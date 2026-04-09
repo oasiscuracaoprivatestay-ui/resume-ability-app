@@ -116,7 +116,7 @@
 .loop-back {
   background: none;
   border: none;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
@@ -128,7 +128,7 @@
 }
 
 .loop-back:hover {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .loop-card {
@@ -155,6 +155,10 @@
   box-shadow: 0 0 8px var(--accent-glow);
 }
 
+.loop-card--custom {
+  border-style: dashed;
+}
+
 .loop-card-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -164,4 +168,86 @@
 .loop-card-detail {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+/* ── Custom stepper ── */
+
+.custom-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: screen-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stepper-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stepper-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stepper-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  font-family: inherit;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.stepper-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 3.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper-detail {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 500;
 }

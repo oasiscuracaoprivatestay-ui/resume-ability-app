@@ -1,14 +1,51 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Screen, ActiveSession } from '../types';
+import { useAudio } from '../hooks/useAudio';
 import ScreenHeader from '../components/ScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
 
+// ── Audio mode system ──
+
+type AudioMode = 'motivation' | 'alternative' | 'music';
+
+const AUDIO_MODES: AudioMode[] = ['motivation', 'alternative', 'music'];
+
+const AUDIO_FILES: Record<AudioMode, string> = {
+  motivation: '/audio/motivation-default.mp3',
+  alternative: '/audio/guidance-alternative.mp3',
+  music: '/audio/background-music.mp3',
+};
+
+const AUDIO_LABELS: Record<AudioMode, string> = {
+  motivation: 'Motivational',
+  alternative: 'Alternative',
+  music: 'Music',
+};
+
+const AUDIO_MODE_KEY = 'resume-ability-audio-mode';
+
+function loadAudioMode(): AudioMode {
+  try {
+    const saved = localStorage.getItem(AUDIO_MODE_KEY);
+    if (saved === 'motivation' || saved === 'alternative' || saved === 'music') return saved;
+  } catch { /* ignore */ }
+  return 'motivation';
+}
+
+function saveAudioMode(mode: AudioMode) {
+  try {
+    localStorage.setItem(AUDIO_MODE_KEY, mode);
+  } catch { /* ignore */ }
+}
+
+// ── Component ──
+
 interface TimerScreenProps {
   session: ActiveSession;
-  onComplete: (durationSeconds: number) => void;
+  onComplete: (durationSeconds: number, blocksCompleted?: number) => void;
   onExtend: () => void;
-  onRelapse: () => void;
+  onRelapse: (blocksCompleted?: number) => void;
   onNavigate: (screen: Screen) => void;
 }
 
@@ -19,6 +56,16 @@ export default function TimerScreen({
   onRelapse,
   onNavigate,
 }: TimerScreenProps) {
+  // ── Audio mode state (persisted) ──
+  const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
+  const audioSrc = AUDIO_FILES[audioMode];
+  const { isPlaying, isMuted, isAvailable, togglePlay, toggleMute, stop: stopAudio } = useAudio(audioSrc);
+
+  const handleAudioModeChange = (mode: AudioMode) => {
+    setAudioMode(mode);
+    saveAudioMode(mode);
+  };
+
   // ── Countdown state (single + loop) ──
   const [remaining, setRemaining] = useState(
     session.mode === 'extended-fast' ? 0 : session.timerDuration,
@@ -79,9 +126,24 @@ export default function TimerScreen({
 
   // ── Wall-clock elapsed for completion ──
   const handleComplete = useCallback(() => {
+    stopAudio();
     const totalSeconds = Math.round((Date.now() - session.startedAt) / 1000);
-    onComplete(totalSeconds);
-  }, [session.startedAt, onComplete]);
+    const blocks = session.mode === 'loop' ? currentBlock : undefined;
+    onComplete(totalSeconds, blocks);
+  }, [session.startedAt, session.mode, currentBlock, onComplete, stopAudio]);
+
+  // ── Relapse handler ──
+  const handleRelapse = useCallback(() => {
+    stopAudio();
+    const blocks = session.mode === 'loop' ? currentBlock : undefined;
+    onRelapse(blocks);
+  }, [session.mode, currentBlock, onRelapse, stopAudio]);
+
+  // ── Navigation with audio cleanup ──
+  const handleNavigate = useCallback((target: Screen) => {
+    stopAudio();
+    onNavigate(target);
+  }, [onNavigate, stopAudio]);
 
   // ── Compute ring props ──
   const isCountUp = session.mode === 'extended-fast';
@@ -106,8 +168,8 @@ export default function TimerScreen({
   return (
     <div className="screen timer-screen">
       <ScreenHeader
-        onBack={() => onNavigate('mode')}
-        onHome={() => onNavigate('home')}
+        onBack={() => handleNavigate('mode')}
+        onHome={() => handleNavigate('home')}
       />
 
       <div className="timer-content">
@@ -124,6 +186,42 @@ export default function TimerScreen({
         {isLoopDone && (
           <p className="timer-loop-done">All blocks completed</p>
         )}
+
+        {/* ── Audio mode selector + controls ── */}
+        <div className="audio-section">
+          <div className="audio-mode-selector">
+            {AUDIO_MODES.map((mode) => (
+              <button
+                key={mode}
+                className={`audio-mode-pill${audioMode === mode ? ' audio-mode-pill--active' : ''}`}
+                onClick={() => handleAudioModeChange(mode)}
+              >
+                {AUDIO_LABELS[mode]}
+              </button>
+            ))}
+          </div>
+
+          {isAvailable && (
+            <div className="audio-controls">
+              <button
+                id="btn-audio-play"
+                className="audio-btn"
+                onClick={togglePlay}
+                aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+              >
+                {isPlaying ? '⏸' : '▶'}
+              </button>
+              <button
+                id="btn-audio-mute"
+                className="audio-btn"
+                onClick={toggleMute}
+                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+              >
+                {isMuted ? '🔇' : '🔊'}
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="timer-actions">
           <button
@@ -145,7 +243,7 @@ export default function TimerScreen({
           <button
             id="btn-relapse"
             className="btn-text"
-            onClick={onRelapse}
+            onClick={handleRelapse}
           >
             I ate again
           </button>

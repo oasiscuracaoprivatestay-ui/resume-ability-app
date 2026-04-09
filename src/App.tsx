@@ -62,7 +62,7 @@ export default function App() {
 
   // ── Timer complete → save & show result ──
   const handleTimerComplete = useCallback(
-    (durationSeconds: number) => {
+    (durationSeconds: number, blocksCompleted?: number) => {
       if (!session) return;
 
       const status: SlipStatus =
@@ -75,6 +75,10 @@ export default function App() {
         mode: session.mode,
         recoveryDuration: durationSeconds,
         status,
+        blocksCompleted:
+          session.mode === 'loop' ? blocksCompleted : undefined,
+        blocksTotal:
+          session.mode === 'loop' ? session.loopBlocks : undefined,
       });
 
       setLastRecovery({ seconds: durationSeconds, status });
@@ -96,25 +100,32 @@ export default function App() {
   }, [session]);
 
   // ── Relapse ──
-  const handleRelapse = useCallback(() => {
-    if (!session) return;
+  const handleRelapse = useCallback(
+    (blocksCompleted?: number) => {
+      if (!session) return;
 
-    const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
+      const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
 
-    saveSlip({
-      id: generateId(),
-      timestamp: session.startedAt,
-      context: session.context,
-      mode: session.mode,
-      recoveryDuration: elapsed,
-      status: 'relapsed',
-    });
+      saveSlip({
+        id: generateId(),
+        timestamp: session.startedAt,
+        context: session.context,
+        mode: session.mode,
+        recoveryDuration: elapsed,
+        status: 'relapsed',
+        blocksCompleted:
+          session.mode === 'loop' ? blocksCompleted : undefined,
+        blocksTotal:
+          session.mode === 'loop' ? session.loopBlocks : undefined,
+      });
 
-    setLastRecovery({ seconds: elapsed, status: 'relapsed' });
-    setSession(null);
-    setPendingContext(null);
-    setScreen('result');
-  }, [session]);
+      setLastRecovery({ seconds: elapsed, status: 'relapsed' });
+      setSession(null);
+      setPendingContext(null);
+      setScreen('result');
+    },
+    [session],
+  );
 
   // ── Render current screen ──
   switch (screen) {

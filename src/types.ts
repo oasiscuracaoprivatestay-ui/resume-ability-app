@@ -31,6 +31,8 @@ export interface SlipRecord {
   mode: TimerMode;             // which timer mode was used
   recoveryDuration: number;    // in seconds
   status: SlipStatus;
+  blocksCompleted?: number;    // blocks completed (loop mode)
+  blocksTotal?: number;        // total planned blocks (loop mode)
 }
 
 // ── Active session (in-progress slip) ──

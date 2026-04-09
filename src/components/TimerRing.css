@@ -4,7 +4,7 @@
   position: relative;
   width: 260px;
   height: 260px;
-  filter: drop-shadow(0 0 40px var(--accent-glow-strong));
+  filter: drop-shadow(0 0 24px var(--accent-glow));
 }
 
 .timer-ring {
@@ -13,14 +13,14 @@
 }
 
 .timer-ring-bg {
-  stroke: var(--border);
-  opacity: 0.5;
+  stroke: var(--border-hover);
+  opacity: 0.6;
 }
 
 .timer-ring-progress {
   stroke: var(--accent);
   transition: stroke-dashoffset 1s linear;
-  filter: drop-shadow(0 0 8px var(--accent-glow-strong));
+  filter: drop-shadow(0 0 4px var(--accent-glow));
 }
 
 .timer-display {
@@ -36,7 +36,7 @@
 .timer-digits {
   font-size: 3.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
@@ -58,16 +58,16 @@
 
 @keyframes ring-pulse {
   0%, 100% {
-    filter: drop-shadow(0 0 30px var(--accent-glow));
+    filter: drop-shadow(0 0 20px var(--accent-glow));
   }
   50% {
-    filter: drop-shadow(0 0 55px var(--accent-glow-strong));
+    filter: drop-shadow(0 0 36px var(--accent-glow-strong));
   }
 }
 
 .timer-countup-label {
   font-size: 0.7rem;
-  color: var(--text-dim);
+  color: var(--text-secondary);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
