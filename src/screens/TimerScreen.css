@@ -122,8 +122,23 @@
   color: var(--text-primary);
 }
 
-.audio-btn:active {
+.audio-btn:active:not(:disabled) {
   transform: scale(0.92);
+}
+
+.audio-btn--disabled,
+.audio-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Audio error message ── */
+
+.audio-error {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 /* ── Actions ── */

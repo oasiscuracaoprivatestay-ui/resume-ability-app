@@ -59,7 +59,7 @@ export default function TimerScreen({
   // ── Audio mode state (persisted) ──
   const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
   const audioSrc = AUDIO_FILES[audioMode];
-  const { isPlaying, isMuted, isAvailable, togglePlay, toggleMute, stop: stopAudio } = useAudio(audioSrc);
+  const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } = useAudio(audioSrc);
 
   const handleAudioModeChange = (mode: AudioMode) => {
     setAudioMode(mode);
@@ -201,25 +201,28 @@ export default function TimerScreen({
             ))}
           </div>
 
-          {isAvailable && (
-            <div className="audio-controls">
-              <button
-                id="btn-audio-play"
-                className="audio-btn"
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
-              >
-                {isPlaying ? '⏸' : '▶'}
-              </button>
-              <button
-                id="btn-audio-mute"
-                className="audio-btn"
-                onClick={toggleMute}
-                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
-              >
-                {isMuted ? '🔇' : '🔊'}
-              </button>
-            </div>
+          <div className="audio-controls">
+            <button
+              id="btn-audio-play"
+              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+              onClick={togglePlay}
+              disabled={loadState !== 'ready'}
+              aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button
+              id="btn-audio-mute"
+              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+              onClick={toggleMute}
+              disabled={loadState !== 'ready'}
+              aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+            >
+              {isMuted ? '🔇' : '🔊'}
+            </button>
+          </div>
+          {loadState === 'error' && (
+            <p className="audio-error">Audio could not be loaded</p>
           )}
         </div>
 
