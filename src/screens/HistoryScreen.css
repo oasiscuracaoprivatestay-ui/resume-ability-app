@@ -1,0 +1,101 @@
+.history-screen {
+  min-height: 100dvh;
+  padding: 1rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.history-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.history-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 3rem;
+  line-height: 1.6;
+}
+
+.history-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+.history-week-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.history-week-card:hover {
+  border-color: var(--border-hover);
+  border-left-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.week-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.week-stats {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.week-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.week-stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.week-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.trend {
+  font-weight: 700;
+}
+
+.trend-good {
+  color: var(--accent);
+}
+
+.trend-bad {
+  color: var(--danger);
+}
+
+.trend-neutral {
+  color: var(--text-dim);
+}

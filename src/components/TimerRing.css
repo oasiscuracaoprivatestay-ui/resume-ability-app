@@ -1,0 +1,74 @@
+/* ── Timer Ring Component ── */
+
+.timer-ring-container {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  filter: drop-shadow(0 0 40px var(--accent-glow-strong));
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.timer-ring-bg {
+  stroke: var(--border);
+  opacity: 0.5;
+}
+
+.timer-ring-progress {
+  stroke: var(--accent);
+  transition: stroke-dashoffset 1s linear;
+  filter: drop-shadow(0 0 8px var(--accent-glow-strong));
+}
+
+.timer-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.timer-digits {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-done-label {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: fade-in 0.5s ease;
+}
+
+/* ── Count-up mode ── */
+
+.timer-ring-countup {
+  animation: ring-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 30px var(--accent-glow));
+  }
+  50% {
+    filter: drop-shadow(0 0 55px var(--accent-glow-strong));
+  }
+}
+
+.timer-countup-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

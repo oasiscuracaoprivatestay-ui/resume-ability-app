@@ -1,0 +1,167 @@
+.mode-screen {
+  min-height: 100dvh;
+  padding: 1rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 2rem;
+}
+
+.mode-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mode-question {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ── Mode cards ── */
+
+.mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.mode-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+}
+
+.mode-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.mode-card:active {
+  transform: translateY(0);
+}
+
+.mode-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.mode-card-icon {
+  font-size: 1.35rem;
+  color: var(--accent);
+  width: 2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mode-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mode-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mode-card-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.mode-card-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(45, 212, 191, 0.08);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* ── Loop sub-options ── */
+
+.loop-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: screen-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loop-back {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  text-align: left;
+  transition: color 0.25s;
+  margin-bottom: 0.25rem;
+}
+
+.loop-back:hover {
+  color: var(--text-muted);
+}
+
+.loop-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loop-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.loop-card:active {
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.loop-card-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.loop-card-detail {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
