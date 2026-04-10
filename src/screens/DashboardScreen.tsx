@@ -5,15 +5,19 @@ import { loadSlips, computeDashboard, formatDuration } from '../utils';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
+import type { Translations } from '../i18n';
 
-const CTX_KEYS: Record<SlipContext, string> = {
-  'late-night': 'ctx_late_night',
-  'stress': 'ctx_stress',
-  'social': 'ctx_social',
-  'boredom': 'ctx_boredom',
-  'habit': 'ctx_habit',
-  'after-meal': 'ctx_after_meal',
-};
+function getContextLabel(t: Translations, ctx: SlipContext): string {
+  const map: Record<SlipContext, string> = {
+    'late-night': t.ctx_late_night,
+    'stress': t.ctx_stress,
+    'social': t.ctx_social,
+    'boredom': t.ctx_boredom,
+    'habit': t.ctx_habit,
+    'after-meal': t.ctx_after_meal,
+  };
+  return map[ctx];
+}
 
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -52,7 +56,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
             <div className="dash-card-row">
               <span className="dash-card-value">
                 {data.mostFrequentContext
-                  ? `${SLIP_CONTEXT_ICONS[data.mostFrequentContext]} ${(t as Record<string, unknown>)[CTX_KEYS[data.mostFrequentContext]] as string}`
+                  ? `${SLIP_CONTEXT_ICONS[data.mostFrequentContext]} ${getContextLabel(t, data.mostFrequentContext)}`
                   : '—'}
               </span>
               <span className="dash-card-icon">◉</span>
