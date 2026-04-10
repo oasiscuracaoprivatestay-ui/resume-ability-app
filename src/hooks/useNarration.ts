@@ -4,13 +4,13 @@ import { useSpeech } from './useSpeech';
 /**
  * Narration hook: tries premium audio first, falls back to browser TTS.
  *
- * Mode resolution:
- *   1. If `audioSrc` is provided → probe the file
- *      - canplaythrough → mode = 'audio'   (use HTML5 Audio)
- *      - error         → mode = 'speech'   (fall back to TTS)
- *   2. If `audioSrc` is null     → mode = 'speech' immediately
+ * Loading strategy:
+ *   1. If audioSrc is null → speech mode immediately
+ *   2. If audioSrc is provided:
+ *      a. fetch(src, HEAD) to confirm file exists
+ *      b. If 200 → create Audio element, wait for canplaythrough → mode = 'audio'
+ *      c. If fetch fails OR Audio errors → mode = 'speech' (TTS fallback)
  *
- * The caller gets a unified API regardless of which system is active.
  * No autoplay — playback starts only when toggle() is called.
  */
 export type NarrationMode = 'checking' | 'audio' | 'speech';
@@ -35,33 +35,67 @@ export function useNarration(audioSrc: string | null, fallbackText: string) {
   // ── Probe premium audio file ──
   useEffect(() => {
     if (!audioSrc) {
+      console.log('[useNarration] No audio src, using speech');
       setMode('speech');
       return;
     }
 
+    let cancelled = false;
+
     setMode('checking');
     setAudioPlaying(false);
 
-    const audio = new Audio();
-    audio.preload = 'auto';
-    audioRef.current = audio;
+    console.log('[useNarration] Probing:', audioSrc);
 
-    const onCanPlay = () => setMode('audio');
-    const onError = () => setMode('speech');
-    const onEnded = () => setAudioPlaying(false);
+    // Step 1: Verify file exists via fetch HEAD
+    fetch(audioSrc, { method: 'HEAD' })
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          console.log('[useNarration] File not found, falling back to speech:', audioSrc, res.status);
+          setMode('speech');
+          return;
+        }
 
-    audio.addEventListener('canplaythrough', onCanPlay, { once: true });
-    audio.addEventListener('error', onError, { once: true });
-    audio.addEventListener('ended', onEnded);
+        console.log('[useNarration] File exists:', audioSrc);
 
-    audio.src = audioSrc;
+        // Step 2: File exists → create Audio element
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audioRef.current = audio;
+
+        const onCanPlay = () => {
+          if (cancelled) return;
+          console.log('[useNarration] Audio ready:', audioSrc);
+          setMode('audio');
+        };
+
+        const onError = () => {
+          if (cancelled) return;
+          console.warn('[useNarration] Audio element error despite fetch OK:', audioSrc);
+          setMode('speech');
+        };
+
+        const onEnded = () => setAudioPlaying(false);
+
+        audio.addEventListener('canplaythrough', onCanPlay, { once: true });
+        audio.addEventListener('error', onError, { once: true });
+        audio.addEventListener('ended', onEnded);
+
+        audio.src = audioSrc;
+      })
+      .catch(() => {
+        if (cancelled) return;
+        console.warn('[useNarration] Fetch network error:', audioSrc);
+        setMode('speech');
+      });
 
     return () => {
-      audio.removeEventListener('canplaythrough', onCanPlay);
-      audio.removeEventListener('error', onError);
-      audio.removeEventListener('ended', onEnded);
-      audio.pause();
-      audioRef.current = null;
+      cancelled = true;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, [audioSrc]);
 
