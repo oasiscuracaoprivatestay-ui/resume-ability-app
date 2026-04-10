@@ -8,9 +8,9 @@ interface ControlScreenProps {
 
 const MESSAGES = [
   'Good. Stay with that.',
-  'You're reinforcing control.',
+  "You're reinforcing control.",
   'This is how consistency grows.',
-  'You're already on track.',
+  "You're already on track.",
   'Keep going. This matters.',
 ];
 
