@@ -9,6 +9,8 @@ import ResultScreen from './screens/ResultScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import ControlScreen from './screens/ControlScreen';
+import HelpOptionsScreen from './screens/HelpOptionsScreen';
+import LearnScreen from './screens/LearnScreen';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -36,10 +38,10 @@ export default function App() {
     setScreen(target);
   }, []);
 
-  // ── Context selected → go to mode selection ──
+  // ── Context selected → go to help options ──
   const handleContextSelect = useCallback((context: SlipContext) => {
     setPendingContext(context);
-    setScreen('mode');
+    setScreen('help');
   }, []);
 
   // ── Mode selected → create session and start timer ──
@@ -171,6 +173,17 @@ export default function App() {
         />
       ) : (
         <HomeScreen onNavigate={navigate} />
+      );
+
+    case 'help':
+      return <HelpOptionsScreen onNavigate={navigate} />;
+
+    case 'learn':
+      return (
+        <LearnScreen
+          context={pendingContext}
+          onNavigate={navigate}
+        />
       );
 
     case 'control':

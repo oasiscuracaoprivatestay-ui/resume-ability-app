@@ -2,10 +2,12 @@
 export type Screen =
   | 'home'
   | 'context'
+  | 'help'
   | 'mode'
   | 'timer'
   | 'result'
   | 'control'
+  | 'learn'
   | 'dashboard'
   | 'history';
 

@@ -38,7 +38,7 @@ export default function ModeScreen({ onSelect, onNavigate }: ModeScreenProps) {
   return (
     <div className="screen mode-screen">
       <ScreenHeader
-        onBack={() => onNavigate('context')}
+        onBack={() => onNavigate('help')}
         onHome={() => onNavigate('home')}
       />
 

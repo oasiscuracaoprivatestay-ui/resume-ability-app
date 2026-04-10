@@ -1,0 +1,108 @@
+.help-screen {
+  padding: 1rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 2rem;
+}
+
+.help-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.help-question {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ── Help cards ── */
+
+.help-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.help-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.help-card:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.help-card:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.help-card--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.help-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.help-card-icon {
+  font-size: 1.2rem;
+  width: 2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.help-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.help-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.help-card-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.help-card-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--surface-hover);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}

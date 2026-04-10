@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Screen, ActiveSession } from '../types';
 import { useAudio } from '../hooks/useAudio';
 import ScreenHeader from '../components/ScreenHeader';
@@ -11,10 +11,20 @@ type AudioMode = 'motivation' | 'alternative' | 'music';
 
 const AUDIO_MODES: AudioMode[] = ['motivation', 'alternative', 'music'];
 
-const AUDIO_FILES: Record<AudioMode, string> = {
-  motivation: '/audio/motivation-default.mp3',
-  alternative: '/audio/guidance-alternative.mp3',
-  music: '/audio/background-music.mp3',
+const AUDIO_FILES: Record<AudioMode, string[]> = {
+  motivation: [
+    '/audio/motivation-1.mp3',
+    '/audio/motivation-2.mp3',
+    '/audio/motivation-3.mp3',
+  ],
+  alternative: [
+    '/audio/alternative-1.mp3',
+    '/audio/alternative-2.mp3',
+  ],
+  music: [
+    '/audio/background-1.mp3',
+    '/audio/background-2.mp3',
+  ],
 };
 
 const AUDIO_LABELS: Record<AudioMode, string> = {
@@ -39,6 +49,14 @@ function saveAudioMode(mode: AudioMode) {
   } catch { /* ignore */ }
 }
 
+/** Pick a random file from the array, avoiding lastPlayed if possible. */
+function pickRandom(files: string[], lastPlayed: string | null): string {
+  if (files.length === 0) return '';
+  if (files.length === 1) return files[0];
+  const candidates = files.filter((f) => f !== lastPlayed);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 // ── Component ──
 
 interface TimerScreenProps {
@@ -58,12 +76,18 @@ export default function TimerScreen({
 }: TimerScreenProps) {
   // ── Audio mode state (persisted) ──
   const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
-  const audioSrc = AUDIO_FILES[audioMode];
+  const lastPlayedRef = useRef<string | null>(null);
+  const [audioSrc, setAudioSrc] = useState(() =>
+    pickRandom(AUDIO_FILES[loadAudioMode()], null),
+  );
   const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } = useAudio(audioSrc);
 
   const handleAudioModeChange = (mode: AudioMode) => {
     setAudioMode(mode);
     saveAudioMode(mode);
+    const file = pickRandom(AUDIO_FILES[mode], lastPlayedRef.current);
+    lastPlayedRef.current = file;
+    setAudioSrc(file);
   };
 
   // ── Countdown state (single + loop) ──
