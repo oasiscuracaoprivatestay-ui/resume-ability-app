@@ -1,38 +1,201 @@
+import { useMemo, useCallback } from 'react';
 import type { Screen, SlipContext } from '../types';
 import { SLIP_CONTEXT_LABELS, SLIP_CONTEXT_ICONS } from '../types';
+import { useNarration } from '../hooks/useNarration';
 import ScreenHeader from '../components/ScreenHeader';
 import './LearnScreen.css';
+
+// ── Coaching category type ──
+
+type CoachingCategory =
+  | 'emotional'
+  | 'trigger'
+  | 'habit'
+  | 'not_hungry'
+  | 'loss_of_control';
+
+interface CoachingSection {
+  title: string;
+  body: string;
+}
+
+interface CoachingContent {
+  sections: CoachingSection[];
+}
+
+// ── Structured coaching data ──
+
+const COACHING: Record<CoachingCategory, CoachingContent> = {
+  emotional: {
+    sections: [
+      {
+        title: 'What happened',
+        body: "You didn't eat because your body needed fuel.\nYou reacted to a feeling.",
+      },
+      {
+        title: 'Why it happens',
+        body: 'Emotions create urgency.\nYour brain is trying to regulate discomfort quickly.',
+      },
+      {
+        title: 'What this tests',
+        body: 'This is your ability to stay present without reacting.',
+      },
+      {
+        title: 'What to do next',
+        body: 'Pause. Breathe. Wait 15 minutes.\nLet the emotion settle before you act again.',
+      },
+    ],
+  },
+  trigger: {
+    sections: [
+      {
+        title: 'What happened',
+        body: 'Something in your environment triggered the urge to eat.',
+      },
+      {
+        title: 'Why it happens',
+        body: 'Your brain links places, people, and moments with food.',
+      },
+      {
+        title: 'What this tests',
+        body: 'Your awareness and interruption ability.',
+      },
+      {
+        title: 'What to do next',
+        body: 'Step away. Break the pattern.\nChange your environment or delay the action.',
+      },
+    ],
+  },
+  habit: {
+    sections: [
+      {
+        title: 'What happened',
+        body: 'You followed a routine, not a real need.',
+      },
+      {
+        title: 'Why it happens',
+        body: 'Your brain runs automatic patterns to save energy.',
+      },
+      {
+        title: 'What this tests',
+        body: 'Your ability to interrupt autopilot behavior.',
+      },
+      {
+        title: 'What to do next',
+        body: 'Pause and ask: "Am I actually hungry?"\nDelay the habit and observe the urge.',
+      },
+    ],
+  },
+  not_hungry: {
+    sections: [
+      {
+        title: 'What happened',
+        body: "You felt like eating, but it wasn't hunger.",
+      },
+      {
+        title: 'Why it happens',
+        body: 'Cravings often mimic hunger signals.',
+      },
+      {
+        title: 'What this tests',
+        body: 'Your ability to distinguish hunger vs appetite.',
+      },
+      {
+        title: 'What to do next',
+        body: 'Wait 15 minutes.\nIf hunger is real, it will remain stable.',
+      },
+    ],
+  },
+  loss_of_control: {
+    sections: [
+      {
+        title: 'What happened',
+        body: 'You acted quickly without awareness.',
+      },
+      {
+        title: 'Why it happens',
+        body: 'Strong impulses override conscious decisions.',
+      },
+      {
+        title: 'What this tests',
+        body: 'Your recovery speed.',
+      },
+      {
+        title: 'What to do next',
+        body: 'Reset immediately.\nOne action does not define the rest of your day.',
+      },
+    ],
+  },
+};
+
+// ── Mapping: SlipContext → CoachingCategory ──
+
+const CONTEXT_TO_COACHING: Record<SlipContext, CoachingCategory> = {
+  'stress': 'emotional',
+  'social': 'trigger',
+  'habit': 'habit',
+  'boredom': 'not_hungry',
+  'after-meal': 'not_hungry',
+  'late-night': 'loss_of_control',
+};
+
+/**
+ * Premium narration audio paths (future ElevenLabs integration).
+ * Drop pre-generated .mp3 files here to override browser TTS.
+ * If a file doesn't exist, the hook falls back to SpeechSynthesis.
+ */
+const PREMIUM_AUDIO: Record<CoachingCategory, string> = {
+  emotional: '/audio/learn/emotional.mp3',
+  trigger: '/audio/learn/trigger.mp3',
+  habit: '/audio/learn/habit.mp3',
+  not_hungry: '/audio/learn/not-hungry.mp3',
+  loss_of_control: '/audio/learn/control.mp3',
+};
+
+// ── Component ──
 
 interface LearnScreenProps {
   context: SlipContext | null;
   onNavigate: (screen: Screen) => void;
 }
 
-const SLIP_INSIGHTS: Record<SlipContext, string> = {
-  'late-night':
-    "Late-night slips happen when willpower is lowest. Your body's tired, your guard is down. This is normal. The key is not to fight it with discipline — it's to make the environment safer before nighttime arrives.",
-  'stress':
-    "Stress eating is your nervous system seeking regulation. Food provides a quick dopamine hit when cortisol is high. Recognizing the trigger is the first step. You're not weak — you're wired to seek relief.",
-  'social':
-    "Social situations create pressure to match others' behavior. Saying no feels socially risky. The slip isn't about food — it's about belonging. You can learn to be present without conforming.",
-  'boredom':
-    "Boredom slips come from understimulation. Your brain craves novelty, and food is the easiest source. Building a micro-routine for idle moments breaks this cycle over time.",
-  'habit':
-    "Habitual slips are the hardest to notice because they feel automatic. They're tied to cues — a time, a place, a sequence. Awareness alone starts to weaken the loop. You're already doing that by being here.",
-  'after-meal':
-    "Post-meal cravings often come from the dopamine pathway, not hunger. Your body got a reward and wants more. Waiting 15 minutes lets the signal pass. The craving is temporary — your decision is permanent.",
-};
-
 export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
   const label = context ? SLIP_CONTEXT_LABELS[context] : 'Unknown';
   const icon = context ? SLIP_CONTEXT_ICONS[context] : '?';
-  const insight = context ? SLIP_INSIGHTS[context] : 'Select a context to learn more.';
+
+  const category: CoachingCategory = context
+    ? CONTEXT_TO_COACHING[context]
+    : 'loss_of_control';
+
+  const content = COACHING[category];
+
+  // ── Narration (premium audio or browser TTS fallback) ──
+  const premiumSrc = PREMIUM_AUDIO[category];
+
+  const narrationText = useMemo(
+    () =>
+      content.sections
+        .map((s) => `${s.title}. ${s.body.replace(/\n/g, ' ')}`)
+        .join('. '),
+    [content],
+  );
+
+  const { isPlaying: isNarrating, isAvailable: narrationAvailable, toggle: toggleNarration, stop: stopNarration } =
+    useNarration(premiumSrc, narrationText);
+
+  const handleNavigate = useCallback(
+    (target: Screen) => {
+      stopNarration();
+      onNavigate(target);
+    },
+    [onNavigate, stopNarration],
+  );
 
   return (
     <div className="screen learn-screen">
       <ScreenHeader
-        onBack={() => onNavigate('help')}
-        onHome={() => onNavigate('home')}
+        onBack={() => handleNavigate('help')}
+        onHome={() => handleNavigate('home')}
       />
 
       <div className="learn-content">
@@ -44,25 +207,50 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
           </div>
         </div>
 
-        <div className="learn-card">
-          <p className="learn-insight">{insight}</p>
+        <div className="learn-sections">
+          {content.sections.map((section, index) => (
+            <div className="learn-section" key={index}>
+              <h3 className="learn-section-title">{section.title}</h3>
+              <p className="learn-section-body">
+                {section.body.split('\n').map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    {i < section.body.split('\n').length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            </div>
+          ))}
         </div>
 
-        <button
-          id="btn-learn-timer"
-          className="btn btn-primary btn-large"
-          onClick={() => onNavigate('mode')}
-        >
-          Start recovery timer
-        </button>
+        {narrationAvailable && (
+          <button
+            id="btn-listen"
+            className={`listen-btn${isNarrating ? ' listen-btn--active' : ''}`}
+            onClick={toggleNarration}
+          >
+            <span className="listen-btn-icon">{isNarrating ? '⏹' : '🔊'}</span>
+            <span>{isNarrating ? 'Stop listening' : 'Listen to this'}</span>
+          </button>
+        )}
 
-        <button
-          id="btn-learn-back"
-          className="btn-text"
-          onClick={() => onNavigate('help')}
-        >
-          Back to options
-        </button>
+        <div className="learn-actions">
+          <button
+            id="btn-learn-timer"
+            className="btn btn-primary btn-large"
+            onClick={() => handleNavigate('mode')}
+          >
+            Start recovery timer
+          </button>
+
+          <button
+            id="btn-learn-back"
+            className="btn-text"
+            onClick={() => handleNavigate('help')}
+          >
+            Back to options
+          </button>
+        </div>
       </div>
     </div>
   );
