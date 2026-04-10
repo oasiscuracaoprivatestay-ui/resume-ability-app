@@ -8,6 +8,7 @@ import TimerScreen from './screens/TimerScreen';
 import ResultScreen from './screens/ResultScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import HistoryScreen from './screens/HistoryScreen';
+import ControlScreen from './screens/ControlScreen';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -171,6 +172,9 @@ export default function App() {
       ) : (
         <HomeScreen onNavigate={navigate} />
       );
+
+    case 'control':
+      return <ControlScreen onNavigate={navigate} />;
 
     case 'dashboard':
       return <DashboardScreen onNavigate={navigate} />;

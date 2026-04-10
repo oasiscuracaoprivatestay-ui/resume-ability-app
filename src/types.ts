@@ -5,6 +5,7 @@ export type Screen =
   | 'mode'
   | 'timer'
   | 'result'
+  | 'control'
   | 'dashboard'
   | 'history';
 

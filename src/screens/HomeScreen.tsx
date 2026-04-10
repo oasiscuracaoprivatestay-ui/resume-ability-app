@@ -42,7 +42,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           <button
             id="btn-in-control"
             className="home-btn-control"
-            onClick={() => onNavigate('home')}
+            onClick={() => onNavigate('control')}
           >
             <span className="home-btn-icon">✓</span>
             <span>I'm in control</span>

@@ -68,11 +68,18 @@ body {
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 /* ── Screen transitions ── */
 
 .screen {
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
   animation: screen-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 

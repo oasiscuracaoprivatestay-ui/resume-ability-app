@@ -71,6 +71,15 @@ export default function TimerScreen({
     session.mode === 'extended-fast' ? 0 : session.timerDuration,
   );
   const [currentBlock, setCurrentBlock] = useState(1);
+  const [blockToast, setBlockToast] = useState<string | null>(null);
+
+  // ── Block transition toast (loop mode) ──
+  useEffect(() => {
+    if (session.mode !== 'loop' || currentBlock <= 1) return;
+    setBlockToast(`Block ${currentBlock} started`);
+    const timeout = setTimeout(() => setBlockToast(null), 2000);
+    return () => clearTimeout(timeout);
+  }, [currentBlock, session.mode]);
 
   // ── Count-up state (extended-fast) ──
   const [elapsed, setElapsed] = useState(0);
@@ -174,9 +183,16 @@ export default function TimerScreen({
 
       <div className="timer-content">
         {session.mode === 'loop' && (
-          <div className="timer-block-indicator">
-            Block {currentBlock} of {session.loopBlocks}
-          </div>
+          <>
+            <div className="timer-block-indicator" key={currentBlock}>
+              Block {currentBlock} of {session.loopBlocks}
+            </div>
+            {blockToast && (
+              <p className="timer-block-toast" key={`toast-${currentBlock}`}>
+                {blockToast}
+              </p>
+            )}
+          </>
         )}
 
         <TimerRing {...ringProps} />
