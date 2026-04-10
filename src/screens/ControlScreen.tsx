@@ -1,23 +1,18 @@
 import { useMemo } from 'react';
 import type { Screen } from '../types';
+import { useTranslation } from '../i18n';
 import './ControlScreen.css';
 
 interface ControlScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
-const MESSAGES = [
-  'Good. Stay with that.',
-  "You're reinforcing control.",
-  'This is how consistency grows.',
-  "You're already on track.",
-  'Keep going. This matters.',
-];
-
 export default function ControlScreen({ onNavigate }: ControlScreenProps) {
+  const { t } = useTranslation();
+
   const message = useMemo(
-    () => MESSAGES[Math.floor(Math.random() * MESSAGES.length)],
-    [],
+    () => t.control_messages[Math.floor(Math.random() * t.control_messages.length)],
+    [t],
   );
 
   return (
@@ -32,7 +27,7 @@ export default function ControlScreen({ onNavigate }: ControlScreenProps) {
         className="btn btn-primary btn-large"
         onClick={() => onNavigate('home')}
       >
-        Continue
+        {t.control_continue}
       </button>
     </div>
   );

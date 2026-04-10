@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Screen } from '../types';
 import { loadSlips, computeWeeklyHistory, formatDuration } from '../utils';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './HistoryScreen.css';
 
@@ -9,6 +10,7 @@ interface HistoryScreenProps {
 }
 
 export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
+  const { t } = useTranslation();
   const weeks = useMemo(() => computeWeeklyHistory(loadSlips()), []);
 
   return (
@@ -20,18 +22,17 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
 
       <div className="history-content">
         <div className="history-heading">
-          <span className="section-label">Weekly Insights</span>
-          <h2 className="section-heading">Progress</h2>
+          <span className="section-label">{t.hist_label}</span>
+          <h2 className="section-heading">{t.hist_heading}</h2>
         </div>
 
         {weeks.length === 0 ? (
           <p className="history-empty">
-            No history yet. Your weekly trends will appear here.
+            {t.hist_empty}
           </p>
         ) : (
           <div className="history-weeks">
             {weeks.map((week, i) => {
-              // Show trend arrows compared to next (older) week
               const prev = weeks[i + 1];
               const speedTrend = prev
                 ? week.averageRecoverySeconds < prev.averageRecoverySeconds
@@ -57,7 +58,7 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                         {formatDuration(week.averageRecoverySeconds)}
                       </span>
                       <span className="week-stat-label">
-                        avg recovery
+                        {t.hist_avg_recovery}
                         {speedTrend && (
                           <span
                             className={`trend trend-${speedTrend === 'faster' ? 'good' : speedTrend === 'slower' ? 'bad' : 'neutral'}`}
@@ -70,7 +71,7 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                     <div className="week-stat">
                       <span className="week-stat-value">{week.slipCount}</span>
                       <span className="week-stat-label">
-                        slips
+                        {t.hist_slips}
                         {freqTrend && (
                           <span
                             className={`trend trend-${freqTrend === 'fewer' ? 'good' : freqTrend === 'more' ? 'bad' : 'neutral'}`}

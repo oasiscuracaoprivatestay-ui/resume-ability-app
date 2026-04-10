@@ -1,0 +1,124 @@
+import type { Translations } from './types';
+
+export const en: Translations = {
+  // ── Home ──
+  home_brand: 'Resume Ability',
+  home_question: 'Are you in',
+  home_question_accent: 'control?',
+  home_subtitle: 'Be honest. Fast recovery starts with awareness.',
+  home_slipped: 'I slipped',
+  home_in_control: "I'm in control",
+  home_dashboard: 'Dashboard',
+  home_history: 'History',
+
+  // ── Context ──
+  ctx_label: 'Quick Check',
+  ctx_question: 'Where did it',
+  ctx_question_accent: 'happen?',
+  ctx_late_night: 'Late night',
+  ctx_stress: 'Stress',
+  ctx_social: 'Social',
+  ctx_boredom: 'Boredom',
+  ctx_habit: 'Habit',
+  ctx_after_meal: 'After meal',
+
+  // ── Help Options ──
+  help_label: 'Recovery Path',
+  help_question: 'How would you like',
+  help_question_accent: 'to recover?',
+  help_timer_title: 'Start motivational timer',
+  help_timer_desc: 'Guided recovery session',
+  help_learn_title: 'Learn about this slip',
+  help_learn_desc: 'Understand the pattern',
+  help_ai_title: 'Talk with AI',
+  help_ai_desc: 'Coming soon',
+  help_ai_badge: 'soon',
+
+  // ── Mode ──
+  mode_label: 'Recovery Mode',
+  mode_question: 'Choose your',
+  mode_question_accent: 'timer',
+  mode_single_title: 'Single',
+  mode_single_desc: 'One focused block',
+  mode_single_badge: '15 min',
+  mode_loop_title: 'Loop',
+  mode_loop_desc: 'Back-to-back blocks',
+  mode_loop_badge: 'multi',
+  mode_extended_title: 'Extended Fast',
+  mode_extended_desc: 'Open-ended recovery',
+  mode_extended_badge: '∞',
+  mode_back_to_modes: '← Back to modes',
+  mode_custom: 'Custom',
+  mode_choose_blocks: 'choose blocks',
+  mode_loop_blocks: 'Loop Blocks',
+  mode_start: 'Start',
+  mode_back_to_presets: '← Back to presets',
+
+  // ── Timer ──
+  timer_message: 'Resume. Not postpone.',
+  timer_all_blocks: 'All blocks completed',
+  timer_recovered: "I'm back in control",
+  timer_extend: '+15 min',
+  timer_relapsed: 'I ate again',
+  timer_block_of: 'Block {x} of {y}',
+  timer_block_started: 'Block {x} started',
+  timer_motivational: 'Motivational',
+  timer_alternative: 'Alternative',
+  timer_music: 'Music',
+  timer_audio_error: 'Audio could not be loaded',
+
+  // ── Result ──
+  result_recovered_in: 'You recovered in',
+  result_control_restored: 'Control restored',
+  result_slip_recorded: 'Slip recorded',
+  result_duration: 'Duration: {t}',
+  result_note_relapsed: 'Every attempt counts. Try again.',
+  result_note_fast: 'Fast recovery. Well done.',
+  result_note_solid: 'Solid recovery. Keep it up.',
+  result_note_default: "You came back. That\u2019s what matters.",
+  result_continue: 'Continue',
+
+  // ── Control ──
+  control_continue: 'Continue',
+  control_messages: [
+    'Good. Stay with that.',
+    "You're reinforcing control.",
+    'This is how consistency grows.',
+    "You're already on track.",
+    'Keep going. This matters.',
+  ],
+
+  // ── Learn ──
+  learn_label: 'Understanding Your Slip',
+  learn_listen: 'Listen to this',
+  learn_stop: 'Stop listening',
+  learn_start_timer: 'Start recovery timer',
+  learn_back: 'Back to options',
+
+  // ── Dashboard ──
+  dash_label: 'Diagnostic Summary',
+  dash_heading: 'Daily Pulse',
+  dash_slips_today: 'Slips Today',
+  dash_most_frequent: 'Most Frequent Zone',
+  dash_avg_recovery: 'Avg Recovery Time',
+  dash_empty: 'No slips recorded yet. Stay aware.',
+
+  // ── History ──
+  hist_label: 'Weekly Insights',
+  hist_heading: 'Progress',
+  hist_empty: 'No history yet. Your weekly trends will appear here.',
+  hist_avg_recovery: 'avg recovery',
+  hist_slips: 'slips',
+
+  // ── Loop presets ──
+  loop_2_label: '2 blocks',
+  loop_2_detail: '30 min',
+  loop_4_label: '4 blocks',
+  loop_4_detail: '1 hour',
+  loop_6_label: '6 blocks',
+  loop_6_detail: '1.5 hours',
+  loop_day_label: '1 day',
+  loop_day_detail: '96 blocks',
+  loop_2days_label: '2 days',
+  loop_2days_detail: '192 blocks',
+};

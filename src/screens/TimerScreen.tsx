@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Screen, ActiveSession } from '../types';
 import { useAudio } from '../hooks/useAudio';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
@@ -27,10 +28,10 @@ const AUDIO_FILES: Record<AudioMode, string[]> = {
   ],
 };
 
-const AUDIO_LABELS: Record<AudioMode, string> = {
-  motivation: 'Motivational',
-  alternative: 'Alternative',
-  music: 'Music',
+const AUDIO_LABEL_KEYS: Record<AudioMode, 'timer_motivational' | 'timer_alternative' | 'timer_music'> = {
+  motivation: 'timer_motivational',
+  alternative: 'timer_alternative',
+  music: 'timer_music',
 };
 
 const AUDIO_MODE_KEY = 'resume-ability-audio-mode';
@@ -74,6 +75,9 @@ export default function TimerScreen({
   onRelapse,
   onNavigate,
 }: TimerScreenProps) {
+  // ── Translations ──
+  const { t } = useTranslation();
+
   // ── Audio mode state (persisted) ──
   const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
   const lastPlayedRef = useRef<string | null>(null);
@@ -100,10 +104,10 @@ export default function TimerScreen({
   // ── Block transition toast (loop mode) ──
   useEffect(() => {
     if (session.mode !== 'loop' || currentBlock <= 1) return;
-    setBlockToast(`Block ${currentBlock} started`);
+    setBlockToast(t.timer_block_started.replace('{x}', String(currentBlock)));
     const timeout = setTimeout(() => setBlockToast(null), 2000);
     return () => clearTimeout(timeout);
-  }, [currentBlock, session.mode]);
+  }, [currentBlock, session.mode, t]);
 
   // ── Count-up state (extended-fast) ──
   const [elapsed, setElapsed] = useState(0);
@@ -209,7 +213,7 @@ export default function TimerScreen({
         {session.mode === 'loop' && (
           <>
             <div className="timer-block-indicator" key={currentBlock}>
-              Block {currentBlock} of {session.loopBlocks}
+              {t.timer_block_of.replace('{x}', String(currentBlock)).replace('{y}', String(session.loopBlocks))}
             </div>
             {blockToast && (
               <p className="timer-block-toast" key={`toast-${currentBlock}`}>
@@ -221,10 +225,10 @@ export default function TimerScreen({
 
         <TimerRing {...ringProps} />
 
-        <p className="timer-message">Resume. Not postpone.</p>
+        <p className="timer-message">{t.timer_message}</p>
 
         {isLoopDone && (
-          <p className="timer-loop-done">All blocks completed</p>
+          <p className="timer-loop-done">{t.timer_all_blocks}</p>
         )}
 
         {/* ── Audio mode selector + controls ── */}
@@ -236,7 +240,7 @@ export default function TimerScreen({
                 className={`audio-mode-pill${audioMode === mode ? ' audio-mode-pill--active' : ''}`}
                 onClick={() => handleAudioModeChange(mode)}
               >
-                {AUDIO_LABELS[mode]}
+                {t[AUDIO_LABEL_KEYS[mode]]}
               </button>
             ))}
           </div>
@@ -262,7 +266,7 @@ export default function TimerScreen({
             </button>
           </div>
           {loadState === 'error' && (
-            <p className="audio-error">Audio could not be loaded</p>
+            <p className="audio-error">{t.timer_audio_error}</p>
           )}
         </div>
 
@@ -272,7 +276,7 @@ export default function TimerScreen({
             className="btn btn-primary btn-large"
             onClick={handleComplete}
           >
-            I'm back in control
+            {t.timer_recovered}
           </button>
           {showExtend && (
             <button
@@ -280,7 +284,7 @@ export default function TimerScreen({
               className="btn btn-secondary"
               onClick={onExtend}
             >
-              +15 min
+              {t.timer_extend}
             </button>
           )}
           <button
@@ -288,7 +292,7 @@ export default function TimerScreen({
             className="btn-text"
             onClick={handleRelapse}
           >
-            I ate again
+            {t.timer_relapsed}
           </button>
         </div>
       </div>

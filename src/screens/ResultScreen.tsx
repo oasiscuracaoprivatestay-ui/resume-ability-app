@@ -1,5 +1,6 @@
 import type { Screen, SlipStatus } from '../types';
 import { formatDuration } from '../utils';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './ResultScreen.css';
 
@@ -14,14 +15,14 @@ export default function ResultScreen({
   status,
   onNavigate,
 }: ResultScreenProps) {
+  const { t } = useTranslation();
   const formattedDuration = formatDuration(recoverySeconds);
 
-  // Small recovery message
   const getRecoveryNote = () => {
-    if (status === 'relapsed') return 'Every attempt counts. Try again.';
-    if (recoverySeconds <= 900) return 'Fast recovery. Well done.';
-    if (recoverySeconds <= 1800) return 'Solid recovery. Keep it up.';
-    return 'You came back. That\u2019s what matters.';
+    if (status === 'relapsed') return t.result_note_relapsed;
+    if (recoverySeconds <= 900) return t.result_note_fast;
+    if (recoverySeconds <= 1800) return t.result_note_solid;
+    return t.result_note_default;
   };
 
   return (
@@ -38,10 +39,10 @@ export default function ResultScreen({
 
         <h2 className="result-heading">
           {status === 'relapsed' ? (
-            'Slip recorded'
+            t.result_slip_recorded
           ) : (
             <>
-              You recovered in<br />
+              {t.result_recovered_in}<br />
               <span className="accent-text">{formattedDuration}</span>
             </>
           )}
@@ -49,8 +50,8 @@ export default function ResultScreen({
 
         <p className="result-subtitle">
           {status === 'relapsed'
-            ? `Duration: ${formattedDuration}`
-            : 'Control restored'}
+            ? t.result_duration.replace('{t}', formattedDuration)
+            : t.result_control_restored}
         </p>
 
         <p className="result-note">{getRecoveryNote()}</p>
@@ -60,7 +61,7 @@ export default function ResultScreen({
           className="btn btn-primary btn-large"
           onClick={() => onNavigate('home')}
         >
-          Continue
+          {t.result_continue}
         </button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import type { Screen } from '../types';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './HelpOptionsScreen.css';
 
@@ -7,6 +8,8 @@ interface HelpOptionsScreenProps {
 }
 
 export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="screen help-screen">
       <ScreenHeader
@@ -16,10 +19,10 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
 
       <div className="help-content">
         <div className="help-heading">
-          <span className="section-label">Recovery Path</span>
+          <span className="section-label">{t.help_label}</span>
           <h2 className="help-question">
-            How would you like<br />
-            to <span className="accent-text">recover?</span>
+            {t.help_question}<br />
+            <span className="accent-text">{t.help_question_accent}</span>
           </h2>
         </div>
 
@@ -32,8 +35,8 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
             <div className="help-card-left">
               <span className="help-card-icon">◎</span>
               <div className="help-card-text">
-                <span className="help-card-title">Start motivational timer</span>
-                <span className="help-card-desc">Guided recovery session</span>
+                <span className="help-card-title">{t.help_timer_title}</span>
+                <span className="help-card-desc">{t.help_timer_desc}</span>
               </div>
             </div>
           </button>
@@ -46,8 +49,8 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
             <div className="help-card-left">
               <span className="help-card-icon">📖</span>
               <div className="help-card-text">
-                <span className="help-card-title">Learn about this slip</span>
-                <span className="help-card-desc">Understand the pattern</span>
+                <span className="help-card-title">{t.help_learn_title}</span>
+                <span className="help-card-desc">{t.help_learn_desc}</span>
               </div>
             </div>
           </button>
@@ -60,11 +63,11 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
             <div className="help-card-left">
               <span className="help-card-icon">💬</span>
               <div className="help-card-text">
-                <span className="help-card-title">Talk with AI</span>
-                <span className="help-card-desc">Coming soon</span>
+                <span className="help-card-title">{t.help_ai_title}</span>
+                <span className="help-card-desc">{t.help_ai_desc}</span>
               </div>
             </div>
-            <span className="help-card-badge">soon</span>
+            <span className="help-card-badge">{t.help_ai_badge}</span>
           </button>
         </div>
       </div>

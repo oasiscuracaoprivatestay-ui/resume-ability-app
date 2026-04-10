@@ -1,15 +1,26 @@
 import { useMemo } from 'react';
-import type { Screen } from '../types';
-import { SLIP_CONTEXT_LABELS, SLIP_CONTEXT_ICONS } from '../types';
+import type { Screen, SlipContext } from '../types';
+import { SLIP_CONTEXT_ICONS } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
+
+const CTX_KEYS: Record<SlipContext, string> = {
+  'late-night': 'ctx_late_night',
+  'stress': 'ctx_stress',
+  'social': 'ctx_social',
+  'boredom': 'ctx_boredom',
+  'habit': 'ctx_habit',
+  'after-meal': 'ctx_after_meal',
+};
 
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
 export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
+  const { t } = useTranslation();
   const data = useMemo(() => computeDashboard(loadSlips()), []);
 
   return (
@@ -21,13 +32,13 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
 
       <div className="dashboard-content">
         <div className="dashboard-heading">
-          <span className="section-label">Diagnostic Summary</span>
-          <h2 className="section-heading">Daily Pulse</h2>
+          <span className="section-label">{t.dash_label}</span>
+          <h2 className="section-heading">{t.dash_heading}</h2>
         </div>
 
         <div className="dashboard-cards">
           <div className="dash-card">
-            <span className="dash-card-label">Slips Today</span>
+            <span className="dash-card-label">{t.dash_slips_today}</span>
             <div className="dash-card-row">
               <span className="dash-card-value dash-card-value--accent">
                 {String(data.slipsToday).padStart(2, '0')}
@@ -37,11 +48,11 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
           </div>
 
           <div className="dash-card">
-            <span className="dash-card-label">Most Frequent Zone</span>
+            <span className="dash-card-label">{t.dash_most_frequent}</span>
             <div className="dash-card-row">
               <span className="dash-card-value">
                 {data.mostFrequentContext
-                  ? `${SLIP_CONTEXT_ICONS[data.mostFrequentContext]} ${SLIP_CONTEXT_LABELS[data.mostFrequentContext]}`
+                  ? `${SLIP_CONTEXT_ICONS[data.mostFrequentContext]} ${(t as Record<string, unknown>)[CTX_KEYS[data.mostFrequentContext]] as string}`
                   : '—'}
               </span>
               <span className="dash-card-icon">◉</span>
@@ -49,7 +60,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
           </div>
 
           <div className="dash-card">
-            <span className="dash-card-label">Avg Recovery Time</span>
+            <span className="dash-card-label">{t.dash_avg_recovery}</span>
             <div className="dash-card-row">
               <span className="dash-card-value">
                 {data.averageRecoverySeconds > 0
@@ -63,7 +74,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
 
         {data.slipsToday === 0 && data.averageRecoverySeconds === 0 && (
           <p className="dashboard-empty">
-            No slips recorded yet. Stay aware.
+            {t.dash_empty}
           </p>
         )}
       </div>

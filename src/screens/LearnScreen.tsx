@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import type { Screen, SlipContext } from '../types';
-import { SLIP_CONTEXT_LABELS, SLIP_CONTEXT_ICONS } from '../types';
+import { SLIP_CONTEXT_ICONS } from '../types';
+import { useTranslation } from '../i18n';
 import { useNarration } from '../hooks/useNarration';
 import ScreenHeader from '../components/ScreenHeader';
 import './LearnScreen.css';
@@ -160,7 +161,18 @@ interface LearnScreenProps {
 }
 
 export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
-  const label = context ? SLIP_CONTEXT_LABELS[context] : 'Unknown';
+  const { t } = useTranslation();
+
+  const CTX_KEYS: Record<SlipContext, keyof typeof t> = {
+    'late-night': 'ctx_late_night',
+    'stress': 'ctx_stress',
+    'social': 'ctx_social',
+    'boredom': 'ctx_boredom',
+    'habit': 'ctx_habit',
+    'after-meal': 'ctx_after_meal',
+  };
+
+  const label = context ? (t[CTX_KEYS[context]] as string) : 'Unknown';
   const icon = context ? SLIP_CONTEXT_ICONS[context] : '?';
 
   const category: CoachingCategory = context
@@ -200,7 +212,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
 
       <div className="learn-content">
         <div className="learn-heading">
-          <span className="section-label">Understanding Your Slip</span>
+          <span className="section-label">{t.learn_label}</span>
           <div className="learn-context-badge">
             <span>{icon}</span>
             <span>{label}</span>
@@ -230,7 +242,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
             onClick={toggleNarration}
           >
             <span className="listen-btn-icon">{isNarrating ? '⏹' : '🔊'}</span>
-            <span>{isNarrating ? 'Stop listening' : 'Listen to this'}</span>
+            <span>{isNarrating ? t.learn_stop : t.learn_listen}</span>
           </button>
         )}
 
@@ -240,7 +252,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
             className="btn btn-primary btn-large"
             onClick={() => handleNavigate('mode')}
           >
-            Start recovery timer
+            {t.learn_start_timer}
           </button>
 
           <button
@@ -248,7 +260,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
             className="btn-text"
             onClick={() => handleNavigate('help')}
           >
-            Back to options
+            {t.learn_back}
           </button>
         </div>
       </div>

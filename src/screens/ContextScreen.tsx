@@ -1,5 +1,6 @@
 import type { Screen, SlipContext } from '../types';
-import { SLIP_CONTEXT_LABELS, SLIP_CONTEXT_ICONS } from '../types';
+import { SLIP_CONTEXT_ICONS } from '../types';
+import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './ContextScreen.css';
 
@@ -17,7 +18,18 @@ const CONTEXTS: SlipContext[] = [
   'after-meal',
 ];
 
+const CTX_KEYS: Record<SlipContext, keyof ReturnType<typeof useTranslation>['t']> = {
+  'late-night': 'ctx_late_night',
+  'stress': 'ctx_stress',
+  'social': 'ctx_social',
+  'boredom': 'ctx_boredom',
+  'habit': 'ctx_habit',
+  'after-meal': 'ctx_after_meal',
+};
+
 export default function ContextScreen({ onSelect, onNavigate }: ContextScreenProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="screen context-screen">
       <ScreenHeader
@@ -27,10 +39,10 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
 
       <div className="context-content">
         <div className="context-heading">
-          <span className="section-label">Context Mapping</span>
+          <span className="section-label">{t.ctx_label}</span>
           <h2 className="context-question">
-            Where did it<br />
-            <span className="accent-text">happen?</span>
+            {t.ctx_question}<br />
+            <span className="accent-text">{t.ctx_question_accent}</span>
           </h2>
         </div>
 
@@ -43,7 +55,7 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
               onClick={() => onSelect(ctx)}
             >
               <span className="context-icon">{SLIP_CONTEXT_ICONS[ctx]}</span>
-              <span className="context-label">{SLIP_CONTEXT_LABELS[ctx]}</span>
+              <span className="context-label">{t[CTX_KEYS[ctx]] as string}</span>
             </button>
           ))}
         </div>

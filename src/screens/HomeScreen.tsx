@@ -1,4 +1,6 @@
 import type { Screen } from '../types';
+import { useTranslation } from '../i18n';
+import LanguageSelector from '../components/LanguageSelector';
 import './HomeScreen.css';
 
 interface HomeScreenProps {
@@ -6,27 +8,32 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="screen home-screen">
       <header className="home-top-bar">
-        <span className="home-brand">Resume Ability</span>
-        <button
-          className="header-btn"
-          onClick={() => onNavigate('home')}
-          aria-label="Home"
-        >
-          ⌂
-        </button>
+        <span className="home-brand">{t.home_brand}</span>
+        <div className="home-top-right">
+          <LanguageSelector />
+          <button
+            className="header-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Home"
+          >
+            ⌂
+          </button>
+        </div>
       </header>
 
       <div className="home-content">
         <div className="home-question-block">
           <h1 className="home-question">
-            Are you in<br />
-            <span className="accent-text">control?</span>
+            {t.home_question}<br />
+            <span className="accent-text">{t.home_question_accent}</span>
           </h1>
           <p className="home-subtitle">
-            Be honest. Fast recovery starts with awareness.
+            {t.home_subtitle}
           </p>
         </div>
 
@@ -37,7 +44,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             onClick={() => onNavigate('context')}
           >
             <span className="home-btn-icon">↻</span>
-            <span>I slipped</span>
+            <span>{t.home_slipped}</span>
           </button>
           <button
             id="btn-in-control"
@@ -45,7 +52,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             onClick={() => onNavigate('control')}
           >
             <span className="home-btn-icon">✓</span>
-            <span>I'm in control</span>
+            <span>{t.home_in_control}</span>
           </button>
         </div>
       </div>
@@ -56,7 +63,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           className="nav-link"
           onClick={() => onNavigate('dashboard')}
         >
-          Dashboard
+          {t.home_dashboard}
         </button>
         <span className="nav-dot">·</span>
         <button
@@ -64,7 +71,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           className="nav-link"
           onClick={() => onNavigate('history')}
         >
-          History
+          {t.home_history}
         </button>
       </nav>
     </div>

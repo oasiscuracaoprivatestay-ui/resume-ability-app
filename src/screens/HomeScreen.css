@@ -21,6 +21,12 @@
   letter-spacing: 0.02em;
 }
 
+.home-top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* ── Question block ── */
 
 .home-content {
