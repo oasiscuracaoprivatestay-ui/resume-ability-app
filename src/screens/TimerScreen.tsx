@@ -118,8 +118,11 @@ export default function TimerScreen({
     setCurrentTrack(next);
   }, []);
 
-  // Resolve language-specific audio path (fallback handled by useAudio fetch-first)
-  const localizedSrc = localizeAudioPath(currentTrack.src, lang);
+  // Resolve language-specific audio path — music is language-independent
+  const localizedSrc =
+    audioMode === 'music'
+      ? currentTrack.src
+      : localizeAudioPath(currentTrack.src, lang);
 
   const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } =
     useAudio(localizedSrc, { onTrackEnd: advanceTrack });
