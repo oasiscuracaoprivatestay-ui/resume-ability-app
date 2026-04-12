@@ -5,6 +5,7 @@ import { useTranslation } from '../i18n';
 import { useNarration } from '../hooks/useNarration';
 import { getCoaching } from '../data/coaching';
 import type { CoachingCategory } from '../data/coaching';
+import { localizeAudioPath } from '../utils/audioPath';
 import ScreenHeader from '../components/ScreenHeader';
 import './LearnScreen.css';
 
@@ -61,7 +62,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
   const content = getCoaching(lang, category);
 
   // ── Narration (premium audio or browser TTS fallback) ──
-  const premiumSrc = PREMIUM_AUDIO[category];
+  const premiumSrc = localizeAudioPath(PREMIUM_AUDIO[category], lang);
 
   const narrationText = useMemo(
     () =>

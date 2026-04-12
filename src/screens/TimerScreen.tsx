@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Screen, ActiveSession } from '../types';
 import { useAudio } from '../hooks/useAudio';
 import { useTranslation } from '../i18n';
+import { localizeAudioPath } from '../utils/audioPath';
 import ScreenHeader from '../components/ScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
@@ -95,7 +96,7 @@ export default function TimerScreen({
   onNavigate,
 }: TimerScreenProps) {
   // ── Translations ──
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
 
   // ── Audio mode state (persisted) ──
   const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
@@ -117,8 +118,11 @@ export default function TimerScreen({
     setCurrentTrack(next);
   }, []);
 
+  // Resolve language-specific audio path (fallback handled by useAudio fetch-first)
+  const localizedSrc = localizeAudioPath(currentTrack.src, lang);
+
   const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } =
-    useAudio(currentTrack.src, { onTrackEnd: advanceTrack });
+    useAudio(localizedSrc, { onTrackEnd: advanceTrack });
 
   const handleAudioModeChange = (mode: AudioMode) => {
     setAudioMode(mode);

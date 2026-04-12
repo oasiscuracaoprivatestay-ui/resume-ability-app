@@ -109,6 +109,25 @@ export interface Translations {
   hist_empty: string;
   hist_avg_recovery: string;
   hist_slips: string;
+  hist_range_today: string;
+  hist_range_7d: string;
+  hist_range_30d: string;
+  hist_range_all: string;
+  hist_tab_summary: string;
+  hist_tab_log: string;
+  hist_log_duration: string;
+  hist_log_mode: string;
+  hist_log_status: string;
+  hist_status_recovered: string;
+  hist_status_extended: string;
+  hist_status_relapsed: string;
+  hist_clear: string;
+  hist_clear_confirm: string;
+  hist_clear_yes: string;
+  hist_clear_no: string;
+  hist_refresh: string;
+  hist_total_slips: string;
+  hist_most_common: string;
 
   // ── Loop presets ──
   loop_2_label: string;

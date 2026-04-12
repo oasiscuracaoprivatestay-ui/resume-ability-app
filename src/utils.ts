@@ -24,6 +24,48 @@ export function saveSlip(record: SlipRecord): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(slips));
 }
 
+export function clearSlips(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+// ── Date range filtering ──
+
+export type HistoryRange = 'today' | '7d' | '30d' | 'all';
+
+export function filterSlipsByRange(slips: SlipRecord[], range: HistoryRange): SlipRecord[] {
+  if (range === 'all') return slips;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  let cutoff: number;
+  switch (range) {
+    case 'today':
+      cutoff = now.getTime();
+      break;
+    case '7d':
+      cutoff = now.getTime() - 6 * 24 * 60 * 60 * 1000;
+      break;
+    case '30d':
+      cutoff = now.getTime() - 29 * 24 * 60 * 60 * 1000;
+      break;
+  }
+  return slips.filter((s) => s.timestamp >= cutoff);
+}
+
+// ── Date/time formatting for log view ──
+
+export function formatDateTime(timestamp: number): { date: string; time: string } {
+  const d = new Date(timestamp);
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  const date = `${months[d.getMonth()]} ${d.getDate()}`;
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  const time = `${h}:${m}`;
+  return { date, time };
+}
+
 // ── ID generation ──
 
 export function generateId(): string {
