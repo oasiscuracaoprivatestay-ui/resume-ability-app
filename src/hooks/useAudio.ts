@@ -13,14 +13,27 @@ import { useRef, useState, useEffect, useCallback } from 'react';
  *
  * isPlaying tracks whether audio is currently playing.
  * These two concepts are fully independent.
+ *
+ * onTrackEnd is called when the current track finishes naturally
+ * (not when paused or stopped manually). The caller can use this
+ * to advance to the next track in a playlist.
  */
 export type AudioLoadState = 'loading' | 'ready' | 'error';
 
-export function useAudio(src: string) {
+export interface UseAudioOptions {
+  /** Called when the track finishes playing (reaches its natural end). */
+  onTrackEnd?: () => void;
+}
+
+export function useAudio(src: string, options?: UseAudioOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [loadState, setLoadState] = useState<AudioLoadState>('loading');
+
+  // Store callback in ref so the Audio 'ended' listener always sees latest
+  const onTrackEndRef = useRef(options?.onTrackEnd);
+  onTrackEndRef.current = options?.onTrackEnd;
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +58,8 @@ export function useAudio(src: string) {
 
         // Step 2: File exists → create Audio element
         const audio = new Audio();
-        audio.loop = true;
+        // No loop — playlist behavior handles advancement
+        audio.loop = false;
         audio.preload = 'auto';
         audioRef.current = audio;
 
@@ -66,14 +80,22 @@ export function useAudio(src: string) {
 
         const onError = () => {
           if (cancelled) return;
-          // Secondary check: Audio element failed despite fetch success
           console.warn('[useAudio] Audio element error:', src);
           setLoadState('error');
           setIsPlaying(false);
         };
 
+        const onEnded = () => {
+          if (cancelled) return;
+          console.log('[useAudio] Track ended:', src);
+          setIsPlaying(false);
+          // Notify caller so they can advance to next track
+          onTrackEndRef.current?.();
+        };
+
         audio.addEventListener('canplaythrough', onCanPlay, { once: true });
         audio.addEventListener('error', onError, { once: true });
+        audio.addEventListener('ended', onEnded);
 
         audio.src = src;
       })

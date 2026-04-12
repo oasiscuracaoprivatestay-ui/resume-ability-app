@@ -84,7 +84,21 @@ export default function TimerScreen({
   const [audioSrc, setAudioSrc] = useState(() =>
     pickRandom(AUDIO_FILES[loadAudioMode()], null),
   );
-  const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } = useAudio(audioSrc);
+
+  // Ref to track current mode inside the onTrackEnd callback
+  const audioModeRef = useRef<AudioMode>(audioMode);
+  audioModeRef.current = audioMode;
+
+  /** Pick next track from current mode, avoiding consecutive repeat. */
+  const advanceTrack = useCallback(() => {
+    const mode = audioModeRef.current;
+    const file = pickRandom(AUDIO_FILES[mode], lastPlayedRef.current);
+    lastPlayedRef.current = file;
+    setAudioSrc(file);
+  }, []);
+
+  const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } =
+    useAudio(audioSrc, { onTrackEnd: advanceTrack });
 
   const handleAudioModeChange = (mode: AudioMode) => {
     setAudioMode(mode);
@@ -93,6 +107,11 @@ export default function TimerScreen({
     lastPlayedRef.current = file;
     setAudioSrc(file);
   };
+
+  /** Manual skip — user taps "next" */
+  const handleNextTrack = useCallback(() => {
+    advanceTrack();
+  }, [advanceTrack]);
 
   // ── Countdown state (single + loop) ──
   const [remaining, setRemaining] = useState(
@@ -254,6 +273,15 @@ export default function TimerScreen({
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button
+              id="btn-audio-next"
+              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+              onClick={handleNextTrack}
+              disabled={loadState !== 'ready'}
+              aria-label="Next track"
+            >
+              ⏭
             </button>
             <button
               id="btn-audio-mute"
