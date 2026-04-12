@@ -37,11 +37,11 @@ const en: CoachingLocale = {
       },
       {
         title: 'What this tests',
-        body: 'This is your ability to stay present without reacting.',
+        body: 'Your ability to stay present without reacting.\nThe timer gives you a structured way to hold that space.',
       },
       {
         title: 'What to do next',
-        body: 'Pause. Breathe. Wait 15 minutes.\nLet the emotion settle before you act again.',
+        body: 'Start a 15-minute timer now.\nFocus only on getting through this block.\nWhen the timer ends, check in with yourself again.\nIf the urge is still there, start another block.\nKeep going until your next planned meal if needed.',
       },
     ],
   },
@@ -57,11 +57,11 @@ const en: CoachingLocale = {
       },
       {
         title: 'What this tests',
-        body: 'Your awareness and interruption ability.',
+        body: 'Your awareness and ability to interrupt the pattern.\nThe timer creates a gap between the trigger and your response.',
       },
       {
         title: 'What to do next',
-        body: 'Step away. Break the pattern.\nChange your environment or delay the action.',
+        body: 'Step away from the trigger and start a 15-minute timer.\nUse the timer to create distance from the urge.\nWhen it ends, decide again with a clear head.\nIf the pull is still strong, start another block.\nContinue until the moment passes or until your next meal.',
       },
     ],
   },
@@ -77,11 +77,11 @@ const en: CoachingLocale = {
       },
       {
         title: 'What this tests',
-        body: 'Your ability to interrupt autopilot behavior.',
+        body: 'Your ability to interrupt autopilot behavior.\nThe timer replaces the automatic response with a conscious pause.',
       },
       {
         title: 'What to do next',
-        body: 'Pause and ask: "Am I actually hungry?"\nDelay the habit and observe the urge.',
+        body: 'Ask yourself: "Am I actually hungry?"\nStart a 15-minute timer before acting.\nFocus on waiting for the timer to finish.\nWhen it ends, reassess honestly.\nIf the habit still pulls, begin another block.\nRepeat until you reach your next planned meal.',
       },
     ],
   },
@@ -97,11 +97,11 @@ const en: CoachingLocale = {
       },
       {
         title: 'What this tests',
-        body: 'Your ability to distinguish hunger vs appetite.',
+        body: 'Your ability to distinguish real hunger from appetite.\nThe timer helps you test whether the feeling is genuine.',
       },
       {
         title: 'What to do next',
-        body: 'Wait 15 minutes.\nIf hunger is real, it will remain stable.',
+        body: 'Start a 15-minute timer and wait.\nReal hunger stays steady. Cravings fade.\nWhen the timer ends, check again: is the feeling still there?\nIf yes, start another block and observe.\nContinue until the craving fades or your next meal arrives.',
       },
     ],
   },
@@ -117,11 +117,11 @@ const en: CoachingLocale = {
       },
       {
         title: 'What this tests',
-        body: 'Your recovery speed.',
+        body: 'Your recovery speed.\nThe timer is your immediate reset tool.',
       },
       {
         title: 'What to do next',
-        body: 'Reset immediately.\nOne action does not define the rest of your day.',
+        body: 'Start a 15-minute timer right now.\nOne action does not define the rest of your day.\nFocus only on this block. Nothing else.\nWhen it ends, decide: continue or reset.\nIf needed, start another block and keep going.\nUse the timer to reclaim the rest of your day.',
       },
     ],
   },
@@ -144,11 +144,11 @@ const es: CoachingLocale = {
       },
       {
         title: 'Qué evalúa esto',
-        body: 'Tu capacidad de estar presente sin reaccionar.',
+        body: 'Tu capacidad de estar presente sin reaccionar.\nEl temporizador te da una forma estructurada de sostener ese espacio.',
       },
       {
         title: 'Qué hacer ahora',
-        body: 'Pausa. Respira. Espera 15 minutos.\nDeja que la emoción se calme antes de actuar.',
+        body: 'Inicia un temporizador de 15 minutos ahora.\nConcéntrate solo en completar este bloque.\nCuando termine, vuelve a evaluar cómo te sientes.\nSi el impulso sigue, inicia otro bloque.\nContinúa hasta tu próxima comida planificada si es necesario.',
       },
     ],
   },
@@ -164,11 +164,11 @@ const es: CoachingLocale = {
       },
       {
         title: 'Qué evalúa esto',
-        body: 'Tu conciencia y capacidad de interrupción.',
+        body: 'Tu conciencia y capacidad de interrupción.\nEl temporizador crea una pausa entre el disparador y tu respuesta.',
       },
       {
         title: 'Qué hacer ahora',
-        body: 'Aléjate. Rompe el patrón.\nCambia tu entorno o retrasa la acción.',
+        body: 'Aléjate del disparador e inicia un temporizador de 15 minutos.\nUsa el temporizador para crear distancia del impulso.\nCuando termine, decide de nuevo con la mente clara.\nSi la atracción sigue fuerte, inicia otro bloque.\nContinúa hasta que el momento pase o llegue tu próxima comida.',
       },
     ],
   },
@@ -184,11 +184,11 @@ const es: CoachingLocale = {
       },
       {
         title: 'Qué evalúa esto',
-        body: 'Tu capacidad de interrumpir el comportamiento automático.',
+        body: 'Tu capacidad de interrumpir el comportamiento automático.\nEl temporizador reemplaza la respuesta automática con una pausa consciente.',
       },
       {
         title: 'Qué hacer ahora',
-        body: 'Pausa y pregúntate: "¿Realmente tengo hambre?"\nRetrasa el hábito y observa el impulso.',
+        body: 'Pregúntate: "¿Realmente tengo hambre?"\nInicia un temporizador de 15 minutos antes de actuar.\nConcéntrate en esperar a que termine.\nCuando termine, reevalúa con honestidad.\nSi el hábito sigue tirando, inicia otro bloque.\nRepite hasta llegar a tu próxima comida planificada.',
       },
     ],
   },
@@ -204,11 +204,11 @@ const es: CoachingLocale = {
       },
       {
         title: 'Qué evalúa esto',
-        body: 'Tu capacidad de distinguir hambre de apetito.',
+        body: 'Tu capacidad de distinguir hambre real de apetito.\nEl temporizador te ayuda a probar si la sensación es genuina.',
       },
       {
         title: 'Qué hacer ahora',
-        body: 'Espera 15 minutos.\nSi el hambre es real, se mantendrá estable.',
+        body: 'Inicia un temporizador de 15 minutos y espera.\nEl hambre real se mantiene estable. Los antojos se desvanecen.\nCuando termine, vuelve a comprobar: ¿sigue la sensación?\nSi es así, inicia otro bloque y observa.\nContinúa hasta que el antojo pase o llegue tu próxima comida.',
       },
     ],
   },
@@ -224,11 +224,11 @@ const es: CoachingLocale = {
       },
       {
         title: 'Qué evalúa esto',
-        body: 'Tu velocidad de recuperación.',
+        body: 'Tu velocidad de recuperación.\nEl temporizador es tu herramienta de reinicio inmediato.',
       },
       {
         title: 'Qué hacer ahora',
-        body: 'Reinicia de inmediato.\nUna acción no define el resto de tu día.',
+        body: 'Inicia un temporizador de 15 minutos ahora mismo.\nUna acción no define el resto de tu día.\nConcéntrate solo en este bloque. Nada más.\nCuando termine, decide: continuar o reiniciar.\nSi es necesario, inicia otro bloque y sigue adelante.\nUsa el temporizador para recuperar el resto de tu día.',
       },
     ],
   },
@@ -251,11 +251,11 @@ const nl: CoachingLocale = {
       },
       {
         title: 'Wat dit test',
-        body: 'Je vermogen om aanwezig te blijven zonder te reageren.',
+        body: 'Je vermogen om aanwezig te blijven zonder te reageren.\nDe timer geeft je een gestructureerde manier om die ruimte vast te houden.',
       },
       {
         title: 'Wat nu te doen',
-        body: 'Pauzeer. Adem. Wacht 15 minuten.\nLaat de emotie zakken voordat je weer handelt.',
+        body: 'Start nu een timer van 15 minuten.\nRicht je alleen op het voltooien van dit blok.\nAls de timer afloopt, check opnieuw hoe je je voelt.\nAls de drang er nog is, start een nieuw blok.\nGa door tot je volgende geplande maaltijd als dat nodig is.',
       },
     ],
   },
@@ -271,11 +271,11 @@ const nl: CoachingLocale = {
       },
       {
         title: 'Wat dit test',
-        body: 'Je bewustzijn en vermogen om te onderbreken.',
+        body: 'Je bewustzijn en vermogen om te onderbreken.\nDe timer creëert een pauze tussen de trigger en je reactie.',
       },
       {
         title: 'Wat nu te doen',
-        body: 'Loop weg. Doorbreek het patroon.\nVerander je omgeving of stel de actie uit.',
+        body: 'Loop weg van de trigger en start een timer van 15 minuten.\nGebruik de timer om afstand te creëren van de drang.\nAls hij afloopt, beslis opnieuw met een helder hoofd.\nAls de aantrekkingskracht sterk blijft, start een nieuw blok.\nGa door tot het moment voorbij is of tot je volgende maaltijd.',
       },
     ],
   },
@@ -291,11 +291,11 @@ const nl: CoachingLocale = {
       },
       {
         title: 'Wat dit test',
-        body: 'Je vermogen om automatisch gedrag te onderbreken.',
+        body: 'Je vermogen om automatisch gedrag te onderbreken.\nDe timer vervangt de automatische reactie door een bewuste pauze.',
       },
       {
         title: 'Wat nu te doen',
-        body: 'Pauzeer en vraag: "Heb ik echt honger?"\nStel de gewoonte uit en observeer de drang.',
+        body: 'Vraag jezelf: "Heb ik echt honger?"\nStart een timer van 15 minuten voordat je handelt.\nRicht je op wachten tot de timer afloopt.\nAls hij afloopt, beoordeel opnieuw eerlijk.\nAls de gewoonte blijft trekken, start een nieuw blok.\nHerhaal tot je volgende geplande maaltijd.',
       },
     ],
   },
@@ -311,11 +311,11 @@ const nl: CoachingLocale = {
       },
       {
         title: 'Wat dit test',
-        body: 'Je vermogen om honger van eetlust te onderscheiden.',
+        body: 'Je vermogen om echte honger van eetlust te onderscheiden.\nDe timer helpt je te testen of het gevoel echt is.',
       },
       {
         title: 'Wat nu te doen',
-        body: 'Wacht 15 minuten.\nAls de honger echt is, blijft die stabiel.',
+        body: 'Start een timer van 15 minuten en wacht.\nEchte honger blijft stabiel. Verlangen verdwijnt.\nAls de timer afloopt, check opnieuw: is het gevoel er nog?\nZo ja, start een nieuw blok en observeer.\nGa door tot het verlangen verdwijnt of je volgende maaltijd komt.',
       },
     ],
   },
@@ -331,11 +331,11 @@ const nl: CoachingLocale = {
       },
       {
         title: 'Wat dit test',
-        body: 'Je herstelsnelheid.',
+        body: 'Je herstelsnelheid.\nDe timer is je directe hersteltool.',
       },
       {
         title: 'Wat nu te doen',
-        body: 'Herstel onmiddellijk.\nEén actie bepaalt niet de rest van je dag.',
+        body: 'Start nu meteen een timer van 15 minuten.\nEén actie bepaalt niet de rest van je dag.\nRicht je alleen op dit blok. Niets anders.\nAls hij afloopt, beslis: doorgaan of resetten.\nStart indien nodig een nieuw blok en ga verder.\nGebruik de timer om de rest van je dag terug te winnen.',
       },
     ],
   },
