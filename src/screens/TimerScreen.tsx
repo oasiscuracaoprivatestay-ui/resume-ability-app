@@ -6,25 +6,38 @@ import ScreenHeader from '../components/ScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
 
-// ── Audio mode system ──
+// ── Audio track system ──
 
 type AudioMode = 'motivation' | 'alternative' | 'music';
 
+interface Track {
+  id: string;
+  name: string;
+  src: string;
+  premium: boolean;
+}
+
 const AUDIO_MODES: AudioMode[] = ['motivation', 'alternative', 'music'];
 
-const AUDIO_FILES: Record<AudioMode, string[]> = {
+const TRACKS: Record<AudioMode, Track[]> = {
   motivation: [
-    '/audio/motivation-1.mp3',
-    '/audio/motivation-2.mp3',
-    '/audio/motivation-3.mp3',
+    { id: 'm1', name: 'Motivation 1', src: '/audio/motivation-1.mp3', premium: false },
+    { id: 'm2', name: 'Motivation 2', src: '/audio/motivation-2.mp3', premium: false },
+    { id: 'm3', name: 'Motivation 3', src: '/audio/motivation-3.mp3', premium: false },
+    { id: 'm4', name: 'Deep Focus', src: '', premium: true },
+    { id: 'm5', name: 'Inner Strength', src: '', premium: true },
   ],
   alternative: [
-    '/audio/alternative-1.mp3',
-    '/audio/alternative-2.mp3',
+    { id: 'a1', name: 'Alternative 1', src: '/audio/alternative-1.mp3', premium: false },
+    { id: 'a2', name: 'Alternative 2', src: '/audio/alternative-2.mp3', premium: false },
+    { id: 'a3', name: 'Calm Voice', src: '', premium: true },
+    { id: 'a4', name: 'Guided Breath', src: '', premium: true },
   ],
   music: [
-    '/audio/background-1.mp3',
-    '/audio/background-2.mp3',
+    { id: 'b1', name: 'Background 1', src: '/audio/background-1.mp3', premium: false },
+    { id: 'b2', name: 'Background 2', src: '/audio/background-2.mp3', premium: false },
+    { id: 'b3', name: 'Ambient Flow', src: '', premium: true },
+    { id: 'b4', name: 'Night Rain', src: '', premium: true },
   ],
 };
 
@@ -33,6 +46,11 @@ const AUDIO_LABEL_KEYS: Record<AudioMode, 'timer_motivational' | 'timer_alternat
   alternative: 'timer_alternative',
   music: 'timer_music',
 };
+
+/** Get only playable (free) tracks for a mode. */
+function getFreeTracks(mode: AudioMode): Track[] {
+  return TRACKS[mode].filter((t) => !t.premium);
+}
 
 const AUDIO_MODE_KEY = 'resume-ability-audio-mode';
 
@@ -50,11 +68,12 @@ function saveAudioMode(mode: AudioMode) {
   } catch { /* ignore */ }
 }
 
-/** Pick a random file from the array, avoiding lastPlayed if possible. */
-function pickRandom(files: string[], lastPlayed: string | null): string {
-  if (files.length === 0) return '';
-  if (files.length === 1) return files[0];
-  const candidates = files.filter((f) => f !== lastPlayed);
+/** Pick a random free track, avoiding lastId if possible. */
+function pickRandomTrack(mode: AudioMode, lastId: string | null): Track {
+  const free = getFreeTracks(mode);
+  if (free.length === 0) return TRACKS[mode][0]; // fallback
+  if (free.length === 1) return free[0];
+  const candidates = free.filter((t) => t.id !== lastId);
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
@@ -80,32 +99,44 @@ export default function TimerScreen({
 
   // ── Audio mode state (persisted) ──
   const [audioMode, setAudioMode] = useState<AudioMode>(loadAudioMode);
-  const lastPlayedRef = useRef<string | null>(null);
-  const [audioSrc, setAudioSrc] = useState(() =>
-    pickRandom(AUDIO_FILES[loadAudioMode()], null),
+  const [currentTrack, setCurrentTrack] = useState<Track>(() =>
+    pickRandomTrack(loadAudioMode(), null),
   );
+  const [premiumToast, setPremiumToast] = useState(false);
 
   // Ref to track current mode inside the onTrackEnd callback
   const audioModeRef = useRef<AudioMode>(audioMode);
   audioModeRef.current = audioMode;
+  const lastTrackIdRef = useRef<string | null>(currentTrack.id);
 
-  /** Pick next track from current mode, avoiding consecutive repeat. */
+  /** Pick next free track from current mode, avoiding consecutive repeat. */
   const advanceTrack = useCallback(() => {
     const mode = audioModeRef.current;
-    const file = pickRandom(AUDIO_FILES[mode], lastPlayedRef.current);
-    lastPlayedRef.current = file;
-    setAudioSrc(file);
+    const next = pickRandomTrack(mode, lastTrackIdRef.current);
+    lastTrackIdRef.current = next.id;
+    setCurrentTrack(next);
   }, []);
 
   const { isPlaying, isMuted, loadState, togglePlay, toggleMute, stop: stopAudio } =
-    useAudio(audioSrc, { onTrackEnd: advanceTrack });
+    useAudio(currentTrack.src, { onTrackEnd: advanceTrack });
 
   const handleAudioModeChange = (mode: AudioMode) => {
     setAudioMode(mode);
     saveAudioMode(mode);
-    const file = pickRandom(AUDIO_FILES[mode], lastPlayedRef.current);
-    lastPlayedRef.current = file;
-    setAudioSrc(file);
+    const next = pickRandomTrack(mode, lastTrackIdRef.current);
+    lastTrackIdRef.current = next.id;
+    setCurrentTrack(next);
+  };
+
+  /** Play a specific free track by id. */
+  const handleTrackSelect = (track: Track) => {
+    if (track.premium) {
+      setPremiumToast(true);
+      setTimeout(() => setPremiumToast(false), 2000);
+      return;
+    }
+    lastTrackIdRef.current = track.id;
+    setCurrentTrack(track);
   };
 
   /** Manual skip — user taps "next" */
@@ -295,6 +326,29 @@ export default function TimerScreen({
           </div>
           {loadState === 'error' && (
             <p className="audio-error">{t.timer_audio_error}</p>
+          )}
+
+          {/* ── Mini playlist ── */}
+          <div className="playlist-panel">
+            {TRACKS[audioMode].map((track) => (
+              <button
+                key={track.id}
+                className={`playlist-track${
+                  track.id === currentTrack.id ? ' playlist-track--active' : ''
+                }${track.premium ? ' playlist-track--locked' : ''}`}
+                onClick={() => handleTrackSelect(track)}
+              >
+                <span className="playlist-track-name">{track.name}</span>
+                {track.premium && <span className="playlist-lock">🔒 Premium</span>}
+                {!track.premium && track.id === currentTrack.id && isPlaying && (
+                  <span className="playlist-playing">♫</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {premiumToast && (
+            <p className="premium-toast">Available in Premium</p>
           )}
         </div>
 

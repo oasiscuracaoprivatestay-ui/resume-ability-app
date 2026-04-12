@@ -175,6 +175,105 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Mini playlist ── */
+
+.playlist-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  max-width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.playlist-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.6rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.playlist-track:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.playlist-track--active {
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.playlist-track--locked {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.playlist-track--locked:hover {
+  background: transparent;
+}
+
+.playlist-track-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-lock {
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.playlist-playing {
+  font-size: 0.55rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  animation: pulse-note 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-note {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ── Premium toast ── */
+
+.premium-toast {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.04em;
+  animation: toast-pop 2s ease forwards;
+}
+
+@keyframes toast-pop {
+  0% { opacity: 0; transform: translateY(4px); }
+  15% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ── Actions ── */
 
 .timer-actions {
