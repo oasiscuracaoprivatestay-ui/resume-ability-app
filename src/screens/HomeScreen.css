@@ -43,12 +43,12 @@
 }
 
 .home-question {
-  font-size: 2.2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.15;
   letter-spacing: -0.02em;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .accent-text {
@@ -56,10 +56,10 @@
 }
 
 .home-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   line-height: 1.6;
-  max-width: 240px;
+  max-width: 260px;
   margin: 0 auto;
 }
 
@@ -68,9 +68,9 @@
 .home-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .home-btn-slip {
@@ -80,11 +80,11 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 1.5rem 1.5rem;
+  padding: 1.75rem 1.5rem;
   background: linear-gradient(135deg, var(--accent-alt), var(--accent));
   color: var(--bg);
   font-family: var(--font);
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   border: none;
   border-radius: var(--radius-xl);
@@ -113,11 +113,11 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1.15rem 1.5rem;
   background: var(--surface);
   color: var(--text-secondary);
   font-family: var(--font);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
@@ -150,7 +150,7 @@
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;

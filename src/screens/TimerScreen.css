@@ -11,13 +11,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
 /* ── Block indicator (loop mode) ── */
 
 .timer-block-indicator {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--accent);
   text-transform: uppercase;
@@ -47,7 +47,7 @@
 /* ── Block transition toast ── */
 
 .timer-block-toast {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -64,7 +64,7 @@
 /* ── Message — improved contrast ── */
 
 .timer-message {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -72,7 +72,7 @@
 }
 
 .timer-loop-done {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--accent);
   font-weight: 600;
   letter-spacing: 0.04em;

@@ -171,7 +171,7 @@ body {
 /* ── Shared section labels ── */
 
 .section-label {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--accent);
   text-transform: uppercase;
@@ -179,7 +179,7 @@ body {
 }
 
 .section-heading {
-  font-size: 1.75rem;
+  font-size: 2.05rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
@@ -201,11 +201,11 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1.15rem 1.75rem;
   border: none;
   border-radius: var(--radius-md);
   font-family: var(--font);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -227,8 +227,8 @@ body {
 }
 
 .btn-large {
-  padding: 1.1rem 1.5rem;
-  font-size: 1rem;
+  padding: 1.3rem 1.75rem;
+  font-size: 1.1rem;
   border-radius: var(--radius-lg);
 }
 
@@ -270,10 +270,10 @@ body {
   border: none;
   color: var(--text-dim);
   font-family: var(--font);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.85rem;
   transition: color 0.25s;
   letter-spacing: 0.01em;
 }
