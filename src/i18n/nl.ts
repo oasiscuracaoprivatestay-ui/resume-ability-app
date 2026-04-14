@@ -10,6 +10,7 @@ export const nl: Translations = {
   home_in_control: 'Ik heb controle',
   home_dashboard: 'Dashboard',
   home_history: 'Geschiedenis',
+  home_daily_audio: 'Dagelijkse Audio',
 
   ctx_label: 'Snelle check',
   ctx_question: 'Waar is het',
@@ -119,6 +120,19 @@ export const nl: Translations = {
   hist_refresh: 'Vernieuwen',
   hist_total_slips: 'Totaal misstappen',
   hist_most_common: 'Meest voorkomend',
+
+  // ── Daily Audio ──
+  daily_label: 'Preventieve ondersteuning',
+  daily_heading: 'Dagelijkse Audio',
+  daily_morning: 'Ochtend',
+  daily_morning_desc: 'Begin gefocust',
+  daily_midday: 'Middag',
+  daily_midday_desc: 'Blijf op koers',
+  daily_evening: 'Avond',
+  daily_evening_desc: 'Eindig bewust',
+  daily_play: 'Afspelen',
+  daily_pause: 'Pauze',
+  daily_error: 'Audio kon niet worden geladen',
 
   loop_2_label: '2 blokken',
   loop_2_detail: '30 min',

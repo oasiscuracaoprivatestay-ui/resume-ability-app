@@ -17,6 +17,7 @@ export interface Translations {
   home_in_control: string;
   home_dashboard: string;
   home_history: string;
+  home_daily_audio: string;
 
   // ── Context ──
   ctx_label: string;
@@ -129,6 +130,19 @@ export interface Translations {
   hist_refresh: string;
   hist_total_slips: string;
   hist_most_common: string;
+
+  // ── Daily Audio ──
+  daily_label: string;
+  daily_heading: string;
+  daily_morning: string;
+  daily_morning_desc: string;
+  daily_midday: string;
+  daily_midday_desc: string;
+  daily_evening: string;
+  daily_evening_desc: string;
+  daily_play: string;
+  daily_pause: string;
+  daily_error: string;
 
   // ── Loop presets ──
   loop_2_label: string;

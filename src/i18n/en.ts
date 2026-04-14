@@ -11,6 +11,7 @@ export const en: Translations = {
   home_in_control: "I'm in control",
   home_dashboard: 'Dashboard',
   home_history: 'History',
+  home_daily_audio: 'Daily Audio',
 
   // ── Context ──
   ctx_label: 'Quick Check',
@@ -129,6 +130,19 @@ export const en: Translations = {
   hist_refresh: 'Refresh',
   hist_total_slips: 'Total slips',
   hist_most_common: 'Most common',
+
+  // ── Daily Audio ──
+  daily_label: 'Preventive Support',
+  daily_heading: 'Daily Audio',
+  daily_morning: 'Morning',
+  daily_morning_desc: 'Start focused',
+  daily_midday: 'Midday',
+  daily_midday_desc: 'Stay on track',
+  daily_evening: 'Evening',
+  daily_evening_desc: 'Finish aware',
+  daily_play: 'Play',
+  daily_pause: 'Pause',
+  daily_error: 'Audio could not be loaded',
 
   // ── Loop presets ──
   loop_2_label: '2 blocks',

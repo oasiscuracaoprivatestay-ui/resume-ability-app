@@ -11,6 +11,7 @@ import HistoryScreen from './screens/HistoryScreen';
 import ControlScreen from './screens/ControlScreen';
 import HelpOptionsScreen from './screens/HelpOptionsScreen';
 import LearnScreen from './screens/LearnScreen';
+import DailyAudioScreen from './screens/DailyAudioScreen';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -194,6 +195,9 @@ export default function App() {
 
     case 'history':
       return <HistoryScreen onNavigate={navigate} />;
+
+    case 'daily-audio':
+      return <DailyAudioScreen onNavigate={navigate} />;
 
     default:
       return <HomeScreen onNavigate={navigate} />;

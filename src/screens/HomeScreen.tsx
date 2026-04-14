@@ -67,6 +67,14 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         </button>
         <span className="nav-dot">·</span>
         <button
+          id="nav-daily-audio"
+          className="nav-link"
+          onClick={() => onNavigate('daily-audio')}
+        >
+          {t.home_daily_audio}
+        </button>
+        <span className="nav-dot">·</span>
+        <button
           id="nav-history"
           className="nav-link"
           onClick={() => onNavigate('history')}

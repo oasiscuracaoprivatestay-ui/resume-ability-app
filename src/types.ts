@@ -9,7 +9,8 @@ export type Screen =
   | 'control'
   | 'learn'
   | 'dashboard'
-  | 'history';
+  | 'history'
+  | 'daily-audio';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';

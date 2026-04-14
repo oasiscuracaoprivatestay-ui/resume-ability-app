@@ -10,6 +10,7 @@ export const es: Translations = {
   home_in_control: 'Tengo el control',
   home_dashboard: 'Panel',
   home_history: 'Historial',
+  home_daily_audio: 'Audio Diario',
 
   ctx_label: 'Comprobación rápida',
   ctx_question: '¿Dónde',
@@ -119,6 +120,19 @@ export const es: Translations = {
   hist_refresh: 'Actualizar',
   hist_total_slips: 'Total deslices',
   hist_most_common: 'Más común',
+
+  // ── Daily Audio ──
+  daily_label: 'Apoyo preventivo',
+  daily_heading: 'Audio Diario',
+  daily_morning: 'Mañana',
+  daily_morning_desc: 'Empieza enfocado',
+  daily_midday: 'Mediodía',
+  daily_midday_desc: 'Mantén el rumbo',
+  daily_evening: 'Noche',
+  daily_evening_desc: 'Termina consciente',
+  daily_play: 'Reproducir',
+  daily_pause: 'Pausa',
+  daily_error: 'No se pudo cargar el audio',
 
   loop_2_label: '2 bloques',
   loop_2_detail: '30 min',

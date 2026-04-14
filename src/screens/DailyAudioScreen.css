@@ -1,0 +1,121 @@
+.daily-screen {
+  min-height: 100dvh;
+  padding: 1rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.daily-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 2rem;
+}
+
+.daily-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* ── Slot cards ── */
+
+.daily-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.daily-slot {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.4rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.daily-slot:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.daily-slot:active {
+  transform: translateY(0);
+}
+
+.daily-slot--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 24px var(--accent-glow), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Icon ── */
+
+.daily-slot-icon {
+  font-size: 1.65rem;
+  width: 2.5rem;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ── Text ── */
+
+.daily-slot-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-slot-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.daily-slot-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Play/pause action ── */
+
+.daily-slot-action {
+  font-size: 1.1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 2rem;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.daily-slot--active .daily-slot-action {
+  animation: action-pulse 2s ease-in-out infinite;
+}
+
+@keyframes action-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ── Error ── */
+
+.daily-error {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
