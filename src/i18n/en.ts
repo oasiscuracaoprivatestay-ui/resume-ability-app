@@ -2,6 +2,7 @@ import type { Translations } from './types';
 
 export const en: Translations = {
   // ── Home ──
+  home_brand_title: 'Super Diet-Ability',
   home_brand: 'Resume Ability',
   home_question: 'Are you in',
   home_question_accent: 'control?',

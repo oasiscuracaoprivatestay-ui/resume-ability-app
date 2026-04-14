@@ -8,6 +8,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 
 export interface Translations {
   // ── Home ──
+  home_brand_title: string;
   home_brand: string;
   home_question: string;
   home_question_accent: string;

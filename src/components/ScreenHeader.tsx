@@ -1,3 +1,4 @@
+import { useTranslation } from '../i18n';
 
 interface ScreenHeaderProps {
   onBack: () => void;
@@ -5,6 +6,8 @@ interface ScreenHeaderProps {
 }
 
 export default function ScreenHeader({ onBack, onHome }: ScreenHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <header className="screen-header">
       <button
@@ -14,7 +17,14 @@ export default function ScreenHeader({ onBack, onHome }: ScreenHeaderProps) {
       >
         ←
       </button>
-      <span className="screen-brand">Resume Ability</span>
+      <button
+        className="screen-brand-btn"
+        onClick={onHome}
+        aria-label="Go home"
+      >
+        <span className="screen-brand-title">{t.home_brand_title}</span>
+        <span className="screen-brand-sub">{t.home_brand}</span>
+      </button>
       <button
         className="header-btn"
         onClick={onHome}

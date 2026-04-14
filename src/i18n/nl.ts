@@ -1,6 +1,7 @@
 import type { Translations } from './types';
 
 export const nl: Translations = {
+  home_brand_title: 'Super Diet-Ability',
   home_brand: 'Resume Ability',
   home_question: 'Heb je de',
   home_question_accent: 'controle?',

@@ -13,16 +13,16 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   return (
     <div className="screen home-screen">
       <header className="home-top-bar">
-        <span className="home-brand">{t.home_brand}</span>
+        <button
+          className="home-brand-btn"
+          onClick={() => onNavigate('home')}
+          aria-label="Home"
+        >
+          <span className="home-brand-title">{t.home_brand_title}</span>
+          <span className="home-brand-sub">{t.home_brand}</span>
+        </button>
         <div className="home-top-right">
           <LanguageSelector />
-          <button
-            className="header-btn"
-            onClick={() => onNavigate('home')}
-            aria-label="Home"
-          >
-            ⌂
-          </button>
         </div>
       </header>
 
