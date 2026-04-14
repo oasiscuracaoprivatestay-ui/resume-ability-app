@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Screen } from '../types';
 import { useAudio } from '../hooks/useAudio';
 import { useTranslation } from '../i18n';
+import { localizeAudioPath } from '../utils/audioPath';
 import type { Translations } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DailyAudioScreen.css';
@@ -49,12 +50,14 @@ interface DailyAudioScreenProps {
 }
 
 export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
   const [activeSlot, setActiveSlot] = useState<DailySlot | null>(null);
 
-  const activeSrc = activeSlot
+  // Resolve language-specific audio path
+  const baseSrc = activeSlot
     ? SLOTS.find((s) => s.id === activeSlot)!.src
     : '';
+  const activeSrc = localizeAudioPath(baseSrc, lang);
 
   const handleTrackEnd = useCallback(() => {
     setActiveSlot(null);
