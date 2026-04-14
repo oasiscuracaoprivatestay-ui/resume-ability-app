@@ -143,6 +143,8 @@ export interface Translations {
   daily_evening_desc: string;
   daily_play: string;
   daily_pause: string;
+  daily_next: string;
+  daily_random: string;
   daily_error: string;
 
   // ── Premium ──

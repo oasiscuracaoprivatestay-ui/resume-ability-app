@@ -133,6 +133,8 @@ export const es: Translations = {
   daily_evening_desc: 'Termina consciente',
   daily_play: 'Reproducir',
   daily_pause: 'Pausa',
+  daily_next: 'Siguiente',
+  daily_random: 'Aleatorio',
   daily_error: 'No se pudo cargar el audio',
 
   // ── Premium ──

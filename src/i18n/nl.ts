@@ -133,6 +133,8 @@ export const nl: Translations = {
   daily_evening_desc: 'Eindig bewust',
   daily_play: 'Afspelen',
   daily_pause: 'Pauze',
+  daily_next: 'Volgende',
+  daily_random: 'Willekeurig',
   daily_error: 'Audio kon niet worden geladen',
 
   // ── Premium ──

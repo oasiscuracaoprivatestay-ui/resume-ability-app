@@ -143,6 +143,8 @@ export const en: Translations = {
   daily_evening_desc: 'Finish aware',
   daily_play: 'Play',
   daily_pause: 'Pause',
+  daily_next: 'Next',
+  daily_random: 'Random',
   daily_error: 'Audio could not be loaded',
 
   // ── Premium ──
