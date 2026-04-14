@@ -11,6 +11,7 @@ export const es: Translations = {
   home_dashboard: 'Panel',
   home_history: 'Historial',
   home_daily_audio: 'Audio Diario',
+  home_motivation: 'Necesito motivación',
 
   ctx_label: 'Comprobación rápida',
   ctx_question: '¿Dónde',

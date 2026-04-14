@@ -12,6 +12,7 @@ export const en: Translations = {
   home_dashboard: 'Dashboard',
   home_history: 'History',
   home_daily_audio: 'Daily Audio',
+  home_motivation: 'I need motivation',
 
   // ── Context ──
   ctx_label: 'Quick Check',

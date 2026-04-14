@@ -134,6 +134,39 @@
   transform: translateY(0);
 }
 
+.home-btn-motivation {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.home-btn-motivation:hover {
+  background: rgba(45, 212, 191, 0.08);
+  box-shadow:
+    0 0 24px var(--accent-glow-strong),
+    0 0 48px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.home-btn-motivation:active {
+  transform: translateY(0);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
 .home-btn-control {
   display: flex;
   flex-direction: row;

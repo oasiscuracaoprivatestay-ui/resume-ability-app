@@ -11,6 +11,7 @@ export const nl: Translations = {
   home_dashboard: 'Dashboard',
   home_history: 'Geschiedenis',
   home_daily_audio: 'Dagelijkse Audio',
+  home_motivation: 'Ik heb motivatie nodig',
 
   ctx_label: 'Snelle check',
   ctx_question: 'Waar is het',

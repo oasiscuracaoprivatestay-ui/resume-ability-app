@@ -18,6 +18,7 @@ export interface Translations {
   home_dashboard: string;
   home_history: string;
   home_daily_audio: string;
+  home_motivation: string;
 
   // ── Context ──
   ctx_label: string;

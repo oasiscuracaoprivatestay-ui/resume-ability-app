@@ -47,6 +47,14 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             <span>{t.home_slipped}</span>
           </button>
           <button
+            id="btn-motivation"
+            className="home-btn-motivation"
+            onClick={() => onNavigate('daily-audio')}
+          >
+            <span className="home-btn-icon">♫</span>
+            <span>{t.home_motivation}</span>
+          </button>
+          <button
             id="btn-in-control"
             className="home-btn-control"
             onClick={() => onNavigate('control')}
