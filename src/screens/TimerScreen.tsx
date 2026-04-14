@@ -353,10 +353,6 @@ export default function TimerScreen({
               </button>
             ))}
           </div>
-
-          {premiumToast && (
-            <p className="premium-toast">Available in Premium</p>
-          )}
         </div>
 
         <div className="timer-actions">
