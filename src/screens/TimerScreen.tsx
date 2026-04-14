@@ -104,7 +104,6 @@ export default function TimerScreen({
   const [currentTrack, setCurrentTrack] = useState<Track>(() =>
     pickRandomTrack(loadAudioMode(), null),
   );
-  const [premiumToast, setPremiumToast] = useState(false);
 
   // Ref to track current mode inside the onTrackEnd callback
   const audioModeRef = useRef<AudioMode>(audioMode);
