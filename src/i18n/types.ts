@@ -144,6 +144,23 @@ export interface Translations {
   daily_pause: string;
   daily_error: string;
 
+  // ── Premium ──
+  prem_title: string;
+  prem_subtitle: string;
+  prem_feat_audio: string;
+  prem_feat_audio_desc: string;
+  prem_feat_sessions: string;
+  prem_feat_sessions_desc: string;
+  prem_feat_daily: string;
+  prem_feat_daily_desc: string;
+  prem_feat_ai: string;
+  prem_feat_ai_desc: string;
+  prem_feat_book: string;
+  prem_feat_book_desc: string;
+  prem_upgrade: string;
+  prem_free: string;
+  prem_coming_soon: string;
+
   // ── Loop presets ──
   loop_2_label: string;
   loop_2_detail: string;

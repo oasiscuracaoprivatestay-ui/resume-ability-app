@@ -144,6 +144,23 @@ export const en: Translations = {
   daily_pause: 'Pause',
   daily_error: 'Audio could not be loaded',
 
+  // ── Premium ──
+  prem_title: 'Unlock Full Access',
+  prem_subtitle: 'Go beyond recovery. Stay in control all day.',
+  prem_feat_audio: 'Full audio library',
+  prem_feat_audio_desc: 'Access all motivational tracks and playlists',
+  prem_feat_sessions: 'More guided sessions',
+  prem_feat_sessions_desc: 'Deeper, longer audio for stronger focus',
+  prem_feat_daily: 'Preventive audio expansion',
+  prem_feat_daily_desc: 'More Morning / Midday / Evening content',
+  prem_feat_ai: 'Future AI support',
+  prem_feat_ai_desc: 'Talk through urges and get guidance',
+  prem_feat_book: 'Audiobook access',
+  prem_feat_book_desc: 'Listen to the full method anytime',
+  prem_upgrade: 'Upgrade to Premium',
+  prem_free: 'Continue with Free Version',
+  prem_coming_soon: 'Coming soon',
+
   // ── Loop presets ──
   loop_2_label: '2 blocks',
   loop_2_detail: '30 min',

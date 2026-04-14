@@ -139,8 +139,8 @@ export default function TimerScreen({
   /** Play a specific free track by id. */
   const handleTrackSelect = (track: Track) => {
     if (track.premium) {
-      setPremiumToast(true);
-      setTimeout(() => setPremiumToast(false), 2000);
+      stopAudio();
+      onNavigate('premium');
       return;
     }
     lastTrackIdRef.current = track.id;

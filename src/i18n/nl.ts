@@ -134,6 +134,23 @@ export const nl: Translations = {
   daily_pause: 'Pauze',
   daily_error: 'Audio kon niet worden geladen',
 
+  // ── Premium ──
+  prem_title: 'Ontgrendel volledige toegang',
+  prem_subtitle: 'Ga verder dan herstel. Houd de hele dag controle.',
+  prem_feat_audio: 'Volledige audiobibliotheek',
+  prem_feat_audio_desc: 'Toegang tot alle motiverende tracks en playlists',
+  prem_feat_sessions: 'Meer begeleide sessies',
+  prem_feat_sessions_desc: 'Diepere, langere audio voor sterkere focus',
+  prem_feat_daily: 'Uitbreiding preventieve audio',
+  prem_feat_daily_desc: 'Meer Ochtend / Middag / Avond content',
+  prem_feat_ai: 'Toekomstige AI-ondersteuning',
+  prem_feat_ai_desc: 'Praat over impulsen en ontvang begeleiding',
+  prem_feat_book: 'Toegang tot audioboek',
+  prem_feat_book_desc: 'Luister altijd naar de volledige methode',
+  prem_upgrade: 'Upgrade naar Premium',
+  prem_free: 'Doorgaan met gratis versie',
+  prem_coming_soon: 'Binnenkort beschikbaar',
+
   loop_2_label: '2 blokken',
   loop_2_detail: '30 min',
   loop_4_label: '4 blokken',

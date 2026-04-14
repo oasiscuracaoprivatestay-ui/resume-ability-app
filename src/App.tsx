@@ -12,6 +12,7 @@ import ControlScreen from './screens/ControlScreen';
 import HelpOptionsScreen from './screens/HelpOptionsScreen';
 import LearnScreen from './screens/LearnScreen';
 import DailyAudioScreen from './screens/DailyAudioScreen';
+import PremiumScreen from './screens/PremiumScreen';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -198,6 +199,9 @@ export default function App() {
 
     case 'daily-audio':
       return <DailyAudioScreen onNavigate={navigate} />;
+
+    case 'premium':
+      return <PremiumScreen onNavigate={navigate} />;
 
     default:
       return <HomeScreen onNavigate={navigate} />;

@@ -134,6 +134,23 @@ export const es: Translations = {
   daily_pause: 'Pausa',
   daily_error: 'No se pudo cargar el audio',
 
+  // ── Premium ──
+  prem_title: 'Desbloquea el acceso completo',
+  prem_subtitle: 'Ve más allá de la recuperación. Mantén el control todo el día.',
+  prem_feat_audio: 'Biblioteca de audio completa',
+  prem_feat_audio_desc: 'Accede a todas las pistas motivacionales',
+  prem_feat_sessions: 'Más sesiones guiadas',
+  prem_feat_sessions_desc: 'Audio más profundo para mayor enfoque',
+  prem_feat_daily: 'Expansión de audio preventivo',
+  prem_feat_daily_desc: 'Más contenido de Mañana / Mediodía / Noche',
+  prem_feat_ai: 'Soporte IA futuro',
+  prem_feat_ai_desc: 'Habla sobre impulsos y recibe orientación',
+  prem_feat_book: 'Acceso al audiolibro',
+  prem_feat_book_desc: 'Escucha el método completo en cualquier momento',
+  prem_upgrade: 'Actualizar a Premium',
+  prem_free: 'Continuar con la versión gratuita',
+  prem_coming_soon: 'Próximamente',
+
   loop_2_label: '2 bloques',
   loop_2_detail: '30 min',
   loop_4_label: '4 bloques',
