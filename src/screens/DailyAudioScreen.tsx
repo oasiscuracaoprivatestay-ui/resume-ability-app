@@ -7,7 +7,7 @@ import type { Translations } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DailyAudioScreen.css';
 
-// ── Audio slots ──
+// ── Category pools ──
 
 type DailySlot = 'morning' | 'midday' | 'evening';
 
@@ -16,7 +16,7 @@ interface SlotConfig {
   icon: string;
   titleKey: keyof Translations;
   descKey: keyof Translations;
-  src: string;
+  tracks: string[];            // pool of base audio paths
 }
 
 const SLOTS: SlotConfig[] = [
@@ -25,36 +25,57 @@ const SLOTS: SlotConfig[] = [
     icon: '🌅',
     titleKey: 'daily_morning',
     descKey: 'daily_morning_desc',
-    src: '/audio/morning-1.mp3',
+    tracks: [
+      '/audio/morning-1.mp3',
+      '/audio/morning-2.mp3',
+      '/audio/morning-3.mp3',
+    ],
   },
   {
     id: 'midday',
     icon: '☀️',
     titleKey: 'daily_midday',
     descKey: 'daily_midday_desc',
-    src: '/audio/midday-1.mp3',
+    tracks: [
+      '/audio/midday-1.mp3',
+      '/audio/midday-2.mp3',
+      '/audio/midday-3.mp3',
+    ],
   },
   {
     id: 'evening',
     icon: '🌙',
     titleKey: 'daily_evening',
     descKey: 'daily_evening_desc',
-    src: '/audio/evening-1.mp3',
+    tracks: [
+      '/audio/evening-1.mp3',
+      '/audio/evening-2.mp3',
+      '/audio/evening-3.mp3',
+    ],
   },
 ];
 
-const SLOT_IDS: DailySlot[] = SLOTS.map((s) => s.id);
+// ── Track selection helpers ──
 
-/** Pick the next slot in order, wrapping around. */
-function nextSlot(current: DailySlot): DailySlot {
-  const idx = SLOT_IDS.indexOf(current);
-  return SLOT_IDS[(idx + 1) % SLOT_IDS.length];
+function getSlot(id: DailySlot): SlotConfig {
+  return SLOTS.find((s) => s.id === id)!;
 }
 
-/** Pick a random slot, avoiding the current one. */
-function randomSlot(current: DailySlot | null): DailySlot {
-  const pool = current ? SLOT_IDS.filter((id) => id !== current) : SLOT_IDS;
-  return pool[Math.floor(Math.random() * pool.length)];
+/** Pick random track from a category, avoiding lastSrc if possible. */
+function pickTrack(slot: DailySlot, lastSrc: string | null): string {
+  const pool = getSlot(slot).tracks;
+  if (pool.length === 1) return pool[0];
+  const filtered = lastSrc ? pool.filter((t) => t !== lastSrc) : pool;
+  const source = filtered.length > 0 ? filtered : pool;
+  return source[Math.floor(Math.random() * source.length)];
+}
+
+/** Pick the next track in the category (sequential, wrapping). */
+function nextTrackInSlot(slot: DailySlot, currentSrc: string | null): string {
+  const pool = getSlot(slot).tracks;
+  if (!currentSrc || pool.length <= 1) return pool[0];
+  const idx = pool.indexOf(currentSrc);
+  return pool[(idx + 1) % pool.length];
 }
 
 // ── Component ──
@@ -66,26 +87,44 @@ interface DailyAudioScreenProps {
 export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) {
   const { lang, t } = useTranslation();
   const [activeSlot, setActiveSlot] = useState<DailySlot | null>(null);
-  const lastSlotRef = useRef<DailySlot | null>(null);
+  const [activeSrcBase, setActiveSrcBase] = useState('');
+  const lastSrcRef = useRef<string | null>(null);
+  const activeSlotRef = useRef<DailySlot | null>(null);
+
+  // Keep ref in sync for use inside callbacks
+  activeSlotRef.current = activeSlot;
 
   // Resolve language-specific audio path
-  const baseSrc = activeSlot
-    ? SLOTS.find((s) => s.id === activeSlot)!.src
-    : '';
-  const activeSrc = localizeAudioPath(baseSrc, lang);
+  const activeSrc = localizeAudioPath(activeSrcBase, lang);
 
+  /** When a track ends, auto-advance to next track in same category. */
   const handleTrackEnd = useCallback(() => {
-    // Auto-advance to next slot when track ends
-    if (lastSlotRef.current) {
-      const next = nextSlot(lastSlotRef.current);
-      lastSlotRef.current = next;
-      setActiveSlot(next);
-    }
+    const slot = activeSlotRef.current;
+    if (!slot) return;
+    const next = nextTrackInSlot(slot, lastSrcRef.current);
+    lastSrcRef.current = next;
+    setActiveSrcBase(next);
   }, []);
 
   const { isPlaying, loadState, togglePlay, stop } = useAudio(activeSrc, {
     onTrackEnd: handleTrackEnd,
   });
+
+  // ── Helpers to start a category ──
+
+  const startSlot = (slot: DailySlot, mode: 'pick' | 'next' | 'random' = 'pick') => {
+    let src: string;
+    if (mode === 'next') {
+      src = nextTrackInSlot(slot, lastSrcRef.current);
+    } else if (mode === 'random') {
+      src = pickTrack(slot, lastSrcRef.current);
+    } else {
+      src = pickTrack(slot, null); // fresh pick when switching categories
+    }
+    lastSrcRef.current = src;
+    setActiveSlot(slot);
+    setActiveSrcBase(src);
+  };
 
   // ── Handlers ──
 
@@ -94,29 +133,28 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
       togglePlay();
     } else {
       stop();
-      lastSlotRef.current = slot;
-      setActiveSlot(slot);
+      startSlot(slot, 'pick');
     }
   };
 
+  /** Next: advance to next track within same category. */
   const handleNext = () => {
     if (!activeSlot) {
-      // Nothing playing → start first
-      lastSlotRef.current = SLOT_IDS[0];
-      setActiveSlot(SLOT_IDS[0]);
+      startSlot('morning', 'pick');
       return;
     }
     stop();
-    const next = nextSlot(activeSlot);
-    lastSlotRef.current = next;
-    setActiveSlot(next);
+    startSlot(activeSlot, 'next');
   };
 
+  /** Random: pick a random track within same category. */
   const handleRandom = () => {
+    if (!activeSlot) {
+      startSlot('morning', 'random');
+      return;
+    }
     stop();
-    const picked = randomSlot(activeSlot);
-    lastSlotRef.current = picked;
-    setActiveSlot(picked);
+    startSlot(activeSlot, 'random');
   };
 
   const handleNavigate = useCallback(
@@ -129,7 +167,7 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
 
   // ── Active slot label for control bar ──
   const activeLabel = activeSlot
-    ? (t[SLOTS.find((s) => s.id === activeSlot)!.titleKey] as string)
+    ? (t[getSlot(activeSlot).titleKey] as string)
     : '';
 
   return (
