@@ -4,7 +4,7 @@ import './FloatingTimerButton.css';
 
 // Screens where the floating button should NOT appear
 // (timer is already running, or the button would be redundant/conflicting)
-const HIDDEN_ON: Screen[] = ['timer', 'mode', 'context', 'help'];
+const HIDDEN_ON: Screen[] = ['timer', 'mode', 'context', 'help', 'daily-audio'];
 
 interface FloatingTimerButtonProps {
   currentScreen: Screen;

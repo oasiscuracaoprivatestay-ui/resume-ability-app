@@ -121,6 +121,47 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Start Timer CTA ── */
+
+.daily-start-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1.4rem 1.5rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, var(--accent-alt), var(--accent));
+  color: var(--bg);
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 4px 20px var(--accent-glow-strong),
+    0 0 48px var(--accent-glow);
+}
+
+.daily-start-timer:hover {
+  box-shadow:
+    0 6px 28px var(--accent-glow-strong),
+    0 0 64px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.daily-start-timer:active {
+  transform: translateY(0);
+}
+
+.daily-start-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
 /* ══════════════════════════════════════════════
    Bottom Control Bar
    ══════════════════════════════════════════════ */
