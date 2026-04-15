@@ -5,7 +5,7 @@ import type { Translations } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './PremiumScreen.css';
 
-const PROGRAM_URL = 'https://your-website-link.com';
+import { PROGRAM_URL } from '../config';
 
 // ── Feature list ──
 

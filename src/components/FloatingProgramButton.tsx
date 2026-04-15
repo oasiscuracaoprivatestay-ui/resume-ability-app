@@ -1,6 +1,5 @@
+import { PROGRAM_URL } from '../config';
 import './FloatingProgramButton.css';
-
-const PROGRAM_URL = 'https://your-website-link.com';
 
 export default function FloatingProgramButton() {
   const handleClick = () => {
