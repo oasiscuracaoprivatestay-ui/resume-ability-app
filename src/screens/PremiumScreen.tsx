@@ -48,7 +48,11 @@ export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
         <div className="premium-hero">
           <div className="premium-badge">✦</div>
           <h2 className="premium-title">{t.prem_title}</h2>
-          <p className="premium-subtitle">{t.prem_subtitle}</p>
+          <div className="premium-subtitle">
+            {t.prem_subtitle.split('\n').map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
         </div>
 
         {/* ── Features ── */}
@@ -90,6 +94,7 @@ export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
           >
             {t.prem_free}
           </button>
+          <p className="premium-redirect">{t.prem_redirect}</p>
         </div>
       </div>
     </div>

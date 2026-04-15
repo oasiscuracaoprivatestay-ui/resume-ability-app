@@ -173,6 +173,8 @@ export interface Translations {
   prem_upgrade: string;
   prem_free: string;
   prem_coming_soon: string;
+  prem_redirect: string;
+  prog_btn_label: string;
 
   // ── Loop presets ──
   loop_2_label: string;

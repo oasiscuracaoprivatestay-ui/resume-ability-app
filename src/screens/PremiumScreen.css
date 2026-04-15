@@ -127,6 +127,14 @@
   padding-top: 0.5rem;
 }
 
+.premium-redirect {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
 /* ── Value statement ── */
 
 .premium-value {
