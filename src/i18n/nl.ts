@@ -12,6 +12,7 @@ export const nl: Translations = {
   home_history: 'Geschiedenis',
   home_daily_audio: 'Dagelijkse Audio',
   home_motivation: 'Ik heb motivatie nodig',
+  global_start_timer: 'Start timer',
 
   ctx_label: 'Snelle check',
   ctx_question: 'Waar is het',
@@ -57,7 +58,7 @@ export const nl: Translations = {
   timer_all_blocks: 'Alle blokken voltooid',
   timer_recovered: 'Ik heb de controle terug',
   timer_extend: '+15 min',
-  timer_relapsed: 'Ik at opnieuw',
+  timer_relapsed: 'Ik ben opnieuw afgeweken',
   timer_block_of: 'Blok {x} van {y}',
   timer_block_started: 'Blok {x} gestart',
   timer_motivational: 'Motiverend',

@@ -13,6 +13,7 @@ import HelpOptionsScreen from './screens/HelpOptionsScreen';
 import LearnScreen from './screens/LearnScreen';
 import DailyAudioScreen from './screens/DailyAudioScreen';
 import PremiumScreen from './screens/PremiumScreen';
+import FloatingTimerButton from './components/FloatingTimerButton';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -133,28 +134,33 @@ export default function App() {
   );
 
   // ── Render current screen ──
+  let content: React.ReactNode;
+
   switch (screen) {
     case 'home':
-      return <HomeScreen onNavigate={navigate} />;
+      content = <HomeScreen onNavigate={navigate} />;
+      break;
 
     case 'context':
-      return (
+      content = (
         <ContextScreen
           onSelect={handleContextSelect}
           onNavigate={navigate}
         />
       );
+      break;
 
     case 'mode':
-      return (
+      content = (
         <ModeScreen
           onSelect={handleModeSelect}
           onNavigate={navigate}
         />
       );
+      break;
 
     case 'timer':
-      return session ? (
+      content = session ? (
         <TimerScreen
           session={session}
           onComplete={handleTimerComplete}
@@ -165,9 +171,10 @@ export default function App() {
       ) : (
         <HomeScreen onNavigate={navigate} />
       );
+      break;
 
     case 'result':
-      return lastRecovery ? (
+      content = lastRecovery ? (
         <ResultScreen
           recoverySeconds={lastRecovery.seconds}
           status={lastRecovery.status}
@@ -176,34 +183,49 @@ export default function App() {
       ) : (
         <HomeScreen onNavigate={navigate} />
       );
+      break;
 
     case 'help':
-      return <HelpOptionsScreen onNavigate={navigate} />;
+      content = <HelpOptionsScreen onNavigate={navigate} />;
+      break;
 
     case 'learn':
-      return (
+      content = (
         <LearnScreen
           context={pendingContext}
           onNavigate={navigate}
         />
       );
+      break;
 
     case 'control':
-      return <ControlScreen onNavigate={navigate} />;
+      content = <ControlScreen onNavigate={navigate} />;
+      break;
 
     case 'dashboard':
-      return <DashboardScreen onNavigate={navigate} />;
+      content = <DashboardScreen onNavigate={navigate} />;
+      break;
 
     case 'history':
-      return <HistoryScreen onNavigate={navigate} />;
+      content = <HistoryScreen onNavigate={navigate} />;
+      break;
 
     case 'daily-audio':
-      return <DailyAudioScreen onNavigate={navigate} />;
+      content = <DailyAudioScreen onNavigate={navigate} />;
+      break;
 
     case 'premium':
-      return <PremiumScreen onNavigate={navigate} />;
+      content = <PremiumScreen onNavigate={navigate} />;
+      break;
 
     default:
-      return <HomeScreen onNavigate={navigate} />;
+      content = <HomeScreen onNavigate={navigate} />;
   }
+
+  return (
+    <>
+      {content}
+      <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
+    </>
+  );
 }

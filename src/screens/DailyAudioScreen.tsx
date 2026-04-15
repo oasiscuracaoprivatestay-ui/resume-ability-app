@@ -193,7 +193,7 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
         )}
         <div className="daily-controls-row">
           <button
-            className="daily-ctrl-btn"
+            className="daily-ctrl-btn daily-ctrl-btn--random"
             onClick={handleRandom}
             aria-label={t.daily_random}
           >
@@ -212,7 +212,7 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
           </button>
 
           <button
-            className="daily-ctrl-btn"
+            className="daily-ctrl-btn daily-ctrl-btn--next"
             onClick={handleNext}
             aria-label={t.daily_next}
           >

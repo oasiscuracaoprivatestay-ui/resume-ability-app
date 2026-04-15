@@ -13,6 +13,7 @@ export const en: Translations = {
   home_history: 'History',
   home_daily_audio: 'Daily Audio',
   home_motivation: 'I need motivation',
+  global_start_timer: 'Start Timer',
 
   // ── Context ──
   ctx_label: 'Quick Check',
@@ -62,7 +63,7 @@ export const en: Translations = {
   timer_all_blocks: 'All blocks completed',
   timer_recovered: "I'm back in control",
   timer_extend: '+15 min',
-  timer_relapsed: 'I ate again',
+  timer_relapsed: 'I slipped again',
   timer_block_of: 'Block {x} of {y}',
   timer_block_started: 'Block {x} started',
   timer_motivational: 'Motivational',

@@ -12,6 +12,7 @@ export const es: Translations = {
   home_history: 'Historial',
   home_daily_audio: 'Audio Diario',
   home_motivation: 'Necesito motivación',
+  global_start_timer: 'Iniciar temporizador',
 
   ctx_label: 'Comprobación rápida',
   ctx_question: '¿Dónde',
@@ -57,7 +58,7 @@ export const es: Translations = {
   timer_all_blocks: 'Todos los bloques completados',
   timer_recovered: 'Recuperé el control',
   timer_extend: '+15 min',
-  timer_relapsed: 'Comí de nuevo',
+  timer_relapsed: 'Volví a fallar',
   timer_block_of: 'Bloque {x} de {y}',
   timer_block_started: 'Bloque {x} iniciado',
   timer_motivational: 'Motivacional',

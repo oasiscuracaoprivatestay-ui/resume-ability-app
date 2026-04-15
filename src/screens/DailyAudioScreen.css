@@ -195,6 +195,42 @@
   text-transform: uppercase;
 }
 
+/* ── Next: larger, more prominent ── */
+
+.daily-ctrl-btn--next {
+  padding: 1rem 1.3rem;
+  min-width: 84px;
+  border-color: var(--accent);
+}
+
+.daily-ctrl-btn--next .daily-ctrl-icon {
+  font-size: 1.75rem;
+}
+
+.daily-ctrl-btn--next .daily-ctrl-text {
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+
+.daily-ctrl-btn--next:hover {
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+/* ── Random: smaller, subtle ── */
+
+.daily-ctrl-btn--random {
+  padding: 0.7rem 0.9rem;
+  min-width: 60px;
+}
+
+.daily-ctrl-btn--random .daily-ctrl-icon {
+  font-size: 1.2rem;
+}
+
+.daily-ctrl-btn--random .daily-ctrl-text {
+  font-size: 0.55rem;
+}
+
 /* ── Large centered play button ── */
 
 .daily-ctrl-btn--play {
