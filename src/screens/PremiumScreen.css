@@ -127,24 +127,28 @@
   padding-top: 0.5rem;
 }
 
-/* ── Toast ── */
+/* ── Value statement ── */
 
-.premium-toast-msg {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgba(45, 212, 191, 0.08);
-  border: 1px solid rgba(45, 212, 191, 0.15);
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.04em;
+.premium-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.25rem 1.4rem;
+  background: rgba(45, 212, 191, 0.05);
+  border: 1px solid rgba(45, 212, 191, 0.12);
+  border-radius: var(--radius-md);
   text-align: center;
-  animation: toast-pop 2.5s ease forwards;
 }
 
-@keyframes toast-pop {
-  0% { opacity: 0; transform: translateY(4px); }
-  15% { opacity: 1; transform: translateY(0); }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+.premium-value-line {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+.premium-value-line:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.92rem;
 }

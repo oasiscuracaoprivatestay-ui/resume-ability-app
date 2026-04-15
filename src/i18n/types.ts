@@ -169,6 +169,7 @@ export interface Translations {
   prem_feat_ai_desc: string;
   prem_feat_book: string;
   prem_feat_book_desc: string;
+  prem_value: string;
   prem_upgrade: string;
   prem_free: string;
   prem_coming_soon: string;

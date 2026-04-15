@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import type { Translations } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './PremiumScreen.css';
+
+const PROGRAM_URL = 'https://your-website-link.com';
 
 // ── Feature list ──
 
@@ -14,11 +16,11 @@ interface Feature {
 }
 
 const FEATURES: Feature[] = [
-  { icon: '🎧', titleKey: 'prem_feat_audio', descKey: 'prem_feat_audio_desc' },
+  { icon: '🎧', titleKey: 'prem_feat_audio',    descKey: 'prem_feat_audio_desc' },
   { icon: '🧘', titleKey: 'prem_feat_sessions', descKey: 'prem_feat_sessions_desc' },
-  { icon: '☀️', titleKey: 'prem_feat_daily', descKey: 'prem_feat_daily_desc' },
-  { icon: '🤖', titleKey: 'prem_feat_ai', descKey: 'prem_feat_ai_desc' },
-  { icon: '📖', titleKey: 'prem_feat_book', descKey: 'prem_feat_book_desc' },
+  { icon: '☀️', titleKey: 'prem_feat_daily',    descKey: 'prem_feat_daily_desc' },
+  { icon: '🤖', titleKey: 'prem_feat_ai',       descKey: 'prem_feat_ai_desc' },
+  { icon: '📖', titleKey: 'prem_feat_book',     descKey: 'prem_feat_book_desc' },
 ];
 
 // ── Component ──
@@ -29,11 +31,9 @@ interface PremiumScreenProps {
 
 export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
   const { t } = useTranslation();
-  const [showToast, setShowToast] = useState(false);
 
   const handleUpgrade = useCallback(() => {
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    window.open(PROGRAM_URL, '_blank', 'noopener,noreferrer');
   }, []);
 
   return (
@@ -68,6 +68,13 @@ export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
           ))}
         </div>
 
+        {/* ── Value statement ── */}
+        <div className="premium-value">
+          {t.prem_value.split('\n').map((line, i) => (
+            <p key={i} className="premium-value-line">{line}</p>
+          ))}
+        </div>
+
         {/* ── CTA ── */}
         <div className="premium-cta">
           <button
@@ -84,10 +91,6 @@ export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
             {t.prem_free}
           </button>
         </div>
-
-        {showToast && (
-          <p className="premium-toast-msg">{t.prem_coming_soon}</p>
-        )}
       </div>
     </div>
   );
