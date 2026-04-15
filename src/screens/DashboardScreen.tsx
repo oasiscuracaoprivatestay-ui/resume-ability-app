@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Screen, SlipContext } from '../types';
+import type { Screen } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
