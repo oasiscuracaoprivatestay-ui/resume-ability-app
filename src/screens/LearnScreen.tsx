@@ -30,11 +30,16 @@ const CONTEXT_TO_COACHING: Record<SlipContext, CoachingCategory> = {
  * If a file doesn't exist, the hook falls back to SpeechSynthesis.
  */
 const PREMIUM_AUDIO: Record<CoachingCategory, string> = {
-  emotional: '/audio/learn/emotional.mp3',
-  trigger: '/audio/learn/trigger.mp3',
-  habit: '/audio/learn/habit.mp3',
-  not_hungry: '/audio/learn/not-hungry.mp3',
-  loss_of_control: '/audio/learn/control.mp3',
+  emotional:      '/audio/learn/emotional.mp3',
+  people_social:  '/audio/learn/people-social.mp3',
+  environment:    '/audio/learn/environment.mp3',
+  habit:          '/audio/learn/habit.mp3',
+  temptation:     '/audio/learn/temptation.mp3',
+  hunger:         '/audio/learn/hunger.mp3',
+  celebration:    '/audio/learn/celebration.mp3',
+  time_of_day:    '/audio/learn/time-of-day.mp3',
+  delay:          '/audio/learn/delay.mp3',
+  all_or_nothing: '/audio/learn/all-or-nothing.mp3',
 };
 
 // ── Component ──
@@ -48,12 +53,16 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
   const { lang, t } = useTranslation();
 
   const CTX_KEYS: Record<SlipContext, keyof typeof t> = {
-    'late-night': 'ctx_late_night',
-    'stress': 'ctx_stress',
-    'social': 'ctx_social',
-    'boredom': 'ctx_boredom',
-    'habit': 'ctx_habit',
-    'after-meal': 'ctx_after_meal',
+    'stress':         'ctx_stress',
+    'people-social':  'ctx_people_social',
+    'environment':    'ctx_environment',
+    'habit':          'ctx_habit',
+    'temptation':     'ctx_temptation',
+    'hunger':         'ctx_hunger',
+    'celebration':    'ctx_celebration',
+    'time-of-day':    'ctx_time_of_day',
+    'delay':          'ctx_delay',
+    'all-or-nothing': 'ctx_all_or_nothing',
   };
 
   const label = context ? (t[CTX_KEYS[context]] as string) : 'Unknown';
@@ -61,7 +70,7 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
 
   const category: CoachingCategory = context
     ? CONTEXT_TO_COACHING[context]
-    : 'loss_of_control';
+    : 'emotional';
 
   const content = getCoaching(lang, category);
 
