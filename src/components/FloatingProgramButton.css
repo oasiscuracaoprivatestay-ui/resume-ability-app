@@ -1,0 +1,50 @@
+.floating-program-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  background: var(--surface);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem 0.55rem 0.7rem;
+
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 1px 8px rgba(0, 0, 0, 0.35),
+    0 0 10px var(--accent-glow);
+}
+
+.floating-program-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  box-shadow:
+    0 2px 14px rgba(0, 0, 0, 0.45),
+    0 0 18px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.floating-program-btn:active {
+  transform: scale(0.95);
+  box-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.3),
+    0 0 8px var(--accent-glow);
+}
+
+.floating-program-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.floating-program-label {
+  line-height: 1;
+}

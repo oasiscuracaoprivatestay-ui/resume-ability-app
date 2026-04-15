@@ -341,3 +341,16 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
 }
+
+/* ── Floating action buttons stack ── */
+
+.floating-buttons-stack {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.25rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+}

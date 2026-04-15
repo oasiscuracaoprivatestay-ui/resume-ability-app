@@ -14,6 +14,7 @@ import LearnScreen from './screens/LearnScreen';
 import DailyAudioScreen from './screens/DailyAudioScreen';
 import PremiumScreen from './screens/PremiumScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
+import FloatingProgramButton from './components/FloatingProgramButton';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -225,7 +226,10 @@ export default function App() {
   return (
     <>
       {content}
-      <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
+      <div className="floating-buttons-stack">
+        <FloatingProgramButton />
+        <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
+      </div>
     </>
   );
 }
