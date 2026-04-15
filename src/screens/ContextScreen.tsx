@@ -10,21 +10,29 @@ interface ContextScreenProps {
 }
 
 const CONTEXTS: SlipContext[] = [
-  'late-night',
   'stress',
-  'social',
-  'boredom',
+  'people-social',
+  'environment',
   'habit',
-  'after-meal',
+  'temptation',
+  'hunger',
+  'celebration',
+  'time-of-day',
+  'delay',
+  'all-or-nothing',
 ];
 
 const CTX_KEYS: Record<SlipContext, keyof ReturnType<typeof useTranslation>['t']> = {
-  'late-night': 'ctx_late_night',
-  'stress': 'ctx_stress',
-  'social': 'ctx_social',
-  'boredom': 'ctx_boredom',
-  'habit': 'ctx_habit',
-  'after-meal': 'ctx_after_meal',
+  'stress':         'ctx_stress',
+  'people-social':  'ctx_people_social',
+  'environment':    'ctx_environment',
+  'habit':          'ctx_habit',
+  'temptation':     'ctx_temptation',
+  'hunger':         'ctx_hunger',
+  'celebration':    'ctx_celebration',
+  'time-of-day':    'ctx_time_of_day',
+  'delay':          'ctx_delay',
+  'all-or-nothing': 'ctx_all_or_nothing',
 };
 
 export default function ContextScreen({ onSelect, onNavigate }: ContextScreenProps) {

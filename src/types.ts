@@ -18,12 +18,16 @@ export type TimerMode = 'single' | 'loop' | 'extended-fast';
 
 // ── Slip context options ──
 export type SlipContext =
-  | 'late-night'
+  | 'people-social'
+  | 'environment'
+  | 'temptation'
+  | 'celebration'
+  | 'hunger'
+  | 'time-of-day'
   | 'stress'
-  | 'social'
-  | 'boredom'
   | 'habit'
-  | 'after-meal';
+  | 'delay'
+  | 'all-or-nothing';
 
 // ── Slip record status ──
 export type SlipStatus = 'recovered' | 'extended' | 'relapsed';
@@ -67,21 +71,29 @@ export interface WeekEntry {
 
 // ── Helpers ──
 export const SLIP_CONTEXT_LABELS: Record<SlipContext, string> = {
-  'late-night': 'Late night',
-  'stress': 'Stress',
-  'social': 'Social',
-  'boredom': 'Boredom',
-  'habit': 'Habit',
-  'after-meal': 'After meal',
+  'people-social':  'People / Social',
+  'environment':    'Environment',
+  'temptation':     'Temptation',
+  'celebration':    'Celebration',
+  'hunger':         'Hunger',
+  'time-of-day':    'Time of day',
+  'stress':         'Stress',
+  'habit':          'Habit',
+  'delay':          'Waiting / Delay',
+  'all-or-nothing': 'All-or-nothing',
 };
 
 export const SLIP_CONTEXT_ICONS: Record<SlipContext, string> = {
-  'late-night': '🌙',
-  'stress': '😤',
-  'social': '👥',
-  'boredom': '😶',
-  'habit': '🔁',
-  'after-meal': '🍽️',
+  'people-social':  '👥',
+  'environment':    '📍',
+  'temptation':     '🍫',
+  'celebration':    '🎉',
+  'hunger':         '🍽️',
+  'time-of-day':    '🕐',
+  'stress':         '😤',
+  'habit':          '🔁',
+  'delay':          '⏳',
+  'all-or-nothing': '🔥',
 };
 
 export const TIMER_MODE_LABELS: Record<TimerMode, string> = {

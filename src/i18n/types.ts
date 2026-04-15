@@ -31,6 +31,14 @@ export interface Translations {
   ctx_boredom: string;
   ctx_habit: string;
   ctx_after_meal: string;
+  ctx_people_social: string;
+  ctx_environment: string;
+  ctx_temptation: string;
+  ctx_celebration: string;
+  ctx_hunger: string;
+  ctx_time_of_day: string;
+  ctx_delay: string;
+  ctx_all_or_nothing: string;
 
   // ── Help Options ──
   help_label: string;

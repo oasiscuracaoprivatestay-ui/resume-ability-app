@@ -12,12 +12,16 @@ import './LearnScreen.css';
 // ── Mapping: SlipContext → CoachingCategory ──
 
 const CONTEXT_TO_COACHING: Record<SlipContext, CoachingCategory> = {
-  'stress': 'emotional',
-  'social': 'trigger',
-  'habit': 'habit',
-  'boredom': 'not_hungry',
-  'after-meal': 'not_hungry',
-  'late-night': 'loss_of_control',
+  'stress':         'emotional',
+  'people-social':  'people_social',
+  'environment':    'environment',
+  'habit':          'habit',
+  'temptation':     'temptation',
+  'hunger':         'hunger',
+  'celebration':    'celebration',
+  'time-of-day':    'time_of_day',
+  'delay':          'delay',
+  'all-or-nothing': 'all_or_nothing',
 };
 
 /**

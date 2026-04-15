@@ -30,12 +30,16 @@ const RANGE_KEYS: Record<HistoryRange, keyof Translations> = {
 
 function getContextLabel(t: Translations, ctx: SlipContext): string {
   const map: Record<SlipContext, string> = {
-    'late-night': t.ctx_late_night,
-    'stress': t.ctx_stress,
-    'social': t.ctx_social,
-    'boredom': t.ctx_boredom,
-    'habit': t.ctx_habit,
-    'after-meal': t.ctx_after_meal,
+    'stress':         t.ctx_stress,
+    'people-social':  t.ctx_people_social,
+    'environment':    t.ctx_environment,
+    'habit':          t.ctx_habit,
+    'temptation':     t.ctx_temptation,
+    'hunger':         t.ctx_hunger,
+    'celebration':    t.ctx_celebration,
+    'time-of-day':    t.ctx_time_of_day,
+    'delay':          t.ctx_delay,
+    'all-or-nothing': t.ctx_all_or_nothing,
   };
   return map[ctx];
 }

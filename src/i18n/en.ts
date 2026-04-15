@@ -25,6 +25,14 @@ export const en: Translations = {
   ctx_boredom: 'Boredom',
   ctx_habit: 'Habit',
   ctx_after_meal: 'After meal',
+  ctx_people_social: 'People / Social',
+  ctx_environment: 'Environment',
+  ctx_temptation: 'Temptation',
+  ctx_celebration: 'Celebration',
+  ctx_hunger: 'Hunger',
+  ctx_time_of_day: 'Time of day',
+  ctx_delay: 'Waiting / Delay',
+  ctx_all_or_nothing: 'All-or-nothing',
 
   // ── Help Options ──
   help_label: 'Recovery Path',
