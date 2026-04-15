@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import type { Screen, SlipContext } from '../types';
-import { SLIP_CONTEXT_ICONS } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
 import type { Translations } from '../i18n';
 
-function getContextLabel(t: Translations, ctx: SlipContext): string {
-  const map: Record<SlipContext, string> = {
+function getContextLabel(t: Translations, ctx: string): string {
+  const map: Partial<Record<string, string>> = {
     'stress':         t.ctx_stress,
     'people-social':  t.ctx_people_social,
     'environment':    t.ctx_environment,
@@ -19,8 +18,34 @@ function getContextLabel(t: Translations, ctx: SlipContext): string {
     'time-of-day':    t.ctx_time_of_day,
     'delay':          t.ctx_delay,
     'all-or-nothing': t.ctx_all_or_nothing,
+    // legacy keys from before the 10-category refactor
+    'late-night':     t.ctx_late_night,
+    'social':         t.ctx_social,
+    'boredom':        t.ctx_boredom,
+    'after-meal':     t.ctx_after_meal,
   };
-  return map[ctx];
+  return map[ctx] ?? '—';
+}
+
+function getContextIcon(ctx: string): string {
+  const icons: Partial<Record<string, string>> = {
+    'stress':         '😤',
+    'people-social':  '👥',
+    'environment':    '📍',
+    'habit':          '🔁',
+    'temptation':     '🍫',
+    'hunger':         '🍽️',
+    'celebration':    '🎉',
+    'time-of-day':    '🕐',
+    'delay':          '⏳',
+    'all-or-nothing': '🔥',
+    // legacy
+    'late-night':     '🌙',
+    'social':         '👥',
+    'boredom':        '😶',
+    'after-meal':     '🍽️',
+  };
+  return icons[ctx] ?? '❓';
 }
 
 interface DashboardScreenProps {
@@ -60,7 +85,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
             <div className="dash-card-row">
               <span className="dash-card-value">
                 {data.mostFrequentContext
-                  ? `${SLIP_CONTEXT_ICONS[data.mostFrequentContext]} ${getContextLabel(t, data.mostFrequentContext)}`
+                  ? `${getContextIcon(data.mostFrequentContext)} ${getContextLabel(t, data.mostFrequentContext)}`
                   : '—'}
               </span>
               <span className="dash-card-icon">◉</span>

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import type { Screen, SlipContext, SlipStatus } from '../types';
-import { SLIP_CONTEXT_ICONS } from '../types';
 import {
   loadSlips,
   clearSlips,
@@ -28,8 +27,8 @@ const RANGE_KEYS: Record<HistoryRange, keyof Translations> = {
   all: 'hist_range_all',
 };
 
-function getContextLabel(t: Translations, ctx: SlipContext): string {
-  const map: Record<SlipContext, string> = {
+function getContextLabel(t: Translations, ctx: string): string {
+  const map: Partial<Record<string, string>> = {
     'stress':         t.ctx_stress,
     'people-social':  t.ctx_people_social,
     'environment':    t.ctx_environment,
@@ -40,8 +39,34 @@ function getContextLabel(t: Translations, ctx: SlipContext): string {
     'time-of-day':    t.ctx_time_of_day,
     'delay':          t.ctx_delay,
     'all-or-nothing': t.ctx_all_or_nothing,
+    // legacy keys
+    'late-night':     t.ctx_late_night,
+    'social':         t.ctx_social,
+    'boredom':        t.ctx_boredom,
+    'after-meal':     t.ctx_after_meal,
   };
-  return map[ctx];
+  return map[ctx] ?? '—';
+}
+
+function getContextIcon(ctx: string): string {
+  const icons: Partial<Record<string, string>> = {
+    'stress':         '😤',
+    'people-social':  '👥',
+    'environment':    '📍',
+    'habit':          '🔁',
+    'temptation':     '🍫',
+    'hunger':         '🍽️',
+    'celebration':    '🎉',
+    'time-of-day':    '🕐',
+    'delay':          '⏳',
+    'all-or-nothing': '🔥',
+    // legacy
+    'late-night':     '🌙',
+    'social':         '👥',
+    'boredom':        '😶',
+    'after-meal':     '🍽️',
+  };
+  return icons[ctx] ?? '❓';
 }
 
 function getStatusLabel(t: Translations, status: SlipStatus): string {
@@ -179,7 +204,7 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
               <div className="hist-stat-card">
                 <span className="hist-stat-value">
                   {mostCommon
-                    ? `${SLIP_CONTEXT_ICONS[mostCommon]} ${getContextLabel(t, mostCommon)}`
+                    ? `${getContextIcon(mostCommon)} ${getContextLabel(t, mostCommon)}`
                     : '—'}
                 </span>
                 <span className="hist-stat-label">{t.hist_most_common}</span>
@@ -261,7 +286,7 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                   </div>
                   <div className="hist-log-bottom">
                     <span className="hist-log-context">
-                      {SLIP_CONTEXT_ICONS[entry.context]}{' '}
+                      {getContextIcon(entry.context)}{' '}
                       {getContextLabel(t, entry.context)}
                     </span>
                     <span className="hist-log-meta">
