@@ -78,6 +78,10 @@ export const en: Translations = {
   timer_alternative: 'Alternative',
   timer_music: 'Music',
   timer_audio_error: 'Audio could not be loaded',
+  timer_pause: 'Pause',
+  timer_resume: 'Resume',
+  timer_reset: 'Reset',
+  timer_add15: '+15 min',
 
   // ── Result ──
   result_recovered_in: 'You recovered in',

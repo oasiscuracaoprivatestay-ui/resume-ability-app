@@ -73,6 +73,10 @@ export const es: Translations = {
   timer_alternative: 'Alternativo',
   timer_music: 'Música',
   timer_audio_error: 'No se pudo cargar el audio',
+  timer_pause: 'Pausar',
+  timer_resume: 'Reanudar',
+  timer_reset: 'Reiniciar',
+  timer_add15: '+15 min',
 
   result_recovered_in: 'Te recuperaste en',
   result_control_restored: 'Control restaurado',

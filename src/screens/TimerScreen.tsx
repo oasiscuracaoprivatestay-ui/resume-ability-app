@@ -79,6 +79,8 @@ function pickRandomTrack(mode: AudioMode, lastId: string | null): Track {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+const ADD_SECONDS = 15 * 60; // 15 minutes in seconds
+
 // ── Component ──
 
 interface TimerScreenProps {
@@ -158,6 +160,11 @@ export default function TimerScreen({
   const [currentBlock, setCurrentBlock] = useState(1);
   const [blockToast, setBlockToast] = useState<string | null>(null);
 
+  // ── Pause state — tracks whether the user has manually paused ──
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+  isPausedRef.current = isPaused;
+
   // ── Block transition toast (loop mode) ──
   useEffect(() => {
     if (session.mode !== 'loop' || currentBlock <= 1) return;
@@ -170,15 +177,26 @@ export default function TimerScreen({
   const [elapsed, setElapsed] = useState(0);
 
   // ── Reset remaining on manual extension (single mode) ──
+  // Note: we do NOT reset on session.timerDuration changes caused by +15
+  // because +15 is additive. We only respond to session.extensions (onExtend).
+  const prevExtensionsRef = useRef(session.extensions ?? 0);
   useEffect(() => {
     if (session.mode === 'extended-fast') return;
-    setRemaining(session.timerDuration);
-  }, [session.timerDuration, session.extensions, session.mode]);
+    const prev = prevExtensionsRef.current;
+    const curr = session.extensions ?? 0;
+    if (curr !== prev) {
+      // onExtend was called — reset to fresh block
+      prevExtensionsRef.current = curr;
+      setRemaining(session.timerDuration);
+      setIsPaused(false);
+    }
+  }, [session.extensions, session.timerDuration, session.mode]);
 
-  // ── Countdown tick (single + loop) ──
+  // ── Countdown tick (single + loop) — respects pause ──
   useEffect(() => {
     if (session.mode === 'extended-fast') return;
     if (remaining <= 0) return;
+    if (isPaused) return; // ← paused: stop the tick
 
     const interval = setInterval(() => {
       setRemaining((prev) => {
@@ -191,12 +209,13 @@ export default function TimerScreen({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [remaining > 0, session.mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [remaining > 0, isPaused, session.mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Loop auto-restart ──
   useEffect(() => {
     if (session.mode !== 'loop') return;
     if (remaining !== 0) return;
+    if (isPaused) return;
     if (currentBlock >= session.loopBlocks) return; // all blocks done
 
     const timeout = setTimeout(() => {
@@ -205,18 +224,46 @@ export default function TimerScreen({
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [remaining, currentBlock, session.mode, session.loopBlocks, session.timerDuration]);
+  }, [remaining, currentBlock, isPaused, session.mode, session.loopBlocks, session.timerDuration]);
 
-  // ── Count-up tick (extended-fast) ──
+  // ── Count-up tick (extended-fast) — also respects pause ──
   useEffect(() => {
     if (session.mode !== 'extended-fast') return;
+    if (isPaused) return;
 
     const interval = setInterval(() => {
       setElapsed((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [session.mode]);
+  }, [session.mode, isPaused]);
+
+  // ── Timer controls ──
+
+  /** Toggle pause / resume. Does NOT touch audio. */
+  const handleTogglePause = useCallback(() => {
+    setIsPaused((prev) => !prev);
+  }, []);
+
+  /**
+   * +15 min: ADDS 15 minutes to the current remaining time.
+   * Stacks on each press: 10 → 25 → 40 → ...
+   * Also resumes the timer if it was paused.
+   */
+  const handleAdd15 = useCallback(() => {
+    setRemaining((prev) => prev + ADD_SECONDS);
+    setIsPaused(false); // resume if paused
+  }, []);
+
+  /**
+   * Reset: returns to the original session duration (15 min / custom).
+   * Respects current pause state — does not auto-unpause.
+   */
+  const handleReset = useCallback(() => {
+    setRemaining(session.timerDuration);
+    // intentionally does NOT touch isPaused —
+    // if the timer was paused, it stays paused at the fresh duration
+  }, [session.timerDuration]);
 
   // ── Wall-clock elapsed for completion ──
   const handleComplete = useCallback(() => {
@@ -246,18 +293,24 @@ export default function TimerScreen({
     remaining === 0 &&
     currentBlock >= session.loopBlocks;
 
+  // For the ring, use the initial session duration as the cycle reference
+  // so +15 extensions expand the ring gracefully rather than jumping back
+  const ringTotal = session.timerDuration;
+  const ringProgress = isCountUp
+    ? 0
+    : ringTotal > 0
+      ? Math.min(1, 1 - remaining / ringTotal) // clamps at 0 minimum via Math.min if remaining > ringTotal
+      : 0;
+
   const ringProps = isCountUp
     ? { displaySeconds: elapsed, progress: 0, isCountUp: true }
     : {
         displaySeconds: remaining,
-        progress:
-          session.timerDuration > 0
-            ? 1 - remaining / session.timerDuration
-            : 0,
+        progress: remaining > ringTotal ? 0 : ringProgress,
       };
 
   // ── Visibility rules ──
-  const showExtend = session.mode === 'single';
+  const isCountdown = session.mode !== 'extended-fast';
 
   return (
     <div className="screen timer-screen">
@@ -281,6 +334,43 @@ export default function TimerScreen({
         )}
 
         <TimerRing {...ringProps} />
+
+        {/* ── Timer controls: +15 | Pause/Resume | Reset ── */}
+        {isCountdown && (
+          <div className="timer-controls">
+            <button
+              id="btn-add15"
+              className="timer-ctrl-btn timer-ctrl-btn--add"
+              onClick={handleAdd15}
+              aria-label="Add 15 minutes"
+            >
+              {t.timer_add15}
+            </button>
+            <button
+              id="btn-pause"
+              className={`timer-ctrl-btn timer-ctrl-btn--primary${isPaused ? ' timer-ctrl-btn--paused' : ''}`}
+              onClick={handleTogglePause}
+              aria-label={isPaused ? t.timer_resume : t.timer_pause}
+            >
+              {isPaused ? '▶' : '⏸'}
+              <span className="timer-ctrl-label">
+                {isPaused ? t.timer_resume : t.timer_pause}
+              </span>
+            </button>
+            <button
+              id="btn-reset"
+              className="timer-ctrl-btn timer-ctrl-btn--reset"
+              onClick={handleReset}
+              aria-label="Reset timer"
+            >
+              {t.timer_reset}
+            </button>
+          </div>
+        )}
+
+        {isPaused && isCountdown && (
+          <p className="timer-paused-label">— {t.timer_pause.toUpperCase()} —</p>
+        )}
 
         <p className="timer-message">{t.timer_message}</p>
 
@@ -363,7 +453,7 @@ export default function TimerScreen({
           >
             {t.timer_recovered}
           </button>
-          {showExtend && (
+          {session.mode === 'single' && (
             <button
               id="btn-extend"
               className="btn btn-secondary"

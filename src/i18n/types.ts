@@ -84,6 +84,10 @@ export interface Translations {
   timer_alternative: string;
   timer_music: string;
   timer_audio_error: string;
+  timer_pause: string;
+  timer_resume: string;
+  timer_reset: string;
+  timer_add15: string;
 
   // ── Result ──
   result_recovered_in: string;

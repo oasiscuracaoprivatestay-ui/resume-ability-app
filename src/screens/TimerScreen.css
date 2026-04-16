@@ -79,7 +79,126 @@
   animation: fade-in 0.5s ease;
 }
 
+/* ── Timer controls: +15 / Pause / Reset ── */
+
+.timer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.timer-ctrl-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 54px;
+  padding: 0.55rem 0.4rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.timer-ctrl-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.timer-ctrl-btn:active {
+  transform: scale(0.94);
+}
+
+/* +15 button */
+.timer-ctrl-btn--add {
+  border-color: rgba(45, 212, 191, 0.3);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.timer-ctrl-btn--add:hover {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.08);
+  color: var(--accent-hover);
+}
+
+/* Pause / Resume button (primary) */
+.timer-ctrl-btn--primary {
+  flex: 1.35;           /* slightly wider than siblings */
+  min-height: 58px;
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.06);
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.timer-ctrl-btn--primary:hover {
+  background: rgba(45, 212, 191, 0.14);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+/* When paused, pulse the border slightly */
+.timer-ctrl-btn--paused {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+  animation: paused-pulse 2s ease-in-out infinite;
+}
+
+@keyframes paused-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50%       { box-shadow: 0 0 20px var(--accent-glow-strong); }
+}
+
+.timer-ctrl-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+/* Reset button */
+.timer-ctrl-btn--reset {
+  color: var(--text-dim);
+}
+
+.timer-ctrl-btn--reset:hover {
+  color: var(--text-secondary);
+}
+
+/* Paused indicator label */
+.timer-paused-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  opacity: 0.8;
+  animation: paused-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes paused-blink {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
 /* ── Audio section ── */
+
 
 .audio-section {
   display: flex;

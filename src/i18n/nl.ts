@@ -73,6 +73,10 @@ export const nl: Translations = {
   timer_alternative: 'Alternatief',
   timer_music: 'Muziek',
   timer_audio_error: 'Audio kon niet worden geladen',
+  timer_pause: 'Pauzeren',
+  timer_resume: 'Hervatten',
+  timer_reset: 'Herstarten',
+  timer_add15: '+15 min',
 
   result_recovered_in: 'Je herstelde in',
   result_control_restored: 'Controle hersteld',
