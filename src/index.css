@@ -346,7 +346,7 @@ body {
 
 .floating-buttons-stack {
   position: fixed;
-  bottom: 1.75rem;
+  bottom: 5.5rem;   /* clears HomeScreen bottom nav (~3.5rem) + comfortable gap */
   right: 1.25rem;
   z-index: 100;
   display: flex;
