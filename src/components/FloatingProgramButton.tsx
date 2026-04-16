@@ -1,9 +1,19 @@
 import { useTranslation } from '../i18n';
 import { PROGRAM_URL } from '../config';
+import type { Screen } from '../types';
 import './FloatingProgramButton.css';
 
-export default function FloatingProgramButton() {
+// Hide on screens where an inline replacement is rendered instead
+const HIDDEN_ON: Screen[] = ['home'];
+
+interface FloatingProgramButtonProps {
+  currentScreen: Screen;
+}
+
+export default function FloatingProgramButton({ currentScreen }: FloatingProgramButtonProps) {
   const { t } = useTranslation();
+
+  if (HIDDEN_ON.includes(currentScreen)) return null;
 
   const handleClick = () => {
     window.open(PROGRAM_URL, '_blank', 'noopener,noreferrer');

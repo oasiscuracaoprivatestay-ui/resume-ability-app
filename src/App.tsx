@@ -227,7 +227,7 @@ export default function App() {
     <>
       {content}
       <div className="floating-buttons-stack">
-        <FloatingProgramButton />
+        <FloatingProgramButton currentScreen={screen} />
         <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
       </div>
     </>

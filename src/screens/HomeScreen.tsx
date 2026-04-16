@@ -1,5 +1,6 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
+import { PROGRAM_URL } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
 import './HomeScreen.css';
 
@@ -62,6 +63,28 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             <span className="home-btn-icon">✓</span>
             <span>{t.home_in_control}</span>
           </button>
+
+          {/* ── Secondary CTAs — inline, never floating on home ── */}
+          <div className="home-secondary-row">
+            <button
+              id="btn-home-program"
+              className="home-secondary-btn home-secondary-btn--program"
+              onClick={() => window.open(PROGRAM_URL, '_blank', 'noopener,noreferrer')}
+              aria-label={t.prog_btn_label}
+            >
+              <span>🔓</span>
+              <span>{t.prog_btn_label}</span>
+            </button>
+            <button
+              id="btn-home-timer"
+              className="home-secondary-btn home-secondary-btn--timer"
+              onClick={() => onNavigate('context')}
+              aria-label={t.global_start_timer}
+            >
+              <span>⏱</span>
+              <span>{t.global_start_timer}</span>
+            </button>
+          </div>
         </div>
       </div>
 

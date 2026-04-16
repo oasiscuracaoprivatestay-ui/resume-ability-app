@@ -197,7 +197,70 @@
   line-height: 1;
 }
 
+/* ── Secondary CTA row (inline on Home — replaces floating buttons) ── */
+
+.home-secondary-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 340px;
+  flex-wrap: wrap; /* stacks cleanly on very narrow screens */
+}
+
+.home-secondary-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 46px;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* "Get the Full System" — teal accent pill */
+.home-secondary-btn--program {
+  background: rgba(45, 212, 191, 0.06);
+  border: 1.5px solid rgba(45, 212, 191, 0.4);
+  color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.home-secondary-btn--program:hover {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 18px var(--accent-glow-strong);
+  transform: translateY(-1px);
+}
+
+/* "Start Timer" — surface pill */
+.home-secondary-btn--timer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.home-secondary-btn--timer:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.home-secondary-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
 /* ── Bottom nav ── */
+
 
 .home-nav {
   display: flex;
