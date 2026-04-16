@@ -23,24 +23,6 @@ const CONTEXT_TO_COACHING: Record<SlipContext, CoachingCategory> = {
   'all-or-nothing': 'all_or_nothing',
 };
 
-/**
- * Premium narration audio paths (future ElevenLabs integration).
- * Drop pre-generated .mp3 files here to override browser TTS.
- * If a file doesn't exist, the hook falls back to SpeechSynthesis.
- */
-const PREMIUM_AUDIO: Record<CoachingCategory, string> = {
-  emotional:      '/audio/learn/emotional.mp3',
-  people_social:  '/audio/learn/people-social.mp3',
-  environment:    '/audio/learn/environment.mp3',
-  habit:          '/audio/learn/habit.mp3',
-  temptation:     '/audio/learn/temptation.mp3',
-  hunger:         '/audio/learn/hunger.mp3',
-  celebration:    '/audio/learn/celebration.mp3',
-  time_of_day:    '/audio/learn/time-of-day.mp3',
-  delay:          '/audio/learn/delay.mp3',
-  all_or_nothing: '/audio/learn/all-or-nothing.mp3',
-};
-
 // ── Component ──
 
 interface LearnScreenProps {
