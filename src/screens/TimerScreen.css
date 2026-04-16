@@ -79,7 +79,57 @@
   animation: fade-in 0.5s ease;
 }
 
+/* ── Inline program CTA (below ring, above controls) ── */
+
+.timer-program-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  padding: 0.75rem 1.6rem;
+  border-radius: 999px;
+
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  color: var(--accent);
+
+  background: rgba(45, 212, 191, 0.06);
+  border: 1.5px solid rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 14px var(--accent-glow);
+
+  cursor: pointer;
+  transition: all 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  animation: cta-breathe 3.5s ease-in-out infinite;
+}
+
+.timer-program-cta:hover {
+  background: rgba(45, 212, 191, 0.13);
+  border-color: var(--accent);
+  box-shadow: 0 0 22px var(--accent-glow-strong);
+  transform: translateY(-2px);
+}
+
+.timer-program-cta:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.timer-program-cta-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Very subtle breathing glow — draws the eye without being aggressive */
+@keyframes cta-breathe {
+  0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
+  50%       { box-shadow: 0 0 22px var(--accent-glow-strong); }
+}
+
 /* ── Timer controls: +15 / Pause / Reset ── */
+
 
 .timer-controls {
   display: flex;

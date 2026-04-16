@@ -3,6 +3,7 @@ import type { Screen, ActiveSession } from '../types';
 import { useAudio } from '../hooks/useAudio';
 import { useTranslation } from '../i18n';
 import { localizeAudioPath } from '../utils/audioPath';
+import { PROGRAM_URL } from '../config';
 import ScreenHeader from '../components/ScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
@@ -286,6 +287,12 @@ export default function TimerScreen({
     onNavigate(target);
   }, [onNavigate, stopAudio]);
 
+  // ── Program CTA — opens external link after stopping audio ──
+  const handleProgramCTA = useCallback(() => {
+    stopAudio();
+    window.open(PROGRAM_URL, '_blank', 'noopener,noreferrer');
+  }, [stopAudio]);
+
   // ── Compute ring props ──
   const isCountUp = session.mode === 'extended-fast';
   const isLoopDone =
@@ -334,6 +341,17 @@ export default function TimerScreen({
         )}
 
         <TimerRing {...ringProps} />
+
+        {/* ── Program CTA — inline, below ring ── */}
+        <button
+          id="btn-timer-program"
+          className="timer-program-cta"
+          onClick={handleProgramCTA}
+          aria-label={t.prog_btn_label}
+        >
+          <span className="timer-program-cta-icon">🔓</span>
+          {t.prog_btn_label}
+        </button>
 
         {/* ── Timer controls: +15 | Pause/Resume | Reset ── */}
         {isCountdown && (
