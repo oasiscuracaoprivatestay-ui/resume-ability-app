@@ -15,7 +15,12 @@ import { useSpeech } from './useSpeech';
  */
 export type NarrationMode = 'checking' | 'audio' | 'speech';
 
-export function useNarration(audioSrc: string | null, fallbackText: string) {
+export function useNarration(
+  audioSrc: string | null,
+  fallbackText: string,
+  /** BCP-47 locale key ('en' | 'es' | 'nl') — used for TTS voice selection */
+  locale = 'en',
+) {
   const [mode, setMode] = useState<NarrationMode>(
     audioSrc ? 'checking' : 'speech',
   );
@@ -112,9 +117,10 @@ export function useNarration(audioSrc: string | null, fallbackText: string) {
           .catch(() => {});
       }
     } else if (mode === 'speech') {
-      toggleSpeech(fallbackText);
+      // Pass locale so useSpeech can pick the right voice + language
+      toggleSpeech(fallbackText, locale);
     }
-  }, [mode, audioPlaying, fallbackText, toggleSpeech]);
+  }, [mode, audioPlaying, fallbackText, locale, toggleSpeech]);
 
   // ── Unified stop ──
   const stop = useCallback(() => {

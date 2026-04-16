@@ -5,7 +5,6 @@ import { useTranslation } from '../i18n';
 import { useNarration } from '../hooks/useNarration';
 import { getCoaching } from '../data/coaching';
 import type { CoachingCategory } from '../data/coaching';
-import { localizeAudioPath } from '../utils/audioPath';
 import ScreenHeader from '../components/ScreenHeader';
 import './LearnScreen.css';
 
@@ -74,19 +73,45 @@ export default function LearnScreen({ context, onNavigate }: LearnScreenProps) {
 
   const content = getCoaching(lang, category);
 
-  // ── Narration (premium audio or browser TTS fallback) ──
-  const premiumSrc = localizeAudioPath(PREMIUM_AUDIO[category], lang);
+  // ── Narration source ──
+  // premiumSrc is set to null until per-category narration audio is recorded.
+  // Re-enable by replacing null with: localizeAudioPath(PREMIUM_AUDIO[category], lang)
+  // The PREMIUM_AUDIO map above shows the expected file paths for each category.
+  const premiumSrc: string | null = null;
 
-  const narrationText = useMemo(
-    () =>
-      content.sections
-        .map((s) => `${s.title}. ${s.body.replace(/\n/g, ' ')}`)
-        .join('. '),
-    [content],
-  );
+  // ── Narration text — formatted for natural spoken delivery ──
+  //
+  // Design principles:
+  //   • Section titles become soft spoken lead-ins, not headers
+  //   • Commas after transitional phrases give the TTS a natural micro-pause
+  //   • \n within body text becomes "…" — a breath pause mid-thought
+  //   • Sections are separated by "  " (two spaces) which most TTS engines
+  //     treat as a longer inter-sentence pause
+  //   • No colons or dashes — they produce robotic prosody in most voices
+  const narrationText = useMemo(() => {
+    const intro = `${label}.`;
 
-  const { isPlaying: isNarrating, isAvailable: narrationAvailable, toggle: toggleNarration, stop: stopNarration } =
-    useNarration(premiumSrc, narrationText);
+    const spokenSections = content.sections.map((s) => {
+      // Convert the title into a soft lead-in phrase
+      const leadIn = s.title.endsWith('.')
+        ? s.title
+        : `${s.title},`;
+
+      // Replace newlines (mid-body paragraph breaks) with a breath pause
+      const body = s.body.replace(/\n/g, '  ');
+
+      return `${leadIn}  ${body}`;
+    });
+
+    return [intro, ...spokenSections].join('  ');
+  }, [content, label]);
+
+  const {
+    isPlaying: isNarrating,
+    isAvailable: narrationAvailable,
+    toggle: toggleNarration,
+    stop: stopNarration,
+  } = useNarration(premiumSrc, narrationText, lang);
 
   const handleNavigate = useCallback(
     (target: Screen) => {
