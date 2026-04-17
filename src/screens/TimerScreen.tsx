@@ -15,6 +15,8 @@ type AudioMode = 'motivation' | 'alternative' | 'music';
 interface Track {
   id: string;
   name: string;
+  /** Optional subtitle shown below the track name (e.g. "Guided session") */
+  session?: string;
   src: string;
   premium: boolean;
 }
@@ -28,10 +30,14 @@ const TRACKS: Record<AudioMode, Track[]> = {
     { id: 'm2', name: 'Stay on Track',   src: '/audio/motivation-2.mp3', premium: false },
     { id: 'm3', name: 'Calm Return',    src: '/audio/motivation-3.mp3', premium: false },
     { id: 'm4', name: 'Regain Focus',   src: '/audio/motivation-4.mp3', premium: false },
-    // ── Premium: deep audio ──
-    { id: 'd1', name: 'Deep Focus',      src: '/audio/timer-deep-1.mp3', premium: true },
-    { id: 'd2', name: 'Take Control',    src: '/audio/timer-deep-2.mp3', premium: true },
-    { id: 'd3', name: 'Breathing Reset', src: '/audio/timer-deep-3.mp3', premium: true },
+    // ── Premium: short deep tracks ──
+    { id: 'd1', name: 'Deep Focus',          src: '/audio/timer-deep-1.mp3',      premium: true },
+    { id: 'd2', name: 'Take Control',        src: '/audio/timer-deep-2.mp3',      premium: true },
+    { id: 'd3', name: 'Breathing Reset',     src: '/audio/timer-deep-3.mp3',      premium: true },
+    // ── Premium: long guided sessions ──
+    { id: 'l1', name: 'Full Focus Session',  src: '/audio/timer-deep-1-long.mp3', premium: true, session: 'Guided session' },
+    { id: 'l2', name: 'Full Control Session',src: '/audio/timer-deep-2-long.mp3', premium: true, session: 'Guided session' },
+    { id: 'l3', name: 'Full Reset Session',  src: '/audio/timer-deep-3-long.mp3', premium: true, session: 'Guided session' },
   ],
   alternative: [
     { id: 'a1', name: 'Alternative 1', src: '/audio/alternative-1.mp3', premium: false },
@@ -451,12 +457,20 @@ export default function TimerScreen({
             {TRACKS[audioMode].map((track) => (
               <button
                 key={track.id}
-                className={`playlist-track${
-                  track.id === currentTrack.id ? ' playlist-track--active' : ''
-                }${track.premium ? ' playlist-track--locked' : ''}`}
+                className={[
+                  'playlist-track',
+                  track.id === currentTrack.id ? 'playlist-track--active' : '',
+                  track.premium ? 'playlist-track--locked' : '',
+                  track.session ? 'playlist-track--session' : '',
+                ].filter(Boolean).join(' ')}
                 onClick={() => handleTrackSelect(track)}
               >
-                <span className="playlist-track-name">{track.name}</span>
+                <span className="playlist-track-info">
+                  <span className="playlist-track-name">{track.name}</span>
+                  {track.session && (
+                    <span className="playlist-track-sub">{track.session}</span>
+                  )}
+                </span>
                 {track.premium && <span className="playlist-lock">🔒 Premium</span>}
                 {!track.premium && track.id === currentTrack.id && isPlaying && (
                   <span className="playlist-playing">♫</span>
