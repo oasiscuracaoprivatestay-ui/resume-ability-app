@@ -23,12 +23,13 @@ const AUDIO_MODES: AudioMode[] = ['motivation', 'alternative', 'music'];
 
 const TRACKS: Record<AudioMode, Track[]> = {
   motivation: [
-    { id: 'm1', name: 'Motivation 1', src: '/audio/motivation-1.mp3', premium: false },
-    { id: 'm2', name: 'Motivation 2', src: '/audio/motivation-2.mp3', premium: false },
-    { id: 'm3', name: 'Motivation 3', src: '/audio/motivation-3.mp3', premium: false },
-    { id: 'm4', name: 'Motivation 4', src: '/audio/motivation-4.mp3', premium: false },
-    { id: 'm5', name: 'Deep Focus', src: '', premium: true },
-    { id: 'm6', name: 'Inner Strength', src: '', premium: true },
+    // ── Free: quick tracks ──
+    { id: 'm1', name: 'Quick Reset',    src: '/audio/motivation-1.mp3', premium: false },
+    { id: 'm2', name: 'Stay on Track',  src: '/audio/motivation-2.mp3', premium: false },
+    // ── Premium: deep audio ──
+    { id: 'd1', name: 'Deep Focus',     src: '/audio/timer-deep-1.mp3', premium: true },
+    { id: 'd2', name: 'Take Control',   src: '/audio/timer-deep-2.mp3', premium: true },
+    { id: 'd3', name: 'Breathing Reset',src: '/audio/timer-deep-3.mp3', premium: true },
   ],
   alternative: [
     { id: 'a1', name: 'Alternative 1', src: '/audio/alternative-1.mp3', premium: false },
