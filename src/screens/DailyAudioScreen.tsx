@@ -29,6 +29,7 @@ const SLOTS: SlotConfig[] = [
       '/audio/morning-1.mp3',
       '/audio/morning-2.mp3',
       '/audio/morning-3.mp3',
+      '/audio/morning-4.mp3',
     ],
   },
   {
@@ -40,6 +41,7 @@ const SLOTS: SlotConfig[] = [
       '/audio/midday-1.mp3',
       '/audio/midday-2.mp3',
       '/audio/midday-3.mp3',
+      '/audio/midday-4.mp3',
     ],
   },
   {
@@ -51,6 +53,7 @@ const SLOTS: SlotConfig[] = [
       '/audio/evening-1.mp3',
       '/audio/evening-2.mp3',
       '/audio/evening-3.mp3',
+      '/audio/evening-4.mp3',
     ],
   },
 ];
