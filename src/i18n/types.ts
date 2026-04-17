@@ -88,6 +88,13 @@ export interface Translations {
   timer_resume: string;
   timer_reset: string;
   timer_add15: string;
+  // Section headers
+  timer_section_label: string;
+  audio_section_label: string;
+  // Audio button labels
+  audio_btn_play: string;
+  audio_btn_pause: string;
+  audio_btn_next: string;
 
   // ── Result ──
   result_recovered_in: string;

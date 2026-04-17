@@ -364,39 +364,42 @@ export default function TimerScreen({
 
         {/* ── Timer controls: +15 | Pause/Resume | Reset ── */}
         {isCountdown && (
-          <div className="timer-controls">
-            <button
-              id="btn-add15"
-              className="timer-ctrl-btn timer-ctrl-btn--add"
-              onClick={handleAdd15}
-              aria-label="Add 15 minutes"
-            >
-              {t.timer_add15}
-            </button>
-            <button
-              id="btn-pause"
-              className={`timer-ctrl-btn timer-ctrl-btn--primary${isPaused ? ' timer-ctrl-btn--paused' : ''}`}
-              onClick={handleTogglePause}
-              aria-label={isPaused ? t.timer_resume : t.timer_pause}
-            >
-              {isPaused ? '▶' : '⏸'}
-              <span className="timer-ctrl-label">
-                {isPaused ? t.timer_resume : t.timer_pause}
-              </span>
-            </button>
-            <button
-              id="btn-reset"
-              className="timer-ctrl-btn timer-ctrl-btn--reset"
-              onClick={handleReset}
-              aria-label="Reset timer"
-            >
-              {t.timer_reset}
-            </button>
-          </div>
+          <>
+            <p className="ctrl-section-label">{t.timer_section_label}</p>
+            <div className="timer-controls">
+              <button
+                id="btn-add15"
+                className="timer-ctrl-btn timer-ctrl-btn--add"
+                onClick={handleAdd15}
+                aria-label={t.timer_add15}
+              >
+                {t.timer_add15}
+              </button>
+              <button
+                id="btn-pause"
+                className={`timer-ctrl-btn timer-ctrl-btn--primary${isPaused ? ' timer-ctrl-btn--paused' : ''}`}
+                onClick={handleTogglePause}
+                aria-label={isPaused ? t.timer_resume : t.timer_pause}
+              >
+                {isPaused ? '▶' : '⏸'}
+                <span className="timer-ctrl-label">
+                  {isPaused ? t.timer_resume : t.timer_pause}
+                </span>
+              </button>
+              <button
+                id="btn-reset"
+                className="timer-ctrl-btn timer-ctrl-btn--reset"
+                onClick={handleReset}
+                aria-label={t.timer_reset}
+              >
+                {t.timer_reset}
+              </button>
+            </div>
+          </>
         )}
 
         {isPaused && isCountdown && (
-          <p className="timer-paused-label">— {t.timer_pause.toUpperCase()} —</p>
+          <p className="timer-paused-label">— {t.timer_section_label.toUpperCase()} —</p>
         )}
 
         <p className="timer-message">{t.timer_message}</p>
@@ -407,6 +410,8 @@ export default function TimerScreen({
 
         {/* ── Audio mode selector + controls ── */}
         <div className="audio-section">
+          <p className="ctrl-section-label">{t.audio_section_label}</p>
+
           <div className="audio-mode-selector">
             {AUDIO_MODES.map((mode) => (
               <button
@@ -425,18 +430,20 @@ export default function TimerScreen({
               className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
               onClick={togglePlay}
               disabled={loadState !== 'ready'}
-              aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+              aria-label={isPlaying ? t.audio_btn_pause : t.audio_btn_play}
             >
-              {isPlaying ? '⏸' : '▶'}
+              <span className="audio-btn-icon">{isPlaying ? '⏸' : '▶'}</span>
+              <span className="audio-btn-label">{isPlaying ? t.audio_btn_pause : t.audio_btn_play}</span>
             </button>
             <button
               id="btn-audio-next"
               className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
               onClick={handleNextTrack}
               disabled={loadState !== 'ready'}
-              aria-label="Next track"
+              aria-label={t.audio_btn_next}
             >
-              ⏭
+              <span className="audio-btn-icon">⏭</span>
+              <span className="audio-btn-label">{t.audio_btn_next}</span>
             </button>
             <button
               id="btn-audio-mute"
@@ -445,7 +452,7 @@ export default function TimerScreen({
               disabled={loadState !== 'ready'}
               aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
             >
-              {isMuted ? '🔇' : '🔊'}
+              <span className="audio-btn-icon">{isMuted ? '🔇' : '🔊'}</span>
             </button>
           </div>
           {loadState === 'error' && (
