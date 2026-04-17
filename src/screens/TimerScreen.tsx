@@ -26,8 +26,8 @@ const TRACKS: Record<AudioMode, Track[]> = {
     // ── Free: quick tracks ──
     { id: 'm1', name: 'Quick Reset',     src: '/audio/motivation-1.mp3', premium: false },
     { id: 'm2', name: 'Stay on Track',   src: '/audio/motivation-2.mp3', premium: false },
-    { id: 'm3', name: 'Motivation 3',    src: '/audio/motivation-3.mp3', premium: false },
-    { id: 'm4', name: 'Motivation 4',    src: '/audio/motivation-4.mp3', premium: false },
+    { id: 'm3', name: 'Calm Return',    src: '/audio/motivation-3.mp3', premium: false },
+    { id: 'm4', name: 'Regain Focus',   src: '/audio/motivation-4.mp3', premium: false },
     // ── Premium: deep audio ──
     { id: 'd1', name: 'Deep Focus',      src: '/audio/timer-deep-1.mp3', premium: true },
     { id: 'd2', name: 'Take Control',    src: '/audio/timer-deep-2.mp3', premium: true },
