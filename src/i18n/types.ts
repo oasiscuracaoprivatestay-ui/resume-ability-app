@@ -21,6 +21,7 @@ export interface Translations {
   home_motivation: string;
   global_start_timer: string;
   home_exit: string;
+  home_feedback: string;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

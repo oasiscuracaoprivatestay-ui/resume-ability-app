@@ -1,6 +1,6 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import { PROGRAM_URL } from '../config';
+import { PROGRAM_URL, FEEDBACK_EMAIL, FEEDBACK_SUBJECT } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
 import './HomeScreen.css';
 
@@ -141,6 +141,22 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           {t.home_history}
         </button>
       </nav>
+
+      {/* ── Feedback link — bottom of screen, minimal ── */}
+      <button
+        id="btn-feedback"
+        className="home-feedback-btn"
+        onClick={() =>
+          window.open(
+            `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(FEEDBACK_SUBJECT)}`,
+            '_blank',
+          )
+        }
+        aria-label={t.home_feedback}
+      >
+        <span className="home-feedback-icon">✉️</span>
+        <span>{t.home_feedback}</span>
+      </button>
     </div>
   );
 }

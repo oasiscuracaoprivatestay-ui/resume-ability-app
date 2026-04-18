@@ -14,6 +14,7 @@ export const nl: Translations = {
   home_motivation: 'Ik heb motivatie nodig',
   global_start_timer: 'Start timer',
   home_exit: 'Afsluiten',
+  home_feedback: 'Feedback / Suggesties',
   home_timer_learn_link: 'Hoe de timer werkt',
 
   // ── Timer Learn ──

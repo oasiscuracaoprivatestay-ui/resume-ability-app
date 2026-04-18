@@ -14,6 +14,7 @@ export const es: Translations = {
   home_motivation: 'Necesito motivación',
   global_start_timer: 'Iniciar temporizador',
   home_exit: 'Salir',
+  home_feedback: 'Comentarios / Sugerencias',
   home_timer_learn_link: 'Cómo funciona el temporizador',
 
   // ── Timer Learn ──

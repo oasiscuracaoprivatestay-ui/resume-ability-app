@@ -15,6 +15,7 @@ export const en: Translations = {
   home_motivation: 'I need motivation',
   global_start_timer: 'Start Timer',
   home_exit: 'Exit',
+  home_feedback: 'Feedback / Suggestions',
   home_timer_learn_link: 'How the Timer Works',
 
   // ── Timer Learn ──

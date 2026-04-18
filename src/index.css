@@ -21,9 +21,9 @@
 
   /* ── Text hierarchy ── */
   --text-primary:  #eeeef2;
-  --text-secondary:#b0b0c0;
-  --text-muted:    #6e6e82;
-  --text-dim:      #52526a;
+  --text-secondary:#c8c8d8;   /* was #b0b0c0 — lifted for readability */
+  --text-muted:    #8e8ea8;   /* was #6e6e82 — lifted for readability */
+  --text-dim:      #6e6e88;   /* was #52526a — lifted for readability */
 
   /* ── Semantic ── */
   --danger:        #f87171;
