@@ -130,7 +130,6 @@
   gap: 0.5rem;
   width: 100%;
   padding: 1.4rem 1.5rem;
-  margin-top: 0.5rem;
   background: linear-gradient(135deg, var(--accent-alt), var(--accent));
   color: var(--bg);
   font-family: var(--font);
@@ -171,7 +170,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.25rem 1rem 2.5rem;
+  padding: 1.25rem 1rem 1.5rem; /* bottom handled by daily-timer-section */
   background: var(--surface);
   border-top: 1px solid var(--border);
   margin: 0 -1.5rem;  /* bleed to screen edges */
@@ -305,4 +304,28 @@
   font-size: 2rem;
   color: var(--bg);
   line-height: 1;
+}
+/* ── Timer section — sits below audio controls with clear separation ── */
+
+.daily-timer-section {
+  width: 100%;
+  padding: 0.85rem 1.5rem 1.75rem; /* comfortable bottom gap above floating btn */
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* subtle label above the button */
+}
+
+.daily-timer-section::before {
+  content: 'TIMER';
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+  opacity: 0.55;
+  margin-bottom: 0.65rem;
+  align-self: flex-start;
+  padding-left: 0.25rem;
 }

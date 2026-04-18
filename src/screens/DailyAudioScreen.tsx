@@ -225,16 +225,6 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
         {activeSlot && loadState === 'error' && (
           <p className="daily-error">{t.daily_error}</p>
         )}
-
-        {/* ── Start Timer CTA ── */}
-        <button
-          id="daily-start-timer"
-          className="daily-start-timer"
-          onClick={() => handleNavigate('context')}
-        >
-          <span className="daily-start-icon">⏱</span>
-          <span>{t.global_start_timer}</span>
-        </button>
       </div>
 
       {/* ── Bottom control bar ── */}
@@ -269,6 +259,18 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
           >
             <span className="daily-ctrl-icon">⏭</span>
             <span className="daily-ctrl-text">{t.daily_next}</span>
+          </button>
+        </div>
+
+        {/* ── Timer action — separated from audio controls ── */}
+        <div className="daily-timer-section">
+          <button
+            id="daily-start-timer"
+            className="daily-start-timer"
+            onClick={() => handleNavigate('context')}
+          >
+            <span className="daily-start-icon">⏱</span>
+            <span>{t.global_start_timer}</span>
           </button>
         </div>
       </div>
