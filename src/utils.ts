@@ -24,6 +24,16 @@ export function saveSlip(record: SlipRecord): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(slips));
 }
 
+/** Patch an existing slip record by ID (used to enrich with timer outcome). */
+export function updateSlip(id: string, patch: Partial<SlipRecord>): void {
+  const slips = loadSlips();
+  const idx = slips.findIndex((s) => s.id === id);
+  if (idx !== -1) {
+    slips[idx] = { ...slips[idx], ...patch };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(slips));
+  }
+}
+
 export function clearSlips(): void {
   localStorage.removeItem(STORAGE_KEY);
 }

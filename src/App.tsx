@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Screen, SlipContext, TimerMode, ActiveSession, SlipStatus } from './types';
-import { generateId, saveSlip } from './utils';
+import { generateId, saveSlip, updateSlip } from './utils';
 import HomeScreen from './screens/HomeScreen';
 import ContextScreen from './screens/ContextScreen';
 import ModeScreen from './screens/ModeScreen';
@@ -26,6 +26,10 @@ export default function App() {
     seconds: number;
     status: SlipStatus;
   } | null>(null);
+
+  // ID of the slip created when the user picks a context.
+  // Timer completion / relapse will update this same record.
+  const [slipId, setSlipId] = useState<string | null>(null);
 
   // ── Back-button override ──
   // Track current screen in a ref so the popstate handler always has fresh value.
@@ -75,8 +79,23 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Context selected → go to help options ──
+  // ── Context selected → record the slip immediately, then go to help options ──
   const handleContextSelect = useCallback((context: SlipContext) => {
+    const id = generateId();
+
+    // Record the slip the moment the user admits it.
+    // mode / recoveryDuration / status are placeholders — updated when the
+    // timer finishes (see handleTimerComplete / handleRelapse).
+    saveSlip({
+      id,
+      timestamp: Date.now(),
+      context,
+      mode: 'single',        // best-guess placeholder
+      recoveryDuration: 0,   // will be updated
+      status: 'recovered',   // will be updated
+    });
+
+    setSlipId(id);
     setPendingContext(context);
     setScreen('help');
   }, []);
@@ -100,7 +119,7 @@ export default function App() {
     [pendingContext],
   );
 
-  // ── Timer complete → save & show result ──
+  // ── Timer complete → update existing slip record ──
   const handleTimerComplete = useCallback(
     (durationSeconds: number, blocksCompleted?: number) => {
       if (!session) return;
@@ -108,25 +127,26 @@ export default function App() {
       const status: SlipStatus =
         session.extensions > 0 ? 'extended' : 'recovered';
 
-      saveSlip({
-        id: generateId(),
-        timestamp: session.startedAt,
-        context: session.context,
-        mode: session.mode,
-        recoveryDuration: durationSeconds,
-        status,
-        blocksCompleted:
-          session.mode === 'loop' ? blocksCompleted : undefined,
-        blocksTotal:
-          session.mode === 'loop' ? session.loopBlocks : undefined,
-      });
+      if (slipId) {
+        // Enrich the slip that was already saved at context selection.
+        updateSlip(slipId, {
+          mode: session.mode,
+          recoveryDuration: durationSeconds,
+          status,
+          blocksCompleted:
+            session.mode === 'loop' ? blocksCompleted : undefined,
+          blocksTotal:
+            session.mode === 'loop' ? session.loopBlocks : undefined,
+        });
+      }
 
       setLastRecovery({ seconds: durationSeconds, status });
       setSession(null);
       setPendingContext(null);
+      setSlipId(null);
       setScreen('result');
     },
-    [session],
+    [session, slipId],
   );
 
   // ── Extend timer (single mode only) ──
@@ -139,32 +159,32 @@ export default function App() {
     });
   }, [session]);
 
-  // ── Relapse ──
+  // ── Relapse → update existing slip record ──
   const handleRelapse = useCallback(
     (blocksCompleted?: number) => {
       if (!session) return;
 
       const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
 
-      saveSlip({
-        id: generateId(),
-        timestamp: session.startedAt,
-        context: session.context,
-        mode: session.mode,
-        recoveryDuration: elapsed,
-        status: 'relapsed',
-        blocksCompleted:
-          session.mode === 'loop' ? blocksCompleted : undefined,
-        blocksTotal:
-          session.mode === 'loop' ? session.loopBlocks : undefined,
-      });
+      if (slipId) {
+        updateSlip(slipId, {
+          mode: session.mode,
+          recoveryDuration: elapsed,
+          status: 'relapsed',
+          blocksCompleted:
+            session.mode === 'loop' ? blocksCompleted : undefined,
+          blocksTotal:
+            session.mode === 'loop' ? session.loopBlocks : undefined,
+        });
+      }
 
       setLastRecovery({ seconds: elapsed, status: 'relapsed' });
       setSession(null);
       setPendingContext(null);
+      setSlipId(null);
       setScreen('result');
     },
-    [session],
+    [session, slipId],
   );
 
   // ── Render current screen ──
