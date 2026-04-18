@@ -20,6 +20,7 @@ export interface Translations {
   home_daily_audio: string;
   home_motivation: string;
   global_start_timer: string;
+  home_exit: string;
 
   // ── Context ──
   ctx_label: string;

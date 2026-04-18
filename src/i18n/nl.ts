@@ -13,6 +13,7 @@ export const nl: Translations = {
   home_daily_audio: 'Dagelijkse Audio',
   home_motivation: 'Ik heb motivatie nodig',
   global_start_timer: 'Start timer',
+  home_exit: 'Afsluiten',
 
   ctx_label: 'Snelle check',
   ctx_question: 'Waar is het',

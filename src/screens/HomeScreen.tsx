@@ -11,6 +11,16 @@ interface HomeScreenProps {
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { t } = useTranslation();
 
+  // On Home, back button / OS already handles exit via App.tsx popstate.
+  // This gives a visible tap target for the same action.
+  const handleExit = () => {
+    // history.back() fires popstate; since we're on home the handler does
+    // nothing and the browser/Android OS performs the exit.
+    history.back();
+    // Fallback for desktop browsers where back() may do nothing:
+    setTimeout(() => window.close(), 200);
+  };
+
   return (
     <div className="screen home-screen">
       <header className="home-top-bar">
@@ -24,6 +34,15 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         </button>
         <div className="home-top-right">
           <LanguageSelector />
+          <button
+            id="btn-exit-app"
+            className="home-exit-btn"
+            onClick={handleExit}
+            aria-label={t.home_exit}
+          >
+            <span className="home-exit-icon">✕</span>
+            <span className="home-exit-label">{t.home_exit}</span>
+          </button>
         </div>
       </header>
 

@@ -14,6 +14,7 @@ export const en: Translations = {
   home_daily_audio: 'Daily Audio',
   home_motivation: 'I need motivation',
   global_start_timer: 'Start Timer',
+  home_exit: 'Exit',
 
   // ── Context ──
   ctx_label: 'Quick Check',

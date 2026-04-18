@@ -13,6 +13,7 @@ export const es: Translations = {
   home_daily_audio: 'Audio Diario',
   home_motivation: 'Necesito motivación',
   global_start_timer: 'Iniciar temporizador',
+  home_exit: 'Salir',
 
   ctx_label: 'Comprobación rápida',
   ctx_question: '¿Dónde',

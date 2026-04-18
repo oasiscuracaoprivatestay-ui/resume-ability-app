@@ -55,6 +55,44 @@
   gap: 0.5rem;
 }
 
+/* ── Exit button (top-right, next to language selector) ── */
+
+.home-exit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-exit-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
+}
+
+.home-exit-btn:active {
+  transform: scale(0.95);
+}
+
+.home-exit-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.home-exit-label {
+  line-height: 1;
+}
+
 /* ── Question block ── */
 
 .home-content {

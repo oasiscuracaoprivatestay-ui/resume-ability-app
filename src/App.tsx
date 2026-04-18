@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Screen, SlipContext, TimerMode, ActiveSession, SlipStatus } from './types';
 import { generateId, saveSlip } from './utils';
 import HomeScreen from './screens/HomeScreen';
@@ -27,6 +27,10 @@ export default function App() {
     status: SlipStatus;
   } | null>(null);
 
+  // ── Back-button override ──
+  // Track current screen in a ref so the popstate handler always has fresh value.
+  const screenRef = useRef<Screen>('home');
+
   // ── Navigation ──
   const navigate = useCallback((target: Screen) => {
     if (target === 'home') {
@@ -39,7 +43,36 @@ export default function App() {
       setSession(null);
       // keep pendingContext so the user can pick a different mode
     }
+    // Push a history entry whenever navigating away from home so the
+    // popstate handler has something to intercept.
+    if (target !== 'home') {
+      history.pushState({ screen: target }, '');
+    }
+    screenRef.current = target;
     setScreen(target);
+  }, []);
+
+  // Intercept the browser / Android hardware back button.
+  useEffect(() => {
+    // Seed an initial entry so there's always one entry to pop back to.
+    history.pushState({ screen: 'home' }, '');
+
+    const handlePopState = () => {
+      if (screenRef.current !== 'home') {
+        // Navigate to home instead of exiting.
+        screenRef.current = 'home';
+        setScreen('home');
+        setSession(null);
+        setPendingContext(null);
+        // Push a replacement entry so subsequent back presses keep firing.
+        history.pushState({ screen: 'home' }, '');
+      }
+      // If already on home: do nothing — the browser/OS handles exit.
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Context selected → go to help options ──
