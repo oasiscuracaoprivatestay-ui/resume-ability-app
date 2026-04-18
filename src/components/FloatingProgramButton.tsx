@@ -4,7 +4,7 @@ import type { Screen } from '../types';
 import './FloatingProgramButton.css';
 
 // Hide on screens where an inline replacement is rendered instead
-const HIDDEN_ON: Screen[] = ['home'];
+const HIDDEN_ON: Screen[] = ['home', 'timer'];
 
 interface FloatingProgramButtonProps {
   currentScreen: Screen;
