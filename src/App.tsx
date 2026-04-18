@@ -13,6 +13,7 @@ import HelpOptionsScreen from './screens/HelpOptionsScreen';
 import LearnScreen from './screens/LearnScreen';
 import DailyAudioScreen from './screens/DailyAudioScreen';
 import PremiumScreen from './screens/PremiumScreen';
+import TimerLearnScreen from './screens/TimerLearnScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 
@@ -270,6 +271,10 @@ export default function App() {
 
     case 'premium':
       content = <PremiumScreen onNavigate={navigate} />;
+      break;
+
+    case 'timer-learn':
+      content = <TimerLearnScreen onNavigate={navigate} />;
       break;
 
     default:

@@ -75,3 +75,27 @@
   color: var(--text-secondary);
   letter-spacing: 0.01em;
 }
+
+/* ── Timer education ghost link ── */
+
+.ctx-learn-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  align-self: center;
+}
+
+.ctx-learn-link:hover {
+  opacity: 0.85;
+  color: var(--accent);
+}
+

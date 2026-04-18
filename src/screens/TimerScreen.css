@@ -71,6 +71,28 @@
   text-transform: uppercase;
 }
 
+/* Subtle info link below timer message */
+.timer-learn-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  padding: 0.15rem 0;
+  opacity: 0.45;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: -0.5rem; /* tighten up with timer-message */
+}
+
+.timer-learn-link:hover {
+  opacity: 0.75;
+  color: var(--accent);
+}
+
 .timer-loop-done {
   font-size: 0.9rem;
   color: var(--accent);

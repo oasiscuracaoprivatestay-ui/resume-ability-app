@@ -67,6 +67,15 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
             </button>
           ))}
         </div>
+
+        {/* ── Subtle timer education link ── */}
+        <button
+          id="btn-ctx-learn"
+          className="ctx-learn-link"
+          onClick={() => onNavigate('timer-learn')}
+        >
+          {t.ctx_learn_link}
+        </button>
       </div>
     </div>
   );

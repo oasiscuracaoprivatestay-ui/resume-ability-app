@@ -403,6 +403,13 @@ export default function TimerScreen({
         )}
 
         <p className="timer-message">{t.timer_message}</p>
+        <button
+          id="btn-timer-learn-link"
+          className="timer-learn-link"
+          onClick={() => onNavigate('timer-learn')}
+        >
+          {t.home_timer_learn_link} →
+        </button>
 
         {isLoopDone && (
           <p className="timer-loop-done">{t.timer_all_blocks}</p>

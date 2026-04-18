@@ -1,0 +1,109 @@
+.tl-screen {
+  padding: 1rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.tl-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 1.75rem;
+}
+
+/* ── Hero ── */
+
+.tl-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tl-hero-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tl-heading {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  margin: 0;
+  padding: 0;
+  margin-top: 0.2rem;
+}
+
+/* ── Section cards ── */
+
+.tl-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tl-section {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  animation: tl-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes tl-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tl-section-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.tl-section-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.tl-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.tl-section-body {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+/* ── Actions ── */
+
+.tl-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding-top: 0.25rem;
+}

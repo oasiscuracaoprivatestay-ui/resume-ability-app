@@ -15,8 +15,23 @@ export const en: Translations = {
   home_motivation: 'I need motivation',
   global_start_timer: 'Start Timer',
   home_exit: 'Exit',
+  home_timer_learn_link: 'How the Timer Works',
+
+  // ── Timer Learn ──
+  tl_label: 'The 15-Minute Method',
+  tl_heading: 'How the Timer Works',
+  tl_a_title: 'What the Timer Is',
+  tl_a_body: 'The 15-minute timer is a pause tool. When you slip, your brain is in reactive mode — acting fast, without space to think. This timer creates that space. It is not punishment. It is a reset.',
+  tl_b_title: 'Why It Works',
+  tl_b_body: 'The urge to continue a slip is strongest in the first few minutes. When you start the timer, you shift from reacting to waiting. That pause is where recovery begins. You are not fighting the urge. You are outlasting it.',
+  tl_c_title: 'How to Use It',
+  tl_c_body: 'Start one 15-minute block. Wait until it ends. Then reassess honestly. If you feel ready, you are done. If not, add another block. Each block is one small act of control.',
+  tl_d_title: 'What Success Looks Like',
+  tl_d_body: 'Success is not perfection. It is interrupting the pattern. Every time you start the timer, you choose a pause over a reaction. That choice — made once, then again, then again — is how control is rebuilt.',
+  tl_back: 'Got it',
 
   // ── Context ──
+  ctx_learn_link: 'Not sure? See how the timer works →',
   ctx_label: 'Quick Check',
   ctx_question: 'Where did it',
   ctx_question_accent: 'happen?',

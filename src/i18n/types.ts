@@ -21,8 +21,22 @@ export interface Translations {
   home_motivation: string;
   global_start_timer: string;
   home_exit: string;
+  home_timer_learn_link: string;
+  // ── Timer Learn ──
+  tl_label: string;
+  tl_heading: string;
+  tl_a_title: string;
+  tl_a_body: string;
+  tl_b_title: string;
+  tl_b_body: string;
+  tl_c_title: string;
+  tl_c_body: string;
+  tl_d_title: string;
+  tl_d_body: string;
+  tl_back: string;
 
   // ── Context ──
+  ctx_learn_link: string;
   ctx_label: string;
   ctx_question: string;
   ctx_question_accent: string;

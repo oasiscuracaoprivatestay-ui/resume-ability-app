@@ -104,6 +104,15 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               <span>{t.global_start_timer}</span>
             </button>
           </div>
+
+          {/* ── Subtle link to timer education ── */}
+          <button
+            id="btn-timer-learn"
+            className="home-learn-link"
+            onClick={() => onNavigate('timer-learn')}
+          >
+            {t.home_timer_learn_link} →
+          </button>
         </div>
       </div>
 

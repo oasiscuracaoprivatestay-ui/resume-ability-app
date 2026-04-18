@@ -297,6 +297,28 @@
   transform: translateY(0) scale(0.96);
 }
 
+/* ── "How the Timer Works" ghost link ── */
+
+.home-learn-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-learn-link:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
 /* ── Bottom nav ── */
 
 

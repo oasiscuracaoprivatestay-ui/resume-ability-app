@@ -14,7 +14,22 @@ export const nl: Translations = {
   home_motivation: 'Ik heb motivatie nodig',
   global_start_timer: 'Start timer',
   home_exit: 'Afsluiten',
+  home_timer_learn_link: 'Hoe de timer werkt',
 
+  // ── Timer Learn ──
+  tl_label: 'De 15-minutenmethode',
+  tl_heading: 'Hoe de timer werkt',
+  tl_a_title: 'Wat de timer is',
+  tl_a_body: 'De timer van 15 minuten is een pauzetool. Wanneer je uitglijdt, staat je brein in reactiemodus — snel handelen, zonder ruimte om na te denken. Deze timer creërt die ruimte. Het is geen straf. Het is een herstart.',
+  tl_b_title: 'Waarom het werkt',
+  tl_b_body: 'De drang om door te gaan met een uitglijder is het sterkst in de eerste minuten. Wanneer je de timer start, ga je van reageren naar wachten. Die pauze is waar herstel begint. Je vecht niet tegen de drang. Je houdt het langer vol dan zij.',
+  tl_c_title: 'Hoe gebruik je het',
+  tl_c_body: 'Start één blok van 15 minuten. Wacht tot het afloopt. Evalueer daarna eerlijk. Als je klaar voelt, ben je klaar. Als niet, voeg een blok toe. Elk blok is één kleine daad van controle.',
+  tl_d_title: 'Hoe succes eruitziet',
+  tl_d_body: 'Succes is geen perfectie. Het is het patroon onderbreken. Elke keer dat je de timer start, kies je een pauze boven een reactie. Die keuze — één keer gemaakt, dan nog een keer, dan nog een keer — is hoe controle wordt hersteld.',
+  tl_back: 'Begrepen',
+
+  ctx_learn_link: 'Niet zeker? Zie hoe de timer werkt →',
   ctx_label: 'Snelle check',
   ctx_question: 'Waar is het',
   ctx_question_accent: 'gebeurd?',

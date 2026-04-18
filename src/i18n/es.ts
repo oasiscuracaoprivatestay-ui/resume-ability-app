@@ -14,7 +14,22 @@ export const es: Translations = {
   home_motivation: 'Necesito motivación',
   global_start_timer: 'Iniciar temporizador',
   home_exit: 'Salir',
+  home_timer_learn_link: 'Cómo funciona el temporizador',
 
+  // ── Timer Learn ──
+  tl_label: 'El Método de 15 Minutos',
+  tl_heading: 'Cómo funciona el temporizador',
+  tl_a_title: 'Qué es el temporizador',
+  tl_a_body: 'El temporizador de 15 minutos es una herramienta de pausa. Cuando tienes un desliz, tu cerebro está en modo reactivo: actuar rápido, sin espacio para pensar. Este temporizador crea ese espacio. No es un castigo. Es un reinicio.',
+  tl_b_title: 'Por qué funciona',
+  tl_b_body: 'El impulso de continuar con el desliz es más fuerte en los primeros minutos. Cuando inicias el temporizador, pasas de reaccionar a esperar. Esa pausa es donde comienza la recuperación. No estás luchando contra el impulso. Estás aguantando más que él.',
+  tl_c_title: 'Cómo usarlo',
+  tl_c_body: 'Inicia un bloque de 15 minutos. Espera hasta que termine. Luego evalúa honestamente. Si te sientes listo, has terminado. Si no, añade otro bloque. Cada bloque es un pequeño acto de control.',
+  tl_d_title: 'Cómo se ve el éxito',
+  tl_d_body: 'El éxito no es la perfección. Es interrumpir el patrón. Cada vez que inicias el temporizador, eliges una pausa en lugar de una reacción. Esa elección — hecha una vez, luego otra, luego otra — es cómo se reconstruye el control.',
+  tl_back: 'Entendido',
+
+  ctx_learn_link: '¿No estás seguro? Ver cómo funciona el temporizador →',
   ctx_label: 'Comprobación rápida',
   ctx_question: '¿Dónde',
   ctx_question_accent: 'ocurrió?',
