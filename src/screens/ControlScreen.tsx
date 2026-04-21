@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { recordBalance } from '../utils/balanceStorage';
@@ -16,13 +16,12 @@ export default function ControlScreen({ onNavigate }: ControlScreenProps) {
     [t],
   );
 
-  // Record the balance check-in the moment the user arrives here.
-  // Runs once per visit; silently persists to localStorage.
-  useEffect(() => {
+  // Balance is recorded only when the user explicitly confirms by tapping Continue.
+  const handleContinue = () => {
     recordBalance();
     if (navigator.vibrate) navigator.vibrate(40);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    onNavigate('home');
+  };
 
   return (
     <div className="screen control-screen">
@@ -34,7 +33,7 @@ export default function ControlScreen({ onNavigate }: ControlScreenProps) {
       <button
         id="btn-control-home"
         className="btn btn-primary btn-large"
-        onClick={() => onNavigate('home')}
+        onClick={handleContinue}
       >
         {t.control_continue}
       </button>

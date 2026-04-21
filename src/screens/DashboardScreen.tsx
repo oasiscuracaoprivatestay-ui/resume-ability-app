@@ -109,39 +109,37 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
         </div>
 
         {/* ── Balance Score section ── */}
-        <div className="dashboard-heading" style={{ marginTop: '1.5rem' }}>
-          <span className="section-label">Today's Balance</span>
-        </div>
-        <div className="dashboard-cards">
-          <div className="dash-card">
-            <span className="dash-card-label">Balance Kept</span>
-            <div className="dash-card-row">
-              <span className="dash-card-value dash-card-value--success">
-                {String(balance.balanceCount).padStart(2, '0')}
-              </span>
-              <span className="dash-card-icon">✓</span>
+        <div className="balance-section">
+          <div className="balance-section-header">
+            <span className="section-label">Today's Balance</span>
+            <span className="balance-tagline">Balance Kept − Slips = Daily Score</span>
+          </div>
+
+          {/* Hero card: Balance Kept */}
+          <div className="balance-hero-card">
+            <div className="balance-hero-inner">
+              <div className="balance-hero-left">
+                <span className="balance-hero-label">Balance Kept</span>
+                <span className="balance-hero-value">{balance.balanceCount}</span>
+                <span className="balance-hero-sub">check-ins today</span>
+              </div>
+              <div className="balance-hero-icon">✓</div>
             </div>
           </div>
 
-          <div className="dash-card">
-            <span className="dash-card-label">Slips Today</span>
-            <div className="dash-card-row">
-              <span className="dash-card-value dash-card-value--danger-dim">
-                {String(balance.slipCount).padStart(2, '0')}
-              </span>
-              <span className="dash-card-icon">⧘</span>
+          {/* Sub-row: Slips + Score */}
+          <div className="balance-sub-grid">
+            <div className="balance-sub-card balance-sub-card--slip">
+              <span className="balance-sub-label">Slips Today</span>
+              <span className="balance-sub-value">{balance.slipCount}</span>
             </div>
-          </div>
-
-          <div className="dash-card">
-            <span className="dash-card-label">Daily Score</span>
-            <div className="dash-card-row">
-              <span className={`dash-card-value ${
-                score >= 0 ? 'dash-card-value--success' : 'dash-card-value--danger-dim'
-              }`}>
+            <div className={`balance-sub-card balance-sub-card--score${
+              score >= 0 ? ' balance-sub-card--score-pos' : ' balance-sub-card--score-neg'
+            }`}>
+              <span className="balance-sub-label">Daily Score</span>
+              <span className="balance-sub-value">
                 {score >= 0 ? '+' : ''}{score}
               </span>
-              <span className="dash-card-icon">○</span>
             </div>
           </div>
         </div>

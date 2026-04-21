@@ -94,3 +94,177 @@
   margin-top: 1.5rem;
   line-height: 1.6;
 }
+
+/* ════════════════════════════════════════
+   Balance Score Section — premium layout
+   ════════════════════════════════════════ */
+
+.balance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+  /* Visually separate from the slip stats above */
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.balance-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.balance-tagline {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 0.1rem;
+}
+
+/* ── Hero card: Balance Kept ── */
+
+.balance-hero-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.35rem;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient radial glow on the left edge */
+.balance-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at left center,
+    rgba(52, 211, 153, 0.07) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.balance-hero-card:hover {
+  border-color: rgba(52, 211, 153, 0.35);
+  border-left-color: var(--success);
+  box-shadow: 0 4px 24px rgba(52, 211, 153, 0.08);
+}
+
+.balance-hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.balance-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.balance-hero-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--success);
+  opacity: 0.85;
+}
+
+.balance-hero-value {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--success);
+}
+
+.balance-hero-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  margin-top: 0.2rem;
+}
+
+.balance-hero-icon {
+  font-size: 2rem;
+  color: var(--success);
+  opacity: 0.2;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Sub-grid: Slips + Daily Score ── */
+
+.balance-sub-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.balance-sub-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.balance-sub-card--slip {
+  border-left: 3px solid rgba(248, 113, 113, 0.35);
+}
+
+.balance-sub-card--score {
+  border-left: 3px solid var(--border);
+}
+
+.balance-sub-card--score-pos {
+  border-left-color: var(--success);
+}
+
+.balance-sub-card--score-neg {
+  border-left-color: var(--danger);
+}
+
+.balance-sub-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.balance-sub-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.balance-sub-card--slip .balance-sub-value {
+  color: rgba(248, 113, 113, 0.7);
+  font-size: 1.65rem;  /* intentionally a touch smaller — less celebrated */
+}
+
+.balance-sub-card--score-pos .balance-sub-value {
+  color: var(--success);
+}
+
+.balance-sub-card--score-neg .balance-sub-value {
+  color: var(--danger);
+  opacity: 0.8;
+}
