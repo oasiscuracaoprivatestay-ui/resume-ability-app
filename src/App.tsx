@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Screen, SlipContext, TimerMode, ActiveSession, SlipStatus } from './types';
 import { generateId, saveSlip, updateSlip } from './utils';
-import ControlHomeScreen from './screens/ControlHomeScreen';
+import HomeScreen from './screens/HomeScreen';
 import ContextScreen from './screens/ContextScreen';
 import ModeScreen from './screens/ModeScreen';
 import TimerScreen from './screens/TimerScreen';
@@ -193,7 +193,7 @@ export default function App() {
 
   switch (screen) {
     case 'home':
-      content = <ControlHomeScreen onNavigate={navigate} />;
+      content = <HomeScreen onNavigate={navigate} />;
       break;
 
     case 'context':
@@ -224,7 +224,7 @@ export default function App() {
           onNavigate={navigate}
         />
       ) : (
-        <ControlHomeScreen onNavigate={navigate} />
+        <HomeScreen onNavigate={navigate} />
       );
       break;
 
@@ -236,7 +236,7 @@ export default function App() {
           onNavigate={navigate}
         />
       ) : (
-        <ControlHomeScreen onNavigate={navigate} />
+        <HomeScreen onNavigate={navigate} />
       );
       break;
 
@@ -278,7 +278,7 @@ export default function App() {
       break;
 
     default:
-      content = <ControlHomeScreen onNavigate={navigate} />;
+      content = <HomeScreen onNavigate={navigate} />;
   }
 
   return (
