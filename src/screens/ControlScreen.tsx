@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
+import { recordBalance } from '../utils/balanceStorage';
 import './ControlScreen.css';
 
 interface ControlScreenProps {
@@ -14,6 +15,14 @@ export default function ControlScreen({ onNavigate }: ControlScreenProps) {
     () => t.control_messages[Math.floor(Math.random() * t.control_messages.length)],
     [t],
   );
+
+  // Record the balance check-in the moment the user arrives here.
+  // Runs once per visit; silently persists to localStorage.
+  useEffect(() => {
+    recordBalance();
+    if (navigator.vibrate) navigator.vibrate(40);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="screen control-screen">

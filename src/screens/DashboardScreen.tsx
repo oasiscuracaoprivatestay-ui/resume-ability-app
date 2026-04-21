@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Screen } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
+import { loadToday, dailyScore } from '../utils/balanceStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
@@ -55,6 +56,8 @@ interface DashboardScreenProps {
 export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
   const { t } = useTranslation();
   const data = useMemo(() => computeDashboard(loadSlips()), []);
+  const balance = useMemo(() => loadToday(), []);
+  const score = dailyScore(balance);
 
   return (
     <div className="screen dashboard-screen">
@@ -105,7 +108,46 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
           </div>
         </div>
 
-        {data.slipsToday === 0 && data.averageRecoverySeconds === 0 && (
+        {/* ── Balance Score section ── */}
+        <div className="dashboard-heading" style={{ marginTop: '1.5rem' }}>
+          <span className="section-label">Today's Balance</span>
+        </div>
+        <div className="dashboard-cards">
+          <div className="dash-card">
+            <span className="dash-card-label">Balance Kept</span>
+            <div className="dash-card-row">
+              <span className="dash-card-value dash-card-value--success">
+                {String(balance.balanceCount).padStart(2, '0')}
+              </span>
+              <span className="dash-card-icon">✓</span>
+            </div>
+          </div>
+
+          <div className="dash-card">
+            <span className="dash-card-label">Slips Today</span>
+            <div className="dash-card-row">
+              <span className="dash-card-value dash-card-value--danger-dim">
+                {String(balance.slipCount).padStart(2, '0')}
+              </span>
+              <span className="dash-card-icon">⧘</span>
+            </div>
+          </div>
+
+          <div className="dash-card">
+            <span className="dash-card-label">Daily Score</span>
+            <div className="dash-card-row">
+              <span className={`dash-card-value ${
+                score >= 0 ? 'dash-card-value--success' : 'dash-card-value--danger-dim'
+              }`}>
+                {score >= 0 ? '+' : ''}{score}
+              </span>
+              <span className="dash-card-icon">○</span>
+            </div>
+          </div>
+        </div>
+
+        {data.slipsToday === 0 && data.averageRecoverySeconds === 0
+          && balance.balanceCount === 0 && (
           <p className="dashboard-empty">
             {t.dash_empty}
           </p>
