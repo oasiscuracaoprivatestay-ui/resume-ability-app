@@ -16,6 +16,78 @@ export const en: Translations = {
   global_start_timer: 'Start Timer',
   home_exit: 'Exit',
   home_feedback: 'Feedback / Suggestions',
+  home_quiz_link: 'How strong is your Resume-Ability?',
+
+  // ── Quiz ──
+  quiz_start_label: 'Self-Assessment',
+  quiz_start_heading: 'How strong is your Resume-Ability?',
+  quiz_start_body: 'Answer 5 honest questions. Find out where you stand and what to work on.',
+  quiz_start_btn: 'Start Quiz',
+  quiz_q_label: 'Question',
+  quiz_next: 'Next',
+  quiz_result_label: 'Your Result',
+  quiz_result_heading: 'Your Resume-Ability Score',
+  quiz_score_label: 'Score',
+  quiz_result_strong: 'Strong',
+  quiz_result_moderate: 'Moderate',
+  quiz_result_needs: 'Needs Training',
+  quiz_result_strong_body: 'You spot slips early, recover fast, and don’t let one moment derail your day. You already have the foundation. Keep using it.',
+  quiz_result_moderate_body: 'You recover, but not always quickly. The 15-minute timer can sharpen your response time and build more consistent habits.',
+  quiz_result_needs_body: 'You’re likely losing hours — sometimes days — to slips. Start with one rule: use the 15-minute timer after every slip. Small resets build real momentum.',
+  quiz_result_cta: 'Start Improving Now',
+  quiz_result_retake: 'Retake Quiz',
+  quiz_questions: [
+    {
+      q: 'When you slip, how quickly do you recover?',
+      options: [
+        'It usually takes me days',
+        'By the next day',
+        'Within the same day',
+        'Within a few hours',
+        'I recover almost immediately',
+      ],
+    },
+    {
+      q: 'Do you notice immediately when you lose control?',
+      options: [
+        'I usually don’t notice at all',
+        'Rarely — often too late',
+        'Sometimes, not always',
+        'Most of the time',
+        'Yes, almost always',
+      ],
+    },
+    {
+      q: 'How often do you eat in “slippery zones”?',
+      options: [
+        'Every single day',
+        'Most days',
+        'A few times a week',
+        'Occasionally',
+        'Almost never',
+      ],
+    },
+    {
+      q: 'Do you restart your diet often?',
+      options: [
+        'I restart almost every day',
+        'Every week',
+        'Every month or so',
+        'Rarely — I stay mostly on track',
+        'I don’t need to restart — I stay consistent',
+      ],
+    },
+    {
+      q: 'Can you stop a slip once it starts?',
+      options: [
+        'No — it always snowballs',
+        'Rarely, it usually continues',
+        'Sometimes I can',
+        'Usually yes',
+        'Yes — I can stop it quickly',
+      ],
+    },
+  ],
   home_timer_learn_link: 'How the Timer Works',
 
   // ── Timer Learn ──

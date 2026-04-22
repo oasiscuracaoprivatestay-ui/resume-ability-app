@@ -330,6 +330,11 @@
   transform: scale(0.97);
 }
 
+/* Quiz entry link — slightly more prominent, accent-adjacent */
+.home-quiz-link {
+  color: rgba(45, 212, 191, 0.75);
+}
+
 /* ── Bottom nav ── */
 
 

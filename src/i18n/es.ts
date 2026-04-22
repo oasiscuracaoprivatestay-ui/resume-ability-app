@@ -15,6 +15,78 @@ export const es: Translations = {
   global_start_timer: 'Iniciar temporizador',
   home_exit: 'Salir',
   home_feedback: 'Comentarios / Sugerencias',
+  home_quiz_link: '¿Qué tan fuerte es tu Capacidad de Reanudar?',
+
+  // ── Quiz ──
+  quiz_start_label: 'Autoevaluación',
+  quiz_start_heading: '¿Qué tan fuerte es tu Capacidad de Reanudar?',
+  quiz_start_body: 'Responde 5 preguntas honestas. Descubre dónde estás y qué mejorar.',
+  quiz_start_btn: 'Iniciar cuestionario',
+  quiz_q_label: 'Pregunta',
+  quiz_next: 'Siguiente',
+  quiz_result_label: 'Tu resultado',
+  quiz_result_heading: 'Tu puntuación de Capacidad de Reanudar',
+  quiz_score_label: 'Puntuación',
+  quiz_result_strong: 'Fuerte',
+  quiz_result_moderate: 'Moderada',
+  quiz_result_needs: 'Necesita entrenamiento',
+  quiz_result_strong_body: 'Detectas los deslices rápidamente, te recuperas con velocidad y no dejas que un momento arruine tu día. Sigue así.',
+  quiz_result_moderate_body: 'Te recuperas, pero no siempre con rapidez. El temporizador de 15 minutos puede ayudarte a construir hábitos de recuperación más sólidos.',
+  quiz_result_needs_body: 'Probablemente pierdes horas — a veces días — por los deslices. Empieza con una regla: usa el temporizador de 15 minutos después de cada desliz.',
+  quiz_result_cta: 'Empieza a mejorar ahora',
+  quiz_result_retake: 'Repetir cuestionario',
+  quiz_questions: [
+    {
+      q: '¿Cuándo tienes un desliz, qué tan rápido te recuperas?',
+      options: [
+        'Suele llevarme días',
+        'Al día siguiente',
+        'En el mismo día',
+        'En pocas horas',
+        'Me recupero casi de inmediato',
+      ],
+    },
+    {
+      q: '¿Notas inmediatamente cuando pierdes el control?',
+      options: [
+        'Generalmente no me doy cuenta',
+        'Rara vez — suele ser tarde',
+        'A veces, no siempre',
+        'La mayoría de las veces',
+        'Sí, casi siempre',
+      ],
+    },
+    {
+      q: '¿Con qué frecuencia comes en “zonas resbaladizas”?',
+      options: [
+        'Todos los días',
+        'La mayoría de los días',
+        'Varias veces por semana',
+        'Ocasionalmente',
+        'Casi nunca',
+      ],
+    },
+    {
+      q: '¿Reinicias tu dieta con frecuencia?',
+      options: [
+        'Casi todos los días',
+        'Cada semana',
+        'Cada mes más o menos',
+        'Rara vez — me mantengo bastante bien',
+        'No necesito reiniciar — soy constante',
+      ],
+    },
+    {
+      q: '¿Puedes detener un desliz una vez que comienza?',
+      options: [
+        'No — siempre se descontrola',
+        'Rara vez, suele continuar',
+        'A veces sí',
+        'Normalmente sí',
+        'Sí — puedo detenerlo rápidamente',
+      ],
+    },
+  ],
   home_timer_learn_link: 'Cómo funciona el temporizador',
 
   // ── Timer Learn ──

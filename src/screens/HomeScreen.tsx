@@ -113,6 +113,13 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           >
             {t.home_timer_learn_link} →
           </button>
+          <button
+            id="btn-quiz-entry"
+            className="home-learn-link home-quiz-link"
+            onClick={() => onNavigate('quiz')}
+          >
+            {t.home_quiz_link}
+          </button>
         </div>
       </div>
 

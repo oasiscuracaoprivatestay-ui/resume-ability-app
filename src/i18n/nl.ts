@@ -15,6 +15,78 @@ export const nl: Translations = {
   global_start_timer: 'Start timer',
   home_exit: 'Afsluiten',
   home_feedback: 'Feedback / Suggesties',
+  home_quiz_link: 'Hoe sterk is jouw Hervatvermogen?',
+
+  // ── Quiz ──
+  quiz_start_label: 'Zelfevaluatie',
+  quiz_start_heading: 'Hoe sterk is jouw Hervatvermogen?',
+  quiz_start_body: 'Beantwoord 5 eerlijke vragen. Ontdek waar je staat en wat je kunt verbeteren.',
+  quiz_start_btn: 'Quiz starten',
+  quiz_q_label: 'Vraag',
+  quiz_next: 'Volgende',
+  quiz_result_label: 'Jouw resultaat',
+  quiz_result_heading: 'Jouw Hervatvermogen score',
+  quiz_score_label: 'Score',
+  quiz_result_strong: 'Sterk',
+  quiz_result_moderate: 'Matig',
+  quiz_result_needs: 'Heeft training nodig',
+  quiz_result_strong_body: 'Je herkent uitglijders snel, herstelt snel en laat één moment je dag niet verpesten. Je hebt al een sterke basis. Blijf zo doorgaan.',
+  quiz_result_moderate_body: 'Je herstelt, maar niet altijd snel. De 15-minutentimer kan je helpen sneller en consistenter te reageren op uitglijders.',
+  quiz_result_needs_body: 'Je verliest waarschijnlijk uren — soms dagen — aan uitglijders. Begin met één regel: gebruik de 15-minutentimer na elke uitglijder. Kleine resets bouwen echte vooruitgang.',
+  quiz_result_cta: 'Begin nu met verbeteren',
+  quiz_result_retake: 'Quiz opnieuw doen',
+  quiz_questions: [
+    {
+      q: 'Hoe snel herstel je nadat je bent uitgegleden?',
+      options: [
+        'Duurt meestal dagen',
+        'De volgende dag',
+        'Nog dezelfde dag',
+        'Binnen een paar uur',
+        'Ik herstel bijna onmiddellijk',
+      ],
+    },
+    {
+      q: 'Merk je het meteen wanneer je de controle verliest?',
+      options: [
+        'Ik merk het meestal niet',
+        'Zelden — vaak te laat',
+        'Soms, niet altijd',
+        'De meeste keren',
+        'Ja, bijna altijd',
+      ],
+    },
+    {
+      q: 'Hoe vaak eet je in “glibberige zones”?',
+      options: [
+        'Elke dag',
+        'De meeste dagen',
+        'Enkele keren per week',
+        'Af en toe',
+        'Bijna nooit',
+      ],
+    },
+    {
+      q: 'Begin je jouw dieet vaak opnieuw?',
+      options: [
+        'Bijna elke dag',
+        'Elke week',
+        'Elke maand of zo',
+        'Zelden — ik blijf grotendeels op schema',
+        'Ik hoef niet opnieuw te beginnen — ik ben consistent',
+      ],
+    },
+    {
+      q: 'Kun je een uitglijder stoppen zodra hij begint?',
+      options: [
+        'Nee — het loopt altijd uit de hand',
+        'Zelden, het gaat meestal door',
+        'Soms lukt het',
+        'Meestal wel',
+        'Ja — ik kan het snel stoppen',
+      ],
+    },
+  ],
   home_timer_learn_link: 'Hoe de timer werkt',
 
   // ── Timer Learn ──

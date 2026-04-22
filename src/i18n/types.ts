@@ -22,6 +22,26 @@ export interface Translations {
   global_start_timer: string;
   home_exit: string;
   home_feedback: string;
+  home_quiz_link: string;
+  // ── Quiz ──
+  quiz_start_label: string;
+  quiz_start_heading: string;
+  quiz_start_body: string;
+  quiz_start_btn: string;
+  quiz_q_label: string;
+  quiz_next: string;
+  quiz_result_label: string;
+  quiz_result_heading: string;
+  quiz_score_label: string;
+  quiz_result_strong: string;
+  quiz_result_moderate: string;
+  quiz_result_needs: string;
+  quiz_result_strong_body: string;
+  quiz_result_moderate_body: string;
+  quiz_result_needs_body: string;
+  quiz_result_cta: string;
+  quiz_result_retake: string;
+  quiz_questions: Array<{ q: string; options: string[] }>;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;
