@@ -212,7 +212,7 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 1.15rem 1.5rem;
+  padding: 1rem 1.5rem;         /* slightly less vertical — column label adds natural height */
   background: var(--surface);
   color: var(--text-secondary);
   font-family: var(--font);
@@ -222,6 +222,7 @@
   border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .home-btn-control:hover {
@@ -230,9 +231,38 @@
   color: var(--text-primary);
 }
 
+/* Two-line label column */
+.home-btn-control-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.home-btn-control-primary {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.home-btn-control-secondary {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  transition: color 0.25s ease;
+}
+
+.home-btn-control:hover .home-btn-control-secondary {
+  color: var(--text-secondary);
+}
+
 .home-btn-icon {
   font-size: 1.25rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 /* ── Secondary CTA row (inline on Home — replaces floating buttons) ── */

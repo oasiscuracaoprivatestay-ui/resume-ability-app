@@ -80,7 +80,10 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             onClick={() => onNavigate('control')}
           >
             <span className="home-btn-icon">✓</span>
-            <span>{t.home_in_control}</span>
+            <span className="home-btn-control-label">
+              <span className="home-btn-control-primary">{t.home_in_control}</span>
+              <span className="home-btn-control-secondary">Keep your balance</span>
+            </span>
           </button>
 
           {/* ── Secondary CTAs — inline, never floating on home ── */}
