@@ -57,7 +57,7 @@ export const es: Translations = {
       ],
     },
     {
-      q: '¿Con qué frecuencia comes en “zonas resbaladizas”?',
+      q: '¿Con qué frecuencia comes en situaciones donde tiendes a perder el control (noche tarde, estrés, aburrimiento)?',
       options: [
         'Todos los días',
         'La mayoría de los días',

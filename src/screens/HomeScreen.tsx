@@ -81,8 +81,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           >
             <span className="home-btn-icon">✓</span>
             <span className="home-btn-control-label">
-              <span className="home-btn-control-primary">{t.home_in_control}</span>
-              <span className="home-btn-control-secondary">Keep your balance</span>
+              <span className="home-btn-control-primary">Keep your balance</span>
+              <span className="home-btn-control-secondary">{t.home_in_control}</span>
             </span>
           </button>
 

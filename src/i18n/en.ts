@@ -58,7 +58,7 @@ export const en: Translations = {
       ],
     },
     {
-      q: 'How often do you eat in “slippery zones”?',
+      q: 'How often do you eat in situations where you tend to lose control (late night, stress, boredom)?',
       options: [
         'Every single day',
         'Most days',

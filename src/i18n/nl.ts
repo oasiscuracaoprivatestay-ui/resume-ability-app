@@ -57,7 +57,7 @@ export const nl: Translations = {
       ],
     },
     {
-      q: 'Hoe vaak eet je in “glibberige zones”?',
+      q: 'Hoe vaak eet je in situaties waarin je de neiging hebt de controle te verliezen (laat op de avond, stress, verveling)?',
       options: [
         'Elke dag',
         'De meeste dagen',
