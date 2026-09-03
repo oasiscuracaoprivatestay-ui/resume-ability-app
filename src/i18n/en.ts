@@ -110,6 +110,22 @@ export const en: Translations = {
   ci_done_on_structure: 'You’re staying with your structure.',
   ci_done_near_slip: 'You noticed the risk early.',
   ci_done_slip: 'You checked in. Now let’s focus on recovery.',
+  // ── Phase 3: post-check-in support ──
+  ci_done_near_slip_desc: 'You noticed the risk early. Let’s protect your next decision.',
+  ci_near_support_heading: 'What would help right now?',
+  ci_action_motivation: 'I Need Motivation',
+  ci_action_timer: 'Start a Timer',
+  ci_action_why: 'Remember My Why',
+  ci_action_ability: 'Use an Ability',
+  ci_back_home: 'Back to Home',
+  ci_why_heading: 'REMEMBER YOUR WHY',
+  ci_why_body: 'You chose this structure for a reason.\nThe urge is temporary. Your reason still matters.',
+  ci_why_cta: 'Keep Going',
+  ci_resumeability_heading: 'RESUME-ABILITY',
+  ci_ability_body: 'You don’t need a perfect day. Protect your next decision.',
+  ci_ability_cta: 'Use Resume-Ability',
+  ci_slip_recovery_body: 'You do not need to wait until tomorrow. Resume with your next decision.',
+  ci_slip_recovery_cta: 'Resume My Structure',
 
   home_timer_learn_link: 'How the Timer Works',
 

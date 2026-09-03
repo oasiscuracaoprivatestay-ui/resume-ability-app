@@ -436,3 +436,268 @@
   line-height: 1.65;
   max-width: 22ch;
 }
+
+/* ════════════════════════════════════════════════════════
+   DONE STEP — COMPACT HEADER (Near Slip / Slip)
+   A horizontal layout so the support actions have room
+   ════════════════════════════════════════════════════════ */
+
+.ci-done-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0;
+  animation: ci-done-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Smaller icon circle for compact header */
+.ci-done-icon-wrap--sm {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.ci-done-icon-wrap--sm .ci-done-icon {
+  font-size: 1.35rem;
+}
+
+.ci-done-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ci-done-heading--sm {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Short descriptive text below the compact header */
+.ci-done-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 0.5rem 1.5rem 0;
+  animation: ci-done-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.08s backwards;
+}
+
+/* ════════════════════════════════════════════════════════
+   NEAR SLIP — SUPPORT SECTION
+   ════════════════════════════════════════════════════════ */
+
+.ci-support-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 2rem;
+  flex: 1;
+}
+
+.ci-support-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-bottom: 0.25rem;
+}
+
+.ci-support-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Action card base ──────────────────────────────────── */
+.ci-support-action {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-left: 3px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+  /* Staggered entrance */
+  animation: ci-card-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.ci-support-actions .ci-support-action:nth-child(1) { animation-delay: 0.08s; }
+.ci-support-actions .ci-support-action:nth-child(2) { animation-delay: 0.14s; }
+.ci-support-actions .ci-support-action:nth-child(3) { animation-delay: 0.20s; }
+.ci-support-actions .ci-support-action:nth-child(4) { animation-delay: 0.26s; }
+
+.ci-support-action:hover {
+  background: var(--surface-hover);
+  transform: translateX(2px);
+}
+.ci-support-action:active { transform: translateX(1px) scale(0.985); }
+
+/* ── Colour left-border variants ──────────────────────── */
+.ci-support-action--motivation { border-left-color: rgba(45, 212, 191, 0.45); }
+.ci-support-action--timer      { border-left-color: rgba(45, 212, 191, 0.45); }
+.ci-support-action--why        { border-left-color: rgba(245, 158, 11, 0.45); }
+.ci-support-action--ability    { border-left-color: rgba(245, 158, 11, 0.45); }
+
+.ci-support-action-icon {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+  line-height: 1;
+}
+
+.ci-support-action-text {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  line-height: 1.3;
+}
+
+.ci-support-action-arrow {
+  font-size: 1.15rem;
+  color: var(--accent);
+  opacity: 0.5;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ci-support-action:hover .ci-support-action-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* ── Back to Home ──────────────────────────────────────── */
+.ci-back-home {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  align-self: center;
+  margin-top: auto;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ci-back-home:hover { color: var(--text-muted); }
+
+/* ════════════════════════════════════════════════════════
+   SLIP — RECOVERY SECTION
+   ════════════════════════════════════════════════════════ */
+
+.ci-recovery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.5rem 2rem;
+  flex: 1;
+}
+
+.ci-recovery-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius-lg);
+  animation: ci-card-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
+}
+
+.ci-recovery-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.25rem 0.65rem;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+.ci-recovery-body {
+  font-size: 0.93rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ════════════════════════════════════════════════════════
+   INLINE PANELS (Remember My Why / Use an Ability)
+   Full-screen calm views, no header chrome
+   ════════════════════════════════════════════════════════ */
+
+.ci-panel-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ci-panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem 1.5rem 3rem;
+  text-align: center;
+  animation: ci-done-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Badge pill at top of panel */
+.ci-panel-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.ci-panel-badge--amber {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--ci-amber);
+}
+
+.ci-panel-body {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  max-width: 24ch;
+}
+
+/* "← Back" link inside panel */
+.ci-panel-back {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ci-panel-back:hover { color: var(--text-muted); }

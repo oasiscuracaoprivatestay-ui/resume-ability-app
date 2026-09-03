@@ -109,6 +109,22 @@ export const nl: Translations = {
   ci_done_on_structure: 'Je houdt je aan je structuur.',
   ci_done_near_slip: 'Je herkende het risico op tijd.',
   ci_done_slip: 'Je hebt ingecheckt. Laten we ons nu richten op herstel.',
+  // ── Fase 3: ondersteuning na check-in ──
+  ci_done_near_slip_desc: 'Je herkende het risico op tijd. Laten we je volgende beslissing beschermen.',
+  ci_near_support_heading: 'Wat zou je nu helpen?',
+  ci_action_motivation: 'Ik heb motivatie nodig',
+  ci_action_timer: 'Start een timer',
+  ci_action_why: 'Onthoud mijn waarom',
+  ci_action_ability: 'Gebruik een vaardigheid',
+  ci_back_home: 'Terug naar home',
+  ci_why_heading: 'ONTHOUD JE WAAROM',
+  ci_why_body: 'Je hebt deze structuur om een reden gekozen.\nDe drang is tijdelijk. Jouw reden is er nog steeds.',
+  ci_why_cta: 'Doorgaan',
+  ci_resumeability_heading: 'HERVATVERMOGEN',
+  ci_ability_body: 'Je hebt geen perfecte dag nodig. Bescherm je volgende beslissing.',
+  ci_ability_cta: 'Gebruik Hervatvermogen',
+  ci_slip_recovery_body: 'Je hoeft niet te wachten tot morgen. Hervat met je volgende beslissing.',
+  ci_slip_recovery_cta: 'Hervat mijn structuur',
 
   home_timer_learn_link: 'Hoe de timer werkt',
 

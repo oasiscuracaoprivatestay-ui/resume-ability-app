@@ -63,6 +63,22 @@ export interface Translations {
   ci_done_on_structure: string;
   ci_done_near_slip: string;
   ci_done_slip: string;
+  // ── Phase 3: post-check-in support ──
+  ci_done_near_slip_desc: string;
+  ci_near_support_heading: string;
+  ci_action_motivation: string;
+  ci_action_timer: string;
+  ci_action_why: string;
+  ci_action_ability: string;
+  ci_back_home: string;
+  ci_why_heading: string;
+  ci_why_body: string;
+  ci_why_cta: string;
+  ci_resumeability_heading: string;
+  ci_ability_body: string;
+  ci_ability_cta: string;
+  ci_slip_recovery_body: string;
+  ci_slip_recovery_cta: string;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

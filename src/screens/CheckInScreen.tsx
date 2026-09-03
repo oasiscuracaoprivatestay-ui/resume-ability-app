@@ -10,22 +10,19 @@ interface CheckInScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
-type CheckInStep = 'hold' | 'choice' | 'done';
+type CheckInStep   = 'hold' | 'choice' | 'done';
+type InlinePanel   = 'none' | 'why' | 'ability';
 
 // ── Ring geometry ─────────────────────────────────────────────────────────────
-const RING_R     = 78;
-const RING_CX    = 100;
-const RING_CY    = 100;
-const RING_CIRC  = 2 * Math.PI * RING_R;
-const HOLD_MS    = 2500;
-const DONE_DELAY = 1400;   // ms before auto-navigating home after confirmation
+const RING_R    = 78;
+const RING_CX   = 100;
+const RING_CY   = 100;
+const RING_CIRC = 2 * Math.PI * RING_R;
+const HOLD_MS   = 2500;
+const ON_STRUCTURE_DELAY = 1400;  // auto-nav delay for on-structure only
 
 // ── Status option config ──────────────────────────────────────────────────────
-interface StatusOption {
-  id: CheckInStatus;
-  mod: string;
-  icon: string;
-}
+interface StatusOption { id: CheckInStatus; mod: string; icon: string; }
 
 const STATUS_OPTIONS: StatusOption[] = [
   { id: 'on-structure', mod: 'on-structure', icon: '✓' },
@@ -33,12 +30,26 @@ const STATUS_OPTIONS: StatusOption[] = [
   { id: 'slip',         mod: 'slip',         icon: '↻' },
 ];
 
-// ── Done state icon ───────────────────────────────────────────────────────────
 const DONE_ICON: Record<CheckInStatus, string> = {
   'on-structure': '✓',
   'near-slip':    '⚡',
   'slip':         '↻',
 };
+
+// ── Support action config (Near Slip) ─────────────────────────────────────────
+interface SupportAction {
+  id: string;
+  icon: string;
+  labelKey: 'ci_action_motivation' | 'ci_action_timer' | 'ci_action_why' | 'ci_action_ability';
+  mod: string;
+}
+
+const SUPPORT_ACTIONS: SupportAction[] = [
+  { id: 'motivation', icon: '♫', labelKey: 'ci_action_motivation', mod: 'motivation' },
+  { id: 'timer',      icon: '⏱', labelKey: 'ci_action_timer',      mod: 'timer'      },
+  { id: 'why',        icon: '✦', labelKey: 'ci_action_why',         mod: 'why'        },
+  { id: 'ability',    icon: '◎', labelKey: 'ci_action_ability',     mod: 'ability'    },
+];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
@@ -48,20 +59,20 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const [progress, setProgress] = useState(0);
   const [holding, setHolding]   = useState(false);
   const [selected, setSelected] = useState<CheckInStatus | null>(null);
-  const [saved, setSaved]       = useState<CheckInStatus | null>(null);  // what was confirmed
+  const [saved, setSaved]       = useState<CheckInStatus | null>(null);
+  const [panel, setPanel]       = useState<InlinePanel>('none');
 
   const rafRef   = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
 
-  // ── Auto-navigate home after done state ──────────────────────────────────────
+  // ── Auto-nav: ON STRUCTURE only ───────────────────────────────────────────
   useEffect(() => {
-    if (step !== 'done') return;
-    const timer = setTimeout(() => onNavigate('home'), DONE_DELAY);
+    if (step !== 'done' || saved !== 'on-structure') return;
+    const timer = setTimeout(() => onNavigate('home'), ON_STRUCTURE_DELAY);
     return () => clearTimeout(timer);
-  }, [step, onNavigate]);
+  }, [step, saved, onNavigate]);
 
-  // ── Hold mechanics ───────────────────────────────────────────────────────────
-
+  // ── Hold mechanics ─────────────────────────────────────────────────────────
   const cancelHold = useCallback(() => {
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
@@ -75,16 +86,13 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const startHold = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (step !== 'hold') return;
-
     setHolding(true);
     startRef.current = performance.now();
 
     const tick = (now: number) => {
       if (startRef.current === null) return;
-      const elapsed = now - startRef.current;
-      const p = Math.min(elapsed / HOLD_MS, 1);
+      const p = Math.min((now - startRef.current) / HOLD_MS, 1);
       setProgress(p);
-
       if (p < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
@@ -93,29 +101,34 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
         setHolding(false);
         setProgress(1);
         if (navigator.vibrate) navigator.vibrate(60);
-        setTimeout(() => {
-          setProgress(0);
-          setStep('choice');
-        }, 250);
+        setTimeout(() => { setProgress(0); setStep('choice'); }, 250);
       }
     };
-
     rafRef.current = requestAnimationFrame(tick);
   }, [step]);
 
-  // ── Confirm check-in ─────────────────────────────────────────────────────────
+  // ── Confirm check-in ───────────────────────────────────────────────────────
   const handleConfirm = useCallback(() => {
     if (!selected) return;
-    saveCheckIn(selected);          // persist to localStorage
+    saveCheckIn(selected);
     setSaved(selected);
+    setPanel('none');
     if (navigator.vibrate) navigator.vibrate(40);
     setStep('done');
   }, [selected]);
 
-  // ── Ring ─────────────────────────────────────────────────────────────────────
+  // ── Reset to hold (redo) ───────────────────────────────────────────────────
+  const handleRedo = () => {
+    setStep('hold');
+    setSelected(null);
+    setSaved(null);
+    setPanel('none');
+  };
+
+  // ── Ring ───────────────────────────────────────────────────────────────────
   const strokeOffset = RING_CIRC * (1 - progress);
 
-  // ── i18n label maps ──────────────────────────────────────────────────────────
+  // ── i18n label maps ────────────────────────────────────────────────────────
   const statusLabel: Record<CheckInStatus, string> = {
     'on-structure': t.ci_on_structure,
     'near-slip':    t.ci_near_slip,
@@ -132,26 +145,169 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     'slip':         t.ci_done_slip,
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Support action tap ─────────────────────────────────────────────────────
+  const handleSupportAction = (id: string) => {
+    switch (id) {
+      case 'motivation': onNavigate('daily-audio');  break;
+      case 'timer':      onNavigate('context');      break;
+      case 'why':        setPanel('why');             break;
+      case 'ability':    setPanel('ability');         break;
+    }
+  };
 
-  // ══ DONE STEP ════════════════════════════════════════════════════════════════
-  if (step === 'done' && saved) {
+  // ════════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════════════════════════════════════════
+
+  // ── "Remember My Why" inline panel ────────────────────────────────────────
+  if (step === 'done' && saved === 'near-slip' && panel === 'why') {
     return (
-      <div className="screen ci-screen">
-        <div className="ci-done-content">
-          <div className={`ci-done-icon-wrap ci-done-icon-wrap--${saved}`}>
-            <span className="ci-done-icon">{DONE_ICON[saved]}</span>
+      <div className="screen ci-screen ci-panel-screen">
+        <div className="ci-panel-content">
+          <div className="ci-panel-badge ci-panel-badge--amber">
+            {t.ci_why_heading}
           </div>
-          <span className="section-label">{t.ci_label}</span>
-          <h1 className="ci-done-heading">{t.ci_done_heading}</h1>
-          <p className="ci-done-status">{statusLabel[saved]}</p>
-          <p className="ci-done-body">{doneBody[saved]}</p>
+          <p className="ci-panel-body">
+            {t.ci_why_body.split('\n').map((line, i) => (
+              <span key={i}>{line}{i === 0 && <br />}</span>
+            ))}
+          </p>
+          <button
+            id="btn-ci-why-cta"
+            className="btn btn-primary btn-large"
+            onClick={() => setPanel('none')}
+          >
+            {t.ci_why_cta}
+          </button>
         </div>
       </div>
     );
   }
 
-  // ══ HOLD + CHOICE (share header) ═════════════════════════════════════════════
+  // ── "Use an Ability" inline panel ──────────────────────────────────────────
+  if (step === 'done' && saved === 'near-slip' && panel === 'ability') {
+    return (
+      <div className="screen ci-screen ci-panel-screen">
+        <div className="ci-panel-content">
+          <div className="ci-panel-badge ci-panel-badge--amber">
+            {t.ci_resumeability_heading}
+          </div>
+          <p className="ci-panel-body">{t.ci_ability_body}</p>
+          <button
+            id="btn-ci-ability-cta"
+            className="btn btn-primary btn-large"
+            onClick={() => onNavigate('context')}
+          >
+            {t.ci_ability_cta}
+          </button>
+          <button className="ci-panel-back" onClick={() => setPanel('none')}>
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── ON STRUCTURE done ──────────────────────────────────────────────────────
+  if (step === 'done' && saved === 'on-structure') {
+    return (
+      <div className="screen ci-screen">
+        <div className="ci-done-content">
+          <div className="ci-done-icon-wrap ci-done-icon-wrap--on-structure">
+            <span className="ci-done-icon">{DONE_ICON['on-structure']}</span>
+          </div>
+          <span className="section-label">{t.ci_label}</span>
+          <h1 className="ci-done-heading">{t.ci_done_heading}</h1>
+          <p className="ci-done-status">{statusLabel['on-structure']}</p>
+          <p className="ci-done-body">{doneBody['on-structure']}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── NEAR SLIP done — support menu ──────────────────────────────────────────
+  if (step === 'done' && saved === 'near-slip') {
+    return (
+      <div className="screen ci-screen">
+        <div className="ci-done-header ci-done-header--near-slip">
+          <div className="ci-done-icon-wrap ci-done-icon-wrap--near-slip ci-done-icon-wrap--sm">
+            <span className="ci-done-icon">{DONE_ICON['near-slip']}</span>
+          </div>
+          <div className="ci-done-header-text">
+            <span className="section-label">{t.ci_label}</span>
+            <h1 className="ci-done-heading ci-done-heading--sm">{t.ci_done_heading}</h1>
+            <p className="ci-done-status">{statusLabel['near-slip']}</p>
+          </div>
+        </div>
+        <p className="ci-done-desc">{t.ci_done_near_slip_desc}</p>
+
+        {/* Support section */}
+        <div className="ci-support-section">
+          <p className="ci-support-heading">{t.ci_near_support_heading}</p>
+          <div className="ci-support-actions">
+            {SUPPORT_ACTIONS.map(({ id, icon, labelKey, mod }) => (
+              <button
+                key={id}
+                id={`ci-support-${id}`}
+                className={`ci-support-action ci-support-action--${mod}`}
+                onClick={() => handleSupportAction(id)}
+              >
+                <span className="ci-support-action-icon">{icon}</span>
+                <span className="ci-support-action-text">{t[labelKey]}</span>
+                <span className="ci-support-action-arrow">›</span>
+              </button>
+            ))}
+          </div>
+          <button className="ci-back-home" onClick={() => onNavigate('home')}>
+            {t.ci_back_home}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SLIP done — recovery card ──────────────────────────────────────────────
+  if (step === 'done' && saved === 'slip') {
+    return (
+      <div className="screen ci-screen">
+        <div className="ci-done-header ci-done-header--slip">
+          <div className="ci-done-icon-wrap ci-done-icon-wrap--slip ci-done-icon-wrap--sm">
+            <span className="ci-done-icon">{DONE_ICON['slip']}</span>
+          </div>
+          <div className="ci-done-header-text">
+            <span className="section-label">{t.ci_label}</span>
+            <h1 className="ci-done-heading ci-done-heading--sm">{t.ci_done_heading}</h1>
+            <p className="ci-done-status">{statusLabel['slip']}</p>
+          </div>
+        </div>
+        <p className="ci-done-desc">{doneBody['slip']}</p>
+
+        {/* Recovery card */}
+        <div className="ci-recovery-section">
+          <div className="ci-recovery-card">
+            <div className="ci-recovery-badge">
+              {t.ci_resumeability_heading}
+            </div>
+            <p className="ci-recovery-body">{t.ci_slip_recovery_body}</p>
+            <button
+              id="btn-ci-resume"
+              className="btn btn-primary btn-large"
+              onClick={() => onNavigate('context')}
+            >
+              {t.ci_slip_recovery_cta}
+            </button>
+          </div>
+          <button className="ci-back-home" onClick={() => onNavigate('home')}>
+            {t.ci_back_home}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // HOLD + CHOICE (share ScreenHeader)
+  // ════════════════════════════════════════════════════════════════════════════
   return (
     <div className="screen ci-screen">
       <ScreenHeader
@@ -159,7 +315,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
         onHome={() => onNavigate('home')}
       />
 
-      {/* ══ HOLD STEP ══════════════════════════════════════════════════════════ */}
+      {/* ══ HOLD STEP ════════════════════════════════════════════════════════ */}
       {step === 'hold' && (
         <div className="ci-hold-content">
           <div className="ci-title-block">
@@ -184,24 +340,15 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                     </feMerge>
                   </filter>
                 </defs>
-                <circle
-                  className="ci-ring-track"
-                  cx={RING_CX} cy={RING_CY} r={RING_R}
-                  fill="none" strokeWidth="5"
-                />
+                <circle className="ci-ring-track" cx={RING_CX} cy={RING_CY} r={RING_R}
+                  fill="none" strokeWidth="5" />
                 {(holding || progress > 0) && (
-                  <circle
-                    className="ci-ring-arc"
-                    cx={RING_CX} cy={RING_CY} r={RING_R}
-                    fill="none"
-                    stroke="url(#ci-ring-grad)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeDasharray={RING_CIRC}
+                  <circle className="ci-ring-arc" cx={RING_CX} cy={RING_CY} r={RING_R}
+                    fill="none" stroke="url(#ci-ring-grad)" strokeWidth="5"
+                    strokeLinecap="round" strokeDasharray={RING_CIRC}
                     strokeDashoffset={strokeOffset}
                     transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
-                    filter="url(#ci-ring-glow)"
-                  />
+                    filter="url(#ci-ring-glow)" />
                 )}
               </svg>
 
@@ -217,8 +364,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               >
                 {holding
                   ? <span className="ci-hold-pct">{Math.round(progress * 100)}</span>
-                  : <span className="ci-hold-icon">◎</span>
-                }
+                  : <span className="ci-hold-icon">◎</span>}
               </button>
             </div>
 
@@ -229,7 +375,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
         </div>
       )}
 
-      {/* ══ CHOICE STEP ════════════════════════════════════════════════════════ */}
+      {/* ══ CHOICE STEP ══════════════════════════════════════════════════════ */}
       {step === 'choice' && (
         <div className="ci-choice-content">
           <div className="ci-title-block">
@@ -238,7 +384,6 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
             <p className="ci-supporting">{t.ci_status_sub}</p>
           </div>
 
-          {/* Status cards */}
           <div className="ci-status-list" role="radiogroup" aria-label={t.ci_status_label}>
             {STATUS_OPTIONS.map(({ id, mod, icon }) => (
               <button
@@ -265,7 +410,6 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
             ))}
           </div>
 
-          {/* Confirm button */}
           <div className="ci-confirm-area">
             <button
               id="btn-ci-confirm"
@@ -275,11 +419,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
             >
               {t.ci_confirm_btn}
             </button>
-
-            <button
-              className="ci-redo-link"
-              onClick={() => { setStep('hold'); setSelected(null); }}
-            >
+            <button className="ci-redo-link" onClick={handleRedo}>
               ← Check in again
             </button>
           </div>
