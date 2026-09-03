@@ -88,6 +88,24 @@ export const en: Translations = {
       ],
     },
   ],
+
+  // ── Daily Check-In ──
+  ci_entry_label: 'Daily Check-In',
+  ci_entry_sub: 'How are you doing right now?',
+  ci_label: 'Daily Check-In',
+  ci_title: 'Daily Check-In',
+  ci_supporting: 'Take a moment to check in with yourself.',
+  ci_hold_label: 'Press and hold to check in',
+  ci_holding_label: 'Keep holding…',
+  ci_status_label: 'How are you right now?',
+  ci_status_sub: 'Select the option that best reflects where you are.',
+  ci_on_structure: 'ON STRUCTURE',
+  ci_on_structure_body: 'I’m following my structure.',
+  ci_near_slip: 'NEAR SLIP',
+  ci_near_slip_body: 'I’m struggling and need support.',
+  ci_slip: 'SLIP',
+  ci_slip_body: 'I slipped from my structure.',
+
   home_timer_learn_link: 'How the Timer Works',
 
   // ── Timer Learn ──

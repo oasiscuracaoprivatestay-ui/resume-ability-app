@@ -87,6 +87,24 @@ export const nl: Translations = {
       ],
     },
   ],
+
+  // ── Dagelijkse check-in ──
+  ci_entry_label: 'Dagelijkse check-in',
+  ci_entry_sub: 'Hoe gaat het met je op dit moment?',
+  ci_label: 'Dagelijkse check-in',
+  ci_title: 'Dagelijkse check-in',
+  ci_supporting: 'Neem even de tijd om bij jezelf in te checken.',
+  ci_hold_label: 'Ingedrukt houden om in te checken',
+  ci_holding_label: 'Blijf vasthouden…',
+  ci_status_label: 'Hoe ben je nu?',
+  ci_status_sub: 'Kies de optie die het beste weerspiegelt hoe je je voelt.',
+  ci_on_structure: 'OP SCHEMA',
+  ci_on_structure_body: 'Ik volg mijn structuur.',
+  ci_near_slip: 'BIJNA UIT BALANS',
+  ci_near_slip_body: 'Ik heb het moeilijk en heb ondersteuning nodig.',
+  ci_slip: 'UITGEGLEDEN',
+  ci_slip_body: 'Ik ben van mijn structuur afgeweken.',
+
   home_timer_learn_link: 'Hoe de timer werkt',
 
   // ── Timer Learn ──

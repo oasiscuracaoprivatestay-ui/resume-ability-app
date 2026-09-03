@@ -13,6 +13,7 @@ export type Screen =
   | 'daily-audio'
   | 'timer-learn'
   | 'quiz'
+  | 'check-in'
   | 'premium';
 
 // ── Timer mode ──

@@ -87,6 +87,24 @@ export const es: Translations = {
       ],
     },
   ],
+
+  // ── Registro diario ──
+  ci_entry_label: 'Registro diario',
+  ci_entry_sub: '¿Cómo estás ahora mismo?',
+  ci_label: 'Registro diario',
+  ci_title: 'Registro diario',
+  ci_supporting: 'Tómate un momento para conectar contigo mismo.',
+  ci_hold_label: 'Mantén presionado para registrarte',
+  ci_holding_label: 'Sigue presionando…',
+  ci_status_label: '¿Cómo estás ahora?',
+  ci_status_sub: 'Selecciona la opción que mejor refleje tu estado.',
+  ci_on_structure: 'EN ESTRUCTURA',
+  ci_on_structure_body: 'Estoy siguiendo mi estructura.',
+  ci_near_slip: 'CERCA DE CAER',
+  ci_near_slip_body: 'Estoy luchando y necesito apoyo.',
+  ci_slip: 'CAÍDA',
+  ci_slip_body: 'Me salté de mi estructura.',
+
   home_timer_learn_link: 'Cómo funciona el temporizador',
 
   // ── Timer Learn ──

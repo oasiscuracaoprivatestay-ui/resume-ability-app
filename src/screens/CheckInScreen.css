@@ -1,0 +1,333 @@
+/* ══════════════════════════════════════════════════════
+   CheckInScreen — Daily Check-In
+   Aura Kinetic dark theme · mobile-first
+   ══════════════════════════════════════════════════════ */
+
+/* ── Colour palette additions ─────────────────────────── */
+/* ON STRUCTURE → var(--success)  #34d399  */
+/* NEAR SLIP    → --ci-amber      #f59e0b  */
+/* SLIP         → var(--danger)   #f87171  */
+.ci-screen { --ci-amber: #f59e0b; }
+
+/* ── Screen wrapper ───────────────────────────────────── */
+.ci-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem 2rem;
+}
+
+/* ── Shared title block ───────────────────────────────── */
+.ci-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.ci-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.ci-supporting {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════════════════════════
+   HOLD STEP
+   ════════════════════════════════════════════════════════ */
+
+.ci-hold-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Ring area — centred vertically in remaining space */
+.ci-ring-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+/* Outer wrapper — positions SVG and button together */
+.ci-ring-wrap {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ambient background glow — visible while holding */
+.ci-ring-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0) 0%,
+    transparent 70%
+  );
+  transition: background 0.3s ease;
+  pointer-events: none;
+}
+
+.ci-ring-wrap--holding::before {
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0.14) 0%,
+    transparent 70%
+  );
+}
+
+/* SVG ring — absolute, full container */
+.ci-ring-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ci-ring-track {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+.ci-ring-arc {
+  /* stroke-dashoffset is set inline from React */
+}
+
+/* ── Inner hold button ───────────────────────────────── */
+.ci-hold-btn {
+  position: relative;
+  z-index: 1;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-hover);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font);
+  /* Remove default tap flash on mobile */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;          /* prevent scroll while holding */
+  transition:
+    background    0.2s ease,
+    border-color  0.2s ease,
+    box-shadow    0.2s ease,
+    transform     0.15s ease;
+}
+
+.ci-hold-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.ci-hold-btn--active {
+  background: rgba(45, 212, 191, 0.07);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 24px var(--accent-glow),
+    0 0 48px rgba(45, 212, 191, 0.08);
+  transform: scale(0.97);
+}
+
+/* Idle icon */
+.ci-hold-icon {
+  font-size: 2.25rem;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.ci-hold-btn:hover .ci-hold-icon,
+.ci-hold-btn--active .ci-hold-icon {
+  color: var(--accent);
+}
+
+/* Progress percentage shown while holding */
+.ci-hold-pct {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* Hint text below ring */
+.ci-hold-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+/* ════════════════════════════════════════════════════════
+   CHOICE STEP
+   ════════════════════════════════════════════════════════ */
+
+.ci-choice-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Status list */
+.ci-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.5rem;
+}
+
+/* ── Status card base ────────────────────────────────── */
+.ci-status-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font);
+  transition:
+    border-color  0.2s ease,
+    background    0.2s ease,
+    box-shadow    0.2s ease,
+    transform     0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  /* Staggered entrance animation */
+  animation: ci-card-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.ci-status-list .ci-status-card:nth-child(1) { animation-delay: 0.05s; }
+.ci-status-list .ci-status-card:nth-child(2) { animation-delay: 0.12s; }
+.ci-status-list .ci-status-card:nth-child(3) { animation-delay: 0.19s; }
+
+@keyframes ci-card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.ci-status-card:active { transform: scale(0.985); }
+
+/* ── Colour variants (left border + selected glow) ──── */
+.ci-status-card--on-structure {
+  border-left-color: rgba(52, 211, 153, 0.35);
+}
+.ci-status-card--near-slip {
+  border-left-color: rgba(245, 158, 11, 0.35);
+}
+.ci-status-card--slip {
+  border-left-color: rgba(248, 113, 113, 0.35);
+}
+
+/* ── Selected state ──────────────────────────────────── */
+.ci-status-card--on-structure.ci-status-card--selected {
+  border-color: var(--success);
+  border-left-color: var(--success);
+  background: rgba(52, 211, 153, 0.06);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.08);
+}
+.ci-status-card--near-slip.ci-status-card--selected {
+  border-color: var(--ci-amber);
+  border-left-color: var(--ci-amber);
+  background: rgba(245, 158, 11, 0.06);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
+}
+.ci-status-card--slip.ci-status-card--selected {
+  border-color: var(--danger);
+  border-left-color: var(--danger);
+  background: rgba(248, 113, 113, 0.06);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.08);
+}
+
+/* ── Card inner layout ───────────────────────────────── */
+.ci-status-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ci-status-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ci-status-name {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Colour the name on selected */
+.ci-status-card--on-structure.ci-status-card--selected .ci-status-name { color: var(--success); }
+.ci-status-card--near-slip.ci-status-card--selected    .ci-status-name { color: var(--ci-amber); }
+.ci-status-card--slip.ci-status-card--selected         .ci-status-name { color: var(--danger);   }
+
+.ci-status-check {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.ci-status-card--on-structure.ci-status-card--selected .ci-status-check { color: var(--success); }
+.ci-status-card--near-slip.ci-status-card--selected    .ci-status-check { color: var(--ci-amber); }
+.ci-status-card--slip.ci-status-card--selected         .ci-status-check { color: var(--danger);   }
+
+.ci-status-body {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ci-status-card--selected .ci-status-body {
+  color: var(--text-primary);
+}
+
+/* ── Redo link ───────────────────────────────────────── */
+.ci-redo-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  align-self: center;
+  margin-top: auto;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ci-redo-link:hover { color: var(--text-muted); }

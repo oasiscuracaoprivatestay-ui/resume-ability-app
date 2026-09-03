@@ -58,6 +58,19 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         </div>
 
         <div className="home-actions">
+          {/* ── Daily Check-In entry ── */}
+          <button
+            id="btn-daily-checkin"
+            className="home-btn-checkin"
+            onClick={() => onNavigate('check-in')}
+          >
+            <div className="home-btn-checkin-left">
+              <span className="home-btn-checkin-label">{t.ci_entry_label}</span>
+              <span className="home-btn-checkin-sub">{t.ci_entry_sub}</span>
+            </div>
+            <span className="home-btn-checkin-arrow">›</span>
+          </button>
+
           <button
             id="btn-slipped"
             className="home-btn-slip"

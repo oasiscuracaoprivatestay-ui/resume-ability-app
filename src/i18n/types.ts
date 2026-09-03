@@ -42,6 +42,22 @@ export interface Translations {
   quiz_result_cta: string;
   quiz_result_retake: string;
   quiz_questions: Array<{ q: string; options: string[] }>;
+  // ── Daily Check-In ──
+  ci_entry_label: string;
+  ci_entry_sub: string;
+  ci_label: string;
+  ci_title: string;
+  ci_supporting: string;
+  ci_hold_label: string;
+  ci_holding_label: string;
+  ci_status_label: string;
+  ci_status_sub: string;
+  ci_on_structure: string;
+  ci_on_structure_body: string;
+  ci_near_slip: string;
+  ci_near_slip_body: string;
+  ci_slip: string;
+  ci_slip_body: string;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

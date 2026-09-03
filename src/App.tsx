@@ -15,6 +15,7 @@ import DailyAudioScreen from './screens/DailyAudioScreen';
 import PremiumScreen from './screens/PremiumScreen';
 import TimerLearnScreen from './screens/TimerLearnScreen';
 import QuizScreen from './screens/QuizScreen';
+import CheckInScreen from './screens/CheckInScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 
@@ -280,6 +281,10 @@ export default function App() {
 
     case 'quiz':
       content = <QuizScreen onNavigate={navigate} />;
+      break;
+
+    case 'check-in':
+      content = <CheckInScreen onNavigate={navigate} />;
       break;
 
     default:
