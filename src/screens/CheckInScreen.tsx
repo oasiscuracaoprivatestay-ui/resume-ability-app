@@ -1,27 +1,29 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import { saveCheckIn } from '../utils/checkInStorage';
+import type { CheckInStatus } from '../utils/checkInStorage';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
-type CheckInStep = 'hold' | 'choice';
-type CheckInStatus = 'on-structure' | 'near-slip' | 'slip';
+type CheckInStep = 'hold' | 'choice' | 'done';
 
 // ── Ring geometry ─────────────────────────────────────────────────────────────
 const RING_R     = 78;
 const RING_CX    = 100;
 const RING_CY    = 100;
-const RING_CIRC  = 2 * Math.PI * RING_R;  // ≈ 490 px
-const HOLD_MS    = 2500;                   // 2.5 seconds
+const RING_CIRC  = 2 * Math.PI * RING_R;
+const HOLD_MS    = 2500;
+const DONE_DELAY = 1400;   // ms before auto-navigating home after confirmation
 
-// ── Status options config ─────────────────────────────────────────────────────
+// ── Status option config ──────────────────────────────────────────────────────
 interface StatusOption {
   id: CheckInStatus;
-  mod: string;           // BEM modifier for colour
+  mod: string;
   icon: string;
 }
 
@@ -31,17 +33,32 @@ const STATUS_OPTIONS: StatusOption[] = [
   { id: 'slip',         mod: 'slip',         icon: '↻' },
 ];
 
+// ── Done state icon ───────────────────────────────────────────────────────────
+const DONE_ICON: Record<CheckInStatus, string> = {
+  'on-structure': '✓',
+  'near-slip':    '⚡',
+  'slip':         '↻',
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const { t } = useTranslation();
 
   const [step, setStep]         = useState<CheckInStep>('hold');
-  const [progress, setProgress] = useState(0);          // 0 – 1
+  const [progress, setProgress] = useState(0);
   const [holding, setHolding]   = useState(false);
   const [selected, setSelected] = useState<CheckInStatus | null>(null);
+  const [saved, setSaved]       = useState<CheckInStatus | null>(null);  // what was confirmed
 
   const rafRef   = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
+
+  // ── Auto-navigate home after done state ──────────────────────────────────────
+  useEffect(() => {
+    if (step !== 'done') return;
+    const timer = setTimeout(() => onNavigate('home'), DONE_DELAY);
+    return () => clearTimeout(timer);
+  }, [step, onNavigate]);
 
   // ── Hold mechanics ───────────────────────────────────────────────────────────
 
@@ -56,7 +73,6 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   }, []);
 
   const startHold = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
-    // Prevent scroll / long-press context menu on mobile
     e.preventDefault();
     if (step !== 'hold') return;
 
@@ -64,7 +80,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     startRef.current = performance.now();
 
     const tick = (now: number) => {
-      if (startRef.current === null) return;          // cancelled
+      if (startRef.current === null) return;
       const elapsed = now - startRef.current;
       const p = Math.min(elapsed / HOLD_MS, 1);
       setProgress(p);
@@ -72,13 +88,11 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
       if (p < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        // ── Hold complete ──
         rafRef.current = null;
         startRef.current = null;
         setHolding(false);
         setProgress(1);
         if (navigator.vibrate) navigator.vibrate(60);
-        // Short pause so the user sees the ring reach 100% before transition
         setTimeout(() => {
           setProgress(0);
           setStep('choice');
@@ -89,16 +103,19 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     rafRef.current = requestAnimationFrame(tick);
   }, [step]);
 
-  // ── Status selection ─────────────────────────────────────────────────────────
+  // ── Confirm check-in ─────────────────────────────────────────────────────────
+  const handleConfirm = useCallback(() => {
+    if (!selected) return;
+    saveCheckIn(selected);          // persist to localStorage
+    setSaved(selected);
+    if (navigator.vibrate) navigator.vibrate(40);
+    setStep('done');
+  }, [selected]);
 
-  const handleStatusSelect = (id: CheckInStatus) => {
-    setSelected(prev => (prev === id ? null : id));
-  };
-
-  // ── Ring SVG values ──────────────────────────────────────────────────────────
+  // ── Ring ─────────────────────────────────────────────────────────────────────
   const strokeOffset = RING_CIRC * (1 - progress);
 
-  // ── Labels from i18n for each status ─────────────────────────────────────────
+  // ── i18n label maps ──────────────────────────────────────────────────────────
   const statusLabel: Record<CheckInStatus, string> = {
     'on-structure': t.ci_on_structure,
     'near-slip':    t.ci_near_slip,
@@ -109,8 +126,32 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     'near-slip':    t.ci_near_slip_body,
     'slip':         t.ci_slip_body,
   };
+  const doneBody: Record<CheckInStatus, string> = {
+    'on-structure': t.ci_done_on_structure,
+    'near-slip':    t.ci_done_near_slip,
+    'slip':         t.ci_done_slip,
+  };
 
   // ── Render ───────────────────────────────────────────────────────────────────
+
+  // ══ DONE STEP ════════════════════════════════════════════════════════════════
+  if (step === 'done' && saved) {
+    return (
+      <div className="screen ci-screen">
+        <div className="ci-done-content">
+          <div className={`ci-done-icon-wrap ci-done-icon-wrap--${saved}`}>
+            <span className="ci-done-icon">{DONE_ICON[saved]}</span>
+          </div>
+          <span className="section-label">{t.ci_label}</span>
+          <h1 className="ci-done-heading">{t.ci_done_heading}</h1>
+          <p className="ci-done-status">{statusLabel[saved]}</p>
+          <p className="ci-done-body">{doneBody[saved]}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ══ HOLD + CHOICE (share header) ═════════════════════════════════════════════
   return (
     <div className="screen ci-screen">
       <ScreenHeader
@@ -121,24 +162,15 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
       {/* ══ HOLD STEP ══════════════════════════════════════════════════════════ */}
       {step === 'hold' && (
         <div className="ci-hold-content">
-
-          {/* Title block */}
           <div className="ci-title-block">
             <span className="section-label">{t.ci_label}</span>
             <h1 className="ci-title">{t.ci_title}</h1>
             <p className="ci-supporting">{t.ci_supporting}</p>
           </div>
 
-          {/* Ring + button */}
           <div className="ci-ring-area">
             <div className={`ci-ring-wrap${holding ? ' ci-ring-wrap--holding' : ''}`}>
-
-              {/* Progress ring SVG */}
-              <svg
-                className="ci-ring-svg"
-                viewBox="0 0 200 200"
-                aria-hidden="true"
-              >
+              <svg className="ci-ring-svg" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
                   <linearGradient id="ci-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%"   stopColor="#2dd4bf" />
@@ -152,15 +184,11 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                     </feMerge>
                   </filter>
                 </defs>
-
-                {/* Track */}
                 <circle
                   className="ci-ring-track"
                   cx={RING_CX} cy={RING_CY} r={RING_R}
                   fill="none" strokeWidth="5"
                 />
-
-                {/* Progress arc — only visible when holding */}
                 {(holding || progress > 0) && (
                   <circle
                     className="ci-ring-arc"
@@ -177,7 +205,6 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                 )}
               </svg>
 
-              {/* Inner hold button */}
               <button
                 id="btn-ci-hold"
                 className={`ci-hold-btn${holding ? ' ci-hold-btn--active' : ''}`}
@@ -185,32 +212,26 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                 onPointerUp={cancelHold}
                 onPointerLeave={cancelHold}
                 onPointerCancel={cancelHold}
-                // Prevent iOS magnifier / context menu on long-press
                 onContextMenu={e => e.preventDefault()}
                 aria-label={t.ci_hold_label}
               >
-                {holding ? (
-                  <span className="ci-hold-pct">{Math.round(progress * 100)}</span>
-                ) : (
-                  <span className="ci-hold-icon">◎</span>
-                )}
+                {holding
+                  ? <span className="ci-hold-pct">{Math.round(progress * 100)}</span>
+                  : <span className="ci-hold-icon">◎</span>
+                }
               </button>
-
-            </div>{/* /ci-ring-wrap */}
+            </div>
 
             <p className="ci-hold-label">
               {holding ? t.ci_holding_label : t.ci_hold_label}
             </p>
-          </div>{/* /ci-ring-area */}
-
+          </div>
         </div>
-      )}{/* /hold step */}
+      )}
 
       {/* ══ CHOICE STEP ════════════════════════════════════════════════════════ */}
       {step === 'choice' && (
         <div className="ci-choice-content">
-
-          {/* Title block */}
           <div className="ci-title-block">
             <span className="section-label">{t.ci_label}</span>
             <h1 className="ci-title">{t.ci_status_label}</h1>
@@ -230,12 +251,11 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                   `ci-status-card--${mod}`,
                   selected === id ? 'ci-status-card--selected' : '',
                 ].filter(Boolean).join(' ')}
-                onClick={() => handleStatusSelect(id)}
+                onClick={() => setSelected(prev => prev === id ? null : id)}
               >
                 <div className="ci-status-top">
                   <span className="ci-status-icon">{icon}</span>
                   <span className="ci-status-name">{statusLabel[id]}</span>
-                  {/* Selection indicator */}
                   <span className="ci-status-check" aria-hidden="true">
                     {selected === id ? '●' : '○'}
                   </span>
@@ -245,17 +265,26 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
             ))}
           </div>
 
-          {/* Retake hint */}
-          <button
-            className="ci-redo-link"
-            onClick={() => { setStep('hold'); setSelected(null); }}
-          >
-            ← Check in again
-          </button>
+          {/* Confirm button */}
+          <div className="ci-confirm-area">
+            <button
+              id="btn-ci-confirm"
+              className="btn btn-primary btn-large ci-confirm-btn"
+              disabled={selected === null}
+              onClick={handleConfirm}
+            >
+              {t.ci_confirm_btn}
+            </button>
 
+            <button
+              className="ci-redo-link"
+              onClick={() => { setStep('hold'); setSelected(null); }}
+            >
+              ← Check in again
+            </button>
+          </div>
         </div>
-      )}{/* /choice step */}
-
+      )}
     </div>
   );
 }

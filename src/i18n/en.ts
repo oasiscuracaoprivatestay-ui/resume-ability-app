@@ -105,6 +105,11 @@ export const en: Translations = {
   ci_near_slip_body: 'I’m struggling and need support.',
   ci_slip: 'SLIP',
   ci_slip_body: 'I slipped from my structure.',
+  ci_confirm_btn: 'Confirm Check-In',
+  ci_done_heading: 'Check-In Complete',
+  ci_done_on_structure: 'You’re staying with your structure.',
+  ci_done_near_slip: 'You noticed the risk early.',
+  ci_done_slip: 'You checked in. Now let’s focus on recovery.',
 
   home_timer_learn_link: 'How the Timer Works',
 

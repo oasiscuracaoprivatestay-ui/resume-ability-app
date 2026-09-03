@@ -104,6 +104,11 @@ export const nl: Translations = {
   ci_near_slip_body: 'Ik heb het moeilijk en heb ondersteuning nodig.',
   ci_slip: 'UITGEGLEDEN',
   ci_slip_body: 'Ik ben van mijn structuur afgeweken.',
+  ci_confirm_btn: 'Check-in bevestigen',
+  ci_done_heading: 'Check-in voltooid',
+  ci_done_on_structure: 'Je houdt je aan je structuur.',
+  ci_done_near_slip: 'Je herkende het risico op tijd.',
+  ci_done_slip: 'Je hebt ingecheckt. Laten we ons nu richten op herstel.',
 
   home_timer_learn_link: 'Hoe de timer werkt',
 

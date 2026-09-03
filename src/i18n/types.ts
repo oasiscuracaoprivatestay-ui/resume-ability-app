@@ -58,6 +58,11 @@ export interface Translations {
   ci_near_slip_body: string;
   ci_slip: string;
   ci_slip_body: string;
+  ci_confirm_btn: string;
+  ci_done_heading: string;
+  ci_done_on_structure: string;
+  ci_done_near_slip: string;
+  ci_done_slip: string;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

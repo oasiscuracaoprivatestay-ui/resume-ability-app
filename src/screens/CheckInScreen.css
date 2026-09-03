@@ -331,3 +331,108 @@
 }
 
 .ci-redo-link:hover { color: var(--text-muted); }
+
+/* ════════════════════════════════════════════════════════
+   CONFIRM AREA (choice step footer)
+   ════════════════════════════════════════════════════════ */
+
+.ci-confirm-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.ci-confirm-btn {
+  width: 100%;
+}
+
+/* Disabled state — override global .btn so opacity is visible */
+.ci-confirm-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ════════════════════════════════════════════════════════
+   DONE STEP
+   ════════════════════════════════════════════════════════ */
+
+.ci-done-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem 3rem;
+  text-align: center;
+  animation: ci-done-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ci-done-enter {
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* Icon circle */
+.ci-done-icon-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.ci-done-icon-wrap--on-structure {
+  border-color: var(--success);
+  background: rgba(52, 211, 153, 0.08);
+  box-shadow: 0 0 32px rgba(52, 211, 153, 0.15);
+}
+.ci-done-icon-wrap--near-slip {
+  border-color: var(--ci-amber);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 32px rgba(245, 158, 11, 0.15);
+}
+.ci-done-icon-wrap--slip {
+  border-color: var(--danger);
+  background: rgba(248, 113, 113, 0.08);
+  box-shadow: 0 0 32px rgba(248, 113, 113, 0.15);
+}
+
+.ci-done-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Heading */
+.ci-done-heading {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+/* Selected status name echo */
+.ci-done-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.1rem;
+}
+
+/* Confirmation message */
+.ci-done-body {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 22ch;
+}

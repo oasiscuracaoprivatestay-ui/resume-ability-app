@@ -104,6 +104,11 @@ export const es: Translations = {
   ci_near_slip_body: 'Estoy luchando y necesito apoyo.',
   ci_slip: 'CAÍDA',
   ci_slip_body: 'Me salté de mi estructura.',
+  ci_confirm_btn: 'Confirmar registro',
+  ci_done_heading: 'Registro completado',
+  ci_done_on_structure: 'Estás siguiendo tu estructura.',
+  ci_done_near_slip: 'Notaste el riesgo a tiempo.',
+  ci_done_slip: 'Te registraste. Ahora enfocémonos en la recuperación.',
 
   home_timer_learn_link: 'Cómo funciona el temporizador',
 
