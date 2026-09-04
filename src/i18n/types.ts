@@ -79,6 +79,10 @@ export interface Translations {
   ci_ability_cta: string;
   ci_slip_recovery_body: string;
   ci_slip_recovery_cta: string;
+  // ── Celebration + wins ──
+  ci_win_heading: string;          // shown on celebration overlay
+  ci_checkin_wins_label: string;   // "Check-In Wins" label
+  ci_near_slip_win: string;        // subtle win confirmation for near-slip
   // ── Dashboard — Check-In KPI ──
   kpi_section_label: string;
   kpi_section_heading: string;
@@ -94,6 +98,7 @@ export interface Translations {
   kpi_insight_near_slip: string;
   kpi_insight_slip: string;
   kpi_insight_mixed: string;
+  kpi_total_checkins: string;      // "Total Check-Ins" label for the wins card
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

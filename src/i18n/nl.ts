@@ -125,6 +125,10 @@ export const nl: Translations = {
   ci_ability_cta: 'Gebruik Hervatvermogen',
   ci_slip_recovery_body: 'Je hoeft niet te wachten tot morgen. Hervat met je volgende beslissing.',
   ci_slip_recovery_cta: 'Hervat mijn structuur',
+  // ── Viering + successen ──
+  ci_win_heading: 'Bewustzijnsoverwinning',
+  ci_checkin_wins_label: 'Check-in successen',
+  ci_near_slip_win: 'Je hield het tegen voor het te laat was. Dat is een overwinning.',
   // ── Dashboard — Check-in KPI ──
   kpi_section_label: 'Check-in status',
   kpi_section_heading: 'Check-in status',
@@ -140,6 +144,7 @@ export const nl: Translations = {
   kpi_insight_near_slip: 'Je merkt risicomamenten op tijd op — dat bewustzijn telt.',
   kpi_insight_slip: 'Herstel is de focus. Gebruik Hervatvermogen om terug te keren met je volgende beslissing.',
   kpi_insight_mixed: 'Je check-ins tonen een gemengd patroon deze week.',
+  kpi_total_checkins: 'Totale check-ins',
 
   home_timer_learn_link: 'Hoe de timer werkt',
 

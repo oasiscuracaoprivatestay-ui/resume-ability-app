@@ -3,6 +3,11 @@
  * Records are stored as an append-only array under a single localStorage key.
  * Each record captures the status, a full ISO timestamp, and a local date key
  * so the app can filter by day without timezone ambiguity.
+ *
+ * v2 additions:
+ *  - CHECKIN_COUNT_KEY  — total completed check-ins (all statuses, all time)
+ *    incremented inside saveCheckIn() after every successful write.
+ *    Near Slip is NOT a Slip — they are tracked separately via status.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -31,7 +36,8 @@ export interface StatusPercentages {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'resume-ability-checkins';
+const STORAGE_KEY       = 'resume-ability-checkins';
+const CHECKIN_COUNT_KEY = 'resume-ability-checkin-count';
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
@@ -73,7 +79,12 @@ export function getCheckIns(): CheckInRecord[] {
 /**
  * Append a new check-in record for the given status.
  * Never overwrites — always pushes to the existing array.
+ * Also increments the persistent total check-in count.
  * Returns the newly created record.
+ *
+ * NOTE: Near Slip is NOT counted as Slip. Both increment the total
+ * check-in count because completing any check-in is a win.
+ * The status field keeps them separately measurable.
  */
 export function saveCheckIn(status: CheckInStatus): CheckInRecord {
   const record: CheckInRecord = {
@@ -85,7 +96,38 @@ export function saveCheckIn(status: CheckInStatus): CheckInRecord {
   const all = getCheckIns();
   all.push(record);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+
+  // Increment total check-in count (all statuses count — every check-in is a win)
+  const current = getTotalCheckInCount();
+  localStorage.setItem(CHECKIN_COUNT_KEY, String(current + 1));
+
   return record;
+}
+
+// ── Total check-in count (persisted) ─────────────────────────────────────────
+
+/**
+ * Returns the total number of completed check-ins ever recorded.
+ * Includes all statuses: on-structure, near-slip, and slip.
+ * Falls back to counting existing records if the counter is missing
+ * (backward compatibility with data saved before v2).
+ */
+export function getTotalCheckInCount(): number {
+  try {
+    const raw = localStorage.getItem(CHECKIN_COUNT_KEY);
+    if (raw !== null) {
+      const n = parseInt(raw, 10);
+      return isNaN(n) ? 0 : n;
+    }
+    // Backward compat: derive from existing records on first call
+    const existingCount = getCheckIns().length;
+    if (existingCount > 0) {
+      localStorage.setItem(CHECKIN_COUNT_KEY, String(existingCount));
+    }
+    return existingCount;
+  } catch {
+    return 0;
+  }
 }
 
 // ── Date-range queries ────────────────────────────────────────────────────────
@@ -116,6 +158,7 @@ export function getLatestCheckIn(): CheckInRecord | null {
 /**
  * Counts each status in an array of records.
  * Safe to call with an empty array — returns zeros.
+ * NOTE: near-slip and slip are always counted separately.
  */
 export function getStatusCounts(records: CheckInRecord[]): StatusCounts {
   const counts: StatusCounts = { 'on-structure': 0, 'near-slip': 0, 'slip': 0, total: 0 };

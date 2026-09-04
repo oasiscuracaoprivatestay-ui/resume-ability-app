@@ -8,6 +8,7 @@ import {
   getStatusCounts,
   getStatusPercentages,
   getDominantStatus,
+  getTotalCheckInCount,
 } from '../utils/checkInStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
@@ -183,11 +184,12 @@ function CheckInKPI({ t }: CheckInKPIProps) {
     const week7Counts   = getStatusCounts(last7Records);
     const week7Pct      = getStatusPercentages(week7Counts);
     const dominant      = getDominantStatus(week7Counts);
+    const totalCheckIns = getTotalCheckInCount();
 
-    return { todayCounts, week7Counts, week7Pct, dominant };
+    return { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns };
   }, []);
 
-  const { todayCounts, week7Counts, week7Pct, dominant } = kpi;
+  const { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns } = kpi;
 
   // ── Insight message ────────────────────────────────────────────────────────
   let insight: string;
@@ -215,6 +217,18 @@ function CheckInKPI({ t }: CheckInKPIProps) {
         <span className="section-label">{t.kpi_section_label}</span>
         <h2 className="section-heading">{t.kpi_section_heading}</h2>
         <p className="kpi-sub">{t.kpi_section_sub}</p>
+      </div>
+
+      {/* ── CHECK-IN WINS HERO CARD ────────────────────────────── */}
+      <div className="checkin-wins-card">
+        <div className="checkin-wins-inner">
+          <div className="checkin-wins-left">
+            <span className="checkin-wins-label">{t.kpi_total_checkins}</span>
+            <span className="checkin-wins-value">{totalCheckIns}</span>
+            <span className="checkin-wins-sub">{t.ci_checkin_wins_label}</span>
+          </div>
+          <div className="checkin-wins-icon">✓</div>
+        </div>
       </div>
 
       {/* ── TODAY ─────────────────────────────────────────────────────────── */}

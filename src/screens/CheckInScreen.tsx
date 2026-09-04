@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
@@ -10,7 +10,7 @@ interface CheckInScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
-type CheckInStep   = 'hold' | 'choice' | 'done';
+type CheckInStep   = 'hold' | 'choice' | 'celebrate' | 'done';
 type InlinePanel   = 'none' | 'why' | 'ability';
 
 // ── Ring geometry ─────────────────────────────────────────────────────────────
@@ -20,6 +20,16 @@ const RING_CY   = 100;
 const RING_CIRC = 2 * Math.PI * RING_R;
 const HOLD_MS   = 2500;
 const ON_STRUCTURE_DELAY = 1400;  // auto-nav delay for on-structure only
+
+// ── Celebration variants ──────────────────────────────────────────────────────
+// 4 distinct visual variants, randomly selected after each successful check-in.
+// Win statuses = 'on-structure' and 'near-slip'.
+const CELEBRATION_VARIANTS = ['confetti', 'sparks', 'particles', 'rings'] as const;
+type CelebrationVariant = typeof CELEBRATION_VARIANTS[number];
+
+function getRandomVariant(): CelebrationVariant {
+  return CELEBRATION_VARIANTS[Math.floor(Math.random() * CELEBRATION_VARIANTS.length)];
+}
 
 // ── Status option config ──────────────────────────────────────────────────────
 interface StatusOption { id: CheckInStatus; mod: string; icon: string; }
@@ -51,21 +61,103 @@ const SUPPORT_ACTIONS: SupportAction[] = [
   { id: 'ability',    icon: '◎', labelKey: 'ci_action_ability',     mod: 'ability'    },
 ];
 
+// ── Celebration Overlay ───────────────────────────────────────────────────────
+// Pure CSS/DOM celebration — no external libraries.
+// Auto-dismisses after ~2s and calls onComplete.
+
+interface CelebrationOverlayProps {
+  variant: CelebrationVariant;
+  heading: string;
+  onComplete: () => void;
+}
+
+function CelebrationOverlay({ variant, heading, onComplete }: CelebrationOverlayProps) {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 2200);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  // Generate particle elements for the chosen variant
+  const particles = useMemo(() => {
+    if (variant === 'confetti') {
+      return Array.from({ length: 22 }, (_, i) => (
+        <div
+          key={i}
+          className="cel-confetti-piece"
+          style={{
+            '--i': i,
+            '--hue': (i * 23 + 40) % 360,
+            left: `${5 + (i * 4.2) % 90}%`,
+          } as React.CSSProperties}
+        />
+      ));
+    }
+    if (variant === 'sparks') {
+      return Array.from({ length: 12 }, (_, i) => (
+        <div
+          key={i}
+          className="cel-spark"
+          style={{
+            '--i': i,
+            '--angle': `${i * 30}deg`,
+          } as React.CSSProperties}
+        />
+      ));
+    }
+    if (variant === 'particles') {
+      return Array.from({ length: 18 }, (_, i) => (
+        <div
+          key={i}
+          className="cel-particle"
+          style={{
+            '--i': i,
+            '--x': `${Math.cos((i / 18) * Math.PI * 2) * 120}px`,
+            '--y': `${Math.sin((i / 18) * Math.PI * 2) * 110}px`,
+          } as React.CSSProperties}
+        />
+      ));
+    }
+    // rings
+    return Array.from({ length: 4 }, (_, i) => (
+      <div
+        key={i}
+        className="cel-ring"
+        style={{ '--i': i } as React.CSSProperties}
+      />
+    ));
+  }, [variant]);
+
+  return (
+    <div className={`cel-overlay cel-overlay--${variant}`} aria-live="polite" aria-atomic="true">
+      <div className="cel-stage">
+        {particles}
+        <div className="cel-center">
+          <div className="cel-checkmark">✓</div>
+          <p className="cel-heading">{heading}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const { t } = useTranslation();
 
-  const [step, setStep]         = useState<CheckInStep>('hold');
-  const [progress, setProgress] = useState(0);
-  const [holding, setHolding]   = useState(false);
-  const [selected, setSelected] = useState<CheckInStatus | null>(null);
-  const [saved, setSaved]       = useState<CheckInStatus | null>(null);
-  const [panel, setPanel]       = useState<InlinePanel>('none');
+  const [step, setStep]             = useState<CheckInStep>('hold');
+  const [progress, setProgress]     = useState(0);
+  const [holding, setHolding]       = useState(false);
+  const [selected, setSelected]     = useState<CheckInStatus | null>(null);
+  const [saved, setSaved]           = useState<CheckInStatus | null>(null);
+  const [panel, setPanel]           = useState<InlinePanel>('none');
+  const [celebVariant, setCelebVariant] = useState<CelebrationVariant>('confetti');
 
   const rafRef   = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
+  // Duplicate-prevention: once a hold completes, guard against re-firing
+  const holdCompletedRef = useRef(false);
 
-  // ── Auto-nav: ON STRUCTURE only ───────────────────────────────────────────
+  // ── Auto-nav: ON STRUCTURE only (after celebration finishes) ──────────────
   useEffect(() => {
     if (step !== 'done' || saved !== 'on-structure') return;
     const timer = setTimeout(() => onNavigate('home'), ON_STRUCTURE_DELAY);
@@ -85,7 +177,8 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
 
   const startHold = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (step !== 'hold') return;
+    // Guard: only allow hold in the 'hold' step; prevent duplicate completions
+    if (step !== 'hold' || holdCompletedRef.current) return;
     setHolding(true);
     startRef.current = performance.now();
 
@@ -96,6 +189,8 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
       if (p < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
+        // Prevent this hold from triggering again
+        holdCompletedRef.current = true;
         rafRef.current = null;
         startRef.current = null;
         setHolding(false);
@@ -110,15 +205,32 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   // ── Confirm check-in ───────────────────────────────────────────────────────
   const handleConfirm = useCallback(() => {
     if (!selected) return;
-    saveCheckIn(selected);
+    saveCheckIn(selected);        // increments persistent count
     setSaved(selected);
     setPanel('none');
     if (navigator.vibrate) navigator.vibrate(40);
-    setStep('done');
+
+    if (selected === 'on-structure') {
+      // Full celebration for the primary win
+      setCelebVariant(getRandomVariant());
+      setStep('celebrate');
+    } else if (selected === 'near-slip') {
+      // Near Slip is a win — show done screen (which has a subtle win msg)
+      setStep('done');
+    } else {
+      // Slip — go straight to done/recovery
+      setStep('done');
+    }
   }, [selected]);
+
+  // ── After celebration completes, move to done ─────────────────────────────
+  const handleCelebrationComplete = useCallback(() => {
+    setStep('done');
+  }, []);
 
   // ── Reset to hold (redo) ───────────────────────────────────────────────────
   const handleRedo = () => {
+    holdCompletedRef.current = false; // allow a new hold
     setStep('hold');
     setSelected(null);
     setSaved(null);
@@ -158,6 +270,19 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   // ════════════════════════════════════════════════════════════════════════════
   // RENDER
   // ════════════════════════════════════════════════════════════════════════════
+
+  // ── Celebration overlay ────────────────────────────────────────────────────
+  if (step === 'celebrate') {
+    return (
+      <div className="screen ci-screen">
+        <CelebrationOverlay
+          variant={celebVariant}
+          heading={t.ci_win_heading}
+          onComplete={handleCelebrationComplete}
+        />
+      </div>
+    );
+  }
 
   // ── "Remember My Why" inline panel ────────────────────────────────────────
   if (step === 'done' && saved === 'near-slip' && panel === 'why') {
@@ -225,7 +350,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     );
   }
 
-  // ── NEAR SLIP done — support menu ──────────────────────────────────────────
+  // ── NEAR SLIP done — subtle win + support menu ─────────────────────────────
   if (step === 'done' && saved === 'near-slip') {
     return (
       <div className="screen ci-screen">
@@ -239,6 +364,8 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
             <p className="ci-done-status">{statusLabel['near-slip']}</p>
           </div>
         </div>
+        {/* Subtle win confirmation — Near Slip is a WIN */}
+        <p className="ci-near-slip-win">{t.ci_near_slip_win}</p>
         <p className="ci-done-desc">{t.ci_done_near_slip_desc}</p>
 
         {/* Support section */}
@@ -325,12 +452,18 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
           </div>
 
           <div className="ci-ring-area">
+            {/* ── Instruction ABOVE the button ──────────────────────────── */}
+            <div className="ci-hold-instruction-block">
+              <p className="ci-hold-instruction">PRESS AND HOLD TO CHECK IN</p>
+              <span className="ci-hold-arrow" aria-hidden="true">↓</span>
+            </div>
+
             <div className={`ci-ring-wrap${holding ? ' ci-ring-wrap--holding' : ''}`}>
               <svg className="ci-ring-svg" viewBox="0 0 200 200" aria-hidden="true">
                 <defs>
                   <linearGradient id="ci-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%"   stopColor="#2dd4bf" />
-                    <stop offset="100%" stopColor="#14b8a6" />
+                    <stop offset="0%"   stopColor="#4ade80" />
+                    <stop offset="100%" stopColor="#16a34a" />
                   </linearGradient>
                   <filter id="ci-ring-glow">
                     <feGaussianBlur stdDeviation="2.5" result="blur" />
@@ -360,17 +493,13 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                 onPointerLeave={cancelHold}
                 onPointerCancel={cancelHold}
                 onContextMenu={e => e.preventDefault()}
-                aria-label={t.ci_hold_label}
+                aria-label="Press and hold to check in"
               >
                 {holding
                   ? <span className="ci-hold-pct">{Math.round(progress * 100)}</span>
                   : <span className="ci-hold-icon">◎</span>}
               </button>
             </div>
-
-            <p className="ci-hold-label">
-              {holding ? t.ci_holding_label : t.ci_hold_label}
-            </p>
           </div>
         </div>
       )}

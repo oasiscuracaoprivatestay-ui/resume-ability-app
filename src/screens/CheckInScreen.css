@@ -7,7 +7,8 @@
 /* ON STRUCTURE → var(--success)  #34d399  */
 /* NEAR SLIP    → --ci-amber      #f59e0b  */
 /* SLIP         → var(--danger)   #f87171  */
-.ci-screen { --ci-amber: #f59e0b; }
+/* HOLD BTN     → green           #22c55e  */
+.ci-screen { --ci-amber: #f59e0b; --ci-green: #22c55e; }
 
 /* ── Screen wrapper ───────────────────────────────────── */
 .ci-screen {
@@ -71,7 +72,7 @@
   justify-content: center;
 }
 
-/* Ambient background glow — visible while holding */
+/* Ambient background glow — green while holding */
 .ci-ring-wrap::before {
   content: '';
   position: absolute;
@@ -79,7 +80,7 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(45, 212, 191, 0) 0%,
+    rgba(34, 197, 94, 0) 0%,
     transparent 70%
   );
   transition: background 0.3s ease;
@@ -89,7 +90,7 @@
 .ci-ring-wrap--holding::before {
   background: radial-gradient(
     circle,
-    rgba(45, 212, 191, 0.14) 0%,
+    rgba(34, 197, 94, 0.18) 0%,
     transparent 70%
   );
 }
@@ -118,8 +119,8 @@
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  border: 1.5px solid var(--border-hover);
-  background: var(--surface);
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,42 +138,76 @@
 }
 
 .ci-hold-btn:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 20px var(--accent-glow);
+  border-color: var(--ci-green);
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
 }
 
 .ci-hold-btn--active {
-  background: rgba(45, 212, 191, 0.07);
-  border-color: var(--accent);
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--ci-green);
   box-shadow:
-    0 0 24px var(--accent-glow),
-    0 0 48px rgba(45, 212, 191, 0.08);
+    0 0 28px rgba(34, 197, 94, 0.4),
+    0 0 56px rgba(34, 197, 94, 0.15);
   transform: scale(0.97);
 }
 
 /* Idle icon */
 .ci-hold-icon {
   font-size: 2.25rem;
-  color: var(--text-muted);
+  color: rgba(34, 197, 94, 0.5);
   line-height: 1;
   transition: color 0.2s ease;
 }
 
 .ci-hold-btn:hover .ci-hold-icon,
 .ci-hold-btn--active .ci-hold-icon {
-  color: var(--accent);
+  color: var(--ci-green);
 }
 
 /* Progress percentage shown while holding */
 .ci-hold-pct {
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--ci-green);
   letter-spacing: -0.04em;
   line-height: 1;
 }
 
-/* Hint text below ring */
+/* ── Instruction block ABOVE the ring ────────────────── */
+.ci-hold-instruction-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.ci-hold-instruction {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* Animated downward arrow guides the eye to the button */
+.ci-hold-arrow {
+  font-size: 1.5rem;
+  color: var(--ci-green);
+  line-height: 1;
+  animation: ci-arrow-bounce 1.2s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes ci-arrow-bounce {
+  0%, 100% { transform: translateY(0);   opacity: 0.7; }
+  50%       { transform: translateY(6px); opacity: 1;   }
+}
+
+/* Hint text below ring — kept for holding state only */
 .ci-hold-label {
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -701,3 +736,208 @@
   -webkit-tap-highlight-color: transparent;
 }
 .ci-panel-back:hover { color: var(--text-muted); }
+
+/* ════════════════════════════════════════════════════════
+   NEAR SLIP — Subtle win confirmation banner
+   ════════════════════════════════════════════════════════ */
+
+.ci-near-slip-win {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ci-amber);
+  text-align: center;
+  padding: 0.65rem 1.5rem;
+  background: rgba(245, 158, 11, 0.07);
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+  animation: ci-done-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s backwards;
+  letter-spacing: 0.01em;
+}
+
+/* ════════════════════════════════════════════════════════
+   CELEBRATION OVERLAY — 4 variants
+   Fullscreen overlay, ~2.2s, cleans up automatically
+   ════════════════════════════════════════════════════════ */
+
+.cel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
+  animation: cel-fade-in 0.25s ease forwards;
+}
+
+@keyframes cel-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cel-stage {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Center icon + heading ── */
+.cel-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  animation: cel-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes cel-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.cel-checkmark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 32px rgba(34, 197, 94, 0.6),
+    0 0 64px rgba(34, 197, 94, 0.25);
+  line-height: 1;
+}
+
+.cel-heading {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════
+   VARIANT 1: CONFETTI
+   ══════════════════════════════════════════ */
+
+.cel-confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: hsl(var(--hue), 80%, 60%);
+  animation: cel-confetti-fall 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) var(--i, 0) forwards;
+  animation-delay: calc(var(--i) * 0.04s);
+  transform-origin: center;
+}
+
+@keyframes cel-confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) scaleX(1);
+    opacity: 1;
+  }
+  60% { opacity: 1; }
+  100% {
+    transform: translateY(280px) rotate(calc(var(--i) * 35deg + 180deg)) scaleX(0.5);
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════
+   VARIANT 2: SPARKS / FIREWORKS
+   ══════════════════════════════════════════ */
+
+.cel-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 18px;
+  border-radius: 100px;
+  background: linear-gradient(to top, #fbbf24, #fef3c7);
+  transform-origin: 50% 100%;
+  animation: cel-spark-shoot 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i) * 0.05s);
+  rotate: var(--angle);
+}
+
+@keyframes cel-spark-shoot {
+  0% {
+    opacity: 1;
+    transform: translateY(-10px) scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-90px) scaleY(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-130px) scaleY(0.2);
+  }
+}
+
+/* ══════════════════════════════════════════
+   VARIANT 3: FLOATING PARTICLES
+   ══════════════════════════════════════════ */
+
+.cel-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34d399, #22c55e);
+  animation: cel-particle-float 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i) * 0.03s);
+}
+
+@keyframes cel-particle-float {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  70% {
+    opacity: 0.8;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x) * 1.3), calc(-50% + var(--y) * 1.3)) scale(0);
+  }
+}
+
+/* ══════════════════════════════════════════
+   VARIANT 4: PULSE RINGS
+   ══════════════════════════════════════════ */
+
+.cel-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 197, 94, 0.7);
+  transform: translate(-50%, -50%) scale(0);
+  animation: cel-ring-expand 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i) * 0.25s);
+}
+
+@keyframes cel-ring-expand {
+  0%   { opacity: 0.9; transform: translate(-50%, -50%) scale(0); }
+  70%  { opacity: 0.3; transform: translate(-50%, -50%) scale(2.5); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(3.2); }
+}

@@ -139,7 +139,7 @@
   max-width: 340px;
 }
 
-/* ── Daily Check-In entry button ── */
+/* ── Daily Check-In entry button ── PRIMARY HERO ACTION ── */
 
 .home-btn-checkin {
   display: flex;
@@ -148,72 +148,91 @@
   justify-content: space-between;
   gap: 0.75rem;
   width: 100%;
-  padding: 1rem 1.1rem 1rem 1.25rem;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-left: 4px solid var(--accent);
+  padding: 1.4rem 1.35rem 1.4rem 1.5rem;
+  /* Green hero gradient */
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
   border-radius: var(--radius-xl);
   cursor: pointer;
   font-family: var(--font);
   -webkit-tap-highlight-color: transparent;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+  /* Strong green glow */
+  box-shadow:
+    0 4px 28px rgba(34, 197, 94, 0.45),
+    0 0 60px rgba(34, 197, 94, 0.18);
 }
 
-/* Ambient glow behind left edge */
+/* Shimmer highlight */
 .home-btn-checkin::before {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 100px; height: 100%;
-  background: radial-gradient(
-    ellipse at left center,
-    rgba(45, 212, 191, 0.07) 0%,
-    transparent 70%
+  width: 55%; height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 100%
   );
   pointer-events: none;
+  border-radius: inherit;
 }
 
 .home-btn-checkin:hover {
-  border-color: rgba(45, 212, 191, 0.45);
-  border-left-color: var(--accent);
-  background: var(--surface-hover);
-  box-shadow: 0 4px 20px rgba(45, 212, 191, 0.07);
+  box-shadow:
+    0 6px 36px rgba(34, 197, 94, 0.55),
+    0 0 80px rgba(34, 197, 94, 0.25);
+  transform: translateY(-2px);
 }
 
 .home-btn-checkin:active {
-  transform: scale(0.99);
+  transform: translateY(0) scale(0.99);
+  box-shadow:
+    0 2px 16px rgba(34, 197, 94, 0.4),
+    0 0 40px rgba(34, 197, 94, 0.15);
 }
 
 .home-btn-checkin-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
+  gap: 0.1rem;
   min-width: 0;
 }
 
-.home-btn-checkin-label {
-  font-size: 0.95rem;
+/* Small eyebrow label above title */
+.home-btn-checkin-eyebrow {
+  font-size: 0.58rem;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1;
+  margin-bottom: 0.1rem;
+}
+
+.home-btn-checkin-label {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .home-btn-checkin-sub {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 400;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
   letter-spacing: 0.01em;
   line-height: 1.3;
+  margin-top: 0.15rem;
 }
 
 .home-btn-checkin-arrow {
-  font-size: 1.35rem;
-  color: var(--accent);
-  opacity: 0.6;
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.8);
   flex-shrink: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
   line-height: 1;
@@ -221,41 +240,43 @@
 
 .home-btn-checkin:hover .home-btn-checkin-arrow {
   opacity: 1;
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
-.home-btn-slip {
+/* ── Slip button ── AMBER / SECONDARY ── */
 
+.home-btn-slip {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
-  padding: 1.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--accent-alt), var(--accent));
-  color: var(--bg);
+  padding: 1.15rem 1.5rem;
+  /* Amber treatment — clearly secondary, not green */
+  background: rgba(245, 158, 11, 0.06);
+  color: #f59e0b;
   font-family: var(--font);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
-  border: none;
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
   border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow:
-    0 4px 24px var(--accent-glow-strong),
-    0 0 60px var(--accent-glow);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.08);
+  letter-spacing: 0.01em;
 }
 
 .home-btn-slip:hover {
-  box-shadow:
-    0 6px 32px var(--accent-glow-strong),
-    0 0 80px var(--accent-glow);
-  transform: translateY(-2px);
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
 }
 
 .home-btn-slip:active {
   transform: translateY(0);
+  box-shadow: none;
 }
 
 .home-btn-motivation {

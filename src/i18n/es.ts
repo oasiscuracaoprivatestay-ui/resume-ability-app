@@ -125,6 +125,10 @@ export const es: Translations = {
   ci_ability_cta: 'Usar Reanudar-Habilidad',
   ci_slip_recovery_body: 'No necesitas esperar hasta mañana. Reanuda con tu próxima decisión.',
   ci_slip_recovery_cta: 'Reanudar mi estructura',
+  // ── Celebración + logros ──
+  ci_win_heading: 'Logro de conciencia',
+  ci_checkin_wins_label: 'Registros exitosos',
+  ci_near_slip_win: 'Lo detectaste antes de caer. Eso es un éxito.',
   // ── Panel — KPI de registro ──
   kpi_section_label: 'Estado del registro',
   kpi_section_heading: 'Estado del registro',
@@ -140,6 +144,7 @@ export const es: Translations = {
   kpi_insight_near_slip: 'Estás notando los momentos de riesgo a tiempo — esa conciencia importa.',
   kpi_insight_slip: 'La recuperación es el foco. Usa Reanudar-Habilidad para volver con tu próxima decisión.',
   kpi_insight_mixed: 'Tus registros muestran un patrón mixto esta semana.',
+  kpi_total_checkins: 'Total de registros',
 
   home_timer_learn_link: 'Cómo funciona el temporizador',
 

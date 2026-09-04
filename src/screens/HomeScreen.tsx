@@ -58,13 +58,14 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         </div>
 
         <div className="home-actions">
-          {/* ── Daily Check-In entry ── */}
+          {/* ── Daily Check-In entry ── PRIMARY ACTION ── */}
           <button
             id="btn-daily-checkin"
             className="home-btn-checkin"
             onClick={() => onNavigate('check-in')}
           >
             <div className="home-btn-checkin-left">
+              <span className="home-btn-checkin-eyebrow">Daily Check-In</span>
               <span className="home-btn-checkin-label">{t.ci_entry_label}</span>
               <span className="home-btn-checkin-sub">{t.ci_entry_sub}</span>
             </div>

@@ -126,6 +126,10 @@ export const en: Translations = {
   ci_ability_cta: 'Use Resume-Ability',
   ci_slip_recovery_body: 'You do not need to wait until tomorrow. Resume with your next decision.',
   ci_slip_recovery_cta: 'Resume My Structure',
+  // ── Celebration + wins ──
+  ci_win_heading: 'Awareness Win',
+  ci_checkin_wins_label: 'Check-In Wins',
+  ci_near_slip_win: 'You caught it before the slip. That’s a win.',
   // ── Dashboard — Check-In KPI ──
   kpi_section_label: 'Check-In Status',
   kpi_section_heading: 'Check-In Status',
@@ -141,6 +145,7 @@ export const en: Translations = {
   kpi_insight_near_slip: 'You’re noticing risk moments early — that awareness matters.',
   kpi_insight_slip: 'Recovery is the focus. Use Resume-Ability to return with your next decision.',
   kpi_insight_mixed: 'Your check-ins show a mixed pattern this week.',
+  kpi_total_checkins: 'Total Check-Ins',
 
   home_timer_learn_link: 'How the Timer Works',
 
