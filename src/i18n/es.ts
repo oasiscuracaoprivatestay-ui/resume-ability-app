@@ -125,6 +125,21 @@ export const es: Translations = {
   ci_ability_cta: 'Usar Reanudar-Habilidad',
   ci_slip_recovery_body: 'No necesitas esperar hasta mañana. Reanuda con tu próxima decisión.',
   ci_slip_recovery_cta: 'Reanudar mi estructura',
+  // ── Panel — KPI de registro ──
+  kpi_section_label: 'Estado del registro',
+  kpi_section_heading: 'Estado del registro',
+  kpi_section_sub: 'Mira cómo evolucionan tus registros recientes.',
+  kpi_today_heading: 'Hoy',
+  kpi_7day_heading: 'Últimos 7 días',
+  kpi_no_checkins_today: 'No hay registros hoy todavía.',
+  kpi_status_on_structure: 'En estructura',
+  kpi_status_near_slip: 'Cerca de caer',
+  kpi_status_slip: 'Caída',
+  kpi_insight_none: 'Empieza a registrarte para ver tus patrones aquí.',
+  kpi_insight_on_structure: 'La mayoría de tus registros recientes fueron En Estructura.',
+  kpi_insight_near_slip: 'Estás notando los momentos de riesgo a tiempo — esa conciencia importa.',
+  kpi_insight_slip: 'La recuperación es el foco. Usa Reanudar-Habilidad para volver con tu próxima decisión.',
+  kpi_insight_mixed: 'Tus registros muestran un patrón mixto esta semana.',
 
   home_timer_learn_link: 'Cómo funciona el temporizador',
 

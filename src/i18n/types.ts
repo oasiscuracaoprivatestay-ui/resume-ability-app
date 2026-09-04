@@ -79,6 +79,21 @@ export interface Translations {
   ci_ability_cta: string;
   ci_slip_recovery_body: string;
   ci_slip_recovery_cta: string;
+  // ── Dashboard — Check-In KPI ──
+  kpi_section_label: string;
+  kpi_section_heading: string;
+  kpi_section_sub: string;
+  kpi_today_heading: string;
+  kpi_7day_heading: string;
+  kpi_no_checkins_today: string;
+  kpi_status_on_structure: string;
+  kpi_status_near_slip: string;
+  kpi_status_slip: string;
+  kpi_insight_none: string;
+  kpi_insight_on_structure: string;
+  kpi_insight_near_slip: string;
+  kpi_insight_slip: string;
+  kpi_insight_mixed: string;
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

@@ -126,6 +126,21 @@ export const en: Translations = {
   ci_ability_cta: 'Use Resume-Ability',
   ci_slip_recovery_body: 'You do not need to wait until tomorrow. Resume with your next decision.',
   ci_slip_recovery_cta: 'Resume My Structure',
+  // ── Dashboard — Check-In KPI ──
+  kpi_section_label: 'Check-In Status',
+  kpi_section_heading: 'Check-In Status',
+  kpi_section_sub: 'See how your recent check-ins are trending.',
+  kpi_today_heading: 'Today',
+  kpi_7day_heading: 'Last 7 Days',
+  kpi_no_checkins_today: 'No check-ins yet today.',
+  kpi_status_on_structure: 'On Structure',
+  kpi_status_near_slip: 'Near Slip',
+  kpi_status_slip: 'Slip',
+  kpi_insight_none: 'Start checking in to see your patterns here.',
+  kpi_insight_on_structure: 'Most of your recent check-ins were On Structure.',
+  kpi_insight_near_slip: 'You’re noticing risk moments early — that awareness matters.',
+  kpi_insight_slip: 'Recovery is the focus. Use Resume-Ability to return with your next decision.',
+  kpi_insight_mixed: 'Your check-ins show a mixed pattern this week.',
 
   home_timer_learn_link: 'How the Timer Works',
 

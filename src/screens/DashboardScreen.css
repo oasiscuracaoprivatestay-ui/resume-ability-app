@@ -268,3 +268,196 @@
   color: var(--danger);
   opacity: 0.8;
 }
+
+/* ════════════════════════════════════════════════════════
+   Check-In KPI Section
+   ════════════════════════════════════════════════════════ */
+
+/* Local amber (mirrors --ci-amber in CheckInScreen) */
+.kpi-section { --kpi-amber: #f59e0b; }
+
+.kpi-section {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* ── Section header ──────────────────────────────────── */
+.kpi-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpi-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin-top: 0.1rem;
+}
+
+/* ── Period blocks (Today / Last 7 Days) ─────────────── */
+.kpi-period-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.kpi-period-heading {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.kpi-empty {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  padding: 0.5rem 0;
+}
+
+/* ── Today count row ─────────────────────────────────── */
+.kpi-count-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.kpi-count {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.kpi-count-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.kpi-count-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+
+/* Count value colours */
+.kpi-count--on-structure .kpi-count-value { color: var(--success); }
+.kpi-count--near-slip    .kpi-count-value { color: var(--kpi-amber); }
+.kpi-count--slip         .kpi-count-value { color: var(--danger); opacity: 0.8; }
+
+/* ── 7-day stat grid ─────────────────────────────────── */
+.kpi-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.kpi-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.85rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.kpi-stat-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.kpi-stat-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.kpi-stat-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.3;
+  margin-top: 0.1rem;
+}
+
+/* Stat value + pct colours */
+.kpi-stat--on-structure .kpi-stat-value,
+.kpi-stat--on-structure .kpi-stat-pct  { color: var(--success); }
+.kpi-stat--near-slip    .kpi-stat-value,
+.kpi-stat--near-slip    .kpi-stat-pct  { color: var(--kpi-amber); }
+.kpi-stat--slip         .kpi-stat-value,
+.kpi-stat--slip         .kpi-stat-pct  { color: var(--danger); opacity: 0.8; }
+
+/* ── Segmented bar ───────────────────────────────────── */
+.kpi-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--border);    /* fallback for gaps when only one segment */
+  gap: 1.5px;
+}
+
+.kpi-bar-seg {
+  height: 100%;
+  min-width: 2px;               /* never invisible, even at 1% */
+  transition: width 0.4s ease;
+}
+
+.kpi-bar-seg--on-structure { background: var(--success); }
+.kpi-bar-seg--near-slip    { background: var(--kpi-amber); }
+.kpi-bar-seg--slip         { background: var(--danger); opacity: 0.8; }
+
+/* ── Legend ──────────────────────────────────────────── */
+.kpi-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+}
+
+.kpi-legend-item {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.kpi-legend-item--on-structure { color: var(--success); }
+.kpi-legend-item--near-slip    { color: var(--kpi-amber); }
+.kpi-legend-item--slip         { color: var(--danger); opacity: 0.85; }
+
+/* ── Insight ─────────────────────────────────────────── */
+.kpi-insight {
+  padding: 0.9rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.kpi-insight-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  font-style: italic;
+}

@@ -125,6 +125,21 @@ export const nl: Translations = {
   ci_ability_cta: 'Gebruik Hervatvermogen',
   ci_slip_recovery_body: 'Je hoeft niet te wachten tot morgen. Hervat met je volgende beslissing.',
   ci_slip_recovery_cta: 'Hervat mijn structuur',
+  // ── Dashboard — Check-in KPI ──
+  kpi_section_label: 'Check-in status',
+  kpi_section_heading: 'Check-in status',
+  kpi_section_sub: 'Bekijk hoe je recente check-ins zich ontwikkelen.',
+  kpi_today_heading: 'Vandaag',
+  kpi_7day_heading: 'Laatste 7 dagen',
+  kpi_no_checkins_today: 'Nog geen check-ins vandaag.',
+  kpi_status_on_structure: 'Op schema',
+  kpi_status_near_slip: 'Bijna uit balans',
+  kpi_status_slip: 'Uitgegleden',
+  kpi_insight_none: 'Begin met inchecken om je patronen hier te zien.',
+  kpi_insight_on_structure: 'De meeste van je recente check-ins waren Op Schema.',
+  kpi_insight_near_slip: 'Je merkt risicomamenten op tijd op — dat bewustzijn telt.',
+  kpi_insight_slip: 'Herstel is de focus. Gebruik Hervatvermogen om terug te keren met je volgende beslissing.',
+  kpi_insight_mixed: 'Je check-ins tonen een gemengd patroon deze week.',
 
   home_timer_learn_link: 'Hoe de timer werkt',
 

@@ -2,6 +2,13 @@ import { useMemo } from 'react';
 import type { Screen } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
 import { loadToday, dailyScore } from '../utils/balanceStorage';
+import {
+  getTodayCheckIns,
+  getCheckInsLastNDays,
+  getStatusCounts,
+  getStatusPercentages,
+  getDominantStatus,
+} from '../utils/checkInStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
@@ -150,6 +157,137 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
             {t.dash_empty}
           </p>
         )}
+
+        {/* ══ Check-In KPI section ══ */}
+        <CheckInKPI t={t} />
+
+      </div>
+    </div>
+  );
+}
+
+// ── CheckInKPI ────────────────────────────────────────────────────────────────
+// Self-contained sub-component so the parent's render stays clean.
+// Reads localStorage exactly once per mount via useMemo.
+
+interface CheckInKPIProps {
+  t: Translations;
+}
+
+function CheckInKPI({ t }: CheckInKPIProps) {
+  const kpi = useMemo(() => {
+    const todayRecords  = getTodayCheckIns();
+    const last7Records  = getCheckInsLastNDays(7);
+
+    const todayCounts   = getStatusCounts(todayRecords);
+    const week7Counts   = getStatusCounts(last7Records);
+    const week7Pct      = getStatusPercentages(week7Counts);
+    const dominant      = getDominantStatus(week7Counts);
+
+    return { todayCounts, week7Counts, week7Pct, dominant };
+  }, []);
+
+  const { todayCounts, week7Counts, week7Pct, dominant } = kpi;
+
+  // ── Insight message ────────────────────────────────────────────────────────
+  let insight: string;
+  if (week7Counts.total === 0) {
+    insight = t.kpi_insight_none;
+  } else if (dominant === 'on-structure') {
+    insight = t.kpi_insight_on_structure;
+  } else if (dominant === 'near-slip') {
+    insight = t.kpi_insight_near_slip;
+  } else if (dominant === 'slip') {
+    insight = t.kpi_insight_slip;
+  } else {
+    insight = t.kpi_insight_mixed;  // tie (dominant === null) or unexpected
+  }
+
+  // ── Segmented bar widths (percentages already clamped/rounded) ─────────────
+  const onPct   = week7Pct['on-structure'];
+  const nearPct = week7Pct['near-slip'];
+  const slipPct = week7Pct['slip'];
+
+  return (
+    <div className="kpi-section">
+      {/* Header */}
+      <div className="kpi-header">
+        <span className="section-label">{t.kpi_section_label}</span>
+        <h2 className="section-heading">{t.kpi_section_heading}</h2>
+        <p className="kpi-sub">{t.kpi_section_sub}</p>
+      </div>
+
+      {/* ── TODAY ─────────────────────────────────────────────────────────── */}
+      <div className="kpi-period-block">
+        <span className="kpi-period-heading">{t.kpi_today_heading}</span>
+
+        {todayCounts.total === 0 ? (
+          <p className="kpi-empty">{t.kpi_no_checkins_today}</p>
+        ) : (
+          <div className="kpi-count-row">
+            <div className="kpi-count kpi-count--on-structure">
+              <span className="kpi-count-value">{todayCounts['on-structure']}</span>
+              <span className="kpi-count-label">{t.kpi_status_on_structure}</span>
+            </div>
+            <div className="kpi-count kpi-count--near-slip">
+              <span className="kpi-count-value">{todayCounts['near-slip']}</span>
+              <span className="kpi-count-label">{t.kpi_status_near_slip}</span>
+            </div>
+            <div className="kpi-count kpi-count--slip">
+              <span className="kpi-count-value">{todayCounts['slip']}</span>
+              <span className="kpi-count-label">{t.kpi_status_slip}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── LAST 7 DAYS ───────────────────────────────────────────────────── */}
+      <div className="kpi-period-block">
+        <span className="kpi-period-heading">{t.kpi_7day_heading}</span>
+
+        {week7Counts.total === 0 ? (
+          <p className="kpi-empty">{t.kpi_insight_none}</p>
+        ) : (
+          <>
+            {/* Stat grid */}
+            <div className="kpi-stat-grid">
+              <div className="kpi-stat kpi-stat--on-structure">
+                <span className="kpi-stat-value">{week7Counts['on-structure']}</span>
+                <span className="kpi-stat-pct">{onPct}%</span>
+                <span className="kpi-stat-label">{t.kpi_status_on_structure}</span>
+              </div>
+              <div className="kpi-stat kpi-stat--near-slip">
+                <span className="kpi-stat-value">{week7Counts['near-slip']}</span>
+                <span className="kpi-stat-pct">{nearPct}%</span>
+                <span className="kpi-stat-label">{t.kpi_status_near_slip}</span>
+              </div>
+              <div className="kpi-stat kpi-stat--slip">
+                <span className="kpi-stat-value">{week7Counts['slip']}</span>
+                <span className="kpi-stat-pct">{slipPct}%</span>
+                <span className="kpi-stat-label">{t.kpi_status_slip}</span>
+              </div>
+            </div>
+
+            {/* Segmented bar */}
+            <div className="kpi-bar" role="img" aria-label="7-day status distribution">
+              {onPct   > 0 && <div className="kpi-bar-seg kpi-bar-seg--on-structure" style={{ width: `${onPct}%` }} />}
+              {nearPct > 0 && <div className="kpi-bar-seg kpi-bar-seg--near-slip"    style={{ width: `${nearPct}%` }} />}
+              {slipPct > 0 && <div className="kpi-bar-seg kpi-bar-seg--slip"         style={{ width: `${slipPct}%` }} />}
+            </div>
+
+            {/* Bar legend */}
+            <div className="kpi-legend">
+              {onPct   > 0 && <span className="kpi-legend-item kpi-legend-item--on-structure">✓ {t.kpi_status_on_structure} {onPct}%</span>}
+              {nearPct > 0 && <span className="kpi-legend-item kpi-legend-item--near-slip">⚡ {t.kpi_status_near_slip} {nearPct}%</span>}
+              {slipPct > 0 && <span className="kpi-legend-item kpi-legend-item--slip">↻ {t.kpi_status_slip} {slipPct}%</span>}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Insight ───────────────────────────────────────────────────────── */}
+      <div className="kpi-insight">
+        <p className="kpi-insight-text">{insight}</p>
       </div>
     </div>
   );
