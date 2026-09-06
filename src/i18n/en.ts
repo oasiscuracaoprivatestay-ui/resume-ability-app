@@ -8,7 +8,7 @@ export const en: Translations = {
   home_question_accent: 'control?',
   home_subtitle: 'Be honest. Fast recovery starts with awareness.',
   home_slipped: 'I slipped',
-  home_in_control: "I'm in control",
+  home_in_control: 'I Am in Control',
   home_dashboard: 'Dashboard',
   home_history: 'History',
   home_daily_audio: 'Daily Audio',
@@ -146,6 +146,36 @@ export const en: Translations = {
   kpi_insight_slip: 'Recovery is the focus. Use Resume-Ability to return with your next decision.',
   kpi_insight_mixed: 'Your check-ins show a mixed pattern this week.',
   kpi_total_checkins: 'Total Check-Ins',
+  kpi_nn_reviews_label: 'Reviews',
+
+  // ── Pledge / Commitment (hold step) ──
+  pledge_banner: 'I commit to my structured diet!',
+  pledge_why_title: 'Why I\'m Doing This',
+  pledge_why_empty: 'Add your reason →',
+  pledge_why_manage: 'Manage',
+  pledge_nn_title: 'Non-Negotiables',
+  pledge_nn_empty: 'Set your non-negotiables →',
+  pledge_nn_review_btn: 'Review My Non-Negotiables',
+  pledge_review_heading: 'My Non-Negotiables',
+  pledge_review_done: 'Done — I\'ve Reviewed These',
+  pledge_review_win: 'Awareness is a win.',
+  pledge_review_empty: 'No non-negotiables set yet.',
+
+  // ── Commitment Screen (editing) ──
+  commit_label: 'Commitment',
+  commit_heading: 'My Commitment',
+  commit_why_section: 'Why I\'m Doing This',
+  commit_why_placeholder: 'Enter your reason...',
+  commit_why_add: '+ Add a reason',
+  commit_nn_section: 'My Non-Negotiables',
+  commit_nn_placeholder: 'e.g. No sugary drinks',
+  commit_nn_add: '+ Add a non-negotiable',
+  commit_nn_limit: 'You can set up to 7 non-negotiables.',
+  commit_nn_limit_reached: '7 of 7 — limit reached',
+  commit_edit: 'Edit',
+  commit_delete: 'Delete',
+  commit_save: 'Save',
+  commit_cancel: 'Cancel',
 
   home_timer_learn_link: 'How the Timer Works',
 
@@ -164,9 +194,9 @@ export const en: Translations = {
 
   // ── Context ──
   ctx_learn_link: 'Not sure? See how the timer works →',
-  ctx_label: 'Quick Check',
-  ctx_question: 'Where did it',
-  ctx_question_accent: 'happen?',
+  ctx_label: 'Slippery Zones',
+  ctx_question: 'What caused',
+  ctx_question_accent: 'the slip?',
   ctx_late_night: 'Late night',
   ctx_stress: 'Stress',
   ctx_social: 'Social',

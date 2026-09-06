@@ -10,6 +10,7 @@ import {
   getDominantStatus,
   getTotalCheckInCount,
 } from '../utils/checkInStorage';
+import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import './DashboardScreen.css';
@@ -185,11 +186,12 @@ function CheckInKPI({ t }: CheckInKPIProps) {
     const week7Pct      = getStatusPercentages(week7Counts);
     const dominant      = getDominantStatus(week7Counts);
     const totalCheckIns = getTotalCheckInCount();
+    const nnReviewCount = getNonNegotiableReviewCount();
 
-    return { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns };
+    return { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns, nnReviewCount };
   }, []);
 
-  const { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns } = kpi;
+  const { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns, nnReviewCount } = kpi;
 
   // ── Insight message ────────────────────────────────────────────────────────
   let insight: string;
@@ -299,9 +301,15 @@ function CheckInKPI({ t }: CheckInKPIProps) {
         )}
       </div>
 
-      {/* ── Insight ───────────────────────────────────────────────────────── */}
+      {/* ── Insight ──────────────────────────────────────────────────────────────── */}
       <div className="kpi-insight">
         <p className="kpi-insight-text">{insight}</p>
+      </div>
+
+      {/* ── Compact NN Reviews stat row ────────────────────────────────────── */}
+      <div className="kpi-nn-review-row">
+        <span className="kpi-nn-review-label">{t.kpi_nn_reviews_label}</span>
+        <span className="kpi-nn-review-value">{nnReviewCount}</span>
       </div>
     </div>
   );

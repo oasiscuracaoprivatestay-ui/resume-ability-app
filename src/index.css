@@ -68,13 +68,28 @@ body {
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  overflow: hidden;
+  /* overflow-y: auto — lets the app-shell scroll within the root */
+  overflow-y: auto;
+  overflow-x: hidden;
   isolation: isolate;
+}
+
+/* Shell wraps {screen} + floating-buttons-stack in a flex column.
+   The screen fills the available height; the stack sits below it in
+   normal document flow so it never overlaps any screen content. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
 }
 
 /* ── Screen transitions ── */
 
 .screen {
+  /* flex: 1 fills .app-shell's flex column without creating a double-height stack.
+     min-height: 100dvh ensures the screen still fills the viewport on its own if
+     it is ever rendered outside .app-shell (e.g., storybook / tests). */
+  flex: 1;
   min-height: 100dvh;
   width: 100%;
   position: relative;
@@ -342,15 +357,31 @@ body {
   background: var(--border-hover);
 }
 
-/* ── Floating action buttons stack ── */
+/* ── Floating action buttons stack ──────────────────────────────────────── */
+/*
+  The stack is in NORMAL DOCUMENT FLOW (no fixed/absolute positioning).
+  position: sticky + bottom: keeps it anchored to the viewport bottom as
+  the page scrolls. It lives after {screen} inside .app-shell (flex column).
 
+  margin-top: auto pushes it to the very end of the flex column.
+  No content is ever overlapped because the stack lives BELOW the screen div.
+  On screens shorter than 100dvh the stack is naturally visible;
+  on taller screens the user can scroll to it, but it's always in the right place.
+
+  align-self: flex-end + padding-right positions it in the bottom-right corner,
+  matching the previous visual design without using position: fixed.
+*/
 .floating-buttons-stack {
-  position: fixed;
-  bottom: 5.5rem;   /* clears HomeScreen bottom nav (~3.5rem) + comfortable gap */
-  right: 1.25rem;
+  position: sticky;
+  bottom: 1.5rem;
   z-index: 100;
+  align-self: flex-end;
+  margin-top: auto;
+  padding: 0 1.25rem 0.5rem 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.6rem;
+  pointer-events: auto;
 }
+

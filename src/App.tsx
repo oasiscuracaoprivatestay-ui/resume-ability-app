@@ -16,6 +16,7 @@ import PremiumScreen from './screens/PremiumScreen';
 import TimerLearnScreen from './screens/TimerLearnScreen';
 import QuizScreen from './screens/QuizScreen';
 import CheckInScreen from './screens/CheckInScreen';
+import CommitmentScreen from './screens/CommitmentScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 
@@ -287,17 +288,21 @@ export default function App() {
       content = <CheckInScreen onNavigate={navigate} />;
       break;
 
+    case 'commitment':
+      content = <CommitmentScreen onNavigate={navigate} />;
+      break;
+
     default:
       content = <HomeScreen onNavigate={navigate} />;
   }
 
   return (
-    <>
+    <div className="app-shell">
       {content}
       <div className="floating-buttons-stack">
         <FloatingProgramButton currentScreen={screen} />
         <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
       </div>
-    </>
+    </div>
   );
 }

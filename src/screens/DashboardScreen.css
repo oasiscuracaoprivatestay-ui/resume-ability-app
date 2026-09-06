@@ -542,3 +542,34 @@
   line-height: 1.65;
   font-style: italic;
 }
+
+/* ── Compact NN Reviews stat row ───────────────────────
+   A slim single-line row: label ··· value.
+   Intentionally low-weight — distinct from check-in wins.
+   ─────────────────────────────────────────────────────── */
+.kpi-nn-review-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  gap: 0.75rem;
+}
+
+.kpi-nn-review-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.kpi-nn-review-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}

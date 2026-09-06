@@ -99,6 +99,37 @@ export interface Translations {
   kpi_insight_slip: string;
   kpi_insight_mixed: string;
   kpi_total_checkins: string;      // "Total Check-Ins" label for the wins card
+  kpi_nn_reviews_label: string;    // compact "NN Reviews" label for dashboard
+
+  // ── Pledge / Commitment (hold step) ──
+  pledge_banner: string;           // "I commit to my structured diet!"
+  pledge_why_title: string;        // "Why I'm Doing This"
+  pledge_why_empty: string;        // "Add your reason →"
+  pledge_why_manage: string;       // "Manage"
+  pledge_nn_title: string;         // "Non-Negotiables"
+  pledge_nn_empty: string;         // "Set your non-negotiables →"
+  pledge_nn_review_btn: string;    // "Review My Non-Negotiables"
+  pledge_review_heading: string;   // "My Non-Negotiables" (review screen title)
+  pledge_review_done: string;      // "Done — I've Reviewed These"
+  pledge_review_win: string;       // "Awareness is a win."
+  pledge_review_empty: string;     // "No non-negotiables set yet."
+
+  // ── Commitment Screen (editing) ──
+  commit_label: string;            // screen section label
+  commit_heading: string;          // "My Commitment"
+  commit_why_section: string;      // "Why I'm Doing This" heading
+  commit_why_placeholder: string;  // input placeholder
+  commit_why_add: string;          // "+ Add a reason"
+  commit_nn_section: string;       // "My Non-Negotiables" heading
+  commit_nn_placeholder: string;   // input placeholder
+  commit_nn_add: string;           // "+ Add a non-negotiable"
+  commit_nn_limit: string;         // "You can set up to 7 non-negotiables."
+  commit_nn_limit_reached: string; // "7 of 7 — limit reached"
+  commit_edit: string;             // "Edit"
+  commit_delete: string;           // "Delete"
+  commit_save: string;             // "Save"
+  commit_cancel: string;           // "Cancel"
+
   home_timer_learn_link: string;
   // ── Timer Learn ──
   tl_label: string;

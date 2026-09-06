@@ -15,6 +15,15 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Scrollable inner — allows hold step content (pledge section)
+   to scroll on small phones without cutting off the hold button */
+.ci-scrollable {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   padding: 0 1.5rem 2rem;
 }
 
@@ -46,18 +55,18 @@
    ════════════════════════════════════════════════════════ */
 
 .ci-hold-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  width: 100%;
 }
 
-/* Ring area — centred vertically in remaining space */
+/* Ring area — centres instruction + button */
 .ci-ring-area {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
   justify-content: center;
   gap: 1.25rem;
 }
@@ -940,4 +949,287 @@
   0%   { opacity: 0.9; transform: translate(-50%, -50%) scale(0); }
   70%  { opacity: 0.3; transform: translate(-50%, -50%) scale(2.5); }
   100% { opacity: 0;   transform: translate(-50%, -50%) scale(3.2); }
+}
+
+/* ════════════════════════════════════════════════════════
+   PLEDGE SECTION — in hold step, above ring area
+   ════════════════════════════════════════════════════════ */
+
+.ci-pledge-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Commitment banner ── */
+.ci-pledge-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.08) 0%,
+    rgba(34, 197, 94, 0.04) 100%
+  );
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: var(--radius-md);
+}
+
+.ci-pledge-icon {
+  font-size: 1rem;
+  color: #22c55e;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.ci-pledge-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #22c55e;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+/* ── Compact info cards ── */
+.ci-pledge-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ci-pledge-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-height: 52px;
+  transition: border-color 0.2s ease;
+}
+
+.ci-pledge-card:hover {
+  border-color: var(--border-hover);
+}
+
+.ci-pledge-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ci-pledge-card-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.ci-pledge-card-sub {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.ci-pledge-card-sub--empty {
+  color: var(--text-dim);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.ci-pledge-manage-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s ease, background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ci-pledge-manage-btn:hover {
+  color: var(--accent-hover);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+/* ── Review my non-negotiables button ── */
+.ci-pledge-review-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ci-pledge-review-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.04);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.08);
+}
+
+.ci-pledge-review-btn:active {
+  transform: scale(0.98);
+}
+
+.ci-pledge-review-icon {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* ════════════════════════════════════════════════════════
+   REVIEW STEP — Non-Negotiables review screen
+   ════════════════════════════════════════════════════════ */
+
+.ci-review-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem 0;
+}
+
+.ci-review-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+/* Numbered list of non-negotiables */
+.ci-review-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+  padding-bottom: 1rem;
+}
+
+.ci-review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  animation: ci-done-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--index, 0) * 0.06s);
+}
+
+.ci-review-num {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.08);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 0.05rem;
+}
+
+.ci-review-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Empty state */
+.ci-review-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.ci-review-empty p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Done button sticky footer */
+.ci-review-footer {
+  padding: 1rem 1.5rem 2rem;
+  background: linear-gradient(to top, var(--bg) 80%, transparent);
+  position: sticky;
+  bottom: 0;
+}
+
+/* ── Win toast ── */
+.ci-review-toast {
+  position: fixed;
+  bottom: 5.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 999px;
+  color: #22c55e;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  z-index: 200;
+  backdrop-filter: blur(6px);
+  animation: ci-toast-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  box-shadow: 0 4px 24px rgba(34, 197, 94, 0.2);
+}
+
+.ci-review-toast-icon {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+@keyframes ci-toast-enter {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }

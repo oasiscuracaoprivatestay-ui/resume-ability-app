@@ -14,6 +14,7 @@ export type Screen =
   | 'timer-learn'
   | 'quiz'
   | 'check-in'
+  | 'commitment'
   | 'premium';
 
 // ── Timer mode ──
