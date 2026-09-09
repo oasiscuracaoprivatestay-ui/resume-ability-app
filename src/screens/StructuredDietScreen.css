@@ -1,0 +1,616 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   Structured Diet Screen — Phase 6B
+   Dark premium aesthetic, mobile-first (375px / 390px / 430px)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Screen shell ── */
+
+.sdb-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.sdb-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem;
+}
+
+/* ── Scrollable content ── */
+
+.sdb-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding-bottom: 3rem;
+  overflow-y: auto;
+}
+
+/* ── Heading ── */
+
+.sdb-heading-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.sdb-heading {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.sdb-sub {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: 0.15rem;
+}
+
+/* ── Plan name row ── */
+
+.sdb-plan-name-row {
+  margin-top: -0.5rem;
+}
+
+.sdb-name-display {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sdb-plan-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.01em;
+}
+
+.sdb-name-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sdb-name-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.85rem;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.sdb-name-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── Empty state ── */
+
+.sdb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xl);
+}
+
+.sdb-empty-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.sdb-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sdb-empty-sub {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 240px;
+}
+
+/* ── Block list ── */
+
+.sdb-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Block card ── */
+
+.sdb-block-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 0.95rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sdb-block-card:hover {
+  border-color: var(--border-hover);
+  border-left-color: var(--accent);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sdb-block-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sdb-block-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.sdb-block-overnight {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.sdb-block-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.sdb-block-type-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.sdb-block-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sdb-block-type-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.sdb-block-items {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ── Icon buttons (Edit / Delete) ── */
+
+.sdb-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.35rem;
+  min-width: 30px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-icon-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.sdb-icon-btn--delete:hover {
+  color: #f87171;
+}
+
+/* ── Add block button ── */
+
+.sdb-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  background: rgba(45, 212, 191, 0.07);
+  border: 1.5px dashed rgba(45, 212, 191, 0.4);
+  border-radius: var(--radius-xl);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-add-btn:hover {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.sdb-add-btn:active {
+  transform: scale(0.98);
+}
+
+.sdb-add-btn-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 400;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Block Editor Modal
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.sdb-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;  /* slide up from bottom on mobile */
+  justify-content: center;
+  padding: 0;
+  animation: sdb-overlay-in 0.2s ease;
+}
+
+@keyframes sdb-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sdb-modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  width: 100%;
+  max-width: 430px;
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sdb-modal-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sdb-modal-in {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1;   }
+}
+
+.sdb-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sdb-modal-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.sdb-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.sdb-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sdb-modal-footer {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.9rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Form fields ── */
+
+.sdb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sdb-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sdb-label--optional {
+  justify-content: space-between;
+}
+
+.sdb-optional {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #555);
+  text-transform: none;
+}
+
+.sdb-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;        /* keep native arrow for reliability on mobile */
+  transition: border-color 0.2s;
+}
+
+.sdb-select:focus {
+  border-color: var(--accent);
+}
+
+.sdb-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.sdb-input:focus {
+  border-color: var(--accent);
+}
+
+.sdb-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* ── Overnight badge ── */
+
+.sdb-overnight-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  align-self: flex-start;
+}
+
+/* ── Type chip grid ── */
+
+.sdb-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.sdb-type-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-type-chip:hover {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.sdb-type-chip--active {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.12);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.sdb-chip-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sdb-chip-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sdb-type-chip--active .sdb-chip-label {
+  color: var(--accent);
+}
+
+/* ── Food option chips ── */
+
+.sdb-food-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sdb-food-chip {
+  padding: 0.4rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.sdb-food-chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.sdb-food-chip--active {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ── Error ── */
+
+.sdb-error {
+  font-size: 0.8rem;
+  color: #f87171;
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Modal save / cancel buttons ── */
+
+.sdb-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-btn--cancel {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.sdb-btn--cancel:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.sdb-btn--save {
+  background: linear-gradient(135deg, var(--accent) 0%, #0d9488 100%);
+  color: #000;
+}
+
+.sdb-btn--save:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+
+.sdb-btn--save:active {
+  transform: scale(0.97);
+}
+
+/* ── CommitmentScreen entry link (added via CommitmentScreen.css) ──
+   Kept here for co-location reference. Actual selector is in CommitmentScreen.css. */
+
+/* ── Responsive tweaks ── */
+
+@media (max-width: 380px) {
+  .sdb-type-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
+  .sdb-chip-label {
+    font-size: 0.56rem;
+  }
+
+  .sdb-food-chip {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.6rem;
+  }
+}

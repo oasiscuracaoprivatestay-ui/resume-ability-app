@@ -2,7 +2,10 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Screen, SlipContext, TimerMode, ActiveSession, SlipStatus } from './types';
 import { generateId, saveSlip, updateSlip } from './utils';
 import HomeScreen from './screens/HomeScreen';
+import SlipTypeScreen from './screens/SlipTypeScreen';
+import NonNegotiableSlipScreen from './screens/NonNegotiableSlipScreen';
 import ContextScreen from './screens/ContextScreen';
+import SlipInsightsScreen from './screens/SlipInsightsScreen';
 import ModeScreen from './screens/ModeScreen';
 import TimerScreen from './screens/TimerScreen';
 import ResultScreen from './screens/ResultScreen';
@@ -10,6 +13,8 @@ import DashboardScreen from './screens/DashboardScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import ControlScreen from './screens/ControlScreen';
 import HelpOptionsScreen from './screens/HelpOptionsScreen';
+import RecommitScreen from './screens/RecommitScreen';
+import CommitScreen from './screens/CommitScreen';
 import LearnScreen from './screens/LearnScreen';
 import DailyAudioScreen from './screens/DailyAudioScreen';
 import PremiumScreen from './screens/PremiumScreen';
@@ -17,23 +22,35 @@ import TimerLearnScreen from './screens/TimerLearnScreen';
 import QuizScreen from './screens/QuizScreen';
 import CheckInScreen from './screens/CheckInScreen';
 import CommitmentScreen from './screens/CommitmentScreen';
+import StructuredDietScreen from './screens/StructuredDietScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
+import type { TargetSlipInfo } from './utils/slipInsights';
+import { saveRecommitEvent } from './utils/recommitStorage';
+import { saveInControlEvent, saveCommitEvent } from './utils/inControlStorage';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [pendingContext, setPendingContext] = useState<SlipContext | null>(null);
+  const [currentReportedSlip, setCurrentReportedSlip] = useState<TargetSlipInfo | null>(null);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [lastRecovery, setLastRecovery] = useState<{
     seconds: number;
     status: SlipStatus;
   } | null>(null);
 
+  // Active InControl event ID to link positive Commit events
+  const [activeInControlId, setActiveInControlId] = useState<string | null>(null);
+
   // ID of the slip created when the user picks a context.
   // Timer completion / relapse will update this same record.
   const [slipId, setSlipId] = useState<string | null>(null);
+
+  // When true the user entered the Timer directly (no slip reported).
+  // handleModeSelect and handleTimerComplete skip slip storage in this mode.
+  const [timerOnly, setTimerOnly] = useState(false);
 
   // ── Back-button override ──
   // Track current screen in a ref so the popstate handler always has fresh value.
@@ -41,12 +58,17 @@ export default function App() {
 
   // ── Navigation ──
   const navigate = useCallback((target: Screen) => {
-    if (target === 'home') {
+    if (target === 'home' || target === 'slip-type') {
       setSession(null);
       setPendingContext(null);
-    } else if (target === 'context') {
+      setTimerOnly(false);
+      setSlipId(null);
+      setCurrentReportedSlip(null);
+      setActiveInControlId(null);
+    } else if (target === 'context' || target === 'slip-non-negotiable') {
       setSession(null);
       setPendingContext(null);
+      setTimerOnly(false);
     } else if (target === 'mode') {
       setSession(null);
       // keep pendingContext so the user can pick a different mode
@@ -58,6 +80,17 @@ export default function App() {
     }
     screenRef.current = target;
     setScreen(target);
+  }, []);
+
+  // ── Start Timer (no slip) — skips context / slip recording ──
+  const handleStartTimer = useCallback(() => {
+    setTimerOnly(true);
+    setSlipId(null);
+    setCurrentReportedSlip(null);
+    setPendingContext(null);
+    history.pushState({ screen: 'mode' }, '');
+    screenRef.current = 'mode';
+    setScreen('mode');
   }, []);
 
   // Intercept the browser / Android hardware back button.
@@ -72,6 +105,9 @@ export default function App() {
         setScreen('home');
         setSession(null);
         setPendingContext(null);
+        setTimerOnly(false);
+        setSlipId(null);
+        setCurrentReportedSlip(null);
         // Push a replacement entry so subsequent back presses keep firing.
         history.pushState({ screen: 'home' }, '');
       }
@@ -83,35 +119,86 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Context selected → record the slip immediately, then go to help options ──
+  // ── Context selected → record slip (or update if navigating back) & open Insights ──
   const handleContextSelect = useCallback((context: SlipContext) => {
-    const id = generateId();
+    let currentId = slipId;
+    if (currentId) {
+      // User navigated back from insights to re-choose: update existing record
+      updateSlip(currentId, {
+        context,
+        slipType: 'slippery-zone',
+        nonNegotiableText: undefined,
+      });
+    } else {
+      currentId = generateId();
+      saveSlip({
+        id: currentId,
+        timestamp: Date.now(),
+        context,
+        mode: 'single',        // best-guess placeholder
+        recoveryDuration: 0,   // will be updated
+        status: 'recovered',   // will be updated
+        slipType: 'slippery-zone',
+      });
+      setSlipId(currentId);
+    }
 
-    // Record the slip the moment the user admits it.
-    // mode / recoveryDuration / status are placeholders — updated when the
-    // timer finishes (see handleTimerComplete / handleRelapse).
-    saveSlip({
-      id,
-      timestamp: Date.now(),
-      context,
-      mode: 'single',        // best-guess placeholder
-      recoveryDuration: 0,   // will be updated
-      status: 'recovered',   // will be updated
-    });
-
-    setSlipId(id);
     setPendingContext(context);
-    setScreen('help');
-  }, []);
+    setCurrentReportedSlip({
+      slipType: 'slippery-zone',
+      context,
+    });
+    history.pushState({ screen: 'slip-insights' }, '');
+    screenRef.current = 'slip-insights';
+    setScreen('slip-insights');
+  }, [slipId]);
+
+  // ── Non-Negotiable rule selected → record slip (or update) & open Insights ──
+  const handleNonNegotiableSelect = useCallback((rule: string) => {
+    let currentId = slipId;
+    if (currentId) {
+      // User navigated back from insights to re-choose: update existing record
+      updateSlip(currentId, {
+        context: 'all-or-nothing',
+        slipType: 'non-negotiable',
+        nonNegotiableText: rule,
+      });
+    } else {
+      currentId = generateId();
+      saveSlip({
+        id: currentId,
+        timestamp: Date.now(),
+        context: 'all-or-nothing',
+        mode: 'single',
+        recoveryDuration: 0,
+        status: 'recovered',
+        slipType: 'non-negotiable',
+        nonNegotiableText: rule,
+      });
+      setSlipId(currentId);
+    }
+
+    setPendingContext('all-or-nothing');
+    setCurrentReportedSlip({
+      slipType: 'non-negotiable',
+      context: 'all-or-nothing',
+      nonNegotiableText: rule,
+    });
+    history.pushState({ screen: 'slip-insights' }, '');
+    screenRef.current = 'slip-insights';
+    setScreen('slip-insights');
+  }, [slipId]);
 
   // ── Mode selected → create session and start timer ──
   const handleModeSelect = useCallback(
     (mode: TimerMode, loopBlocks: number) => {
-      if (!pendingContext) return;
+      // timerOnly: no slip context required — enter timer directly.
+      // Slip flow: pendingContext must exist.
+      if (!timerOnly && !pendingContext) return;
 
       setSession({
         startedAt: Date.now(),
-        context: pendingContext,
+        context: pendingContext ?? 'stress', // placeholder context for timer-only
         mode,
         timerDuration: mode === 'extended-fast' ? 0 : TIMER_DURATION,
         extensions: 0,
@@ -120,7 +207,7 @@ export default function App() {
       });
       setScreen('timer');
     },
-    [pendingContext],
+    [timerOnly, pendingContext],
   );
 
   // ── Timer complete → update existing slip record ──
@@ -131,7 +218,8 @@ export default function App() {
       const status: SlipStatus =
         session.extensions > 0 ? 'extended' : 'recovered';
 
-      if (slipId) {
+      // Only update a slip record if this was a slip-reporting session.
+      if (slipId && !timerOnly) {
         // Enrich the slip that was already saved at context selection.
         updateSlip(slipId, {
           mode: session.mode,
@@ -148,9 +236,10 @@ export default function App() {
       setSession(null);
       setPendingContext(null);
       setSlipId(null);
+      setTimerOnly(false);
       setScreen('result');
     },
-    [session, slipId],
+    [session, slipId, timerOnly],
   );
 
   // ── Extend timer (single mode only) ──
@@ -170,7 +259,7 @@ export default function App() {
 
       const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
 
-      if (slipId) {
+      if (slipId && !timerOnly) {
         updateSlip(slipId, {
           mode: session.mode,
           recoveryDuration: elapsed,
@@ -186,17 +275,80 @@ export default function App() {
       setSession(null);
       setPendingContext(null);
       setSlipId(null);
+      setTimerOnly(false);
       setScreen('result');
     },
-    [session, slipId],
+    [session, slipId, timerOnly],
   );
+
+  // ── Re-Commit Success Handler ──
+  const handleRecommitSuccess = useCallback(() => {
+    const id = generateId();
+    saveRecommitEvent({
+      id,
+      timestamp: Date.now(),
+      slipId: slipId ?? undefined,
+    });
+  }, [slipId]);
+
+  // ── "I Am in Control" Handler ──
+  const handleInControl = useCallback(() => {
+    const id = generateId();
+    saveInControlEvent({
+      id,
+      timestamp: Date.now(),
+    });
+    setActiveInControlId(id);
+    navigate('control');
+  }, [navigate]);
+
+  // ── Positive Commit Success Handler ──
+  const handleCommitSuccess = useCallback(() => {
+    const id = generateId();
+    saveCommitEvent({
+      id,
+      timestamp: Date.now(),
+      source: 'in-control',
+      inControlEventId: activeInControlId ?? undefined,
+    });
+  }, [activeInControlId]);
 
   // ── Render current screen ──
   let content: React.ReactNode;
+  // Back destination for ModeScreen depends on entry path.
+  const modeBackTo: Screen = timerOnly ? 'home' : 'help';
 
   switch (screen) {
     case 'home':
-      content = <HomeScreen onNavigate={navigate} />;
+      content = (
+        <HomeScreen
+          onNavigate={navigate}
+          onStartTimer={handleStartTimer}
+          onInControl={handleInControl}
+        />
+      );
+      break;
+
+    case 'recommit':
+      content = (
+        <RecommitScreen
+          onComplete={handleRecommitSuccess}
+          onNavigate={navigate}
+        />
+      );
+      break;
+
+    case 'slip-type':
+      content = <SlipTypeScreen onNavigate={navigate} />;
+      break;
+
+    case 'slip-non-negotiable':
+      content = (
+        <NonNegotiableSlipScreen
+          onSelect={handleNonNegotiableSelect}
+          onNavigate={navigate}
+        />
+      );
       break;
 
     case 'context':
@@ -208,11 +360,24 @@ export default function App() {
       );
       break;
 
+    case 'slip-insights':
+      content = currentReportedSlip ? (
+        <SlipInsightsScreen
+          target={currentReportedSlip}
+          onContinue={() => navigate('help')}
+          onNavigate={navigate}
+        />
+      ) : (
+        <HomeScreen onNavigate={navigate} onStartTimer={handleStartTimer} />
+      );
+      break;
+
     case 'mode':
       content = (
         <ModeScreen
           onSelect={handleModeSelect}
           onNavigate={navigate}
+          backTo={modeBackTo}
         />
       );
       break;
@@ -227,7 +392,7 @@ export default function App() {
           onNavigate={navigate}
         />
       ) : (
-        <HomeScreen onNavigate={navigate} />
+        <HomeScreen onNavigate={navigate} onStartTimer={handleStartTimer} />
       );
       break;
 
@@ -239,7 +404,7 @@ export default function App() {
           onNavigate={navigate}
         />
       ) : (
-        <HomeScreen onNavigate={navigate} />
+        <HomeScreen onNavigate={navigate} onStartTimer={handleStartTimer} />
       );
       break;
 
@@ -258,6 +423,15 @@ export default function App() {
 
     case 'control':
       content = <ControlScreen onNavigate={navigate} />;
+      break;
+
+    case 'commit':
+      content = (
+        <CommitScreen
+          onComplete={handleCommitSuccess}
+          onNavigate={navigate}
+        />
+      );
       break;
 
     case 'dashboard':
@@ -292,8 +466,18 @@ export default function App() {
       content = <CommitmentScreen onNavigate={navigate} />;
       break;
 
+    case 'structured-diet':
+      content = <StructuredDietScreen onNavigate={navigate} />;
+      break;
+
     default:
-      content = <HomeScreen onNavigate={navigate} />;
+      content = (
+        <HomeScreen
+          onNavigate={navigate}
+          onStartTimer={handleStartTimer}
+          onInControl={handleInControl}
+        />
+      );
   }
 
   return (
@@ -301,7 +485,7 @@ export default function App() {
       {content}
       <div className="floating-buttons-stack">
         <FloatingProgramButton currentScreen={screen} />
-        <FloatingTimerButton currentScreen={screen} onNavigate={navigate} />
+        <FloatingTimerButton currentScreen={screen} onNavigate={navigate} onStartTimer={handleStartTimer} />
       </div>
     </div>
   );

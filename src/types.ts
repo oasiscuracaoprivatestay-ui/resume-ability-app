@@ -1,12 +1,17 @@
 // ── Screen identifiers ──
 export type Screen =
   | 'home'
+  | 'slip-type'
+  | 'slip-non-negotiable'
   | 'context'
+  | 'slip-insights'
   | 'help'
+  | 'recommit'
   | 'mode'
   | 'timer'
   | 'result'
   | 'control'
+  | 'commit'
   | 'learn'
   | 'dashboard'
   | 'history'
@@ -15,10 +20,14 @@ export type Screen =
   | 'quiz'
   | 'check-in'
   | 'commitment'
+  | 'structured-diet'
   | 'premium';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';
+
+// ── Slip Type ──
+export type SlipType = 'slippery-zone' | 'non-negotiable';
 
 // ── Slip context options ──
 export type SlipContext =
@@ -46,6 +55,8 @@ export interface SlipRecord {
   status: SlipStatus;
   blocksCompleted?: number;    // blocks completed (loop mode)
   blocksTotal?: number;        // total planned blocks (loop mode)
+  slipType?: SlipType;         // Phase 7B: 'slippery-zone' | 'non-negotiable'
+  nonNegotiableText?: string;  // Selected non-negotiable rule text if non-negotiable slip
 }
 
 // ── Active session (in-progress slip) ──
@@ -57,6 +68,8 @@ export interface ActiveSession {
   extensions: number;          // manual +15 min extensions (single mode only)
   loopBlocks: number;          // total blocks (1 for single, N for loop, 0 for extended)
   completedBlocks: number;     // blocks completed so far
+  slipType?: SlipType;
+  nonNegotiableText?: string;
 }
 
 // ── Dashboard summary ──

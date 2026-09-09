@@ -9,6 +9,8 @@ import {
   recordNonNegotiableReview,
   MAX_NON_NEGOTIABLES,
 } from '../utils/pledgeStorage';
+import { saveReviewEvent } from '../utils/reviewStorage';
+import { generateId } from '../utils';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
@@ -235,6 +237,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     if (reviewedRef.current) return; // prevent double-tap
     reviewedRef.current = true;
     recordNonNegotiableReview();
+    saveReviewEvent({ id: generateId(), timestamp: Date.now() });
     setReviewToast(true);
     setTimeout(() => {
       setReviewToast(false);
@@ -498,31 +501,23 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
 
             {/* ── Pledge section ──────────────────────────────────────────── */}
             <div className="ci-pledge-section">
-              {/* Commitment banner */}
-              <div className="ci-pledge-banner" aria-label="Daily commitment">
-                <span className="ci-pledge-icon" aria-hidden="true">◈</span>
-                <span className="ci-pledge-text">{t.pledge_banner}</span>
+              {/* ── WHY AM I DOING THIS? — prominent reason block ── */}
+              <div className="ci-why-block" aria-label={t.pledge_why_question}>
+                <span className="ci-why-question">{t.pledge_why_question}</span>
+                <p className={`ci-why-reason${firstReason ? '' : ' ci-why-reason--empty'}`}>
+                  {firstReason ?? t.pledge_why_empty}
+                </p>
+                <button
+                  className="ci-pledge-manage-btn ci-why-manage-btn"
+                  onClick={() => onNavigate('commitment')}
+                  aria-label={`${t.pledge_why_manage} ${t.pledge_why_title}`}
+                >
+                  {t.pledge_why_manage} ›
+                </button>
               </div>
 
-              {/* Compact info cards */}
+              {/* Compact info cards — Non-Negotiables only */}
               <div className="ci-pledge-cards">
-                {/* Why card */}
-                <div className="ci-pledge-card">
-                  <div className="ci-pledge-card-body">
-                    <span className="ci-pledge-card-title">{t.pledge_why_title}</span>
-                    <span className={`ci-pledge-card-sub${firstReason ? '' : ' ci-pledge-card-sub--empty'}`}>
-                      {firstReason ?? t.pledge_why_empty}
-                    </span>
-                  </div>
-                  <button
-                    className="ci-pledge-manage-btn"
-                    onClick={() => onNavigate('commitment')}
-                    aria-label={`${t.pledge_why_manage} ${t.pledge_why_title}`}
-                  >
-                    {t.pledge_why_manage} ›
-                  </button>
-                </div>
-
                 {/* Non-Negotiables card */}
                 <div className="ci-pledge-card">
                   <div className="ci-pledge-card-body">

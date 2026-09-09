@@ -348,6 +348,21 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
               )}
             </div>
           </section>
+
+          {/* ════ STRUCTURED DIET ENTRY ════ */}
+          <section className="commit-section commit-section--diet" aria-label={t.sdb_label}>
+            <h2 className="commit-section-title">{t.sdb_label}</h2>
+            <p className="commit-diet-hint">{t.sdb_commit_hint}</p>
+            <button
+              id="btn-structured-diet"
+              className="commit-diet-btn"
+              onClick={() => onNavigate('structured-diet')}
+            >
+              <span className="commit-diet-btn-icon">🥗</span>
+              <span>{t.sdb_open_builder}</span>
+              <span className="commit-diet-btn-arrow">›</span>
+            </button>
+          </section>
         </div>
       </div>
     </div>

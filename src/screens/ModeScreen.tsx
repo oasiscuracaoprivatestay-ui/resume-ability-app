@@ -7,6 +7,7 @@ import './ModeScreen.css';
 interface ModeScreenProps {
   onSelect: (mode: TimerMode, loopBlocks: number) => void;
   onNavigate: (screen: Screen) => void;
+  backTo: Screen;
 }
 
 function formatBlockDuration(blocks: number): string {
@@ -20,7 +21,7 @@ function formatBlockDuration(blocks: number): string {
 
 type View = 'main' | 'loop-presets' | 'loop-custom';
 
-export default function ModeScreen({ onSelect, onNavigate }: ModeScreenProps) {
+export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenProps) {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('main');
   const [customBlocks, setCustomBlocks] = useState(3);
@@ -40,7 +41,7 @@ export default function ModeScreen({ onSelect, onNavigate }: ModeScreenProps) {
   return (
     <div className="screen mode-screen">
       <ScreenHeader
-        onBack={() => onNavigate('help')}
+        onBack={() => onNavigate(backTo)}
         onHome={() => onNavigate('home')}
       />
 

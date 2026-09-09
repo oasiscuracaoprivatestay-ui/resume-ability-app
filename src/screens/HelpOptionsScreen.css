@@ -106,3 +106,16 @@
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
 }
+
+.help-card-arrow {
+  font-size: 1.4rem;
+  color: var(--text-tertiary);
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.help-card:hover .help-card-arrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}

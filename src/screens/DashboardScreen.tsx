@@ -1,8 +1,12 @@
 import { useMemo } from 'react';
 import type { Screen } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
-import { loadToday, dailyScore } from '../utils/balanceStorage';
+import { calculateDailyResumeAbilityScore } from '../utils/dailyScore';
+import { loadRecommitEvents } from '../utils/recommitStorage';
+import { loadInControlEvents, loadCommitEvents } from '../utils/inControlStorage';
+import { loadReviewEvents } from '../utils/reviewStorage';
 import {
+  getCheckIns,
   getTodayCheckIns,
   getCheckInsLastNDays,
   getStatusCounts,
@@ -65,8 +69,37 @@ interface DashboardScreenProps {
 export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
   const { t } = useTranslation();
   const data = useMemo(() => computeDashboard(loadSlips()), []);
-  const balance = useMemo(() => loadToday(), []);
-  const score = dailyScore(balance);
+
+  const scoreResult = useMemo(() => {
+    return calculateDailyResumeAbilityScore({
+      checkIns: getCheckIns(),
+      slips: loadSlips(),
+      recommits: loadRecommitEvents(),
+      inControlEvents: loadInControlEvents(),
+      commitEvents: loadCommitEvents(),
+      reviewEvents: loadReviewEvents(),
+    });
+  }, []);
+
+  const feedbackMessage = useMemo(() => {
+    switch (scoreResult.feedbackKey) {
+      case 'high_recovery':
+        return t.score_feedback_high_recovery;
+      case 'strong_structure':
+        return t.score_feedback_strong_structure;
+      case 'slips_no_recommit':
+        return t.score_feedback_slips_no_recommit;
+      case 'low_engagement':
+        return t.score_feedback_low_engagement;
+      case 'no_activity':
+      default:
+        return t.score_feedback_no_activity;
+    }
+  }, [scoreResult.feedbackKey, t]);
+
+  // Circumference for r=60 is 2 * PI * 60 = 376.99
+  const CIRC = 2 * Math.PI * 60;
+  const strokeOffset = CIRC * (1 - scoreResult.score / 100);
 
   return (
     <div className="screen dashboard-screen">
@@ -117,44 +150,66 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
           </div>
         </div>
 
-        {/* ── Balance Score section ── */}
-        <div className="balance-section">
-          <div className="balance-section-header">
-            <span className="section-label">Today's Balance</span>
-            <span className="balance-tagline">Balance Kept − Slips = Daily Score</span>
+        {/* ── Daily Resume-Ability Score Hero Section ── */}
+        <div className="resume-score-section">
+          <div className="resume-score-header">
+            <span className="section-label">{t.dash_resume_ability_score_label}</span>
           </div>
 
-          {/* Hero card: Balance Kept */}
-          <div className="balance-hero-card">
-            <div className="balance-hero-inner">
-              <div className="balance-hero-left">
-                <span className="balance-hero-label">Balance Kept</span>
-                <span className="balance-hero-value">{balance.balanceCount}</span>
-                <span className="balance-hero-sub">check-ins today</span>
+          <div className="resume-score-hero-card">
+            <div className="resume-score-dial-wrap">
+              <svg className="resume-score-svg" viewBox="0 0 160 160" aria-hidden="true">
+                <defs>
+                  <linearGradient id="resume-score-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#34d399" />
+                    <stop offset="100%" stopColor="#10b981" />
+                  </linearGradient>
+                  <filter id="resume-score-glow">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <circle
+                  className="resume-score-track"
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  strokeWidth="8"
+                />
+                {scoreResult.score > 0 && (
+                  <circle
+                    className="resume-score-progress"
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    stroke="url(#resume-score-grad)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={CIRC}
+                    strokeDashoffset={strokeOffset}
+                    transform="rotate(-90 80 80)"
+                    filter="url(#resume-score-glow)"
+                  />
+                )}
+              </svg>
+
+              <div className="resume-score-center">
+                <span className="resume-score-number" id="dash-score-value">{scoreResult.score}</span>
+                <span className="resume-score-denom">/ 100</span>
               </div>
-              <div className="balance-hero-icon">✓</div>
             </div>
-          </div>
 
-          {/* Sub-row: Slips + Score */}
-          <div className="balance-sub-grid">
-            <div className="balance-sub-card balance-sub-card--slip">
-              <span className="balance-sub-label">Slips Today</span>
-              <span className="balance-sub-value">{balance.slipCount}</span>
-            </div>
-            <div className={`balance-sub-card balance-sub-card--score${
-              score >= 0 ? ' balance-sub-card--score-pos' : ' balance-sub-card--score-neg'
-            }`}>
-              <span className="balance-sub-label">Daily Score</span>
-              <span className="balance-sub-value">
-                {score >= 0 ? '+' : ''}{score}
-              </span>
-            </div>
+            <p className="resume-score-feedback" id="dash-score-feedback">{feedbackMessage}</p>
           </div>
         </div>
 
         {data.slipsToday === 0 && data.averageRecoverySeconds === 0
-          && balance.balanceCount === 0 && (
+          && scoreResult.rawPoints === 0 && (
           <p className="dashboard-empty">
             {t.dash_empty}
           </p>

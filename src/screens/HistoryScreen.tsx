@@ -286,8 +286,11 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                   </div>
                   <div className="hist-log-bottom">
                     <span className="hist-log-context">
-                      {getContextIcon(entry.context)}{' '}
-                      {getContextLabel(t, entry.context)}
+                      {entry.slipType === 'non-negotiable' ? (
+                        <>🛡️ {entry.nonNegotiableText || t.hist_slip_type_nn}</>
+                      ) : (
+                        <>{getContextIcon(entry.context)} {getContextLabel(t, entry.context)}</>
+                      )}
                     </span>
                     <span className="hist-log-meta">
                       {formatDuration(entry.recoveryDuration)} · {getModeLabel(entry.mode)}

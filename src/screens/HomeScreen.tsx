@@ -6,9 +6,11 @@ import './HomeScreen.css';
 
 interface HomeScreenProps {
   onNavigate: (screen: Screen) => void;
+  onStartTimer: () => void;
+  onInControl?: () => void;
 }
 
-export default function HomeScreen({ onNavigate }: HomeScreenProps) {
+export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: HomeScreenProps) {
   const { t } = useTranslation();
 
   // On Home, back button / OS already handles exit via App.tsx popstate.
@@ -75,7 +77,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           <button
             id="btn-slipped"
             className="home-btn-slip"
-            onClick={() => onNavigate('context')}
+            onClick={() => onNavigate('slip-type')}
           >
             <span className="home-btn-icon">↻</span>
             <span>{t.home_slipped}</span>
@@ -91,7 +93,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           <button
             id="btn-in-control"
             className="home-btn-control"
-            onClick={() => onNavigate('control')}
+            onClick={onInControl ?? (() => onNavigate('control'))}
           >
             <span className="home-btn-icon">✓</span>
             <span>{t.home_in_control}</span>
@@ -111,7 +113,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             <button
               id="btn-home-timer"
               className="home-secondary-btn home-secondary-btn--timer"
-              onClick={() => onNavigate('context')}
+              onClick={onStartTimer}
               aria-label={t.global_start_timer}
             >
               <span>⏱</span>

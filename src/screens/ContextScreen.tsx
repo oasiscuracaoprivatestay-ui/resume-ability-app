@@ -41,7 +41,7 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
   return (
     <div className="screen context-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={() => onNavigate('slip-type')}
         onHome={() => onNavigate('home')}
       />
 

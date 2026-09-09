@@ -1,0 +1,185 @@
+.nn-slip-screen {
+  padding: 1rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.nn-slip-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+  gap: 2rem;
+}
+
+.nn-slip-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nn-slip-question {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ── Rules List ── */
+
+.nn-slip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.nn-slip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.nn-slip-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.nn-slip-card:active {
+  transform: scale(0.99);
+}
+
+.nn-slip-card-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.nn-slip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(32, 227, 178, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(32, 227, 178, 0.25);
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nn-slip-text {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.nn-slip-card-arrow {
+  font-size: 1.4rem;
+  color: var(--text-tertiary);
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.nn-slip-card:hover .nn-slip-card-arrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+/* ── Empty state ── */
+
+.nn-slip-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  gap: 1rem;
+}
+
+.nn-empty-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.nn-empty-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.nn-empty-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  max-width: 320px;
+  margin: 0;
+}
+
+.nn-empty-btn {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1.75rem;
+  background: var(--accent);
+  color: #0d1117;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(32, 227, 178, 0.3);
+}
+
+.nn-empty-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 390px) {
+  .nn-slip-screen {
+    padding: 1rem 1.25rem 2rem;
+  }
+
+  .nn-slip-question {
+    font-size: 1.9rem;
+  }
+
+  .nn-slip-card {
+    padding: 1.1rem 1rem;
+  }
+
+  .nn-slip-badge {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.8rem;
+  }
+
+  .nn-slip-text {
+    font-size: 0.95rem;
+  }
+}

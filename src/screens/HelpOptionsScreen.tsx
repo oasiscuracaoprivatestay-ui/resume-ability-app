@@ -13,7 +13,7 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
   return (
     <div className="screen help-screen">
       <ScreenHeader
-        onBack={() => onNavigate('context')}
+        onBack={() => onNavigate('slip-insights')}
         onHome={() => onNavigate('home')}
       />
 
@@ -27,6 +27,21 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
         </div>
 
         <div className="help-options">
+          <button
+            id="help-recommit"
+            className="help-card help-card--recommit"
+            onClick={() => onNavigate('recommit')}
+          >
+            <div className="help-card-left">
+              <span className="help-card-icon">↻</span>
+              <div className="help-card-text">
+                <span className="help-card-title">{t.help_recommit_title}</span>
+                <span className="help-card-desc">{t.help_recommit_desc}</span>
+              </div>
+            </div>
+            <span className="help-card-arrow">›</span>
+          </button>
+
           <button
             id="help-timer"
             className="help-card"

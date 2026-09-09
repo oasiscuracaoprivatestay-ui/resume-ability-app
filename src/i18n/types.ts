@@ -103,6 +103,7 @@ export interface Translations {
 
   // ── Pledge / Commitment (hold step) ──
   pledge_banner: string;           // "I commit to my structured diet!"
+  pledge_why_question: string;     // "Why Am I Doing This?"
   pledge_why_title: string;        // "Why I'm Doing This"
   pledge_why_empty: string;        // "Add your reason →"
   pledge_why_manage: string;       // "Manage"
@@ -322,4 +323,123 @@ export interface Translations {
   loop_day_detail: string;
   loop_2days_label: string;
   loop_2days_detail: string;
+
+  // ── Structured Diet Builder (Phase 6B) ──
+  sdb_label: string;
+  sdb_heading: string;
+  sdb_sub: string;
+  sdb_default_plan_name: string;
+  sdb_plan_name_label: string;
+  sdb_rename_plan: string;
+  sdb_add_block: string;
+  sdb_edit_block: string;
+  sdb_editor_title: string;
+  sdb_start_time: string;
+  sdb_end_time: string;
+  sdb_block_type: string;
+  sdb_food_label: string;
+  sdb_custom_label: string;
+  sdb_custom_placeholder: string;
+  sdb_optional: string;
+  sdb_overnight: string;
+  sdb_next_day: string;
+  sdb_empty_title: string;
+  sdb_empty_sub: string;
+  sdb_err_start_required: string;
+  sdb_err_end_required: string;
+  sdb_err_type_required: string;
+  // ── Commitment screen entry ──
+  sdb_commit_hint: string;
+  sdb_open_builder: string;
+  // ── Block types ──
+  sdb_type_breakfast: string;
+  sdb_type_lunch: string;
+  sdb_type_dinner: string;
+  sdb_type_snack: string;
+  sdb_type_beverages: string;
+  sdb_type_protein_shake: string;
+  sdb_type_micro_fasting: string;
+  sdb_type_kitchen_closed: string;
+  sdb_type_custom: string;
+  // ── Food / structure options ──
+  sdb_food_unsweetened_beverages: string;
+  sdb_food_black_coffee: string;
+  sdb_food_tea: string;
+  sdb_food_herbal_drink: string;
+  sdb_food_protein_shake: string;
+  sdb_food_protein_rich_food: string;
+  sdb_food_vegetables: string;
+  sdb_food_minimal_carbs: string;
+  sdb_food_micro_fasting: string;
+  sdb_food_kitchen_closed: string;
+
+  // ── Slip Type Selection (Phase 7B) ──
+  slip_type_title: string;
+  slip_type_subtitle: string;
+  slip_type_slippery_zone: string;
+  slip_type_slippery_zone_desc: string;
+  slip_type_non_negotiable: string;
+  slip_type_non_negotiable_desc: string;
+
+  // ── Non-Negotiable Slip (Phase 7B) ──
+  slip_nn_label: string;
+  slip_nn_question: string;
+  slip_nn_question_accent: string;
+  slip_nn_empty_title: string;
+  slip_nn_empty_desc: string;
+  slip_nn_empty_cta: string;
+
+  // ── History Screen (Phase 7B) ──
+  hist_slip_type_nn: string;
+  hist_slip_type_sz: string;
+
+  // ── Slip Insights & Trends (Phase 7C) ──
+  insights_label: string;
+  insights_title: string;
+  insights_subtitle: string;
+  insights_card_specific_title: string;
+  insights_card_overall_title: string;
+  insights_today_label: string;
+  insights_trend_label: string;
+  insights_trend_up: string;
+  insights_trend_down: string;
+  insights_trend_stable: string;
+  insights_trend_insufficient: string;
+  insights_btn_continue: string;
+
+  // ── Re-Commit (Phase 7D) ──
+  help_recommit_title: string;
+  help_recommit_desc: string;
+  recommit_label: string;
+  recommit_title: string;
+  recommit_subtitle: string;
+  recommit_hold_instruction: string;
+  recommit_success_heading: string;
+  recommit_success_body: string;
+  recommit_btn_main_menu: string;
+
+  // ── "I Am in Control" Win + Commit (Phase 7E) ──
+  control_badge: string;
+  control_win_title: string;
+  control_win_subtitle: string;
+  control_btn_commit: string;
+  control_btn_home: string;
+  commit_badge: string;
+  commit_title: string;
+  commit_subtitle: string;
+  commit_why_label: string;
+  commit_why_empty: string;
+  commit_why_link: string;
+  commit_hold_instruction: string;
+  commit_success_heading: string;
+  commit_success_body: string;
+  commit_btn_main_menu: string;
+
+  // ── Daily Resume-Ability Score (Phase 8) ──
+  dash_resume_ability_score_label: string;
+  score_feedback_high_recovery: string;
+  score_feedback_strong_structure: string;
+  score_feedback_slips_no_recommit: string;
+  score_feedback_low_engagement: string;
+  score_feedback_no_activity: string;
 }

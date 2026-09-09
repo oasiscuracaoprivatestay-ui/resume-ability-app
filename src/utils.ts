@@ -8,10 +8,11 @@ export function loadSlips(): SlipRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    // Backward compatibility: default mode to 'single' for old records
+    // Backward compatibility: default mode to 'single' and slipType to 'slippery-zone' for old records
     return (JSON.parse(raw) as Record<string, unknown>[]).map((s) => ({
       ...s,
       mode: s.mode || 'single',
+      slipType: s.slipType || 'slippery-zone',
     })) as SlipRecord[];
   } catch {
     return [];

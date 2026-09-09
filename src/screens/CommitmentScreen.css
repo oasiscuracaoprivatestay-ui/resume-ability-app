@@ -293,3 +293,60 @@
   text-align: center;
   letter-spacing: 0.02em;
 }
+
+/* ── Structured Diet entry section ── */
+
+.commit-diet-hint {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.commit-diet-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  background: rgba(45, 212, 191, 0.06);
+  border: 1.5px solid rgba(45, 212, 191, 0.3);
+  border-radius: var(--radius-xl);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.commit-diet-btn:hover {
+  background: rgba(45, 212, 191, 0.11);
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.commit-diet-btn:active {
+  transform: scale(0.98);
+}
+
+.commit-diet-btn-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.commit-diet-btn-arrow {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-left: auto;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.commit-diet-btn:hover .commit-diet-btn-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
