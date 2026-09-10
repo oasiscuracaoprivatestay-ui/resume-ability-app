@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Screen } from '../types';
 import { loadSlips, computeDashboard, formatDuration } from '../utils';
 import { calculateDailyResumeAbilityScore } from '../utils/dailyScore';
@@ -17,6 +17,8 @@ import {
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
 import { getDailyVerificationStats } from '../utils/dietVerificationStorage';
+import { STATS_RESET_EVENT } from '../utils/resetStats';
+import ResetStatsModal from '../components/ResetStatsModal';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
@@ -71,7 +73,16 @@ interface DashboardScreenProps {
 
 export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
   const { t } = useTranslation();
-  const data = useMemo(() => computeDashboard(loadSlips()), []);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [showResetModal, setShowResetModal] = useState(false);
+
+  useEffect(() => {
+    const handleReset = () => setRefreshKey((k) => k + 1);
+    window.addEventListener(STATS_RESET_EVENT, handleReset);
+    return () => window.removeEventListener(STATS_RESET_EVENT, handleReset);
+  }, []);
+
+  const data = useMemo(() => computeDashboard(loadSlips()), [refreshKey]);
 
   const scoreResult = useMemo(() => {
     return calculateDailyResumeAbilityScore({
@@ -82,7 +93,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
       commitEvents: loadCommitEvents(),
       reviewEvents: loadReviewEvents(),
     });
-  }, []);
+  }, [refreshKey]);
 
   const dietStats = useMemo(() => {
     const weekly = loadWeeklyDiet();
@@ -90,7 +101,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
     const todayPlan = getDayPlan(weekly, todayKey);
     const plannedCount = todayPlan.mode === 'structured' ? todayPlan.blocks.length : 0;
     return getDailyVerificationStats(plannedCount);
-  }, []);
+  }, [refreshKey]);
 
   const feedbackMessage = useMemo(() => {
     switch (scoreResult.feedbackKey) {
@@ -267,22 +278,49 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
         )}
 
         {/* ══ Check-In KPI section ══ */}
-        <CheckInKPI t={t} />
+        <CheckInKPI t={t} refreshKey={refreshKey} />
+
+        {/* ══ DATA & STATISTICS RESET ══ */}
+        <div className="dash-reset-section">
+          <div className="dash-reset-header">
+            <span className="dash-reset-title">{t.stats_section_title}</span>
+            <span className="dash-reset-desc">{t.stats_reset_section_desc}</span>
+          </div>
+          <button
+            type="button"
+            id="btn-dash-reset-all-stats"
+            className="commit-reset-stats-btn"
+            onClick={() => setShowResetModal(true)}
+          >
+            <span className="commit-reset-stats-icon" aria-hidden="true">↺</span>
+            <span>{t.stats_reset_btn}</span>
+          </button>
+        </div>
 
       </div>
+
+      <ResetStatsModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onResetComplete={() => {
+          setRefreshKey((k) => k + 1);
+          setShowResetModal(false);
+        }}
+      />
     </div>
   );
 }
 
 // ── CheckInKPI ────────────────────────────────────────────────────────────────
 // Self-contained sub-component so the parent's render stays clean.
-// Reads localStorage exactly once per mount via useMemo.
+// Re-reads data when refreshKey updates.
 
 interface CheckInKPIProps {
   t: Translations;
+  refreshKey: number;
 }
 
-function CheckInKPI({ t }: CheckInKPIProps) {
+function CheckInKPI({ t, refreshKey }: CheckInKPIProps) {
   const kpi = useMemo(() => {
     const todayRecords  = getTodayCheckIns();
     const last7Records  = getCheckInsLastNDays(7);
@@ -295,7 +333,7 @@ function CheckInKPI({ t }: CheckInKPIProps) {
     const nnReviewCount = getNonNegotiableReviewCount();
 
     return { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns, nnReviewCount };
-  }, []);
+  }, [refreshKey]);
 
   const { todayCounts, week7Counts, week7Pct, dominant, totalCheckIns, nnReviewCount } = kpi;
 

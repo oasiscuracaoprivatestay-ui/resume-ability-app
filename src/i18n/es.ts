@@ -684,4 +684,21 @@ export const es: Translations = {
   commit_reminders_desc: 'Configura avisos amables para registrarte y revisar tu estructura.',
   commit_reminders_btn: 'Configurar Recordatorios',
   global_back: 'Volver',
+
+  // ── Stats Reset ──
+  stats_section_title: 'DATOS Y ESTADÍSTICAS',
+  stats_reset_section_desc: 'Gestiona o restablece tu historial de actividad y registros estadísticos.',
+  stats_reset_btn: 'REINICIAR TODAS LAS ESTADÍSTICAS',
+  stats_modal_title: '¿REINICIAR TODAS LAS ESTADÍSTICAS?',
+  stats_modal_desc_1: 'Esto borrará de forma permanente tu historial de actividad, estadísticas de Check-In, historial de Deslices, actividad de puntuación diaria de Resume-Ability e historial de verificación de Dieta Estructurada.',
+  stats_modal_desc_2: 'Tu Por Qué, No-Negociables, plan semanal de Dieta Estructurada y recordatorios NO se eliminarán.',
+  stats_modal_btn_cancel: 'CANCELAR',
+  stats_modal_btn_reset: 'REINICIAR ESTADÍSTICAS',
+  stats_hold_title: 'CONFIRMAR REINICIO',
+  stats_hold_instruction: 'MANTÉN PRESIONADO PARA REINICIAR',
+  stats_hold_subtext: 'Mantén presionado durante 2 segundos para borrar tus estadísticas.',
+  stats_done_title: 'TODAS LAS ESTADÍSTICAS REINICIADAS',
+  stats_done_desc: 'Tus estadísticas se han borrado. Tus planes y preferencias permanecen intactos.',
+  stats_done_btn: 'CONTINUAR',
 };
+

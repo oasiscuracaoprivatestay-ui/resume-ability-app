@@ -9,6 +9,7 @@ import {
   MAX_NON_NEGOTIABLES,
 } from '../utils/pledgeStorage';
 import type { PledgeData } from '../utils/pledgeStorage';
+import ResetStatsModal from '../components/ResetStatsModal';
 import './CommitmentScreen.css';
 
 interface CommitmentScreenProps {
@@ -18,6 +19,7 @@ interface CommitmentScreenProps {
 export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) {
   const { t } = useTranslation();
   const [data, setData] = useState<PledgeData>(() => loadPledge());
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // ── Reason edit state ──────────────────────────────────────────────────────
   const [editReasonIdx, setEditReasonIdx] = useState<number | null>(null);
@@ -383,8 +385,33 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
               <span className="commit-diet-btn-arrow">›</span>
             </button>
           </section>
+
+          {/* ════ DATA & STATISTICS ════ */}
+          <section className="commit-section commit-section--data-stats" aria-label={t.stats_section_title}>
+            <h2 className="commit-section-title">{t.stats_section_title}</h2>
+            <p className="commit-diet-hint">{t.stats_reset_section_desc}</p>
+            <button
+              id="btn-reset-all-stats"
+              type="button"
+              className="commit-reset-stats-btn"
+              onClick={() => setShowResetModal(true)}
+            >
+              <span className="commit-reset-stats-icon" aria-hidden="true">↺</span>
+              <span>{t.stats_reset_btn}</span>
+            </button>
+          </section>
         </div>
       </div>
+
+      <ResetStatsModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onResetComplete={() => {
+          setData(loadPledge());
+          setShowResetModal(false);
+        }}
+      />
     </div>
   );
 }
+

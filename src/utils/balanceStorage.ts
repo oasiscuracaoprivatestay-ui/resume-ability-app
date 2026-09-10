@@ -71,3 +71,13 @@ export function recordSlip(): DayRecord {
 export function dailyScore(record: DayRecord): number {
   return record.balanceCount - record.slipCount;
 }
+
+/** Clear all legacy daily balance records */
+export function clearBalance(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Fail silently in private/restricted storage mode
+  }
+}
+

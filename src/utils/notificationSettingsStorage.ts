@@ -211,3 +211,13 @@ export function recordReminderDismissed(timestamp = Date.now()): ReminderDeliver
   saveReminderDeliveryState(next);
   return next;
 }
+
+/** Clear transient reminder delivery and cooldown state */
+export function clearNotificationDeliveryState(): void {
+  try {
+    localStorage.removeItem(STATE_KEY);
+  } catch {
+    // Fail silently in private/restricted storage mode
+  }
+}
+

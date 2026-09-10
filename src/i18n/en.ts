@@ -697,4 +697,21 @@ export const en: Translations = {
   commit_reminders_desc: 'Set gentle prompts to check in and review your structure.',
   commit_reminders_btn: 'Configure Reminders',
   global_back: 'Back',
+
+  // ── Stats Reset ──
+  stats_section_title: 'DATA & STATISTICS',
+  stats_reset_section_desc: 'Manage or clear your activity history and statistical records.',
+  stats_reset_btn: 'RESET ALL STATS',
+  stats_modal_title: 'RESET ALL STATS?',
+  stats_modal_desc_1: 'This will permanently clear your activity history, Check-In statistics, Slip history, Daily Resume-Ability Score activity, and daily Structured Diet verification history.',
+  stats_modal_desc_2: 'Your Why, Non-Negotiables, Structured Diet plan and reminder settings will NOT be deleted.',
+  stats_modal_btn_cancel: 'CANCEL',
+  stats_modal_btn_reset: 'RESET STATS',
+  stats_hold_title: 'CONFIRM RESET',
+  stats_hold_instruction: 'PRESS AND HOLD TO RESET',
+  stats_hold_subtext: 'Press and hold for 2 seconds to permanently clear your statistics.',
+  stats_done_title: 'ALL STATS RESET',
+  stats_done_desc: 'Your statistics have been cleared. Your plans and preferences are still here.',
+  stats_done_btn: 'CONTINUE',
 };
+

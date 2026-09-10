@@ -287,3 +287,13 @@ function isValidVerificationEntry(e: unknown): e is DietBlockVerification {
     typeof obj.verifiedAt === 'number'
   );
 }
+
+/** Clear all stored daily diet verifications */
+export function clearAllDietVerifications(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Fail silently in private/restricted storage mode
+  }
+}
+

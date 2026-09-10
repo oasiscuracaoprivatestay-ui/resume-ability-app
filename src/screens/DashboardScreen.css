@@ -585,3 +585,35 @@
   letter-spacing: -0.02em;
   line-height: 1;
 }
+
+/* ── Secondary Data & Statistics Reset area ── */
+
+.dash-reset-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 1.25rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.dash-reset-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-reset-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.dash-reset-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+

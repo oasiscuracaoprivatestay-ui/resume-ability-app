@@ -684,4 +684,21 @@ export const nl: Translations = {
   commit_reminders_desc: 'Stel vriendelijke meldingen in om in te checken en je structuur te bekijken.',
   commit_reminders_btn: 'Herinneringen Instellen',
   global_back: 'Terug',
+
+  // ── Stats Reset ──
+  stats_section_title: 'GEGEVENS & STATISTIEKEN',
+  stats_reset_section_desc: 'Beheer of wis je activiteitengeschiedenis en statistische gegevens.',
+  stats_reset_btn: 'ALLE STATISTIEKEN RESETTEN',
+  stats_modal_title: 'ALLE STATISTIEKEN RESETTEN?',
+  stats_modal_desc_1: 'Dit zal je activiteitengeschiedenis, Check-In-statistieken, Uitglijder-geschiedenis, dagelijkse Resume-Ability Score-activiteit en dagelijkse verificatiegeschiedenis van het Gestructureerd Dieet permanent wissen.',
+  stats_modal_desc_2: 'Je Waarom, Niet-Onderhandelbaren, Gestructureerd Dieet-weekplanning en herinneringen worden NIET verwijderd.',
+  stats_modal_btn_cancel: 'ANNULEREN',
+  stats_modal_btn_reset: 'STATISTIEKEN RESETTEN',
+  stats_hold_title: 'RESET BEVESTIGEN',
+  stats_hold_instruction: 'INGEDRUKT HOUDEN OM TE RESETTEN',
+  stats_hold_subtext: 'Houd 2 seconden ingedrukt om je statistieken permanent te wissen.',
+  stats_done_title: 'ALLE STATISTIEKEN GERESET',
+  stats_done_desc: 'Je statistieken zijn gewist. Je plannen en voorkeuren zijn nog aanwezig.',
+  stats_done_btn: 'DOORGAAN',
 };
+

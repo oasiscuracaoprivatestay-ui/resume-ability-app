@@ -87,6 +87,7 @@ export function getCheckIns(): CheckInRecord[] {
  * The status field keeps them separately measurable.
  */
 export function saveCheckIn(status: CheckInStatus): CheckInRecord {
+  const current = getTotalCheckInCount();
   const record: CheckInRecord = {
     id:        generateId(),
     status,
@@ -98,7 +99,6 @@ export function saveCheckIn(status: CheckInStatus): CheckInRecord {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
 
   // Increment total check-in count (all statuses count — every check-in is a win)
-  const current = getTotalCheckInCount();
   localStorage.setItem(CHECKIN_COUNT_KEY, String(current + 1));
 
   return record;
@@ -197,7 +197,18 @@ export function getDominantStatus(counts: StatusCounts): CheckInStatus | null {
     ['slip',         counts['slip']],
   ];
   entries.sort((a, b) => b[1] - a[1]);
-  // Tie: top two share the same count
+// Tie: top two share the same count
   if (entries[0][1] === entries[1][1]) return null;
   return entries[0][0];
 }
+
+/** Clear all stored check-ins and reset check-in count to 0 */
+export function clearCheckIns(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(CHECKIN_COUNT_KEY, '0');
+  } catch {
+    // Fail silently in private/restricted storage mode
+  }
+}
+

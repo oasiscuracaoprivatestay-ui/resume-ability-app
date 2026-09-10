@@ -594,4 +594,20 @@ export interface Translations {
   commit_reminders_desc: string;
   commit_reminders_btn: string;
   global_back: string;
+  // ── Stats Reset ──
+  stats_section_title: string;
+  stats_reset_section_desc: string;
+  stats_reset_btn: string;
+  stats_modal_title: string;
+  stats_modal_desc_1: string;
+  stats_modal_desc_2: string;
+  stats_modal_btn_cancel: string;
+  stats_modal_btn_reset: string;
+  stats_hold_title: string;
+  stats_hold_instruction: string;
+  stats_hold_subtext: string;
+  stats_done_title: string;
+  stats_done_desc: string;
+  stats_done_btn: string;
 }
+

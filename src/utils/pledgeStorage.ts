@@ -95,3 +95,19 @@ export function recordNonNegotiableReview(): PledgeData {
 export function getNonNegotiableReviewCount(): number {
   return loadPledge().nonNegotiableReviewCount;
 }
+
+/**
+ * Reset non-negotiable review statistics to zero.
+ * Preserves reasons (Why) and nonNegotiables (Rules) lists completely intact.
+ */
+export function resetPledgeStats(): void {
+  try {
+    const data = loadPledge();
+    data.nonNegotiableReviewCount = 0;
+    data.lastNonNegotiableReviewAt = null;
+    savePledge(data);
+  } catch {
+    // Fail silently in private/restricted storage mode
+  }
+}
+
