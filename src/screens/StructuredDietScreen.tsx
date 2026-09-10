@@ -40,6 +40,10 @@ import {
   formatTime,
 } from '../data/dietData';
 import type { BlockTypeKey } from '../data/dietData';
+import QuickBuildModal from '../components/QuickBuildModal';
+import TemplateModal from '../components/TemplateModal';
+import type { DietTemplate } from '../data/dietTemplates';
+import { applyDailyTemplateToDay } from '../data/dietTemplates';
 import './StructuredDietScreen.css';
 
 interface StructuredDietScreenProps {
@@ -392,7 +396,10 @@ function BlockCard({
   const foodLabels = block.items.map(key =>
     (t[`sdb_food_${key}` as keyof typeof t] as string | undefined) ?? key
   );
-  if (block.customText) foodLabels.push(block.customText);
+  if (block.customText) {
+    const translatedCustom = (t[block.customText as keyof typeof t] as string | undefined) ?? block.customText;
+    foodLabels.push(translatedCustom);
+  }
 
   return (
     <div className={`sdb-block-card ${verification?.status ? `sdb-block-card--${verification.status}` : ''}`}>
@@ -682,6 +689,9 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
   const [nameText, setNameText] = useState(weekly.planName);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [showQuickBuildModal, setShowQuickBuildModal] = useState(false);
+  const [showUnstructuredConfirmModal, setShowUnstructuredConfirmModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   // Daily verification state (today's verifications)
   const [todayVerification, setTodayVerification] = useState<DailyDietVerification | null>(
@@ -720,6 +730,51 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
   // ── Day Mode toggle ────────────────────────────────────────────────────────
   const handleSetMode = (mode: DayMode) => {
     updateWeekly(w => setDayMode(w, selectedDayKey, mode));
+  };
+
+  // ── Quick Build actions ──────────────────────────────────────────────────
+  const handleOpenQuickBuild = () => {
+    if (currentDay.mode === 'unstructured') {
+      setShowUnstructuredConfirmModal(true);
+    } else {
+      setShowQuickBuildModal(true);
+    }
+  };
+
+  const handleQuickBuildConfirm = (newBlocks: StructuredDietBlock[], mode: 'add' | 'replace') => {
+    updateWeekly(w =>
+      updateDayPlan(w, selectedDayKey, day => {
+        const combined = mode === 'add' ? [...day.blocks, ...newBlocks] : [...newBlocks];
+        return {
+          ...day,
+          mode: 'structured',
+          blocks: sortBlocks(combined),
+        };
+      })
+    );
+    setShowQuickBuildModal(false);
+    setCopyFeedback(t.sdb_qb_success);
+    setTimeout(() => {
+      setCopyFeedback(null);
+    }, 2800);
+  };
+
+  // ── Template actions (Task 6: Daily Scope) ────────────────────────────────
+  const handleApplyTemplate = (template: DietTemplate) => {
+    const { mode, blocks } = applyDailyTemplateToDay(template);
+    updateWeekly(w =>
+      updateDayPlan(w, selectedDayKey, d => ({
+        ...d,
+        mode,
+        blocks,
+      }))
+    );
+    setShowTemplateModal(false);
+    const dayName = (t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string | undefined) ?? selectedDayKey;
+    setCopyFeedback(`${t.sdb_tpl_applied_feedback} (${dayName})`);
+    setTimeout(() => {
+      setCopyFeedback(null);
+    }, 3200);
   };
 
   // ── Block CRUD for current day ─────────────────────────────────────────────
@@ -905,16 +960,38 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                 )}
               </div>
 
-              <button
-                id="btn-sdb-copy-day"
-                type="button"
-                className="sdb-copy-trigger-btn"
-                onClick={() => setShowCopyModal(true)}
-                title={t.sdb_btn_copy_day}
-              >
-                <span>📋</span>
-                <span className="sdb-copy-btn-text">{t.sdb_btn_copy_day}</span>
-              </button>
+              <div className="sdb-day-actions-header">
+                <button
+                  id="btn-sdb-quick-build-header"
+                  type="button"
+                  className="sdb-quick-build-trigger-btn"
+                  onClick={handleOpenQuickBuild}
+                  title={t.sdb_quick_build}
+                >
+                  <span>⚡</span>
+                  <span className="sdb-qb-btn-text">{t.sdb_quick_build}</span>
+                </button>
+                <button
+                  id="btn-sdb-templates-header"
+                  type="button"
+                  className="sdb-templates-trigger-btn"
+                  onClick={() => setShowTemplateModal(true)}
+                  title={t.sdb_choose_template}
+                >
+                  <span>📑</span>
+                  <span className="sdb-tpl-btn-text">{t.sdb_templates}</span>
+                </button>
+                <button
+                  id="btn-sdb-copy-day"
+                  type="button"
+                  className="sdb-copy-trigger-btn"
+                  onClick={() => setShowCopyModal(true)}
+                  title={t.sdb_btn_copy_day}
+                >
+                  <span>📋</span>
+                  <span className="sdb-copy-btn-text">{t.sdb_btn_copy_day}</span>
+                </button>
+              </div>
             </div>
 
             {/* Mode selector */}
@@ -954,20 +1031,98 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
 
           {/* ── Content depending on Day Mode ── */}
           {currentDay.mode === 'unstructured' ? (
-            /* ── Unstructured day state ── */
-            <div className="sdb-unstructured-card">
-              <div className="sdb-unstructured-icon">🌱</div>
-              <h3 className="sdb-unstructured-title">
-                {isToday ? t.sdb_today_unstructured_title : t.sdb_unstructured_title}
-              </h3>
-              <p className="sdb-unstructured-desc">
-                {isToday ? t.sdb_today_unstructured_desc : t.sdb_unstructured_desc}
-              </p>
-              <div className="sdb-unstructured-safe-box">
-                <span className="sdb-safe-box-icon">🔒</span>
-                <p className="sdb-unstructured-safe-hint">{t.sdb_unstructured_safe_hint}</p>
+            currentDay.blocks.length === 0 ? (
+              /* ── Unstructured day state (No blocks) ── */
+              <div className="sdb-unstructured-card">
+                <div className="sdb-unstructured-icon">🌱</div>
+                <h3 className="sdb-unstructured-title">
+                  {isToday ? t.sdb_today_unstructured_title : t.sdb_unstructured_title}
+                </h3>
+                <p className="sdb-unstructured-desc">
+                  {isToday ? t.sdb_today_unstructured_desc : t.sdb_unstructured_desc}
+                </p>
+                <div className="sdb-unstructured-safe-box">
+                  <span className="sdb-safe-box-icon">🔒</span>
+                  <p className="sdb-unstructured-safe-hint">{t.sdb_unstructured_safe_hint}</p>
+                </div>
+                <div className="sdb-empty-actions">
+                  <button
+                    id="btn-sdb-unstructured-qb"
+                    type="button"
+                    className="sdb-empty-qb-btn"
+                    onClick={handleOpenQuickBuild}
+                  >
+                    ⚡ {t.sdb_quick_build}
+                  </button>
+                  <button
+                    id="btn-sdb-unstructured-tpl"
+                    type="button"
+                    className="sdb-empty-tpl-btn"
+                    onClick={() => setShowTemplateModal(true)}
+                  >
+                    📑 {t.sdb_choose_template}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* ── Unstructured day with template timeline guidance ── */
+              <div className="sdb-unstructured-guidance-wrap">
+                <div className="sdb-unstructured-guidance-banner">
+                  <div className="sdb-unstructured-guidance-top">
+                    <span className="sdb-unstructured-guidance-badge">🌱 {t.sdb_mode_unstructured}</span>
+                    <span className="sdb-unstructured-guidance-tag">🧭 {t.sdb_tpl_unstructured_guidance_badge}</span>
+                  </div>
+                  <p className="sdb-unstructured-guidance-hint">{t.sdb_unstructured_safe_hint}</p>
+                </div>
+
+                <div className="sdb-block-list">
+                  {sortedBlocks.map(block => (
+                    <BlockCard
+                      key={block.id}
+                      block={block}
+                      onEdit={() => setEditingBlock(block)}
+                      onDelete={() => handleDeleteBlock(block.id)}
+                      t={t}
+                      isToday={false}
+                      verification={undefined}
+                      onVerifyOnTrack={() => {}}
+                      onOpenSlipModal={() => {}}
+                      onClearStatus={() => {}}
+                      onNavigate={onNavigate}
+                    />
+                  ))}
+                </div>
+
+                <div className="sdb-actions">
+                  <button
+                    id="btn-sdb-quick-build"
+                    type="button"
+                    className="sdb-quick-build-btn"
+                    onClick={handleOpenQuickBuild}
+                  >
+                    <span className="sdb-add-btn-icon">⚡</span>
+                    {t.sdb_quick_build}
+                  </button>
+                  <button
+                    id="btn-sdb-choose-template"
+                    type="button"
+                    className="sdb-template-btn"
+                    onClick={() => setShowTemplateModal(true)}
+                  >
+                    <span className="sdb-add-btn-icon">📑</span>
+                    {t.sdb_choose_template}
+                  </button>
+                  <button
+                    id="btn-sdb-add-block"
+                    className="sdb-add-btn"
+                    onClick={() => setEditingBlock('new')}
+                  >
+                    <span className="sdb-add-btn-icon">+</span>
+                    {t.sdb_add_block}
+                  </button>
+                </div>
+              </div>
+            )
           ) : (
             /* ── Structured day state (Block schedule) ── */
             <>
@@ -1000,6 +1155,24 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                   <div className="sdb-empty-icon">🥗</div>
                   <p className="sdb-empty-title">{t.sdb_empty_title}</p>
                   <p className="sdb-empty-sub">{t.sdb_empty_sub}</p>
+                  <div className="sdb-empty-actions">
+                    <button
+                      id="btn-sdb-empty-quick-build"
+                      type="button"
+                      className="sdb-empty-qb-btn"
+                      onClick={handleOpenQuickBuild}
+                    >
+                      ⚡ {t.sdb_quick_build}
+                    </button>
+                    <button
+                      id="btn-sdb-empty-template"
+                      type="button"
+                      className="sdb-empty-tpl-btn"
+                      onClick={() => setShowTemplateModal(true)}
+                    >
+                      📑 {t.sdb_choose_template}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="sdb-block-list">
@@ -1065,15 +1238,35 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                 </div>
               )}
 
-              {/* ── Add block CTA ── */}
-              <button
-                id="btn-sdb-add-block"
-                className="sdb-add-btn"
-                onClick={() => setEditingBlock('new')}
-              >
-                <span className="sdb-add-btn-icon">+</span>
-                {t.sdb_add_block}
-              </button>
+              {/* ── Planning actions row: Quick Build · Choose Template · Add Block ── */}
+              <div className="sdb-add-actions-row">
+                <button
+                  id="btn-sdb-quick-build"
+                  type="button"
+                  className="sdb-quick-build-btn"
+                  onClick={handleOpenQuickBuild}
+                >
+                  <span className="sdb-add-btn-icon">⚡</span>
+                  {t.sdb_quick_build}
+                </button>
+                <button
+                  id="btn-sdb-choose-template"
+                  type="button"
+                  className="sdb-template-btn"
+                  onClick={() => setShowTemplateModal(true)}
+                >
+                  <span className="sdb-add-btn-icon">📑</span>
+                  {t.sdb_choose_template}
+                </button>
+                <button
+                  id="btn-sdb-add-block"
+                  className="sdb-add-btn"
+                  onClick={() => setEditingBlock('new')}
+                >
+                  <span className="sdb-add-btn-icon">+</span>
+                  {t.sdb_add_block}
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -1115,6 +1308,80 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
           t={t}
         />
       )}
+
+      {/* ── Quick Build modal ── */}
+      <QuickBuildModal
+        isOpen={showQuickBuildModal}
+        dayKey={selectedDayKey}
+        dayName={currentDayFullName}
+        hasExistingBlocks={currentDay.blocks.length > 0}
+        onClose={() => setShowQuickBuildModal(false)}
+        onConfirm={handleQuickBuildConfirm}
+      />
+
+      {/* ── Unstructured to Structured Confirmation Modal ── */}
+      {showUnstructuredConfirmModal && (
+        <div
+          className="sdb-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sdb-unstructured-confirm-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowUnstructuredConfirmModal(false);
+          }}
+        >
+          <div className="sdb-modal sdb-confirm-modal" role="document">
+            <div className="sdb-modal-header">
+              <h2 id="sdb-unstructured-confirm-title" className="sdb-modal-title">
+                {t.sdb_quick_build}
+              </h2>
+              <button
+                className="sdb-modal-close"
+                onClick={() => setShowUnstructuredConfirmModal(false)}
+                aria-label={t.commit_cancel}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="sdb-modal-body">
+              <div className="sdb-confirm-icon">⚙️</div>
+              <p className="sdb-confirm-prompt">{t.sdb_qb_unstructured_prompt}</p>
+            </div>
+            <div className="sdb-modal-footer">
+              <button
+                id="btn-qb-unstructured-cancel"
+                type="button"
+                className="sdb-btn sdb-btn--cancel"
+                onClick={() => setShowUnstructuredConfirmModal(false)}
+              >
+                {t.commit_cancel}
+              </button>
+              <button
+                id="btn-qb-change-structured"
+                type="button"
+                className="sdb-btn sdb-btn--save"
+                onClick={() => {
+                  handleSetMode('structured');
+                  setShowUnstructuredConfirmModal(false);
+                  setShowQuickBuildModal(true);
+                }}
+              >
+                {t.sdb_qb_btn_change_structured}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Choose Template modal (Task 6: Daily Scope) ── */}
+      <TemplateModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onApply={handleApplyTemplate}
+        selectedDayKey={selectedDayKey}
+        selectedDayName={(t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string | undefined) ?? selectedDayKey}
+        hasExistingDayBlocks={currentDay.blocks.length > 0}
+      />
     </div>
   );
 }

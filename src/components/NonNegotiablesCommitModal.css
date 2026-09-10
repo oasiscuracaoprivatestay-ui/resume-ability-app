@@ -1,0 +1,374 @@
+/* ═══════════════════════════════════════════════════════════════
+   Non-Negotiables Commit Modal Styles (Task 2)
+   Deliberate press-and-hold interaction with emerald glow
+   ═══════════════════════════════════════════════════════════════ */
+
+.nn-commit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(6, 6, 9, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: nnCommitFadeIn 0.22s ease-out forwards;
+}
+
+@keyframes nnCommitFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.nn-commit-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #111118;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.7),
+    0 0 40px rgba(52, 211, 153, 0.12);
+  overflow-y: auto;
+  animation: nnCommitScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes nnCommitScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.nn-commit-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Header ── */
+.nn-commit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.nn-commit-badge-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.nn-commit-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+
+.nn-commit-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nn-commit-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+/* ── Affirmation Card ── */
+.nn-commit-affirmation-card {
+  padding: 1.1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.nn-commit-affirmation-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.45;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+/* ── Non-Negotiables List in Modal ── */
+.nn-commit-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.nn-commit-list-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.nn-commit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.nn-commit-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.nn-commit-item-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nn-commit-item-text {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+/* ── Press & Hold Container ── */
+.nn-commit-hold-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+}
+
+.nn-commit-ring-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nn-commit-ring-wrap--holding {
+  transform: scale(1.06);
+}
+
+.nn-commit-ring-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.nn-commit-ring-track {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.nn-commit-ring-arc {
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.6));
+}
+
+.nn-commit-hold-btn {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.2) 0%, rgba(16, 185, 129, 0.08) 100%);
+  border: 1.5px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(52, 211, 153, 0.15);
+}
+
+.nn-commit-hold-btn:focus-visible {
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.4);
+}
+
+.nn-commit-hold-btn--active {
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.35) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border-color: #34d399;
+  box-shadow:
+    0 0 24px rgba(52, 211, 153, 0.4),
+    inset 0 0 16px rgba(52, 211, 153, 0.25);
+  transform: scale(0.96);
+}
+
+.nn-commit-hold-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.nn-commit-hold-pct {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.nn-commit-hold-instruction {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ── Success State ── */
+.nn-commit-success {
+  padding: 2.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  animation: nnCommitFadeIn 0.3s ease-out forwards;
+}
+
+.nn-commit-success-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.15);
+  border: 2px solid #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 28px rgba(52, 211, 153, 0.35);
+  animation: nnSuccessPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes nnSuccessPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.nn-commit-success-icon {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #34d399;
+  line-height: 1;
+}
+
+.nn-commit-success-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.nn-commit-success-sub {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  max-width: 320px;
+}
+
+.nn-commit-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 0.5rem;
+}
+
+.nn-commit-btn-continue {
+  padding: 0.95rem 1.25rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
+}
+
+.nn-commit-btn-continue:hover {
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
+  transform: translateY(-1px);
+}
+
+.nn-commit-btn-continue:active {
+  transform: translateY(0);
+}
+
+.nn-commit-btn-home {
+  padding: 0.85rem 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nn-commit-btn-home:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+}

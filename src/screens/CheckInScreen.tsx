@@ -11,6 +11,9 @@ import {
 } from '../utils/pledgeStorage';
 import { saveReviewEvent } from '../utils/reviewStorage';
 import { generateId } from '../utils';
+import NonNegotiablesCommitModal from '../components/NonNegotiablesCommitModal';
+import { hasCommittedNonNegotiables } from '../utils/inControlStorage';
+import { STATS_RESET_EVENT } from '../utils/resetStats';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
@@ -145,6 +148,17 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const [panel, setPanel]           = useState<InlinePanel>('none');
   const [celebVariant, setCelebVariant] = useState<CelebrationVariant>('confetti');
   const [reviewToast, setReviewToast] = useState(false);
+  const [showCommitModal, setShowCommitModal] = useState(false);
+  const [hasCommittedNN, setHasCommittedNN] = useState(() => hasCommittedNonNegotiables());
+
+  // Listen to stats reset event to update commitment button label
+  useEffect(() => {
+    const handleStatsReset = () => {
+      setHasCommittedNN(hasCommittedNonNegotiables());
+    };
+    window.addEventListener(STATS_RESET_EVENT, handleStatsReset);
+    return () => window.removeEventListener(STATS_RESET_EVENT, handleStatsReset);
+  }, []);
 
   const rafRef   = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
@@ -534,6 +548,30 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                     {t.pledge_why_manage} ›
                   </button>
                 </div>
+
+                {/* ── Task 2B: Non-Negotiables Commit / Re-Commit Shortcut ── */}
+                {nnCount > 0 ? (
+                  <button
+                    id="btn-ci-commit-nn"
+                    type="button"
+                    className="ci-nn-commit-btn"
+                    onClick={() => setShowCommitModal(true)}
+                    aria-label={hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}
+                  >
+                    <span className="ci-nn-commit-btn-icon" aria-hidden="true">⚡</span>
+                    <span>{hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}</span>
+                  </button>
+                ) : (
+                  <button
+                    id="btn-ci-empty-add-nn"
+                    type="button"
+                    className="ci-nn-empty-btn"
+                    onClick={() => onNavigate('commitment')}
+                    aria-label={t.ci_nn_add_btn}
+                  >
+                    + {t.ci_nn_add_btn}
+                  </button>
+                )}
               </div>
 
               {/* Review button */}
@@ -651,6 +689,15 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
           </div>
         )}
       </div>
+
+      {/* ── Non-Negotiables Commit Modal (Task 2B) ── */}
+      <NonNegotiablesCommitModal
+        isOpen={showCommitModal}
+        nonNegotiables={pledge.nonNegotiables}
+        onClose={() => setShowCommitModal(false)}
+        onCommitSuccess={() => setHasCommittedNN(true)}
+        onNavigateHome={() => onNavigate('home')}
+      />
     </div>
   );
 }

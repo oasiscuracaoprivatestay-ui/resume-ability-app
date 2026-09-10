@@ -107,6 +107,14 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span className="home-btn-icon">✓</span>
             <span>{t.home_in_control}</span>
           </button>
+          <button
+            id="btn-structured-diet"
+            className="home-btn-diet"
+            onClick={() => onNavigate('structured-diet')}
+          >
+            <span className="home-btn-icon">🥗</span>
+            <span>{t.home_structured_diet}</span>
+          </button>
 
           {/* ── Secondary CTAs — inline, never floating on home ── */}
           <div className="home-secondary-row">

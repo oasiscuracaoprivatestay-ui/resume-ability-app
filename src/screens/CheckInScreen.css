@@ -1094,6 +1094,68 @@
   background: rgba(45, 212, 191, 0.06);
 }
 
+/* ── Non-Negotiables Commit / Re-Commit Shortcut (Task 2B) ── */
+.ci-nn-commit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.52rem 0.85rem;
+  background: rgba(45, 212, 191, 0.04);
+  border: 1.5px solid rgba(45, 212, 191, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ci-nn-commit-btn:hover {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.15);
+}
+
+.ci-nn-commit-btn:active {
+  transform: scale(0.98);
+}
+
+.ci-nn-commit-btn-icon {
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.ci-nn-empty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.48rem 0.75rem;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ci-nn-empty-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.04);
+}
+
 /* ── Review my non-negotiables button ── */
 .ci-pledge-review-btn {
   display: flex;

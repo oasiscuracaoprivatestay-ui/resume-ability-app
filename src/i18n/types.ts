@@ -19,6 +19,7 @@ export interface Translations {
   home_history: string;
   home_daily_audio: string;
   home_motivation: string;
+  home_structured_diet: string;
   global_start_timer: string;
   home_exit: string;
   home_feedback: string;
@@ -632,6 +633,158 @@ export interface Translations {
   push_test_failed: string;
   push_explain_prompt: string;
   push_inapp_desc: string;
+
+  // ── Non-Negotiables Commitment (Task 2) ──
+  nn_commit_btn: string;
+  nn_recommit_btn: string;
+  nn_commit_modal_title: string;
+  nn_commit_affirmation: string;
+  nn_commit_hold_instruction: string;
+  nn_commit_success_title: string;
+  nn_commit_success_sub: string;
+  nn_commit_empty_hint: string;
+  nn_commit_empty_add_btn: string;
+  nn_commit_btn_return_home: string;
+  nn_commit_btn_continue: string;
+  ci_nn_add_btn: string;
+
+  // ── Structured Diet Quick Build (Task 4) ──
+  sdb_quick_build: string;
+  sdb_qb_title: string;
+  sdb_qb_sub: string;
+  sdb_qb_start_time: string;
+  sdb_qb_interval: string;
+  sdb_qb_block_count: string;
+  sdb_qb_preview: string;
+  sdb_qb_btn_create: string;
+  sdb_qb_btn_cancel: string;
+  sdb_qb_conflict_title: string;
+  sdb_qb_conflict_desc: string;
+  sdb_qb_btn_add_existing: string;
+  sdb_qb_btn_replace_existing: string;
+  sdb_qb_unstructured_prompt: string;
+  sdb_qb_btn_change_structured: string;
+  sdb_qb_err_overflow: string;
+  sdb_qb_hours_unit: string;
+  sdb_qb_hour_unit_singular: string;
+  sdb_qb_success: string;
+
+  // ── Structured / Unstructured Templates (Task 5 & 6) ──
+  sdb_choose_template: string;
+  sdb_templates: string;
+  sdb_templates_structured: string;
+  sdb_templates_unstructured: string;
+  sdb_tpl_preview: string;
+  sdb_tpl_apply: string;
+  sdb_tpl_btn_replace: string;
+  sdb_tpl_confirm_prompt: string;
+  sdb_tpl_structured_label: string;
+  sdb_tpl_unstructured_label: string;
+  sdb_tpl_days_unit: string;
+  sdb_tpl_blocks_unit: string;
+  sdb_tpl_demo_badge: string;
+  sdb_tpl_applied_feedback: string;
+  sdb_tpl_customize_hint: string;
+  sdb_tpl_demo_struct_title: string;
+  sdb_tpl_demo_struct_desc: string;
+  sdb_tpl_demo_unstruct_title: string;
+  sdb_tpl_demo_unstruct_desc: string;
+  sdb_tpl_demo_all_unstruct_title: string;
+  sdb_tpl_demo_all_unstruct_desc: string;
+
+  // Task 6 — Daily template application & confirmation
+  sdb_tpl_apply_to_day: string;
+  sdb_tpl_replace_day_confirm: string;
+  sdb_tpl_btn_replace_day: string;
+  sdb_tpl_unstructured_guidance_badge: string;
+  sdb_tpl_timeline_badge: string;
+  sdb_tpl_next_day_ref: string;
+
+  // Task 6 — Sergio's Approved Unstructured Templates (6)
+  sdb_tpl_unstruct_loss_title: string;
+  sdb_tpl_unstruct_loss_desc: string;
+  sdb_tpl_moderate_loss_title: string;
+  sdb_tpl_moderate_loss_desc: string;
+  sdb_tpl_low_carb_flex_title: string;
+  sdb_tpl_low_carb_flex_desc: string;
+  sdb_tpl_balanced_flex_title: string;
+  sdb_tpl_balanced_flex_desc: string;
+  sdb_tpl_unstruct_maint_title: string;
+  sdb_tpl_unstruct_maint_desc: string;
+  sdb_tpl_social_free_title: string;
+  sdb_tpl_social_free_desc: string;
+
+  // Task 6 — Sergio's Approved Structured Templates (7)
+  sdb_tpl_fasting_title: string;
+  sdb_tpl_fasting_desc: string;
+  sdb_tpl_low_cal_shakes_title: string;
+  sdb_tpl_low_cal_shakes_desc: string;
+  sdb_tpl_1_protein_shakes_title: string;
+  sdb_tpl_1_protein_shakes_desc: string;
+  sdb_tpl_2_protein_shakes_title: string;
+  sdb_tpl_2_protein_shakes_desc: string;
+  sdb_tpl_2_protein_dairy_title: string;
+  sdb_tpl_2_protein_dairy_desc: string;
+  sdb_tpl_2_protein_carbs_title: string;
+  sdb_tpl_2_protein_carbs_desc: string;
+  sdb_tpl_omad_title: string;
+  sdb_tpl_omad_desc: string;
+
+  // Task 6 — Timeline reference points
+  sdb_tl_fast: string;
+  sdb_tl_fast_no_planned_meal: string;
+  sdb_tl_protein_meal_hungry: string;
+  sdb_tl_usually_no_eating: string;
+  sdb_tl_protein_centered_meal: string;
+  sdb_tl_micro_fast_no_grazing: string;
+  sdb_tl_continue_gap_between_meals: string;
+  sdb_tl_protein_centered_dinner: string;
+  sdb_tl_eating_usually_finished: string;
+  sdb_tl_new_intentional_day: string;
+  sdb_tl_fast_optional_breakfast: string;
+  sdb_tl_protein_centered_breakfast: string;
+  sdb_tl_optional: string;
+  sdb_tl_protein_vegetables: string;
+  sdb_tl_continue_gap: string;
+  sdb_tl_eggs_meat_dairy: string;
+  sdb_tl_meat_fish_eggs_veg: string;
+  sdb_tl_optional_dairy_protein: string;
+  sdb_tl_protein_veg_fat: string;
+  sdb_tl_fast_if_finished: string;
+  sdb_tl_breakfast_if_hungry: string;
+  sdb_tl_protein_whole_food_carb: string;
+  sdb_tl_protein_veg_healthy_carb: string;
+  sdb_tl_optional_planned_snack: string;
+  sdb_tl_eat_fast_choice: string;
+  sdb_tl_normal_breakfast_desired: string;
+  sdb_tl_meal_appetite: string;
+  sdb_tl_flexible: string;
+  sdb_tl_normal_balanced_dinner: string;
+  sdb_tl_optional_eating: string;
+  sdb_tl_preferably_finished: string;
+  sdb_tl_continue_maintenance: string;
+  sdb_tl_celebration_social_meal: string;
+  sdb_tl_resume_structure_social: string;
+  sdb_tl_resume_dont_extend: string;
+  sdb_tl_normal_structure_resumes: string;
+  sdb_tl_end_continue_fast: string;
+  sdb_tl_shake_1: string;
+  sdb_tl_shake_2: string;
+  sdb_tl_shake_3: string;
+  sdb_tl_shake_4: string;
+  sdb_tl_next_structured_day: string;
+  sdb_tl_protein_meal: string;
+  sdb_tl_fast_begins: string;
+  sdb_tl_protein_meal_1: string;
+  sdb_tl_protein_meal_2: string;
+  sdb_tl_fast_coffee_tea: string;
+  sdb_tl_protein_1_dairy: string;
+  sdb_tl_dairy_protein_option: string;
+  sdb_tl_protein_2_dairy: string;
+  sdb_tl_protein_1_healthy_carb: string;
+  sdb_tl_protein_2_healthy_carb: string;
+  sdb_tl_omad_meal: string;
+  sdb_tl_continue_until_omad: string;
 }
 
 

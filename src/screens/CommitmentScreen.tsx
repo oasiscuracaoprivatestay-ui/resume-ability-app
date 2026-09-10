@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
@@ -10,6 +10,9 @@ import {
 } from '../utils/pledgeStorage';
 import type { PledgeData } from '../utils/pledgeStorage';
 import ResetStatsModal from '../components/ResetStatsModal';
+import NonNegotiablesCommitModal from '../components/NonNegotiablesCommitModal';
+import { hasCommittedNonNegotiables } from '../utils/inControlStorage';
+import { STATS_RESET_EVENT } from '../utils/resetStats';
 import './CommitmentScreen.css';
 
 interface CommitmentScreenProps {
@@ -20,6 +23,17 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
   const { t } = useTranslation();
   const [data, setData] = useState<PledgeData>(() => loadPledge());
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showCommitModal, setShowCommitModal] = useState(false);
+  const [hasCommittedNN, setHasCommittedNN] = useState(() => hasCommittedNonNegotiables());
+
+  // Listen to stats reset event to update commitment button label
+  useEffect(() => {
+    const handleStatsReset = () => {
+      setHasCommittedNN(hasCommittedNonNegotiables());
+    };
+    window.addEventListener(STATS_RESET_EVENT, handleStatsReset);
+    return () => window.removeEventListener(STATS_RESET_EVENT, handleStatsReset);
+  }, []);
 
   // ── Reason edit state ──────────────────────────────────────────────────────
   const [editReasonIdx, setEditReasonIdx] = useState<number | null>(null);
@@ -354,6 +368,37 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
                 </button>
               )}
             </div>
+
+            {/* ── Non-Negotiables Commitment Action (Task 2) ── */}
+            {data.nonNegotiables.length > 0 ? (
+              <div className="commit-nn-action-wrap">
+                <button
+                  id="btn-commit-nn"
+                  className="commit-nn-btn"
+                  onClick={() => setShowCommitModal(true)}
+                  aria-label={hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}
+                >
+                  <span className="commit-nn-btn-icon" aria-hidden="true">⚡</span>
+                  <span>{hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="commit-nn-empty-notice" role="note">
+                <p className="commit-nn-empty-text">{t.nn_commit_empty_hint}</p>
+                {!addingNN && (
+                  <button
+                    id="btn-empty-add-nn"
+                    className="commit-nn-empty-btn"
+                    onClick={() => {
+                      setAddingNN(true);
+                      setEditNNIdx(null);
+                    }}
+                  >
+                    + {t.nn_commit_empty_add_btn}
+                  </button>
+                )}
+              </div>
+            )}
           </section>
 
           {/* ════ STRUCTURED DIET ENTRY ════ */}
@@ -410,6 +455,15 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
           setData(loadPledge());
           setShowResetModal(false);
         }}
+      />
+
+      {/* ── Non-Negotiables Commit Modal ── */}
+      <NonNegotiablesCommitModal
+        isOpen={showCommitModal}
+        nonNegotiables={data.nonNegotiables}
+        onClose={() => setShowCommitModal(false)}
+        onCommitSuccess={() => setHasCommittedNN(true)}
+        onNavigateHome={() => onNavigate('home')}
       />
     </div>
   );

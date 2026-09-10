@@ -1363,4 +1363,313 @@
   color: #fbbf24;
 }
 
+/* ── Quick Build UI Controls (Task 4) ── */
+
+.sdb-day-actions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sdb-quick-build-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  color: var(--accent);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sdb-quick-build-trigger-btn:hover {
+  background: rgba(45, 212, 191, 0.16);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
+}
+
+.sdb-add-actions-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 1.25rem;
+  width: 100%;
+}
+
+.sdb-add-actions-row .sdb-add-btn {
+  flex: 1.2;
+  margin-top: 0;
+}
+
+.sdb-quick-build-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: rgba(45, 212, 191, 0.09);
+  border: 1.5px dashed rgba(45, 212, 191, 0.45);
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sdb-quick-build-btn:hover {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
+  transform: translateY(-1px);
+}
+
+.sdb-quick-build-btn:active {
+  transform: scale(0.98);
+}
+
+.sdb-empty-qb-btn {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(45, 212, 191, 0.12);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sdb-empty-qb-btn:hover {
+  background: rgba(45, 212, 191, 0.22);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.3);
+  transform: translateY(-1px);
+}
+
+.sdb-unstructured-qb-btn {
+  margin-top: 1rem;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sdb-unstructured-qb-btn:hover {
+  background: rgba(45, 212, 191, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
+}
+
+/* ── Unstructured Confirmation Modal ── */
+.sdb-confirm-modal {
+  max-width: 420px;
+}
+
+.sdb-confirm-icon {
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.sdb-confirm-prompt {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .sdb-add-actions-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sdb-day-actions-header {
+    gap: 5px;
+  }
+
+  .sdb-quick-build-trigger-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .sdb-templates-trigger-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .sdb-copy-trigger-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+}
+
+/* ── Choose Template UI Controls (Task 5) ── */
+
+.sdb-templates-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-primary);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sdb-templates-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.sdb-template-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sdb-template-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.sdb-template-btn:active {
+  transform: scale(0.98);
+}
+
+.sdb-empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sdb-empty-tpl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sdb-empty-tpl-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ── Unstructured Template Guidance (Task 6) ── */
+.sdb-unstructured-guidance-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sdb-unstructured-guidance-banner {
+  background: rgba(251, 191, 36, 0.05);
+  border: 1px dashed rgba(251, 191, 36, 0.3);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdb-unstructured-guidance-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sdb-unstructured-guidance-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  padding: 3px 9px;
+  border-radius: 7px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.sdb-unstructured-guidance-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.1);
+  padding: 3px 8px;
+  border-radius: 7px;
+}
+
+.sdb-unstructured-guidance-hint {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+
 

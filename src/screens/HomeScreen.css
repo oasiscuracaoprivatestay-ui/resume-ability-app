@@ -372,6 +372,43 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* ── Structured Diet button ── TEAL ACCENT ── */
+
+.home-btn-diet {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 1.15rem 1.5rem;
+  background: rgba(45, 212, 191, 0.08);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: 1.5px solid rgba(45, 212, 191, 0.38);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 18px rgba(45, 212, 191, 0.12);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-btn-diet:hover {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 6px 26px rgba(45, 212, 191, 0.25);
+  transform: translateY(-1px);
+}
+
+.home-btn-diet:active {
+  transform: translateY(0);
+  background: rgba(45, 212, 191, 0.1);
+  box-shadow: 0 2px 10px rgba(45, 212, 191, 0.15);
+}
+
 .home-btn-icon {
   font-size: 1.25rem;
   line-height: 1;

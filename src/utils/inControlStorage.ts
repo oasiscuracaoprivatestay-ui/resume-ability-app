@@ -12,7 +12,7 @@ export interface InControlEvent {
 export interface CommitEvent {
   id: string;
   timestamp: number;
-  source: 'in-control';
+  source: 'in-control' | 'non-negotiables';
   inControlEventId?: string;
 }
 
@@ -65,10 +65,25 @@ export function loadCommitEvents(): CommitEvent[] {
   try {
     const raw = localStorage.getItem(COMMIT_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as CommitEvent[];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((e: any) => ({
+      id: String(e.id || ''),
+      timestamp: Number(e.timestamp) || 0,
+      source: e.source === 'non-negotiables' ? 'non-negotiables' : 'in-control',
+      inControlEventId: e.inControlEventId ? String(e.inControlEventId) : undefined,
+    })) as CommitEvent[];
   } catch {
     return [];
   }
+}
+
+/**
+ * Check if the user has recorded at least one commitment to their Non-Negotiables.
+ */
+export function hasCommittedNonNegotiables(): boolean {
+  const events = loadCommitEvents();
+  return events.some((e) => e.source === 'non-negotiables');
 }
 
 /**
