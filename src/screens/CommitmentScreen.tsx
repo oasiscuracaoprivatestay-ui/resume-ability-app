@@ -368,6 +368,21 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
               <span className="commit-diet-btn-arrow">›</span>
             </button>
           </section>
+
+          {/* ════ REMINDERS ENTRY ════ */}
+          <section className="commit-section commit-section--reminders" aria-label={t.commit_reminders_label}>
+            <h2 className="commit-section-title">{t.commit_reminders_label}</h2>
+            <p className="commit-diet-hint">{t.commit_reminders_desc}</p>
+            <button
+              id="btn-reminders-settings"
+              className="commit-diet-btn"
+              onClick={() => onNavigate('notification-settings')}
+            >
+              <span className="commit-diet-btn-icon">🔔</span>
+              <span>{t.commit_reminders_btn}</span>
+              <span className="commit-diet-btn-arrow">›</span>
+            </button>
+          </section>
         </div>
       </div>
     </div>

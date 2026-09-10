@@ -27,11 +27,23 @@ import MotivationalTextScreen from './screens/MotivationalTextScreen';
 import CommitmentScreen from './screens/CommitmentScreen';
 import StructuredDietScreen from './screens/StructuredDietScreen';
 import SdaTermsScreen from './screens/SdaTermsScreen';
+import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
+import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 import type { TargetSlipInfo } from './utils/slipInsights';
 import { saveRecommitEvent } from './utils/recommitStorage';
 import { saveInControlEvent, saveCommitEvent } from './utils/inControlStorage';
+import {
+  evaluateNextReminder,
+  dispatchBrowserNotification,
+  type ReminderCandidate,
+} from './utils/notificationScheduler';
+import {
+  recordReminderDelivered,
+  recordReminderDismissed,
+} from './utils/notificationSettingsStorage';
+import { useTranslation } from './i18n';
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
@@ -61,6 +73,10 @@ export default function App() {
 
   // Tracks whether motivation was requested from 'home' or from 'check-in' (Near Slip support)
   const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in'>('home');
+
+  // Phase 12: Active In-App Reminder
+  const { t } = useTranslation();
+  const [activeReminder, setActiveReminder] = useState<ReminderCandidate | null>(null);
 
   // ── Back-button override ──
   // Track current screen in a ref so the popstate handler always has fresh value.
@@ -139,6 +155,55 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Periodic reminder scheduler check (Phase 12) ──
+  useEffect(() => {
+    const checkReminders = () => {
+      // Do not interrupt critical active states
+      if (screenRef.current === 'timer' || screenRef.current === 'context' || screenRef.current === 'recommit') {
+        return;
+      }
+
+      const candidate = evaluateNextReminder(t);
+      if (candidate) {
+        recordReminderDelivered(candidate.key);
+        dispatchBrowserNotification(candidate, targetScreen => {
+          navigate(targetScreen);
+        });
+        setActiveReminder(candidate);
+      }
+    };
+
+    // Check once after initial mount
+    const initialTimer = setTimeout(checkReminders, 1500);
+
+    // Periodic check every 30 seconds
+    const interval = setInterval(checkReminders, 30000);
+
+    // Check on tab focus / visibility change
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkReminders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [t, navigate]);
+
+  const handleReminderAction = (reminder: ReminderCandidate) => {
+    setActiveReminder(null);
+    navigate(reminder.targetScreen);
+  };
+
+  const handleDismissReminder = () => {
+    recordReminderDismissed();
+    setActiveReminder(null);
+  };
 
   // ── Context selected → record slip (or update if navigating back) & open Insights ──
   const handleContextSelect = useCallback((context: SlipContext) => {
@@ -538,6 +603,15 @@ export default function App() {
       content = <SdaTermsScreen onNavigate={navigate} />;
       break;
 
+    case 'notification-settings':
+      content = (
+        <NotificationSettingsScreen
+          onNavigate={navigate}
+          onTriggerInAppReminder={cand => setActiveReminder(cand)}
+        />
+      );
+      break;
+
     default:
       content = (
         <HomeScreen
@@ -550,6 +624,13 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {activeReminder && (
+        <InAppReminderBanner
+          reminder={activeReminder}
+          onAction={() => handleReminderAction(activeReminder)}
+          onDismiss={handleDismissReminder}
+        />
+      )}
       {content}
       <div className="floating-buttons-stack">
         <FloatingProgramButton currentScreen={screen} />

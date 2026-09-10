@@ -25,6 +25,7 @@ export type Screen =
   | 'sda-terms'
   | 'commitment'
   | 'structured-diet'
+  | 'notification-settings'
   | 'premium';
 
 // ── Timer mode ──

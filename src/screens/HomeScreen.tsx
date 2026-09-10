@@ -37,6 +37,15 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
         <div className="home-top-right">
           <LanguageSelector />
           <button
+            id="btn-header-reminders"
+            className="home-reminders-btn"
+            onClick={() => onNavigate('notification-settings')}
+            aria-label={t.notif_screen_title}
+            title={t.notif_screen_title}
+          >
+            🔔
+          </button>
+          <button
             id="btn-exit-app"
             className="home-exit-btn"
             onClick={handleExit}
@@ -177,6 +186,14 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           onClick={() => onNavigate('commitment')}
         >
           {t.commit_label}
+        </button>
+        <span className="nav-dot">·</span>
+        <button
+          id="nav-reminders"
+          className="nav-link"
+          onClick={() => onNavigate('notification-settings')}
+        >
+          {t.nav_reminders}
         </button>
       </nav>
 
