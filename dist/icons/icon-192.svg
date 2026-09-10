@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="sdaGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <radialGradient id="sdaBg192" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#141926"/>
+      <stop offset="100%" stop-color="#060609"/>
+    </radialGradient>
+  </defs>
+  <rect width="192" height="192" rx="38" fill="url(#sdaBg192)"/>
+  <circle cx="96" cy="96" r="54" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="11"/>
+  <path d="M 96 42 A 54 54 0 1 1 52 130" fill="none" stroke="url(#sdaGrad192)" stroke-width="11" stroke-linecap="round"/>
+  <polygon points="46,114 52,138 72,124" fill="#2dd4bf"/>
+  <text x="96" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="24" font-weight="900" fill="#f8fafc" text-anchor="middle" letter-spacing="1.5">SDA</text>
+  <text x="96" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="8" font-weight="700" fill="#94a3b8" text-anchor="middle" letter-spacing="1">RESUME</text>
+</svg>

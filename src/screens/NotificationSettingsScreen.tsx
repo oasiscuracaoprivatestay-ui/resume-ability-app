@@ -16,6 +16,20 @@ import {
   dispatchBrowserNotification,
 } from '../utils/notificationScheduler';
 import type { ReminderCandidate } from '../utils/notificationScheduler';
+import {
+  getPushDeliveryStatus,
+  subscribeToPush,
+  unsubscribeFromPush,
+  sendTestPush,
+  type PushDeliveryStatus,
+} from '../utils/pushNotifications';
+import {
+  isStandaloneMode,
+  isIOS,
+  canPromptInstall,
+  promptInstall,
+  subscribeToInstallPrompt,
+} from '../utils/pwaSupport';
 import './NotificationSettingsScreen.css';
 
 interface NotificationSettingsScreenProps {
@@ -30,15 +44,33 @@ export default function NotificationSettingsScreen({
   const { t } = useTranslation();
   const [settings, setSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
   const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default');
-  const [testSent, setTestSent] = useState(false);
+  const [pushStatus, setPushStatus] = useState<PushDeliveryStatus>(() => getPushDeliveryStatus());
+  const [isPushLoading, setIsPushLoading] = useState(false);
+  const [pushSuccessMsg, setPushSuccessMsg] = useState<string | null>(null);
+  const [testPushResult, setTestPushResult] = useState<{
+    success: boolean;
+    isBackendPush: boolean;
+    msg: string;
+  } | null>(null);
+  const [canInstallPWA, setCanInstallPWA] = useState(() => canPromptInstall());
+  const [isStandalone, setIsStandalone] = useState(() => isStandaloneMode());
+  const isiOSDevice = isIOS();
 
-  // Check current browser permission on mount
+  // Check current browser permission & push state on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermissionState(Notification.permission);
     } else {
       setPermissionState('unsupported');
     }
+    setPushStatus(getPushDeliveryStatus());
+    setIsStandalone(isStandaloneMode());
+
+    // Listen to install prompt availability
+    const unsubInstall = subscribeToInstallPrompt((canInstall) => {
+      setCanInstallPWA(canInstall);
+    });
+    return () => unsubInstall();
   }, []);
 
   const update = useCallback((updater: (s: NotificationSettings) => NotificationSettings) => {
@@ -78,15 +110,62 @@ export default function NotificationSettingsScreen({
     }));
   };
 
-  // Handle sending a test reminder
-  const handleTestReminder = () => {
+  // Handle push notifications toggle (Phase 14)
+  const handleTogglePush = async () => {
+    setIsPushLoading(true);
+    setTestPushResult(null);
+
+    if (pushStatus === 'enabled') {
+      await unsubscribeFromPush();
+      setPushStatus(getPushDeliveryStatus());
+      setPushSuccessMsg(null);
+    } else {
+      const res = await subscribeToPush();
+      setPushStatus(res.status);
+      if (res.success) {
+        setPushSuccessMsg(t.push_enabled_success);
+        setTimeout(() => setPushSuccessMsg(null), 4000);
+      }
+    }
+    setIsPushLoading(false);
+  };
+
+  // Handle PWA installation prompt
+  const handlePromptInstall = async () => {
+    const accepted = await promptInstall();
+    if (accepted) {
+      setIsStandalone(true);
+      setCanInstallPWA(false);
+    }
+  };
+
+  // Handle sending a test reminder (Phase 14: distinguishes real push vs fallback)
+  const handleTestReminder = async () => {
+    if (pushStatus === 'enabled') {
+      const res = await sendTestPush();
+      if (res.success && res.isBackendPush) {
+        setTestPushResult({
+          success: true,
+          isBackendPush: true,
+          msg: t.push_test_sent_backend,
+        });
+        setTimeout(() => setTestPushResult(null), 4000);
+        return;
+      }
+    }
+
+    // Fallback: in-app / browser banner reminder
     const sample = buildCandidate('check-in', `test_${Date.now()}`, t, settings);
     dispatchBrowserNotification(sample, onNavigate);
     if (onTriggerInAppReminder) {
       onTriggerInAppReminder(sample);
     }
-    setTestSent(true);
-    setTimeout(() => setTestSent(false), 3000);
+    setTestPushResult({
+      success: true,
+      isBackendPush: false,
+      msg: pushStatus === 'enabled' ? t.push_test_failed : t.push_test_sent_fallback,
+    });
+    setTimeout(() => setTestPushResult(null), 4000);
   };
 
   const frequencies: { id: ReminderFrequency; label: string }[] = [
@@ -146,6 +225,104 @@ export default function NotificationSettingsScreen({
         {/* ── CONFIGURATION SECTIONS (Only when enabled) ── */}
         {settings.enabled && (
           <div className="notif-sections">
+            {/* ── 0. DELIVERY METHOD (Phase 14) ── */}
+            <section className="notif-section notif-section--delivery" aria-labelledby="notif-delivery-heading">
+              <h2 id="notif-delivery-heading" className="notif-section-title">
+                {t.push_section_delivery}
+              </h2>
+
+              <div className="notif-card-stack">
+                {/* Background Push Card */}
+                <div className="notif-card notif-card--delivery">
+                  <div className="notif-delivery-header">
+                    <div className="notif-delivery-title-row">
+                      <span className="notif-delivery-icon" aria-hidden="true">🌐</span>
+                      <span className="notif-card-label">{t.push_channel_push}</span>
+                    </div>
+                    <span className={`notif-status-badge notif-status-badge--${pushStatus}`}>
+                      {pushStatus === 'enabled' && `✓ ${t.push_status_enabled}`}
+                      {pushStatus === 'available' && t.push_status_available}
+                      {pushStatus === 'denied' && `✕ ${t.push_status_denied}`}
+                      {pushStatus === 'unsupported' && t.push_status_unsupported}
+                    </span>
+                  </div>
+
+                  {pushStatus === 'denied' && (
+                    <p className="notif-delivery-hint notif-delivery-hint--denied">
+                      {t.push_denied_desc}
+                    </p>
+                  )}
+                  {pushStatus === 'unsupported' && (
+                    <p className="notif-delivery-hint">{t.push_unsupported_desc}</p>
+                  )}
+                  {pushStatus === 'available' && (
+                    <p className="notif-delivery-hint">{t.push_explain_prompt}</p>
+                  )}
+
+                  {pushStatus !== 'unsupported' && pushStatus !== 'denied' && (
+                    <div className="notif-delivery-action">
+                      <button
+                        id="btn-toggle-push"
+                        type="button"
+                        className={`notif-push-btn ${pushStatus === 'enabled' ? 'notif-push-btn--disable' : 'notif-push-btn--enable'}`}
+                        onClick={handleTogglePush}
+                        disabled={isPushLoading}
+                      >
+                        {isPushLoading
+                          ? '...'
+                          : pushStatus === 'enabled'
+                          ? t.push_btn_disable
+                          : t.push_btn_enable}
+                      </button>
+                    </div>
+                  )}
+
+                  {pushSuccessMsg && (
+                    <p className="notif-push-success" role="status">✓ {pushSuccessMsg}</p>
+                  )}
+
+                  {/* iOS Installation Instructions Card */}
+                  {isiOSDevice && !isStandalone && (
+                    <div className="notif-ios-card">
+                      <span className="notif-ios-icon" aria-hidden="true">📲</span>
+                      <div className="notif-ios-content">
+                        <strong className="notif-ios-title">{t.push_ios_install_title}</strong>
+                        <p className="notif-ios-desc">{t.push_ios_install_desc}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Standard PWA Install Prompt Button (Android/Desktop) */}
+                  {canInstallPWA && !isStandalone && (
+                    <div className="notif-install-pwa-block">
+                      <button
+                        id="btn-install-pwa"
+                        type="button"
+                        className="notif-install-pwa-btn"
+                        onClick={handlePromptInstall}
+                      >
+                        <span>⚡ {t.push_btn_install}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* In-App Reminder Card */}
+                <div className="notif-card notif-card--delivery">
+                  <div className="notif-delivery-header">
+                    <div className="notif-delivery-title-row">
+                      <span className="notif-delivery-icon" aria-hidden="true">📱</span>
+                      <span className="notif-card-label">{t.push_channel_inapp}</span>
+                    </div>
+                    <span className="notif-status-badge notif-status-badge--enabled">
+                      ✓ {t.push_status_enabled}
+                    </span>
+                  </div>
+                  <p className="notif-delivery-hint">{t.push_inapp_desc}</p>
+                </div>
+              </div>
+            </section>
+
             {/* ── 1. REMINDER TYPES ── */}
             <section className="notif-section" aria-labelledby="notif-types-heading">
               <h2 id="notif-types-heading" className="notif-section-title">
@@ -396,8 +573,16 @@ export default function NotificationSettingsScreen({
                 className="notif-test-btn"
                 onClick={handleTestReminder}
               >
-                🔔 {testSent ? t.notif_test_sent : t.notif_test_btn}
+                🔔 {t.push_btn_send_test}
               </button>
+              {testPushResult && (
+                <p
+                  className={`notif-test-feedback ${testPushResult.isBackendPush ? 'notif-test-feedback--push' : 'notif-test-feedback--fallback'}`}
+                  role="status"
+                >
+                  {testPushResult.msg}
+                </p>
+              )}
             </div>
           </div>
         )}

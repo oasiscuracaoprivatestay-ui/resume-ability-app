@@ -700,5 +700,30 @@ export const es: Translations = {
   stats_done_title: 'TODAS LAS ESTADÍSTICAS REINICIADAS',
   stats_done_desc: 'Tus estadísticas se han borrado. Tus planes y preferencias permanecen intactos.',
   stats_done_btn: 'CONTINUAR',
+
+  // ── Phase 14: Background Push & PWA ──
+  push_section_delivery: 'MÉTODO DE ENTREGA',
+  push_channel_push: 'Notificaciones Push de Fondo',
+  push_channel_inapp: 'Aviso en la Aplicación',
+  push_status_enabled: 'Activado',
+  push_status_available: 'Disponible — No Activado',
+  push_status_denied: 'Permiso Denegado',
+  push_status_unsupported: 'No Compatible',
+  push_btn_enable: 'ACTIVAR NOTIFICACIONES DE FONDO',
+  push_btn_disable: 'DESACTIVAR NOTIFICACIONES DE FONDO',
+  push_enabled_success: 'Notificaciones en segundo plano activadas.',
+  push_denied_desc: 'El permiso de notificaciones fue denegado. Puedes activarlo en los ajustes de tu navegador o teléfono.',
+  push_unsupported_desc: 'Las notificaciones push no son compatibles con este navegador. Los avisos en la aplicación seguirán funcionando.',
+  push_btn_install: 'INSTALAR SUPER DIET-ABILITY',
+  push_status_installed: 'App Instalada',
+  push_ios_install_title: 'Instalar en iPhone / iPad',
+  push_ios_install_desc: "Para recibir notificaciones en segundo plano en iPhone, toca Compartir ⎋ y selecciona 'Añadir a la pantalla de inicio'.",
+  push_btn_send_test: 'ENVIAR AVISO DE PRUEBA',
+  push_test_sent_backend: '¡Aviso push de prueba enviado desde el servidor!',
+  push_test_sent_fallback: 'Aviso de prueba entregado mediante aviso en pantalla.',
+  push_test_failed: 'Error al enviar push. Usando aviso en pantalla como respaldo.',
+  push_explain_prompt: 'Permite las notificaciones para que Super Diet-Ability pueda recordarte incluso con la app cerrada.',
+  push_inapp_desc: 'Se muestra de inmediato siempre que la aplicación esté abierta.',
 };
+
 

@@ -700,5 +700,30 @@ export const nl: Translations = {
   stats_done_title: 'ALLE STATISTIEKEN GERESET',
   stats_done_desc: 'Je statistieken zijn gewist. Je plannen en voorkeuren zijn nog aanwezig.',
   stats_done_btn: 'DOORGAAN',
+
+  // ── Phase 14: Background Push & PWA ──
+  push_section_delivery: 'BEZORGINGSMETHODE',
+  push_channel_push: 'Achtergrond Pushberichten',
+  push_channel_inapp: 'In-App Herinnering',
+  push_status_enabled: 'Ingeschakeld',
+  push_status_available: 'Beschikbaar — Niet Ingeschakeld',
+  push_status_denied: 'Toestemming Geweigerd',
+  push_status_unsupported: 'Niet Ondersteund',
+  push_btn_enable: 'ACHTERGRONDMELDINGEN INSCHAKELEN',
+  push_btn_disable: 'ACHTERGRONDMELDINGEN UITSCHAKELEN',
+  push_enabled_success: 'Achtergrondmeldingen succesvol ingeschakeld.',
+  push_denied_desc: 'Meldingstoestemming is geweigerd. Je kunt dit op elk gewenst moment inschakelen in je telefoon- of browserinstellingen.',
+  push_unsupported_desc: 'Achtergrond pushberichten worden niet ondersteund door deze browser. In-app herinneringen blijven gewoon werken.',
+  push_btn_install: 'SUPER DIET-ABILITY INSTALLEREN',
+  push_status_installed: 'App Geïnstalleerd',
+  push_ios_install_title: 'Installeren op iPhone / iPad',
+  push_ios_install_desc: "Om achtergrondmeldingen op iPhone te ontvangen, tik op Deel ⎋ en kies 'Zet op beginscherm'.",
+  push_btn_send_test: 'TESTHERINNERING VERZENDEN',
+  push_test_sent_backend: 'Testpush verzonden via achtergrondserver!',
+  push_test_sent_fallback: 'Testherinnering bezorgd via in-app melding.',
+  push_test_failed: 'Push verzenden mislukt. Teruggevallen op in-app melding.',
+  push_explain_prompt: 'Sta meldingen toe zodat Super Diet-Ability je kan herinneren, zelfs als de app gesloten is.',
+  push_inapp_desc: 'Direct weergegeven zolang de applicatie geopend is.',
 };
+
 

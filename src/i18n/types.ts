@@ -609,5 +609,29 @@ export interface Translations {
   stats_done_title: string;
   stats_done_desc: string;
   stats_done_btn: string;
+  // ── Phase 14: Background Push & PWA ──
+  push_section_delivery: string;
+  push_channel_push: string;
+  push_channel_inapp: string;
+  push_status_enabled: string;
+  push_status_available: string;
+  push_status_denied: string;
+  push_status_unsupported: string;
+  push_btn_enable: string;
+  push_btn_disable: string;
+  push_enabled_success: string;
+  push_denied_desc: string;
+  push_unsupported_desc: string;
+  push_btn_install: string;
+  push_status_installed: string;
+  push_ios_install_title: string;
+  push_ios_install_desc: string;
+  push_btn_send_test: string;
+  push_test_sent_backend: string;
+  push_test_sent_fallback: string;
+  push_test_failed: string;
+  push_explain_prompt: string;
+  push_inapp_desc: string;
 }
+
 

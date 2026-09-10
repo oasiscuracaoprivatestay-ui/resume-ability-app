@@ -713,5 +713,30 @@ export const en: Translations = {
   stats_done_title: 'ALL STATS RESET',
   stats_done_desc: 'Your statistics have been cleared. Your plans and preferences are still here.',
   stats_done_btn: 'CONTINUE',
+
+  // ── Phase 14: Background Push & PWA ──
+  push_section_delivery: 'DELIVERY METHOD',
+  push_channel_push: 'Background Push',
+  push_channel_inapp: 'In-App Reminder',
+  push_status_enabled: 'Enabled',
+  push_status_available: 'Available — Not Enabled',
+  push_status_denied: 'Permission Denied',
+  push_status_unsupported: 'Not Supported',
+  push_btn_enable: 'ENABLE BACKGROUND NOTIFICATIONS',
+  push_btn_disable: 'DISABLE BACKGROUND NOTIFICATIONS',
+  push_enabled_success: 'Background notifications enabled.',
+  push_denied_desc: 'Notification permission was denied. You can enable this anytime in your phone or browser settings.',
+  push_unsupported_desc: 'Background push is not supported on this browser or platform. In-app reminders will continue to work.',
+  push_btn_install: 'INSTALL SUPER DIET-ABILITY',
+  push_status_installed: 'App Installed',
+  push_ios_install_title: 'Install on iPhone / iPad',
+  push_ios_install_desc: "To receive background notifications on iPhone, tap Share ⎋ and select 'Add to Home Screen'.",
+  push_btn_send_test: 'SEND TEST REMINDER',
+  push_test_sent_backend: 'Test push sent through background server!',
+  push_test_sent_fallback: 'Test reminder delivered via in-app banner.',
+  push_test_failed: 'Push delivery failed. Falling back to in-app banner.',
+  push_explain_prompt: 'Allow notifications so Super Diet-Ability can remind you even when the app is not open.',
+  push_inapp_desc: 'Delivered instantly whenever the application is open.',
 };
+
 

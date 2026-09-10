@@ -160,7 +160,32 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── PWA Push Deep-linking & SW message listener (Phase 14) ──
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const targetParam = params.get('screen') as Screen | null;
+      if (targetParam) {
+        navigate(targetParam);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } catch {
+      // ignore
+    }
+
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      const handleSwMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'NAVIGATE_SCREEN' && event.data.screen) {
+          navigate(event.data.screen as Screen);
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+      return () => navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+    }
+  }, [navigate]);
+
   // ── Periodic reminder scheduler check (Phase 12) ──
+
   useEffect(() => {
     const checkReminders = () => {
       // Do not interrupt critical active states

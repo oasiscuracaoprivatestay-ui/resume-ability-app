@@ -11,3 +11,15 @@ createRoot(document.getElementById('root')!).render(
     </LanguageProvider>
   </StrictMode>,
 )
+
+// Register Service Worker for PWA and Push Notifications
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .catch((err) => {
+        console.warn('Service worker registration failed:', err);
+      });
+  });
+}
+
