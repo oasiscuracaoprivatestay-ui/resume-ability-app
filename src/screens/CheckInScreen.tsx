@@ -156,7 +156,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   // ── Auto-nav: ON STRUCTURE only ────────────────────────────────────────────
   useEffect(() => {
     if (step !== 'done' || saved !== 'on-structure') return;
-    const timer = setTimeout(() => onNavigate('home'), ON_STRUCTURE_DELAY);
+    const timer = setTimeout(() => onNavigate('quote'), ON_STRUCTURE_DELAY);
     return () => clearTimeout(timer);
   }, [step, saved, onNavigate]);
 
@@ -267,8 +267,8 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
 
   const handleSupportAction = (id: string) => {
     switch (id) {
-      case 'motivation': onNavigate('daily-audio');  break;
-      case 'timer':      onNavigate('context');      break;
+      case 'motivation': onNavigate('motivation-choice');  break;
+      case 'timer':      onNavigate('context');            break;
       case 'why':        setPanel('why');             break;
       case 'ability':    setPanel('ability');         break;
     }
@@ -443,7 +443,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               </button>
             ))}
           </div>
-          <button className="ci-back-home" onClick={() => onNavigate('home')}>{t.ci_back_home}</button>
+          <button className="ci-back-home" onClick={() => onNavigate('quote')}>{t.ci_back_home}</button>
         </div>
       </div>
     );
@@ -472,7 +472,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               {t.ci_slip_recovery_cta}
             </button>
           </div>
-          <button className="ci-back-home" onClick={() => onNavigate('home')}>{t.ci_back_home}</button>
+          <button className="ci-back-home" onClick={() => onNavigate('quote')}>{t.ci_back_home}</button>
         </div>
       </div>
     );

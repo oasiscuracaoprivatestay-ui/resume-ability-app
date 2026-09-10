@@ -5,7 +5,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import './ModeScreen.css';
 
 interface ModeScreenProps {
-  onSelect: (mode: TimerMode, loopBlocks: number) => void;
+  onSelect: (mode: TimerMode, loopBlocks: number, audioEnabled: boolean) => void;
   onNavigate: (screen: Screen) => void;
   backTo: Screen;
 }
@@ -25,6 +25,7 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
   const { t } = useTranslation();
   const [view, setView] = useState<View>('main');
   const [customBlocks, setCustomBlocks] = useState(3);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   const adjustBlocks = (delta: number) => {
     setCustomBlocks((prev) => Math.max(1, Math.min(96, prev + delta)));
@@ -54,13 +55,40 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
           </h2>
         </div>
 
+        {/* ── Audio Option Toggle (Phase 7H) ── */}
+        <div className="mode-audio-toggle-section">
+          <span className="mode-audio-toggle-label">{t.timer_audio_toggle_label}</span>
+          <div className="mode-audio-toggle" role="group" aria-label={t.timer_audio_toggle_label}>
+            <button
+              id="btn-timer-audio-with"
+              type="button"
+              className={`mode-audio-btn ${audioEnabled ? 'mode-audio-btn--active' : ''}`}
+              aria-pressed={audioEnabled}
+              onClick={() => setAudioEnabled(true)}
+            >
+              <span className="mode-audio-icon" aria-hidden="true">🔊</span>
+              <span>{t.timer_audio_with}</span>
+            </button>
+            <button
+              id="btn-timer-audio-without"
+              type="button"
+              className={`mode-audio-btn ${!audioEnabled ? 'mode-audio-btn--active' : ''}`}
+              aria-pressed={!audioEnabled}
+              onClick={() => setAudioEnabled(false)}
+            >
+              <span className="mode-audio-icon" aria-hidden="true">🔇</span>
+              <span>{t.timer_audio_without}</span>
+            </button>
+          </div>
+        </div>
+
         {/* ── Main mode selection ── */}
         {view === 'main' && (
           <div className="mode-options">
             <button
               id="mode-single"
               className="mode-card"
-              onClick={() => onSelect('single', 1)}
+              onClick={() => onSelect('single', 1, audioEnabled)}
             >
               <div className="mode-card-left">
                 <span className="mode-card-icon">◎</span>
@@ -90,7 +118,7 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
             <button
               id="mode-extended"
               className="mode-card"
-              onClick={() => onSelect('extended-fast', 0)}
+              onClick={() => onSelect('extended-fast', 0, audioEnabled)}
             >
               <div className="mode-card-left">
                 <span className="mode-card-icon">▸</span>
@@ -118,7 +146,7 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
                 key={opt.blocks}
                 id={`loop-${opt.blocks}`}
                 className="loop-card"
-                onClick={() => onSelect('loop', opt.blocks)}
+                onClick={() => onSelect('loop', opt.blocks, audioEnabled)}
               >
                 <span className="loop-card-label">{opt.label}</span>
                 <span className="loop-card-detail">{opt.detail}</span>
@@ -174,7 +202,7 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
             <button
               id="btn-start-custom"
               className="btn btn-primary btn-large"
-              onClick={() => onSelect('loop', customBlocks)}
+              onClick={() => onSelect('loop', customBlocks, audioEnabled)}
             >
               {t.mode_start}
             </button>

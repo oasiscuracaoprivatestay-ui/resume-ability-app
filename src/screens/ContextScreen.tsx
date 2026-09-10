@@ -2,6 +2,7 @@ import type { Screen, SlipContext } from '../types';
 import { SLIP_CONTEXT_ICONS } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import './ContextScreen.css';
 
 interface ContextScreenProps {
@@ -47,11 +48,17 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
 
       <div className="context-content">
         <div className="context-heading">
-          <span className="section-label">{t.ctx_label}</span>
+          <div className="context-title-row">
+            <span className="section-label">{t.ctx_label}</span>
+            <TermHelp termKey="sz" btnId="btn-help-ctx-sz" />
+          </div>
           <h2 className="context-question">
             {t.ctx_question}<br />
             <span className="accent-text">{t.ctx_question_accent}</span>
           </h2>
+          <p className="context-subtitle-hint">
+            {t.sda_term_sz_def}
+          </p>
         </div>
 
         <div className="context-grid">

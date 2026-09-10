@@ -53,8 +53,22 @@
 
 .commit-section-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+}
+
+.commit-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.commit-section-desc-hint {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 .commit-section-title {

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import {
   loadPledge,
   savePledge,
@@ -240,11 +241,15 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
           {/* ════ NON-NEGOTIABLES ════ */}
           <section className="commit-section" aria-label={t.commit_nn_section}>
             <div className="commit-section-header">
-              <h2 className="commit-section-title">{t.commit_nn_section}</h2>
+              <div className="commit-title-row">
+                <h2 className="commit-section-title">{t.commit_nn_section}</h2>
+                <TermHelp termKey="nn" btnId="btn-help-commit-nn" />
+              </div>
               <span className="commit-nn-count">
                 {data.nonNegotiables.length} / {MAX_NON_NEGOTIABLES}
               </span>
             </div>
+            <p className="commit-section-desc-hint">{t.sda_term_nn_def}</p>
             <p className="commit-section-hint">{t.commit_nn_limit}</p>
 
             <div className="commit-list">

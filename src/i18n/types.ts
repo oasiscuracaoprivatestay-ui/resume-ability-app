@@ -442,4 +442,78 @@ export interface Translations {
   score_feedback_slips_no_recommit: string;
   score_feedback_low_engagement: string;
   score_feedback_no_activity: string;
+
+  // ── Post Check-In Motivational Quote Screen (Phase 7F) ──
+  quote_screen_label: string;
+  quote_btn_home: string;
+  motivational_quotes: string[];
+
+  // ── I Need Motivation: Audio / Text Choice (Phase 7G) ──
+  motivation_choice_label: string;
+  motivation_choice_heading: string;
+  motivation_choice_sub: string;
+  motivation_btn_audio: string;
+  motivation_btn_audio_desc: string;
+  motivation_btn_text: string;
+  motivation_btn_text_desc: string;
+  motivational_text_label: string;
+  motivational_text_btn_next: string;
+  motivational_text_btn_home: string;
+  motivational_texts: { title: string; body: string }[];
+
+  // ── Timer Audio Mode Toggle (Phase 7H) ──
+  timer_audio_toggle_label: string;
+  timer_audio_with: string;
+  timer_audio_without: string;
+  timer_audio_disabled_desc: string;
+
+  // ── SDA Terminology & Contextual Help (Phase 9) ──
+  sda_terms_link: string;
+  sda_terms_title: string;
+  sda_terms_subtitle: string;
+  sda_term_slip_title: string;
+  sda_term_slip_def: string;
+  sda_term_sz_title: string;
+  sda_term_sz_def: string;
+  sda_term_nn_title: string;
+  sda_term_nn_def: string;
+  sda_term_ra_title: string;
+  sda_term_ra_def: string;
+  sda_term_sd_title: string;
+  sda_term_sd_def: string;
+  sda_term_mf_title: string;
+  sda_term_mf_def: string;
+  sda_btn_close: string;
+  sda_btn_home: string;
+  sda_info_aria: string;
+
+  // ── Structured Diet Weekly / Daily Planning (Phase 10) ──
+  sdb_day_mon: string;
+  sdb_day_tue: string;
+  sdb_day_wed: string;
+  sdb_day_thu: string;
+  sdb_day_fri: string;
+  sdb_day_sat: string;
+  sdb_day_sun: string;
+  sdb_day_mon_short: string;
+  sdb_day_tue_short: string;
+  sdb_day_wed_short: string;
+  sdb_day_thu_short: string;
+  sdb_day_fri_short: string;
+  sdb_day_sat_short: string;
+  sdb_day_sun_short: string;
+  sdb_today: string;
+  sdb_day_type: string;
+  sdb_mode_structured: string;
+  sdb_mode_unstructured: string;
+  sdb_unstructured_title: string;
+  sdb_unstructured_desc: string;
+  sdb_unstructured_safe_hint: string;
+  sdb_btn_copy_day: string;
+  sdb_copy_modal_title: string;
+  sdb_copy_modal_sub: string;
+  sdb_copy_confirm_overwrite: string;
+  sdb_copy_btn_submit: string;
+  sdb_copy_success: string;
+  sdb_select_all: string;
 }

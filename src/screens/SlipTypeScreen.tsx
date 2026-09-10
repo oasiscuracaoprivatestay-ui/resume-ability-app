@@ -1,6 +1,7 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import './SlipTypeScreen.css';
 
 interface SlipTypeScreenProps {
@@ -19,10 +20,16 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
 
       <div className="slip-type-content">
         <div className="slip-type-heading">
-          <span className="section-label">{t.slip_type_title}</span>
+          <div className="slip-type-title-row">
+            <span className="section-label">{t.slip_type_title}</span>
+            <TermHelp termKey="slip" btnId="btn-help-slip" />
+          </div>
           <h2 className="slip-type-question">
             {t.slip_type_subtitle}
           </h2>
+          <p className="slip-type-intro-hint">
+            {t.sda_term_slip_def}
+          </p>
         </div>
 
         <div className="slip-type-options">
@@ -34,7 +41,10 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
             <div className="slip-type-card-left">
               <span className="slip-type-card-icon">⚡</span>
               <div className="slip-type-card-text">
-                <span className="slip-type-card-title">{t.slip_type_slippery_zone}</span>
+                <div className="slip-type-card-title-row">
+                  <span className="slip-type-card-title">{t.slip_type_slippery_zone}</span>
+                  <TermHelp termKey="sz" btnId="btn-help-sz" />
+                </div>
                 <span className="slip-type-card-desc">{t.slip_type_slippery_zone_desc}</span>
               </div>
             </div>
@@ -49,7 +59,10 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
             <div className="slip-type-card-left">
               <span className="slip-type-card-icon">🛡️</span>
               <div className="slip-type-card-text">
-                <span className="slip-type-card-title">{t.slip_type_non_negotiable}</span>
+                <div className="slip-type-card-title-row">
+                  <span className="slip-type-card-title">{t.slip_type_non_negotiable}</span>
+                  <TermHelp termKey="nn" btnId="btn-help-nn" />
+                </div>
                 <span className="slip-type-card-desc">{t.slip_type_non_negotiable_desc}</span>
               </div>
             </div>

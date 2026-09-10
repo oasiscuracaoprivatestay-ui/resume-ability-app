@@ -17,6 +17,7 @@ import {
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import './DashboardScreen.css';
 import type { Translations } from '../i18n';
 
@@ -153,7 +154,11 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
         {/* ── Daily Resume-Ability Score Hero Section ── */}
         <div className="resume-score-section">
           <div className="resume-score-header">
-            <span className="section-label">{t.dash_resume_ability_score_label}</span>
+            <div className="resume-score-title-row">
+              <span className="section-label">{t.dash_resume_ability_score_label}</span>
+              <TermHelp termKey="ra" btnId="btn-help-dash-ra" />
+            </div>
+            <p className="resume-score-header-hint">{t.sda_term_ra_def}</p>
           </div>
 
           <div className="resume-score-hero-card">

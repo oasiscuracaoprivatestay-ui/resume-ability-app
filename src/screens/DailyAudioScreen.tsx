@@ -85,9 +85,10 @@ function nextTrackInSlot(slot: DailySlot, currentSrc: string | null): string {
 
 interface DailyAudioScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) {
+export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScreenProps) {
   const { lang, t } = useTranslation();
   const [activeSlot, setActiveSlot] = useState<DailySlot | null>(null);
   const [activeSrcBase, setActiveSrcBase] = useState('');
@@ -173,10 +174,19 @@ export default function DailyAudioScreen({ onNavigate }: DailyAudioScreenProps) 
     ? (t[getSlot(activeSlot).titleKey] as string)
     : '';
 
+  const handleBack = () => {
+    stop();
+    if (onBack) {
+      onBack();
+    } else {
+      onNavigate('home');
+    }
+  };
+
   return (
     <div className="screen daily-screen">
       <ScreenHeader
-        onBack={() => handleNavigate('home')}
+        onBack={handleBack}
         onHome={() => handleNavigate('home')}
       />
 

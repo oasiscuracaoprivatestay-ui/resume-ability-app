@@ -95,6 +95,7 @@ const ADD_SECONDS = 15 * 60; // 15 minutes in seconds
 
 interface TimerScreenProps {
   session: ActiveSession;
+  audioEnabled?: boolean;
   onComplete: (durationSeconds: number, blocksCompleted?: number) => void;
   onExtend: () => void;
   onRelapse: (blocksCompleted?: number) => void;
@@ -103,6 +104,7 @@ interface TimerScreenProps {
 
 export default function TimerScreen({
   session,
+  audioEnabled = true,
   onComplete,
   onExtend,
   onRelapse,
@@ -131,8 +133,10 @@ export default function TimerScreen({
   }, []);
 
   // Resolve language-specific audio path — music is language-independent
-  const localizedSrc =
-    audioMode === 'music'
+  // If audio is disabled for this timer session, pass empty string to avoid loading/playing
+  const localizedSrc = !audioEnabled
+    ? ''
+    : audioMode === 'music'
       ? currentTrack.src
       : localizeAudioPath(currentTrack.src, lang);
 
@@ -415,84 +419,91 @@ export default function TimerScreen({
           <p className="timer-loop-done">{t.timer_all_blocks}</p>
         )}
 
-        {/* ── Audio mode selector + controls ── */}
-        <div className="audio-section">
-          <p className="ctrl-section-label">{t.audio_section_label}</p>
+        {/* ── Audio mode selector + controls (or disabled state) ── */}
+        {audioEnabled ? (
+          <div className="audio-section">
+            <p className="ctrl-section-label">{t.audio_section_label}</p>
 
-          <div className="audio-mode-selector">
-            {AUDIO_MODES.map((mode) => (
+            <div className="audio-mode-selector">
+              {AUDIO_MODES.map((mode) => (
+                <button
+                  key={mode}
+                  className={`audio-mode-pill${audioMode === mode ? ' audio-mode-pill--active' : ''}`}
+                  onClick={() => handleAudioModeChange(mode)}
+                >
+                  {t[AUDIO_LABEL_KEYS[mode]]}
+                </button>
+              ))}
+            </div>
+
+            <div className="audio-controls">
               <button
-                key={mode}
-                className={`audio-mode-pill${audioMode === mode ? ' audio-mode-pill--active' : ''}`}
-                onClick={() => handleAudioModeChange(mode)}
+                id="btn-audio-play"
+                className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+                onClick={togglePlay}
+                disabled={loadState !== 'ready'}
+                aria-label={isPlaying ? t.audio_btn_pause : t.audio_btn_play}
               >
-                {t[AUDIO_LABEL_KEYS[mode]]}
+                <span className="audio-btn-icon">{isPlaying ? '⏸' : '▶'}</span>
+                <span className="audio-btn-label">{isPlaying ? t.audio_btn_pause : t.audio_btn_play}</span>
               </button>
-            ))}
-          </div>
-
-          <div className="audio-controls">
-            <button
-              id="btn-audio-play"
-              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
-              onClick={togglePlay}
-              disabled={loadState !== 'ready'}
-              aria-label={isPlaying ? t.audio_btn_pause : t.audio_btn_play}
-            >
-              <span className="audio-btn-icon">{isPlaying ? '⏸' : '▶'}</span>
-              <span className="audio-btn-label">{isPlaying ? t.audio_btn_pause : t.audio_btn_play}</span>
-            </button>
-            <button
-              id="btn-audio-next"
-              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
-              onClick={handleNextTrack}
-              disabled={loadState !== 'ready'}
-              aria-label={t.audio_btn_next}
-            >
-              <span className="audio-btn-icon">⏭</span>
-              <span className="audio-btn-label">{t.audio_btn_next}</span>
-            </button>
-            <button
-              id="btn-audio-mute"
-              className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
-              onClick={toggleMute}
-              disabled={loadState !== 'ready'}
-              aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
-            >
-              <span className="audio-btn-icon">{isMuted ? '🔇' : '🔊'}</span>
-            </button>
-          </div>
-          {loadState === 'error' && (
-            <p className="audio-error">{t.timer_audio_error}</p>
-          )}
-
-          {/* ── Mini playlist ── */}
-          <div className="playlist-panel">
-            {TRACKS[audioMode].map((track) => (
               <button
-                key={track.id}
-                className={[
-                  'playlist-track',
-                  track.id === currentTrack.id ? 'playlist-track--active' : '',
-                  track.premium ? 'playlist-track--locked' : '',
-                  track.session ? 'playlist-track--session' : '',
-                ].filter(Boolean).join(' ')}
-                onClick={() => handleTrackSelect(track)}
+                id="btn-audio-next"
+                className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+                onClick={handleNextTrack}
+                disabled={loadState !== 'ready'}
+                aria-label={t.audio_btn_next}
               >
-                <span className="playlist-track-info">
-                  <span className="playlist-track-name">{track.name}</span>
-                  {track.session && (
-                    <span className="playlist-track-sub">{track.session}</span>
+                <span className="audio-btn-icon">⏭</span>
+                <span className="audio-btn-label">{t.audio_btn_next}</span>
+              </button>
+              <button
+                id="btn-audio-mute"
+                className={`audio-btn${loadState !== 'ready' ? ' audio-btn--disabled' : ''}`}
+                onClick={toggleMute}
+                disabled={loadState !== 'ready'}
+                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+              >
+                <span className="audio-btn-icon">{isMuted ? '🔇' : '🔊'}</span>
+              </button>
+            </div>
+            {loadState === 'error' && (
+              <p className="audio-error">{t.timer_audio_error}</p>
+            )}
+
+            {/* ── Mini playlist ── */}
+            <div className="playlist-panel">
+              {TRACKS[audioMode].map((track) => (
+                <button
+                  key={track.id}
+                  className={[
+                    'playlist-track',
+                    track.id === currentTrack.id ? 'playlist-track--active' : '',
+                    track.premium ? 'playlist-track--locked' : '',
+                    track.session ? 'playlist-track--session' : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => handleTrackSelect(track)}
+                >
+                  <span className="playlist-track-info">
+                    <span className="playlist-track-name">{track.name}</span>
+                    {track.session && (
+                      <span className="playlist-track-sub">{track.session}</span>
+                    )}
+                  </span>
+                  {track.premium && <span className="playlist-lock">🔒 Premium</span>}
+                  {!track.premium && track.id === currentTrack.id && isPlaying && (
+                    <span className="playlist-playing">♫</span>
                   )}
-                </span>
-                {track.premium && <span className="playlist-lock">🔒 Premium</span>}
-                {!track.premium && track.id === currentTrack.id && isPlaying && (
-                  <span className="playlist-playing">♫</span>
-                )}
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="audio-section audio-section--disabled" id="timer-audio-disabled-banner">
+            <span className="audio-disabled-icon" aria-hidden="true">🔇</span>
+            <span className="audio-disabled-text">{t.timer_audio_disabled_desc}</span>
+          </div>
+        )}
 
         <div className="timer-actions">
           <button

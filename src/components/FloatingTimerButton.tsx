@@ -17,6 +17,10 @@ const HIDDEN_ON: Screen[] = [
   'daily-audio',
   'slip-type',
   'slip-non-negotiable',
+  'quote',
+  'motivation-choice',
+  'motivational-text',
+  'sda-terms',
 ];
 
 interface FloatingTimerButtonProps {

@@ -85,7 +85,7 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           <button
             id="btn-motivation"
             className="home-btn-motivation"
-            onClick={() => onNavigate('daily-audio')}
+            onClick={() => onNavigate('motivation-choice')}
           >
             <span className="home-btn-icon">♫</span>
             <span>{t.home_motivation}</span>
@@ -128,6 +128,13 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             onClick={() => onNavigate('timer-learn')}
           >
             {t.home_timer_learn_link} →
+          </button>
+          <button
+            id="btn-sda-terms-link"
+            className="home-learn-link home-sda-terms-link"
+            onClick={() => onNavigate('sda-terms')}
+          >
+            {t.sda_terms_link} →
           </button>
           <button
             id="btn-quiz-entry"

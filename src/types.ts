@@ -19,6 +19,10 @@ export type Screen =
   | 'timer-learn'
   | 'quiz'
   | 'check-in'
+  | 'quote'
+  | 'motivation-choice'
+  | 'motivational-text'
+  | 'sda-terms'
   | 'commitment'
   | 'structured-diet'
   | 'premium';

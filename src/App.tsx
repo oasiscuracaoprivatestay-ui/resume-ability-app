@@ -21,8 +21,12 @@ import PremiumScreen from './screens/PremiumScreen';
 import TimerLearnScreen from './screens/TimerLearnScreen';
 import QuizScreen from './screens/QuizScreen';
 import CheckInScreen from './screens/CheckInScreen';
+import MotivationalQuoteScreen from './screens/MotivationalQuoteScreen';
+import MotivationChoiceScreen from './screens/MotivationChoiceScreen';
+import MotivationalTextScreen from './screens/MotivationalTextScreen';
 import CommitmentScreen from './screens/CommitmentScreen';
 import StructuredDietScreen from './screens/StructuredDietScreen';
+import SdaTermsScreen from './screens/SdaTermsScreen';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 import type { TargetSlipInfo } from './utils/slipInsights';
@@ -52,12 +56,27 @@ export default function App() {
   // handleModeSelect and handleTimerComplete skip slip storage in this mode.
   const [timerOnly, setTimerOnly] = useState(false);
 
+  // Timer audio preference: true (With Audio, default) or false (Without Audio)
+  const [timerAudioEnabled, setTimerAudioEnabled] = useState(true);
+
+  // Tracks whether motivation was requested from 'home' or from 'check-in' (Near Slip support)
+  const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in'>('home');
+
   // ── Back-button override ──
   // Track current screen in a ref so the popstate handler always has fresh value.
   const screenRef = useRef<Screen>('home');
 
   // ── Navigation ──
   const navigate = useCallback((target: Screen) => {
+    if (target === 'motivation-choice') {
+      // Record origin based on where the user navigated from
+      if (screenRef.current === 'check-in') {
+        setMotivationOrigin('check-in');
+      } else {
+        setMotivationOrigin('home');
+      }
+    }
+
     if (target === 'home' || target === 'slip-type') {
       setSession(null);
       setPendingContext(null);
@@ -69,8 +88,9 @@ export default function App() {
       setSession(null);
       setPendingContext(null);
       setTimerOnly(false);
-    } else if (target === 'mode') {
+    } else    if (target === 'mode') {
       setSession(null);
+      setTimerAudioEnabled(true);
       // keep pendingContext so the user can pick a different mode
     }
     // Push a history entry whenever navigating away from home so the
@@ -85,6 +105,7 @@ export default function App() {
   // ── Start Timer (no slip) — skips context / slip recording ──
   const handleStartTimer = useCallback(() => {
     setTimerOnly(true);
+    setTimerAudioEnabled(true);
     setSlipId(null);
     setCurrentReportedSlip(null);
     setPendingContext(null);
@@ -191,11 +212,12 @@ export default function App() {
 
   // ── Mode selected → create session and start timer ──
   const handleModeSelect = useCallback(
-    (mode: TimerMode, loopBlocks: number) => {
+    (mode: TimerMode, loopBlocks: number, audioEnabled: boolean) => {
       // timerOnly: no slip context required — enter timer directly.
       // Slip flow: pendingContext must exist.
       if (!timerOnly && !pendingContext) return;
 
+      setTimerAudioEnabled(audioEnabled);
       setSession({
         startedAt: Date.now(),
         context: pendingContext ?? 'stress', // placeholder context for timer-only
@@ -386,6 +408,7 @@ export default function App() {
       content = session ? (
         <TimerScreen
           session={session}
+          audioEnabled={timerAudioEnabled}
           onComplete={handleTimerComplete}
           onExtend={handleExtend}
           onRelapse={handleRelapse}
@@ -443,7 +466,44 @@ export default function App() {
       break;
 
     case 'daily-audio':
-      content = <DailyAudioScreen onNavigate={navigate} />;
+      content = (
+        <DailyAudioScreen
+          onNavigate={navigate}
+          onBack={() => {
+            if (motivationOrigin === 'check-in') {
+              navigate('check-in');
+            } else {
+              navigate('motivation-choice');
+            }
+          }}
+        />
+      );
+      break;
+
+    case 'motivation-choice':
+      content = (
+        <MotivationChoiceScreen
+          onBack={() => {
+            if (motivationOrigin === 'check-in') {
+              navigate('check-in');
+            } else {
+              navigate('home');
+            }
+          }}
+          onNavigate={navigate}
+          onChooseAudio={() => navigate('daily-audio')}
+          onChooseText={() => navigate('motivational-text')}
+        />
+      );
+      break;
+
+    case 'motivational-text':
+      content = (
+        <MotivationalTextScreen
+          onBack={() => navigate('motivation-choice')}
+          onNavigate={navigate}
+        />
+      );
       break;
 
     case 'premium':
@@ -462,12 +522,20 @@ export default function App() {
       content = <CheckInScreen onNavigate={navigate} />;
       break;
 
+    case 'quote':
+      content = <MotivationalQuoteScreen onNavigate={navigate} />;
+      break;
+
     case 'commitment':
       content = <CommitmentScreen onNavigate={navigate} />;
       break;
 
     case 'structured-diet':
       content = <StructuredDietScreen onNavigate={navigate} />;
+      break;
+
+    case 'sda-terms':
+      content = <SdaTermsScreen onNavigate={navigate} />;
       break;
 
     default:

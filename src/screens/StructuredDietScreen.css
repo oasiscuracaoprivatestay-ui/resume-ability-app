@@ -37,6 +37,12 @@
   padding-top: 0.5rem;
 }
 
+.sdb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .sdb-heading {
   font-size: 2rem;
   font-weight: 800;
@@ -50,6 +56,13 @@
   color: var(--text-dim);
   line-height: 1.5;
   margin-top: 0.15rem;
+}
+
+.sdb-desc-hint {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* ── Plan name row ── */
@@ -513,6 +526,22 @@
   gap: 0.4rem;
 }
 
+.sdb-food-chip-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sdb-microfasting-hint {
+  font-size: 0.8rem;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0.5rem 0 0;
+  line-height: 1.45;
+}
+
 .sdb-food-chip {
   padding: 0.4rem 0.75rem;
   background: var(--surface);
@@ -614,3 +643,357 @@
     padding: 0.35rem 0.6rem;
   }
 }
+
+/* ── Phase 10: Weekly Day Selector & Planning Styles ── */
+
+.sdb-week-selector {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.sdb-day-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 38px;
+  font-family: inherit;
+  color: var(--text-secondary);
+}
+
+.sdb-day-pill:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.sdb-day-pill--active {
+  background: rgba(45, 212, 191, 0.14);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.sdb-day-pill-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: inherit;
+}
+
+.sdb-day-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  margin-top: 4px;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.sdb-day-pill--today:not(.sdb-day-pill--active) {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* ── Selected Day Header Card ── */
+
+.sdb-day-header-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 14px 16px;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sdb-day-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sdb-day-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdb-day-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.sdb-today-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.sdb-copy-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sdb-copy-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.sdb-copy-btn-text {
+  font-size: 0.78rem;
+}
+
+/* Day Mode Selector */
+
+.sdb-day-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sdb-day-mode-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.sdb-day-mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid var(--border);
+}
+
+.sdb-mode-pill {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.sdb-mode-pill:hover {
+  color: var(--text-primary);
+}
+
+.sdb-mode-pill--active {
+  background: var(--surface-hover);
+  color: var(--accent);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Transient Feedback Toast */
+
+.sdb-toast-feedback {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  animation: termHelpFadeIn 0.2s ease;
+}
+
+/* ── Unstructured Day Card ── */
+
+.sdb-unstructured-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg, 16px);
+  padding: 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.sdb-unstructured-icon {
+  font-size: 2.2rem;
+}
+
+.sdb-unstructured-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sdb-unstructured-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 320px;
+}
+
+.sdb-unstructured-safe-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  max-width: 340px;
+  text-align: left;
+}
+
+.sdb-safe-box-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sdb-unstructured-safe-hint {
+  font-size: 0.8rem;
+  color: #93c5fd;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Copy Day Modal Styles ── */
+
+.sdb-copy-modal {
+  max-width: 400px;
+}
+
+.sdb-copy-sub {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.sdb-copy-select-all-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.sdb-btn-select-all {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: opacity 0.15s ease;
+  font-family: inherit;
+}
+
+.sdb-btn-select-all:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.sdb-copy-targets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sdb-copy-target-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sdb-copy-target-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+.sdb-copy-checkbox {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.sdb-copy-target-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sdb-copy-target-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.sdb-copy-overwrite-alert {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+

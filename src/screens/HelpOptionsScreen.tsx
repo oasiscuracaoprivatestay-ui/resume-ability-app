@@ -1,6 +1,7 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import './HelpOptionsScreen.css';
 
 interface HelpOptionsScreenProps {
@@ -19,11 +20,17 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
 
       <div className="help-content">
         <div className="help-heading">
-          <span className="section-label">{t.help_label}</span>
+          <div className="help-title-row">
+            <span className="section-label">{t.help_label}</span>
+            <TermHelp termKey="ra" btnId="btn-help-options-ra" />
+          </div>
           <h2 className="help-question">
             {t.help_question}<br />
             <span className="accent-text">{t.help_question_accent}</span>
           </h2>
+          <p className="help-subtitle-hint">
+            {t.sda_term_ra_def}
+          </p>
         </div>
 
         <div className="help-options">

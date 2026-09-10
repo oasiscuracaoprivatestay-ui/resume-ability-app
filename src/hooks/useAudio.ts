@@ -42,6 +42,12 @@ export function useAudio(src: string, options?: UseAudioOptions) {
     setLoadState('loading');
     setIsPlaying(false);
 
+    if (!src) {
+      setLoadState('ready');
+      audioRef.current = null;
+      return;
+    }
+
     console.log('[useAudio] Loading:', src);
 
     // Step 1: Verify file exists via fetch HEAD

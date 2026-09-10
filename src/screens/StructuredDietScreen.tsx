@@ -1,15 +1,27 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import TermHelp from '../components/TermHelp';
 import {
-  loadDietPlan,
-  saveDietPlan,
+  loadWeeklyDiet,
+  saveWeeklyDiet,
+  getDayPlan,
+  updateDayPlan,
+  setDayMode,
+  copyDayPlan,
+  getLocalTodayKey,
   generateBlockId,
   isOvernightBlock,
   sortBlocks,
+  DAY_KEYS,
 } from '../utils/dietStorage';
-import type { StructuredDietBlock, StructuredDietPlan } from '../utils/dietStorage';
+import type {
+  DayKey,
+  DayMode,
+  StructuredDietBlock,
+  WeeklyStructuredDiet,
+} from '../utils/dietStorage';
 import {
   BLOCK_TYPE_KEYS,
   BLOCK_TYPE_ICONS,
@@ -149,16 +161,25 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             <label className="sdb-label">{t.sdb_food_label}</label>
             <div className="sdb-food-grid">
               {FOOD_OPTION_KEYS.map(key => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`sdb-food-chip ${items.includes(key) ? 'sdb-food-chip--active' : ''}`}
-                  onClick={() => toggleItem(key)}
-                >
-                  {t[`sdb_food_${key}` as keyof typeof t] as string}
-                </button>
+                <div key={key} className="sdb-food-chip-wrap">
+                  <button
+                    type="button"
+                    className={`sdb-food-chip ${items.includes(key) ? 'sdb-food-chip--active' : ''}`}
+                    onClick={() => toggleItem(key)}
+                  >
+                    {t[`sdb_food_${key}` as keyof typeof t] as string}
+                  </button>
+                  {key === 'micro_fasting' && (
+                    <TermHelp termKey="mf" btnId="btn-help-microfasting" />
+                  )}
+                </div>
               ))}
             </div>
+            {items.includes('micro_fasting') && (
+              <p className="sdb-microfasting-hint">
+                {t.sda_term_mf_def}
+              </p>
+            )}
           </div>
 
           {/* ── Custom note ── */}
@@ -255,50 +276,212 @@ function BlockCard({ block, onEdit, onDelete, t }: BlockCardProps) {
   );
 }
 
+// ── Copy Day Modal ────────────────────────────────────────────────────────────
+
+interface CopyDayModalProps {
+  sourceDayKey: DayKey;
+  weekly: WeeklyStructuredDiet;
+  onCopy: (targets: DayKey[]) => void;
+  onCancel: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function CopyDayModal({ sourceDayKey, weekly, onCopy, onCancel, t }: CopyDayModalProps) {
+  const otherDays = DAY_KEYS.filter(k => k !== sourceDayKey);
+  const [selectedTargets, setSelectedTargets] = useState<DayKey[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
+  const toggleTarget = (key: DayKey) => {
+    setSelectedTargets(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTargets.length === otherDays.length) {
+      setSelectedTargets([]);
+    } else {
+      setSelectedTargets([...otherDays]);
+    }
+  };
+
+  const sourceDayName = t[`sdb_day_${sourceDayKey}` as keyof typeof t] as string;
+
+  // Check if any selected target day currently has non-empty blocks
+  const willOverwrite = selectedTargets.some(k => {
+    const day = getDayPlan(weekly, k);
+    return day.blocks.length > 0;
+  });
+
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onCancel();
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-copy-title"
+    >
+      <div className="sdb-modal sdb-copy-modal" ref={modalRef}>
+        <div className="sdb-modal-header">
+          <h2 id="sdb-copy-title" className="sdb-modal-title">
+            {t.sdb_copy_modal_title}
+          </h2>
+          <button className="sdb-modal-close" onClick={onCancel} aria-label={t.commit_cancel}>
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body">
+          <p className="sdb-copy-sub">
+            {t.sdb_copy_modal_sub.replace('{day}', sourceDayName)}
+          </p>
+
+          <div className="sdb-copy-select-all-row">
+            <button
+              type="button"
+              className="sdb-btn-select-all"
+              onClick={handleSelectAll}
+            >
+              {t.sdb_select_all}
+            </button>
+          </div>
+
+          <div className="sdb-copy-targets-list">
+            {otherDays.map(k => {
+              const dayName = t[`sdb_day_${k}` as keyof typeof t] as string;
+              const isChecked = selectedTargets.includes(k);
+              const targetDay = getDayPlan(weekly, k);
+              const blockCount = targetDay.blocks.length;
+
+              return (
+                <label key={k} className="sdb-copy-target-item">
+                  <input
+                    type="checkbox"
+                    className="sdb-copy-checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleTarget(k)}
+                  />
+                  <span className="sdb-copy-target-name">{dayName}</span>
+                  <span className="sdb-copy-target-badge">
+                    {targetDay.mode === 'unstructured'
+                      ? t.sdb_mode_unstructured
+                      : `${blockCount} ${blockCount === 1 ? 'block' : 'blocks'}`}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {willOverwrite && (
+            <div className="sdb-copy-overwrite-alert" role="alert">
+              ⚠️ {t.sdb_copy_confirm_overwrite}
+            </div>
+          )}
+        </div>
+
+        <div className="sdb-modal-footer">
+          <button className="sdb-btn sdb-btn--cancel" onClick={onCancel}>
+            {t.commit_cancel}
+          </button>
+          <button
+            id="btn-sdb-copy-confirm"
+            className="sdb-btn sdb-btn--save"
+            disabled={selectedTargets.length === 0}
+            onClick={() => onCopy(selectedTargets)}
+          >
+            {t.sdb_copy_btn_submit} ({selectedTargets.length})
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function StructuredDietScreen({ onNavigate }: StructuredDietScreenProps) {
   const { t } = useTranslation();
-  const [plan, setPlan] = useState<StructuredDietPlan>(() => loadDietPlan());
+  const [weekly, setWeekly] = useState<WeeklyStructuredDiet>(() => loadWeeklyDiet());
+  const [selectedDayKey, setSelectedDayKey] = useState<DayKey>(() => getLocalTodayKey());
   const [editingBlock, setEditingBlock] = useState<StructuredDietBlock | null | 'new'>(null);
   const [editingName, setEditingName] = useState(false);
-  const [nameText, setNameText] = useState(plan.name);
+  const [nameText, setNameText] = useState(weekly.planName);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+  const todayKey = getLocalTodayKey();
+  const currentDay = getDayPlan(weekly, selectedDayKey);
 
   // ── Persist helper ─────────────────────────────────────────────────────────
-  const updatePlan = useCallback((updater: (p: StructuredDietPlan) => StructuredDietPlan) => {
-    setPlan(prev => {
+  const updateWeekly = useCallback((updater: (w: WeeklyStructuredDiet) => WeeklyStructuredDiet) => {
+    setWeekly(prev => {
       const next = updater({ ...prev });
-      saveDietPlan(next);
+      saveWeeklyDiet(next);
       return next;
     });
   }, []);
 
-  // ── Name edit ──────────────────────────────────────────────────────────────
+  // ── Plan Name edit ─────────────────────────────────────────────────────────
   const commitName = () => {
     const trimmed = nameText.trim();
-    const finalName = trimmed || t.sdb_default_plan_name;
+    const finalName = trimmed || t.sdb_default_plan_name || 'My Structured Diet';
     setNameText(finalName);
-    updatePlan(p => ({ ...p, name: finalName }));
+    updateWeekly(w => ({ ...w, planName: finalName }));
     setEditingName(false);
   };
 
-  // ── Block CRUD ─────────────────────────────────────────────────────────────
+  // ── Day Mode toggle ────────────────────────────────────────────────────────
+  const handleSetMode = (mode: DayMode) => {
+    updateWeekly(w => setDayMode(w, selectedDayKey, mode));
+  };
+
+  // ── Block CRUD for current day ─────────────────────────────────────────────
   const handleSaveBlock = (block: StructuredDietBlock) => {
-    updatePlan(p => {
-      const existing = p.blocks.findIndex(b => b.id === block.id);
-      const blocks = existing >= 0
-        ? p.blocks.map((b, i) => i === existing ? block : b)
-        : [...p.blocks, block];
-      return { ...p, blocks: sortBlocks(blocks) };
-    });
+    updateWeekly(w =>
+      updateDayPlan(w, selectedDayKey, day => {
+        const existing = day.blocks.findIndex(b => b.id === block.id);
+        const blocks = existing >= 0
+          ? day.blocks.map((b, i) => (i === existing ? block : b))
+          : [...day.blocks, block];
+        return { ...day, blocks: sortBlocks(blocks) };
+      })
+    );
     setEditingBlock(null);
   };
 
   const handleDeleteBlock = (id: string) => {
-    updatePlan(p => ({ ...p, blocks: p.blocks.filter(b => b.id !== id) }));
+    updateWeekly(w =>
+      updateDayPlan(w, selectedDayKey, day => ({
+        ...day,
+        blocks: day.blocks.filter(b => b.id !== id),
+      }))
+    );
   };
 
-  const sortedBlocks = sortBlocks(plan.blocks);
+  // ── Copy day action ────────────────────────────────────────────────────────
+  const handleExecuteCopy = (targets: DayKey[]) => {
+    updateWeekly(w => copyDayPlan(w, selectedDayKey, targets));
+    setShowCopyModal(false);
+    setCopyFeedback(t.sdb_copy_success);
+    setTimeout(() => {
+      setCopyFeedback(null);
+    }, 2800);
+  };
+
+  const sortedBlocks = sortBlocks(currentDay.blocks);
+  const currentDayFullName = t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string;
 
   return (
     <div className="screen sdb-screen">
@@ -311,12 +494,16 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
         <div className="sdb-content">
           {/* ── Heading ── */}
           <div className="sdb-heading-block">
-            <span className="section-label">{t.sdb_label}</span>
+            <div className="sdb-title-row">
+              <span className="section-label">{t.sdb_label}</span>
+              <TermHelp termKey="sd" btnId="btn-help-sd" />
+            </div>
             <h1 className="sdb-heading">{t.sdb_heading}</h1>
             <p className="sdb-sub">{t.sdb_sub}</p>
+            <p className="sdb-desc-hint">{t.sda_term_sd_def}</p>
           </div>
 
-          {/* ── Plan name ── */}
+          {/* ── Overall Weekly Plan Name ── */}
           <div className="sdb-plan-name-row">
             {editingName ? (
               <div className="sdb-name-edit">
@@ -327,23 +514,39 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                   onChange={e => setNameText(e.target.value)}
                   onKeyDown={e => {
                     if (e.key === 'Enter') commitName();
-                    if (e.key === 'Escape') { setNameText(plan.name); setEditingName(false); }
+                    if (e.key === 'Escape') {
+                      setNameText(weekly.planName);
+                      setEditingName(false);
+                    }
                   }}
                   autoFocus
                   maxLength={60}
                   aria-label={t.sdb_plan_name_label}
                 />
                 <div className="sdb-name-actions">
-                  <button className="commit-btn commit-btn--save" onClick={commitName}>{t.commit_save}</button>
-                  <button className="commit-btn commit-btn--cancel" onClick={() => { setNameText(plan.name); setEditingName(false); }}>{t.commit_cancel}</button>
+                  <button className="commit-btn commit-btn--save" onClick={commitName}>
+                    {t.commit_save}
+                  </button>
+                  <button
+                    className="commit-btn commit-btn--cancel"
+                    onClick={() => {
+                      setNameText(weekly.planName);
+                      setEditingName(false);
+                    }}
+                  >
+                    {t.commit_cancel}
+                  </button>
                 </div>
               </div>
             ) : (
               <div className="sdb-name-display">
-                <span className="sdb-plan-name">{plan.name}</span>
+                <span className="sdb-plan-name">{weekly.planName}</span>
                 <button
                   className="sdb-icon-btn"
-                  onClick={() => { setNameText(plan.name); setEditingName(true); }}
+                  onClick={() => {
+                    setNameText(weekly.planName);
+                    setEditingName(true);
+                  }}
                   aria-label={t.sdb_rename_plan}
                   title={t.sdb_rename_plan}
                 >
@@ -353,45 +556,153 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
             )}
           </div>
 
-          {/* ── Block list or empty state ── */}
-          {sortedBlocks.length === 0 ? (
-            <div className="sdb-empty">
-              <div className="sdb-empty-icon">🥗</div>
-              <p className="sdb-empty-title">{t.sdb_empty_title}</p>
-              <p className="sdb-empty-sub">{t.sdb_empty_sub}</p>
+          {/* ── Compact 7-day selector ── */}
+          <div className="sdb-week-selector" role="tablist" aria-label="Days of the week">
+            {DAY_KEYS.map(k => {
+              const isSelected = k === selectedDayKey;
+              const isToday = k === todayKey;
+              const shortLabel = t[`sdb_day_${k}_short` as keyof typeof t] as string;
+
+              return (
+                <button
+                  key={k}
+                  id={`sdb-day-${k}`}
+                  role="tab"
+                  aria-selected={isSelected}
+                  aria-current={isToday ? 'date' : undefined}
+                  className={`sdb-day-pill ${isSelected ? 'sdb-day-pill--active' : ''} ${isToday ? 'sdb-day-pill--today' : ''}`}
+                  onClick={() => setSelectedDayKey(k)}
+                >
+                  <span className="sdb-day-pill-name">{shortLabel}</span>
+                  {isToday && <span className="sdb-day-pill-dot" title={t.sdb_today} aria-label={t.sdb_today} />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Selected day header & Mode toggle ── */}
+          <div className="sdb-day-header-card">
+            <div className="sdb-day-title-row">
+              <div className="sdb-day-title-wrap">
+                <h2 className="sdb-day-name">{currentDayFullName}</h2>
+                {selectedDayKey === todayKey && (
+                  <span className="sdb-today-badge">{t.sdb_today}</span>
+                )}
+              </div>
+
+              <button
+                id="btn-sdb-copy-day"
+                type="button"
+                className="sdb-copy-trigger-btn"
+                onClick={() => setShowCopyModal(true)}
+                title={t.sdb_btn_copy_day}
+              >
+                <span>📋</span>
+                <span className="sdb-copy-btn-text">{t.sdb_btn_copy_day}</span>
+              </button>
             </div>
-          ) : (
-            <div className="sdb-block-list">
-              {sortedBlocks.map(block => (
-                <BlockCard
-                  key={block.id}
-                  block={block}
-                  onEdit={() => setEditingBlock(block)}
-                  onDelete={() => handleDeleteBlock(block.id)}
-                  t={t}
-                />
-              ))}
+
+            {/* Mode selector */}
+            <div className="sdb-day-mode-row">
+              <span className="sdb-day-mode-label">{t.sdb_day_type}:</span>
+              <div className="sdb-day-mode-toggle" role="radiogroup" aria-label={t.sdb_day_type}>
+                <button
+                  id="sdb-mode-btn-structured"
+                  type="button"
+                  role="radio"
+                  aria-checked={currentDay.mode === 'structured'}
+                  className={`sdb-mode-pill ${currentDay.mode === 'structured' ? 'sdb-mode-pill--active' : ''}`}
+                  onClick={() => handleSetMode('structured')}
+                >
+                  {t.sdb_mode_structured}
+                </button>
+                <button
+                  id="sdb-mode-btn-unstructured"
+                  type="button"
+                  role="radio"
+                  aria-checked={currentDay.mode === 'unstructured'}
+                  className={`sdb-mode-pill ${currentDay.mode === 'unstructured' ? 'sdb-mode-pill--active' : ''}`}
+                  onClick={() => handleSetMode('unstructured')}
+                >
+                  {t.sdb_mode_unstructured}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Copy transient feedback toast */}
+          {copyFeedback && (
+            <div className="sdb-toast-feedback" role="status">
+              ✓ {copyFeedback}
             </div>
           )}
 
-          {/* ── Add block CTA ── */}
-          <button
-            id="btn-sdb-add-block"
-            className="sdb-add-btn"
-            onClick={() => setEditingBlock('new')}
-          >
-            <span className="sdb-add-btn-icon">+</span>
-            {t.sdb_add_block}
-          </button>
+          {/* ── Content depending on Day Mode ── */}
+          {currentDay.mode === 'unstructured' ? (
+            /* ── Unstructured day state ── */
+            <div className="sdb-unstructured-card">
+              <div className="sdb-unstructured-icon">🌱</div>
+              <h3 className="sdb-unstructured-title">{t.sdb_unstructured_title}</h3>
+              <p className="sdb-unstructured-desc">{t.sdb_unstructured_desc}</p>
+              <div className="sdb-unstructured-safe-box">
+                <span className="sdb-safe-box-icon">🔒</span>
+                <p className="sdb-unstructured-safe-hint">{t.sdb_unstructured_safe_hint}</p>
+              </div>
+            </div>
+          ) : (
+            /* ── Structured day state (Block schedule) ── */
+            <>
+              {sortedBlocks.length === 0 ? (
+                <div className="sdb-empty">
+                  <div className="sdb-empty-icon">🥗</div>
+                  <p className="sdb-empty-title">{t.sdb_empty_title}</p>
+                  <p className="sdb-empty-sub">{t.sdb_empty_sub}</p>
+                </div>
+              ) : (
+                <div className="sdb-block-list">
+                  {sortedBlocks.map(block => (
+                    <BlockCard
+                      key={block.id}
+                      block={block}
+                      onEdit={() => setEditingBlock(block)}
+                      onDelete={() => handleDeleteBlock(block.id)}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* ── Add block CTA ── */}
+              <button
+                id="btn-sdb-add-block"
+                className="sdb-add-btn"
+                onClick={() => setEditingBlock('new')}
+              >
+                <span className="sdb-add-btn-icon">+</span>
+                {t.sdb_add_block}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* ── Block editor modal ── */}
-      {editingBlock !== null && (
+      {editingBlock && (
         <BlockEditor
           initial={editingBlock === 'new' ? null : editingBlock}
           onSave={handleSaveBlock}
           onCancel={() => setEditingBlock(null)}
+          t={t}
+        />
+      )}
+
+      {/* ── Copy Day Plan modal ── */}
+      {showCopyModal && (
+        <CopyDayModal
+          sourceDayKey={selectedDayKey}
+          weekly={weekly}
+          onCopy={handleExecuteCopy}
+          onCancel={() => setShowCopyModal(false)}
           t={t}
         />
       )}

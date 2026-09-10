@@ -18,12 +18,25 @@
   gap: 0.5rem;
 }
 
+.help-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .help-question {
   font-size: 2.3rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.15;
   letter-spacing: -0.02em;
+}
+
+.help-subtitle-hint {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
 }
 
 /* ── Help cards ── */
