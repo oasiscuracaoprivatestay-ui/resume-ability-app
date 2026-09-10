@@ -46,19 +46,13 @@ export type HistoryRange = 'today' | '7d' | '30d' | 'all';
 export function filterSlipsByRange(slips: SlipRecord[], range: HistoryRange): SlipRecord[] {
   if (range === 'all') return slips;
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  let cutoff: number;
-  switch (range) {
-    case 'today':
-      cutoff = now.getTime();
-      break;
-    case '7d':
-      cutoff = now.getTime() - 6 * 24 * 60 * 60 * 1000;
-      break;
-    case '30d':
-      cutoff = now.getTime() - 29 * 24 * 60 * 60 * 1000;
-      break;
+  const cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  if (range === '7d') {
+    cutoffDate.setDate(cutoffDate.getDate() - 6);
+  } else if (range === '30d') {
+    cutoffDate.setDate(cutoffDate.getDate() - 29);
   }
+  const cutoff = cutoffDate.getTime();
   return slips.filter((s) => s.timestamp >= cutoff);
 }
 
@@ -149,14 +143,15 @@ export function computeWeeklyHistory(slips: SlipRecord[]): WeekEntry[] {
   for (const s of sorted) {
     const d = new Date(s.timestamp);
     const monday = getMonday(d);
-    const key = monday.toISOString().split('T')[0];
+    const key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
     if (!weeks.has(key)) weeks.set(key, []);
     weeks.get(key)!.push(s);
   }
 
   const entries: WeekEntry[] = [];
   for (const [key, records] of weeks) {
-    const monday = new Date(key);
+    const [y, m, day] = key.split('-').map(Number);
+    const monday = new Date(y, m - 1, day);
     const sunday = new Date(monday);
     sunday.setDate(sunday.getDate() + 6);
 

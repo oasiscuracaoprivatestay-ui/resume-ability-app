@@ -683,4 +683,5 @@ export const nl: Translations = {
   commit_reminders_label: 'Slimme Herinneringen',
   commit_reminders_desc: 'Stel vriendelijke meldingen in om in te checken en je structuur te bekijken.',
   commit_reminders_btn: 'Herinneringen Instellen',
+  global_back: 'Terug',
 };

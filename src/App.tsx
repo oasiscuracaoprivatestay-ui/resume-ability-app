@@ -71,8 +71,8 @@ export default function App() {
   // Timer audio preference: true (With Audio, default) or false (Without Audio)
   const [timerAudioEnabled, setTimerAudioEnabled] = useState(true);
 
-  // Tracks whether motivation was requested from 'home' or from 'check-in' (Near Slip support)
-  const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in'>('home');
+  // Tracks whether motivation was requested from 'home', 'check-in' (Near Slip support), or 'home-nav'
+  const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in' | 'home-nav'>('home');
 
   // Phase 12: Active In-App Reminder
   const { t } = useTranslation();
@@ -90,6 +90,10 @@ export default function App() {
         setMotivationOrigin('check-in');
       } else {
         setMotivationOrigin('home');
+      }
+    } else if (target === 'daily-audio') {
+      if (screenRef.current !== 'motivation-choice') {
+        setMotivationOrigin('home-nav');
       }
     }
 
@@ -537,6 +541,8 @@ export default function App() {
           onBack={() => {
             if (motivationOrigin === 'check-in') {
               navigate('check-in');
+            } else if (motivationOrigin === 'home-nav') {
+              navigate('home');
             } else {
               navigate('motivation-choice');
             }

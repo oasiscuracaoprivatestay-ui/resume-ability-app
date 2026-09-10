@@ -593,4 +593,5 @@ export interface Translations {
   commit_reminders_label: string;
   commit_reminders_desc: string;
   commit_reminders_btn: string;
+  global_back: string;
 }

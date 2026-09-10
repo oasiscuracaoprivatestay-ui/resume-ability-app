@@ -388,7 +388,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
           <button id="btn-ci-ability-cta" className="btn btn-primary btn-large" onClick={() => onNavigate('context')}>
             {t.ci_ability_cta}
           </button>
-          <button className="ci-panel-back" onClick={() => setPanel('none')}>← Back</button>
+          <button className="ci-panel-back" onClick={() => setPanel('none')}>← {t.global_back}</button>
         </div>
       </div>
     );

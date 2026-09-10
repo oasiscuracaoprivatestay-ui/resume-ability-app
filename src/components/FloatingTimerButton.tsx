@@ -14,6 +14,7 @@ const HIDDEN_ON: Screen[] = [
   'recommit',
   'control',
   'commit',
+  'check-in',
   'daily-audio',
   'slip-type',
   'slip-non-negotiable',
@@ -21,6 +22,8 @@ const HIDDEN_ON: Screen[] = [
   'motivation-choice',
   'motivational-text',
   'sda-terms',
+  'structured-diet',
+  'notification-settings',
 ];
 
 interface FloatingTimerButtonProps {

@@ -683,4 +683,5 @@ export const es: Translations = {
   commit_reminders_label: 'Recordatorios Inteligentes',
   commit_reminders_desc: 'Configura avisos amables para registrarte y revisar tu estructura.',
   commit_reminders_btn: 'Configurar Recordatorios',
+  global_back: 'Volver',
 };

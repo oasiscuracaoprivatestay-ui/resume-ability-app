@@ -696,4 +696,5 @@ export const en: Translations = {
   commit_reminders_label: 'Smart Reminders',
   commit_reminders_desc: 'Set gentle prompts to check in and review your structure.',
   commit_reminders_btn: 'Configure Reminders',
+  global_back: 'Back',
 };

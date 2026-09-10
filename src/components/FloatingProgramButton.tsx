@@ -3,8 +3,27 @@ import { PROGRAM_URL } from '../config';
 import type { Screen } from '../types';
 import './FloatingProgramButton.css';
 
-// Hide on screens where an inline replacement is rendered instead
-const HIDDEN_ON: Screen[] = ['home', 'timer'];
+// Hide on action, planning, setup, and recovery screens to prevent mobile button overlap
+const HIDDEN_ON: Screen[] = [
+  'home',
+  'timer',
+  'mode',
+  'context',
+  'slip-type',
+  'slip-non-negotiable',
+  'slip-insights',
+  'help',
+  'recommit',
+  'control',
+  'commit',
+  'check-in',
+  'quote',
+  'motivation-choice',
+  'motivational-text',
+  'sda-terms',
+  'structured-diet',
+  'notification-settings',
+];
 
 interface FloatingProgramButtonProps {
   currentScreen: Screen;
