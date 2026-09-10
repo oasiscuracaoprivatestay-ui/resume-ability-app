@@ -8,6 +8,8 @@
 .sdb-screen {
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sdb-inner {
@@ -15,6 +17,8 @@
   display: flex;
   flex-direction: column;
   padding: 0 1.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Scrollable content ── */
@@ -26,6 +30,8 @@
   gap: 1.75rem;
   padding-bottom: 3rem;
   overflow-y: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Heading ── */
@@ -652,6 +658,8 @@
   justify-content: space-between;
   margin-top: 0.75rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sdb-day-pill {
@@ -667,7 +675,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  min-width: 38px;
+  min-width: 0;
+  box-sizing: border-box;
   font-family: inherit;
   color: var(--text-secondary);
 }
@@ -718,12 +727,17 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sdb-day-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sdb-day-title-wrap {
@@ -1396,15 +1410,19 @@
   box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
 }
 
-.sdb-add-actions-row {
+.sdb-add-actions-row,
+.sdb-actions {
   display: flex;
   align-items: stretch;
   gap: 10px;
   margin-top: 1.25rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.sdb-add-actions-row .sdb-add-btn {
+.sdb-add-actions-row .sdb-add-btn,
+.sdb-actions .sdb-add-btn {
   flex: 1.2;
   margin-top: 0;
 }
@@ -1507,31 +1525,7 @@
   margin: 0;
 }
 
-@media (max-width: 480px) {
-  .sdb-add-actions-row {
-    flex-direction: column;
-    gap: 8px;
-  }
 
-  .sdb-day-actions-header {
-    gap: 5px;
-  }
-
-  .sdb-quick-build-trigger-btn {
-    padding: 4px 8px;
-    font-size: 0.72rem;
-  }
-
-  .sdb-templates-trigger-btn {
-    padding: 4px 8px;
-    font-size: 0.72rem;
-  }
-
-  .sdb-copy-trigger-btn {
-    padding: 4px 8px;
-    font-size: 0.72rem;
-  }
-}
 
 /* ── Choose Template UI Controls (Task 5) ── */
 
@@ -1669,6 +1663,239 @@
   color: var(--text-secondary);
   line-height: 1.45;
   margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Task 15.1 — Mobile Responsive Layout & Horizontal Overflow Fix
+   Breakpoints: <= 540px (Mobile portrait), <= 480px (Compact), <= 430px, <= 360px
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* All card containers box-sizing & max-width safety */
+.sdb-day-header-card,
+.sdb-block-card,
+.sdb-today-progress-card,
+.sdb-unstructured-card,
+.sdb-unstructured-guidance-banner,
+.sdb-empty,
+.sdb-block-list,
+.sdb-heading-block,
+.sdb-plan-name-row {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 540px) {
+  /* Inner container padding adaptation */
+  .sdb-inner {
+    padding: 0 1rem;
+  }
+
+  /* ── 1. Day Header Actions Adaptive Layout ──
+     Row 1: Friday / TODAY (Title + Badge)
+     Row 2: Quick Build | Templates
+     Row 3: Copy Day Plan
+  */
+  .sdb-day-title-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .sdb-day-title-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .sdb-day-actions-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .sdb-quick-build-trigger-btn {
+    grid-column: 1;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+
+  .sdb-templates-trigger-btn {
+    grid-column: 2;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+
+  .sdb-copy-trigger-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  /* ── 2. Bottom Planning Actions Responsive Grid ──
+     Row 1: [ Quick Build ] [ Choose Template ]
+     Row 2: [        + Add Time Block         ]
+  */
+  .sdb-add-actions-row,
+  .sdb-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .sdb-quick-build-btn {
+    grid-column: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 8px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+
+  .sdb-template-btn {
+    grid-column: 2;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 8px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+
+  .sdb-add-actions-row .sdb-add-btn,
+  .sdb-actions .sdb-add-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0;
+    padding: 11px 12px;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  /* ── 3. Day Mode Selector Mobile Adaptation ── */
+  .sdb-day-mode-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .sdb-day-mode-toggle {
+    width: 100%;
+    display: flex;
+    box-sizing: border-box;
+  }
+
+  .sdb-mode-pill {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding: 7px 4px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+
+  /* ── 4. Empty State Actions Mobile Layout ── */
+  .sdb-empty-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .sdb-empty-qb-btn,
+  .sdb-empty-tpl-btn {
+    width: 100%;
+    margin-top: 0;
+    padding: 9px 6px;
+    font-size: 0.8rem;
+    text-align: center;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 430px) {
+  /* ── 5. Weekday Selector Compact Safety ── */
+  .sdb-week-selector {
+    gap: 4px;
+  }
+
+  .sdb-day-pill {
+    padding: 6px 2px 5px;
+    min-width: 0;
+  }
+
+  .sdb-day-pill-name {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  /* ── 6. Ultra-Compact Screen Safety (<= 360px) ── */
+  .sdb-empty-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .sdb-day-actions-header {
+    grid-template-columns: 1fr;
+  }
+
+  .sdb-quick-build-trigger-btn,
+  .sdb-templates-trigger-btn,
+  .sdb-copy-trigger-btn {
+    grid-column: 1;
+  }
 }
 
 
