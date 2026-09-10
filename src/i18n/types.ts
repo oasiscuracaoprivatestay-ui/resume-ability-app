@@ -516,4 +516,29 @@ export interface Translations {
   sdb_copy_btn_submit: string;
   sdb_copy_success: string;
   sdb_select_all: string;
+
+  // ── Structured Diet Daily Verification (Phase 11) ──
+  sdb_v_today_plan: string;
+  sdb_v_today_progress: string;
+  sdb_v_not_reported: string;
+  sdb_v_on_track: string;
+  sdb_v_slip: string;
+  sdb_v_slip_reported: string;
+  sdb_v_what_happened: string;
+  sdb_v_what_had: string;
+  sdb_v_save_slip: string;
+  sdb_v_clear_status: string;
+  sdb_v_change_status: string;
+  sdb_v_actual_label: string;
+  sdb_v_earlier_verified: string;
+  sdb_v_practice_ra: string;
+  sdb_v_reported_summary: string;
+  sdb_v_summary_breakdown: string;
+  sdb_v_on_track_hint: string;
+  sdb_v_slip_hint: string;
+  sdb_today_unstructured_title: string;
+  sdb_today_unstructured_desc: string;
+  dash_diet_today_title: string;
+  dash_breakdown_diet_on_track: string;
+  dash_breakdown_diet_slip: string;
 }

@@ -87,6 +87,61 @@
   opacity: 0.6;
 }
 
+.dash-card--interactive {
+  cursor: pointer;
+  border-left-color: #10b981;
+}
+
+.dash-card--interactive:hover {
+  border-left-color: #34d399;
+  transform: translateY(-1px);
+}
+
+.dash-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-card-action-hint {
+  font-size: 0.9rem;
+  color: var(--accent);
+  opacity: 0.8;
+  font-weight: 700;
+  transition: transform 0.2s;
+}
+
+.dash-card--interactive:hover .dash-card-action-hint {
+  transform: translateX(3px);
+}
+
+.dash-diet-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.dash-diet-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.dash-diet-badge--on-track {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dash-diet-badge--slip {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .dashboard-empty {
   color: var(--text-dim);
   font-size: 0.85rem;

@@ -3,6 +3,8 @@ import type { SlipRecord } from '../types';
 import type { RecommitEvent } from './recommitStorage';
 import type { InControlEvent, CommitEvent } from './inControlStorage';
 import type { ReviewEvent } from './reviewStorage';
+import type { DietBlockVerification } from './dietVerificationStorage';
+import { loadAllDietVerifications, getLocalDateKey } from './dietVerificationStorage';
 
 export interface ScoreInputs {
   checkIns: CheckInRecord[];
@@ -11,6 +13,7 @@ export interface ScoreInputs {
   inControlEvents: InControlEvent[];
   commitEvents: CommitEvent[];
   reviewEvents: ReviewEvent[];
+  dietVerifications?: DietBlockVerification[];
 }
 
 export interface ScoreBreakdown {
@@ -23,6 +26,8 @@ export interface ScoreBreakdown {
   inControl: number;
   commit: number;
   reviews: number;
+  dietOnTrack: number;
+  dietSlipReporting: number;
 }
 
 export interface ScoreActivity {
@@ -35,6 +40,8 @@ export interface ScoreActivity {
   eligibleInControl: number;
   eligibleCommits: number;
   eligibleReviews: number;
+  eligibleDietOnTrack: number;
+  eligibleDietSlips: number;
 }
 
 export type ScoreFeedbackKey =
@@ -245,7 +252,48 @@ export function calculateDailyResumeAbilityScore(
   const eligibleReviews = dayReviews.length > 0 ? 1 : 0;
   const reviewPoints = eligibleReviews > 0 ? 10 : 0;
 
-  // ── 8. Total Score Calculation ───────────────────────────────────────────────
+  // ── 8. Structured Diet Daily Verification (Phase 11) ───────────────────────
+  // Max 5 On Track (+5 pts each, max 25 pts)
+  // Max 3 Honest Slips (+5 pts each, max 15 pts)
+  let dietVerifications = inputs.dietVerifications;
+  if (!dietVerifications) {
+    const all = loadAllDietVerifications();
+    const dateKey = getLocalDateKey(target);
+    dietVerifications = all[dateKey]?.entries ?? [];
+  }
+
+  // Filter for today's local boundaries
+  const dayVerifications = dietVerifications.filter(
+    (v) =>
+      typeof v.verifiedAt === 'number' &&
+      v.verifiedAt >= startOfToday &&
+      v.verifiedAt < startOfTomorrow,
+  );
+
+  // Deduplicate by plannedBlockId (keep latest verification state per block)
+  const uniqueDietMap = new Map<string, DietBlockVerification>();
+  for (const v of dayVerifications) {
+    const existing = uniqueDietMap.get(v.plannedBlockId);
+    if (!existing || v.verifiedAt >= existing.verifiedAt) {
+      uniqueDietMap.set(v.plannedBlockId, v);
+    }
+  }
+
+  // Sort deterministically by verifiedAt ascending
+  const uniqueDietList = Array.from(uniqueDietMap.values()).sort(
+    (a, b) => a.verifiedAt - b.verifiedAt,
+  );
+
+  const onTrackList = uniqueDietList.filter((v) => v.status === 'on-track');
+  const slipList = uniqueDietList.filter((v) => v.status === 'slip');
+
+  const eligibleDietOnTrack = Math.min(5, onTrackList.length);
+  const dietOnTrackPoints = eligibleDietOnTrack * 5;
+
+  const eligibleDietSlips = Math.min(3, slipList.length);
+  const dietSlipPoints = eligibleDietSlips * 5;
+
+  // ── 9. Total Score Calculation ───────────────────────────────────────────────
   const rawPoints =
     checkInPoints +
     onStructurePoints +
@@ -255,11 +303,13 @@ export function calculateDailyResumeAbilityScore(
     recoveryChainPoints +
     inControlPoints +
     commitPoints +
-    reviewPoints;
+    reviewPoints +
+    dietOnTrackPoints +
+    dietSlipPoints;
 
   const score = Math.min(100, Math.max(0, rawPoints));
 
-  // ── 9. Dynamic Behavioral Feedback ───────────────────────────────────────────
+  // ── 10. Dynamic Behavioral Feedback ──────────────────────────────────────────
   let feedbackKey: ScoreFeedbackKey;
   if (recoveryChains > 0 || (daySlips.length > 0 && eligibleRecommits > 0)) {
     feedbackKey = 'high_recovery';
@@ -286,6 +336,8 @@ export function calculateDailyResumeAbilityScore(
       inControl: inControlPoints,
       commit: commitPoints,
       reviews: reviewPoints,
+      dietOnTrack: dietOnTrackPoints,
+      dietSlipReporting: dietSlipPoints,
     },
     activity: {
       eligibleCheckIns,
@@ -297,6 +349,8 @@ export function calculateDailyResumeAbilityScore(
       eligibleInControl,
       eligibleCommits,
       eligibleReviews,
+      eligibleDietOnTrack,
+      eligibleDietSlips,
     },
     feedbackKey,
   };

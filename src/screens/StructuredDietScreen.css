@@ -997,3 +997,370 @@
   line-height: 1.4;
 }
 
+/* ── Phase 11: Daily Verification Styles ── */
+
+/* Today's Progress Card */
+.sdb-today-progress-card {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: var(--radius-lg, 16px);
+  padding: 14px 16px;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sdb-today-progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sdb-progress-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.sdb-progress-summary {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sdb-progress-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdb-prog-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.sdb-prog-pill--ontrack {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.sdb-prog-pill--slip {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Block Card Verification Box */
+.sdb-verification-box {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sdb-block-card--on-track {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.03) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.sdb-block-card--slip {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.03) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+/* Unreported verify actions */
+.sdb-verify-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sdb-verify-status-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.sdb-verify-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.sdb-verify-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  border: 1px solid transparent;
+}
+
+.sdb-verify-btn--ontrack {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.sdb-verify-btn--ontrack:hover {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: #4ade80;
+  transform: translateY(-1px);
+}
+
+.sdb-verify-btn--slip {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.sdb-verify-btn--slip:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+}
+
+/* Verified Badges */
+.sdb-verified-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.sdb-verified-badge--ontrack {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.sdb-verified-badge--slip {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.sdb-verified-badge-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sdb-verified-badge-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sdb-verified-badge--ontrack .sdb-verified-badge-label {
+  color: #4ade80;
+}
+
+.sdb-verified-badge--slip .sdb-verified-badge-label {
+  color: #fbbf24;
+}
+
+.sdb-verified-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdb-verified-link {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.sdb-verified-link:hover {
+  color: var(--text-primary);
+}
+
+.sdb-verified-link--clear {
+  color: var(--text-dim);
+}
+
+.sdb-verified-link--clear:hover {
+  color: #f87171;
+}
+
+.sdb-verified-ctrl-dot {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* Actual items row */
+.sdb-verified-actual-row {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  display: flex;
+  gap: 6px;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.sdb-actual-label {
+  font-weight: 600;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.sdb-actual-text {
+  color: #e2e8f0;
+}
+
+/* Practice Resume-Ability secondary link */
+.sdb-practice-ra-link {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.sdb-practice-ra-link:hover {
+  opacity: 0.85;
+}
+
+/* ── Slip Modal Extensions ── */
+.sdb-slip-modal {
+  max-width: 420px;
+}
+
+.sdb-slip-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sdb-slip-modal-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.sdb-slip-planned-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.sdb-slip-planned-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.sdb-slip-planned-val {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sdb-slip-hint-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+.sdb-btn--save-slip {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #000 !important;
+}
+
+.sdb-btn--save-slip:hover {
+  filter: brightness(1.1) !important;
+}
+
+/* ── Orphaned / Earlier Verified Section ── */
+.sdb-orphaned-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sdb-orphaned-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.sdb-orphaned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdb-orphaned-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.sdb-orphaned-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sdb-orphaned-time {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sdb-orphaned-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sdb-orphaned-card--on-track .sdb-orphaned-status {
+  color: #4ade80;
+}
+
+.sdb-orphaned-card--slip .sdb-orphaned-status {
+  color: #fbbf24;
+}
+
+

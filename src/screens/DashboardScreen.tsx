@@ -15,6 +15,8 @@ import {
   getTotalCheckInCount,
 } from '../utils/checkInStorage';
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
+import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
+import { getDailyVerificationStats } from '../utils/dietVerificationStorage';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
@@ -80,6 +82,14 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
       commitEvents: loadCommitEvents(),
       reviewEvents: loadReviewEvents(),
     });
+  }, []);
+
+  const dietStats = useMemo(() => {
+    const weekly = loadWeeklyDiet();
+    const todayKey = getLocalTodayKey();
+    const todayPlan = getDayPlan(weekly, todayKey);
+    const plannedCount = todayPlan.mode === 'structured' ? todayPlan.blocks.length : 0;
+    return getDailyVerificationStats(plannedCount);
   }, []);
 
   const feedbackMessage = useMemo(() => {
@@ -149,6 +159,42 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
               <span className="dash-card-icon">⏱</span>
             </div>
           </div>
+
+          {(dietStats.plannedCount > 0 || dietStats.reportedCount > 0) && (
+            <div
+              className="dash-card dash-card--interactive dash-card--diet-today"
+              id="dash-card-diet-today"
+              onClick={() => onNavigate('structured-diet')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNavigate('structured-diet'); }}
+            >
+              <div className="dash-card-header-row">
+                <span className="dash-card-label">{t.dash_diet_today_title}</span>
+                <span className="dash-card-action-hint">→</span>
+              </div>
+              <div className="dash-card-row">
+                <span className="dash-card-value">
+                  {t.sdb_v_reported_summary
+                    .replace('{reported}', String(dietStats.reportedCount))
+                    .replace('{total}', String(dietStats.plannedCount))}
+                </span>
+                <span className="dash-card-icon">🥗</span>
+              </div>
+              {dietStats.reportedCount > 0 && (
+                <div className="dash-diet-breakdown">
+                  <span className="dash-diet-badge dash-diet-badge--on-track">
+                    ✓ {dietStats.onTrackCount} {t.sdb_v_on_track}
+                  </span>
+                  {dietStats.slipCount > 0 && (
+                    <span className="dash-diet-badge dash-diet-badge--slip">
+                      ⚡ {dietStats.slipCount} {t.sdb_v_slip}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Daily Resume-Ability Score Hero Section ── */}

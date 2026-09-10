@@ -23,6 +23,16 @@ import type {
   WeeklyStructuredDiet,
 } from '../utils/dietStorage';
 import {
+  getDailyDietVerification,
+  saveBlockVerification,
+  clearBlockVerification,
+  getDailyVerificationStats,
+} from '../utils/dietVerificationStorage';
+import type {
+  DietBlockVerification,
+  DailyDietVerification,
+} from '../utils/dietVerificationStorage';
+import {
   BLOCK_TYPE_KEYS,
   BLOCK_TYPE_ICONS,
   FOOD_OPTION_KEYS,
@@ -216,6 +226,136 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   );
 }
 
+// ── Lightweight Diet Slip Verification Modal ──────────────────────────────────
+
+interface DietSlipModalProps {
+  block: StructuredDietBlock;
+  initialActualItems?: string[];
+  initialCustomText?: string;
+  onSave: (actualItems: string[], customText: string) => void;
+  onCancel: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function DietSlipModal({
+  block,
+  initialActualItems = [],
+  initialCustomText = '',
+  onSave,
+  onCancel,
+  t,
+}: DietSlipModalProps) {
+  const [actualItems, setActualItems] = useState<string[]>(initialActualItems);
+  const [customText, setCustomText] = useState(initialCustomText);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
+  const toggleItem = (key: string) => {
+    setActualItems(prev =>
+      prev.includes(key) ? prev.filter(i => i !== key) : [...prev, key]
+    );
+  };
+
+  const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
+  const isFoodBlock = ['breakfast', 'lunch', 'dinner', 'snack', 'protein_shake'].includes(block.type);
+
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onCancel();
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-slip-modal-title"
+    >
+      <div className="sdb-modal sdb-slip-modal" ref={modalRef}>
+        <div className="sdb-modal-header">
+          <div className="sdb-slip-modal-header-text">
+            <span className="sdb-slip-modal-badge">SLIP VERIFICATION</span>
+            <h2 id="sdb-slip-modal-title" className="sdb-modal-title">
+              {isFoodBlock ? t.sdb_v_what_had : t.sdb_v_what_happened}
+            </h2>
+          </div>
+          <button className="sdb-modal-close" onClick={onCancel} aria-label={t.commit_cancel}>
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body">
+          {/* Planned Context Banner */}
+          <div className="sdb-slip-planned-context">
+            <span className="sdb-slip-planned-label">Planned:</span>
+            <span className="sdb-slip-planned-val">
+              {formatTime(block.startTime)} - {formatTime(block.endTime)} · {typeName}
+            </span>
+          </div>
+
+          <p className="sdb-slip-hint-text">
+            {t.sdb_v_slip_hint}
+          </p>
+
+          {/* Actual items chips */}
+          <div className="sdb-field">
+            <label className="sdb-label">Select Items Consumed (optional):</label>
+            <div className="sdb-food-grid">
+              {FOOD_OPTION_KEYS.map(key => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`sdb-food-chip ${actualItems.includes(key) ? 'sdb-food-chip--active' : ''}`}
+                  onClick={() => toggleItem(key)}
+                >
+                  {t[`sdb_food_${key}` as keyof typeof t] as string}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom text */}
+          <div className="sdb-field">
+            <label className="sdb-label sdb-label--optional">
+              Notes / Custom Items
+              <span className="sdb-optional">{t.sdb_optional}</span>
+            </label>
+            <input
+              id="sdb-slip-custom-text"
+              className="sdb-input"
+              type="text"
+              value={customText}
+              onChange={e => setCustomText(e.target.value)}
+              placeholder="e.g. Pizza with coworkers, soda..."
+              maxLength={120}
+            />
+          </div>
+        </div>
+
+        <div className="sdb-modal-footer">
+          <button id="btn-sdb-cancel-slip" className="sdb-btn sdb-btn--cancel" onClick={onCancel}>
+            {t.commit_cancel}
+          </button>
+          <button
+            id="btn-sdb-save-slip"
+            className="sdb-btn sdb-btn--save sdb-btn--save-slip"
+            onClick={() => onSave(actualItems, customText)}
+          >
+            {t.sdb_v_save_slip}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Block card ─────────────────────────────────────────────────────────────────
 
 interface BlockCardProps {
@@ -223,9 +363,26 @@ interface BlockCardProps {
   onEdit: () => void;
   onDelete: () => void;
   t: ReturnType<typeof useTranslation>['t'];
+  isToday: boolean;
+  verification?: DietBlockVerification;
+  onVerifyOnTrack?: () => void;
+  onOpenSlipModal?: () => void;
+  onClearStatus?: () => void;
+  onNavigate?: (screen: Screen) => void;
 }
 
-function BlockCard({ block, onEdit, onDelete, t }: BlockCardProps) {
+function BlockCard({
+  block,
+  onEdit,
+  onDelete,
+  t,
+  isToday,
+  verification,
+  onVerifyOnTrack,
+  onOpenSlipModal,
+  onClearStatus,
+  onNavigate,
+}: BlockCardProps) {
   const typeKey = block.type as BlockTypeKey;
   const icon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
@@ -238,7 +395,7 @@ function BlockCard({ block, onEdit, onDelete, t }: BlockCardProps) {
   if (block.customText) foodLabels.push(block.customText);
 
   return (
-    <div className="sdb-block-card">
+    <div className={`sdb-block-card ${verification?.status ? `sdb-block-card--${verification.status}` : ''}`}>
       <div className="sdb-block-time-row">
         <span className="sdb-block-time">
           {formatTime(block.startTime)} → {formatTime(block.endTime)}
@@ -271,6 +428,111 @@ function BlockCard({ block, onEdit, onDelete, t }: BlockCardProps) {
 
       {foodLabels.length > 0 && (
         <p className="sdb-block-items">{foodLabels.join(', ')}</p>
+      )}
+
+      {/* ── Today Daily Verification Controls ── */}
+      {isToday && (
+        <div className="sdb-verification-box">
+          {!verification ? (
+            /* Not Reported State */
+            <div className="sdb-verify-actions">
+              <span className="sdb-verify-status-label">{t.sdb_v_not_reported}</span>
+              <div className="sdb-verify-btn-group">
+                <button
+                  id={`btn-verify-ontrack-${block.id}`}
+                  type="button"
+                  className="sdb-verify-btn sdb-verify-btn--ontrack"
+                  onClick={onVerifyOnTrack}
+                >
+                  ✓ {t.sdb_v_on_track}
+                </button>
+                <button
+                  id={`btn-verify-slip-${block.id}`}
+                  type="button"
+                  className="sdb-verify-btn sdb-verify-btn--slip"
+                  onClick={onOpenSlipModal}
+                >
+                  ⚠ {t.sdb_v_slip}
+                </button>
+              </div>
+            </div>
+          ) : verification.status === 'on-track' ? (
+            /* Verified On Track State */
+            <div className="sdb-verified-badge sdb-verified-badge--ontrack">
+              <div className="sdb-verified-badge-top">
+                <span className="sdb-verified-badge-label">✓ {t.sdb_v_on_track}</span>
+                <div className="sdb-verified-controls">
+                  <button
+                    type="button"
+                    className="sdb-verified-link"
+                    onClick={onOpenSlipModal}
+                  >
+                    {t.sdb_v_change_status}
+                  </button>
+                  <span className="sdb-verified-ctrl-dot">·</span>
+                  <button
+                    id={`btn-clear-status-${block.id}`}
+                    type="button"
+                    className="sdb-verified-link sdb-verified-link--clear"
+                    onClick={onClearStatus}
+                  >
+                    {t.sdb_v_clear_status}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Verified Slip State */
+            <div className="sdb-verified-badge sdb-verified-badge--slip">
+              <div className="sdb-verified-badge-top">
+                <span className="sdb-verified-badge-label">⚠ {t.sdb_v_slip_reported}</span>
+                <div className="sdb-verified-controls">
+                  <button
+                    type="button"
+                    className="sdb-verified-link"
+                    onClick={onOpenSlipModal}
+                  >
+                    {t.commit_edit}
+                  </button>
+                  <span className="sdb-verified-ctrl-dot">·</span>
+                  <button
+                    id={`btn-clear-status-${block.id}`}
+                    type="button"
+                    className="sdb-verified-link sdb-verified-link--clear"
+                    onClick={onClearStatus}
+                  >
+                    {t.sdb_v_clear_status}
+                  </button>
+                </div>
+              </div>
+
+              {/* Actual consumed details */}
+              {(verification.actualItems?.length || verification.actualCustomText) && (
+                <div className="sdb-verified-actual-row">
+                  <span className="sdb-actual-label">{t.sdb_v_actual_label}:</span>
+                  <span className="sdb-actual-text">
+                    {[
+                      ...(verification.actualItems?.map(k => (t[`sdb_food_${k}` as keyof typeof t] as string) ?? k) || []),
+                      verification.actualCustomText,
+                    ].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              )}
+
+              {/* Practice Resume-Ability secondary link */}
+              {onNavigate && (
+                <button
+                  id={`btn-practice-ra-${block.id}`}
+                  type="button"
+                  className="sdb-practice-ra-link"
+                  onClick={() => onNavigate('slip-type')}
+                >
+                  {t.sdb_v_practice_ra} →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -421,8 +683,21 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
+  // Daily verification state (today's verifications)
+  const [todayVerification, setTodayVerification] = useState<DailyDietVerification | null>(
+    () => getDailyDietVerification()
+  );
+  // Modal state for reporting a Slip on a block
+  const [slipModalBlock, setSlipModalBlock] = useState<StructuredDietBlock | null>(null);
+
   const todayKey = getLocalTodayKey();
+  const isToday = selectedDayKey === todayKey;
   const currentDay = getDayPlan(weekly, selectedDayKey);
+
+  // Reload verifications whenever needed
+  const refreshVerifications = useCallback(() => {
+    setTodayVerification(getDailyDietVerification());
+  }, []);
 
   // ── Persist helper ─────────────────────────────────────────────────────────
   const updateWeekly = useCallback((updater: (w: WeeklyStructuredDiet) => WeeklyStructuredDiet) => {
@@ -480,8 +755,48 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
     }, 2800);
   };
 
+  // ── Verification actions ───────────────────────────────────────────────────
+  const handleVerifyOnTrack = (block: StructuredDietBlock) => {
+    saveBlockVerification({
+      plannedBlock: block,
+      status: 'on-track',
+      sourcePlanName: weekly.planName,
+    });
+    refreshVerifications();
+  };
+
+  const handleSaveSlipVerification = (actualItems: string[], customText: string) => {
+    if (!slipModalBlock) return;
+    saveBlockVerification({
+      plannedBlock: slipModalBlock,
+      status: 'slip',
+      actualItems,
+      actualCustomText: customText,
+      sourcePlanName: weekly.planName,
+    });
+    setSlipModalBlock(null);
+    refreshVerifications();
+  };
+
+  const handleClearStatus = (blockId: string) => {
+    clearBlockVerification(blockId);
+    refreshVerifications();
+  };
+
   const sortedBlocks = sortBlocks(currentDay.blocks);
   const currentDayFullName = t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string;
+
+  // Stats for today's verification
+  const verificationStats = isToday
+    ? getDailyVerificationStats(sortedBlocks.length)
+    : null;
+
+  // Orphaned verifications: verified blocks whose plannedBlockId is no longer in sortedBlocks
+  const orphanedVerifications = isToday && todayVerification
+    ? todayVerification.entries.filter(
+        e => !sortedBlocks.some(b => b.id === e.plannedBlockId)
+      )
+    : [];
 
   return (
     <div className="screen sdb-screen">
@@ -560,7 +875,7 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
           <div className="sdb-week-selector" role="tablist" aria-label="Days of the week">
             {DAY_KEYS.map(k => {
               const isSelected = k === selectedDayKey;
-              const isToday = k === todayKey;
+              const isTodayPill = k === todayKey;
               const shortLabel = t[`sdb_day_${k}_short` as keyof typeof t] as string;
 
               return (
@@ -569,12 +884,12 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                   id={`sdb-day-${k}`}
                   role="tab"
                   aria-selected={isSelected}
-                  aria-current={isToday ? 'date' : undefined}
-                  className={`sdb-day-pill ${isSelected ? 'sdb-day-pill--active' : ''} ${isToday ? 'sdb-day-pill--today' : ''}`}
+                  aria-current={isTodayPill ? 'date' : undefined}
+                  className={`sdb-day-pill ${isSelected ? 'sdb-day-pill--active' : ''} ${isTodayPill ? 'sdb-day-pill--today' : ''}`}
                   onClick={() => setSelectedDayKey(k)}
                 >
                   <span className="sdb-day-pill-name">{shortLabel}</span>
-                  {isToday && <span className="sdb-day-pill-dot" title={t.sdb_today} aria-label={t.sdb_today} />}
+                  {isTodayPill && <span className="sdb-day-pill-dot" title={t.sdb_today} aria-label={t.sdb_today} />}
                 </button>
               );
             })}
@@ -585,7 +900,7 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
             <div className="sdb-day-title-row">
               <div className="sdb-day-title-wrap">
                 <h2 className="sdb-day-name">{currentDayFullName}</h2>
-                {selectedDayKey === todayKey && (
+                {isToday && (
                   <span className="sdb-today-badge">{t.sdb_today}</span>
                 )}
               </div>
@@ -642,8 +957,12 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
             /* ── Unstructured day state ── */
             <div className="sdb-unstructured-card">
               <div className="sdb-unstructured-icon">🌱</div>
-              <h3 className="sdb-unstructured-title">{t.sdb_unstructured_title}</h3>
-              <p className="sdb-unstructured-desc">{t.sdb_unstructured_desc}</p>
+              <h3 className="sdb-unstructured-title">
+                {isToday ? t.sdb_today_unstructured_title : t.sdb_unstructured_title}
+              </h3>
+              <p className="sdb-unstructured-desc">
+                {isToday ? t.sdb_today_unstructured_desc : t.sdb_unstructured_desc}
+              </p>
               <div className="sdb-unstructured-safe-box">
                 <span className="sdb-safe-box-icon">🔒</span>
                 <p className="sdb-unstructured-safe-hint">{t.sdb_unstructured_safe_hint}</p>
@@ -652,6 +971,30 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
           ) : (
             /* ── Structured day state (Block schedule) ── */
             <>
+              {/* Today's Progress Card (shown only on Today) */}
+              {isToday && verificationStats && (
+                <div className="sdb-today-progress-card">
+                  <div className="sdb-today-progress-top">
+                    <span className="sdb-progress-badge">{t.sdb_v_today_progress}</span>
+                    <span className="sdb-progress-summary" id="sdb-progress-summary">
+                      {t.sdb_v_reported_summary
+                        .replace('{reported}', String(verificationStats.reportedCount))
+                        .replace('{total}', String(verificationStats.plannedCount))}
+                    </span>
+                  </div>
+                  {verificationStats.reportedCount > 0 && (
+                    <div className="sdb-progress-breakdown" id="sdb-progress-breakdown">
+                      <span className="sdb-prog-pill sdb-prog-pill--ontrack">
+                        ✓ {verificationStats.onTrackCount} {t.sdb_v_on_track}
+                      </span>
+                      <span className="sdb-prog-pill sdb-prog-pill--slip">
+                        ⚠ {verificationStats.slipCount} {t.sdb_v_slip}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {sortedBlocks.length === 0 ? (
                 <div className="sdb-empty">
                   <div className="sdb-empty-icon">🥗</div>
@@ -660,15 +1003,65 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                 </div>
               ) : (
                 <div className="sdb-block-list">
-                  {sortedBlocks.map(block => (
-                    <BlockCard
-                      key={block.id}
-                      block={block}
-                      onEdit={() => setEditingBlock(block)}
-                      onDelete={() => handleDeleteBlock(block.id)}
-                      t={t}
-                    />
-                  ))}
+                  {sortedBlocks.map(block => {
+                    const verification = isToday && todayVerification
+                      ? todayVerification.entries.find(e => e.plannedBlockId === block.id)
+                      : undefined;
+
+                    return (
+                      <BlockCard
+                        key={block.id}
+                        block={block}
+                        onEdit={() => setEditingBlock(block)}
+                        onDelete={() => handleDeleteBlock(block.id)}
+                        t={t}
+                        isToday={isToday}
+                        verification={verification}
+                        onVerifyOnTrack={() => handleVerifyOnTrack(block)}
+                        onOpenSlipModal={() => setSlipModalBlock(block)}
+                        onClearStatus={() => handleClearStatus(block.id)}
+                        onNavigate={onNavigate}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── Orphaned / Earlier Verified Blocks Today ── */}
+              {isToday && orphanedVerifications.length > 0 && (
+                <div className="sdb-orphaned-section">
+                  <span className="sdb-orphaned-label">{t.sdb_v_earlier_verified}</span>
+                  <div className="sdb-orphaned-list">
+                    {orphanedVerifications.map(orphan => {
+                      const typeName =
+                        (t[`sdb_type_${orphan.plannedSnapshot.type}` as keyof typeof t] as string | undefined) ??
+                        orphan.plannedSnapshot.type;
+
+                      return (
+                        <div
+                          key={orphan.id}
+                          className={`sdb-orphaned-card sdb-orphaned-card--${orphan.status}`}
+                        >
+                          <div className="sdb-orphaned-info">
+                            <span className="sdb-orphaned-time">
+                              {formatTime(orphan.plannedSnapshot.startTime)} →{' '}
+                              {formatTime(orphan.plannedSnapshot.endTime)} · {typeName}
+                            </span>
+                            <span className="sdb-orphaned-status">
+                              {orphan.status === 'on-track' ? `✓ ${t.sdb_v_on_track}` : `⚠ ${t.sdb_v_slip_reported}`}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className="sdb-verified-link sdb-verified-link--clear"
+                            onClick={() => handleClearStatus(orphan.plannedBlockId)}
+                          >
+                            {t.sdb_v_clear_status}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -692,6 +1085,22 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
           initial={editingBlock === 'new' ? null : editingBlock}
           onSave={handleSaveBlock}
           onCancel={() => setEditingBlock(null)}
+          t={t}
+        />
+      )}
+
+      {/* ── Slip Verification Modal ── */}
+      {slipModalBlock && (
+        <DietSlipModal
+          block={slipModalBlock}
+          initialActualItems={
+            todayVerification?.entries.find(e => e.plannedBlockId === slipModalBlock.id)?.actualItems
+          }
+          initialCustomText={
+            todayVerification?.entries.find(e => e.plannedBlockId === slipModalBlock.id)?.actualCustomText
+          }
+          onSave={handleSaveSlipVerification}
+          onCancel={() => setSlipModalBlock(null)}
           t={t}
         />
       )}
