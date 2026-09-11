@@ -46,6 +46,15 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             🔔
           </button>
           <button
+            id="btn-header-settings"
+            className="home-settings-btn"
+            onClick={() => onNavigate('settings')}
+            aria-label={t.settings_title}
+            title={t.settings_title}
+          >
+            ⚙️
+          </button>
+          <button
             id="btn-exit-app"
             className="home-exit-btn"
             onClick={handleExit}
@@ -202,6 +211,14 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           onClick={() => onNavigate('notification-settings')}
         >
           {t.nav_reminders}
+        </button>
+        <span className="nav-dot">·</span>
+        <button
+          id="nav-settings"
+          className="nav-link"
+          onClick={() => onNavigate('settings')}
+        >
+          {t.nav_settings}
         </button>
       </nav>
 

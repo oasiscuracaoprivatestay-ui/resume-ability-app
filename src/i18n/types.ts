@@ -432,6 +432,8 @@ export interface Translations {
   commit_why_empty: string;
   commit_why_link: string;
   commit_hold_instruction: string;
+  commit_btn_hold: string;
+  commit_btn_holding: string;
   commit_success_heading: string;
   commit_success_body: string;
   commit_btn_main_menu: string;
@@ -459,14 +461,64 @@ export interface Translations {
   motivation_btn_text_desc: string;
   motivational_text_label: string;
   motivational_text_btn_next: string;
+  motivational_text_btn_back: string;
   motivational_text_btn_home: string;
   motivational_texts: { title: string; body: string }[];
 
-  // ── Timer Audio Mode Toggle (Phase 7H) ──
+  // ── Phase 24: Premium Motivation Library ──
+  prem_badge: string;
+  prem_free_badge: string;
+  prem_info_title: string;
+  prem_info_desc: string;
+  prem_btn_explore: string;
+  prem_coming_soon_title: string;
+  prem_coming_soon_desc: string;
+  prem_feature_audio: string;
+  prem_feature_reading: string;
+  prem_feature_library: string;
+  mot_lib_tab_slots: string;
+  mot_lib_tab_all: string;
+  mot_reading_lib_title: string;
+  mot_reading_btn_browse: string;
+  mot_reading_btn_quick: string;
+  mot_audio_m1_title: string;
+  mot_audio_m1_desc: string;
+  mot_audio_m2_title: string;
+  mot_audio_m2_desc: string;
+  mot_audio_m3_title: string;
+  mot_audio_m3_desc: string;
+  mot_audio_m4_title: string;
+  mot_audio_m4_desc: string;
+  mot_audio_d1_title: string;
+  mot_audio_d1_desc: string;
+  mot_audio_d2_title: string;
+  mot_audio_d2_desc: string;
+  mot_audio_d3_title: string;
+  mot_audio_d3_desc: string;
+  mot_audio_d4_title: string;
+  mot_audio_d4_desc: string;
+  mot_audio_e1_title: string;
+  mot_audio_e1_desc: string;
+  mot_audio_e2_title: string;
+  mot_audio_e2_desc: string;
+  mot_audio_e3_title: string;
+  mot_audio_e3_desc: string;
+  mot_audio_e4_title: string;
+  mot_audio_e4_desc: string;
+  mot_audio_prem_1_title: string;
+  mot_audio_prem_1_desc: string;
+  mot_audio_prem_2_title: string;
+  mot_audio_prem_2_desc: string;
+  mot_audio_prem_3_title: string;
+  mot_audio_prem_3_desc: string;
+
+  // ── Timer Audio Mode Toggle (Phase 7H & 18) ──
   timer_audio_toggle_label: string;
   timer_audio_with: string;
   timer_audio_without: string;
   timer_audio_disabled_desc: string;
+  timer_audio_turn_on: string;
+  timer_audio_turn_off: string;
 
   // ── SDA Terminology & Contextual Help (Phase 9) ──
   sda_terms_link: string;
@@ -504,6 +556,7 @@ export interface Translations {
   sdb_day_sat_short: string;
   sdb_day_sun_short: string;
   sdb_today: string;
+  sdb_day_select_label: string;
   sdb_day_type: string;
   sdb_mode_structured: string;
   sdb_mode_unstructured: string;
@@ -685,6 +738,7 @@ export interface Translations {
   sdb_tpl_demo_badge: string;
   sdb_tpl_applied_feedback: string;
   sdb_tpl_customize_hint: string;
+  sdb_btn_customize: string;
   sdb_tpl_demo_struct_title: string;
   sdb_tpl_demo_struct_desc: string;
   sdb_tpl_demo_unstruct_title: string;
@@ -785,6 +839,73 @@ export interface Translations {
   sdb_tl_protein_2_healthy_carb: string;
   sdb_tl_omad_meal: string;
   sdb_tl_continue_until_omad: string;
+
+  // ── Settings Hub (Phase 16) ──
+  settings_title: string;
+  settings_subtitle: string;
+  settings_sec_account: string;
+  settings_sec_experience: string;
+  settings_sec_data: string;
+  settings_sec_support: string;
+  settings_lang_title: string;
+  settings_lang_desc: string;
+  settings_lang_modal_title: string;
+  settings_lang_en: string;
+  settings_lang_es: string;
+  settings_lang_nl: string;
+  settings_theme_title: string;
+  settings_theme_desc: string;
+  settings_theme_dark: string;
+  settings_theme_active: string;
+  settings_theme_notice: string;
+  settings_reminders_title: string;
+  settings_reminders_desc: string;
+  settings_sound_title: string;
+  settings_sound_desc: string;
+  settings_sound_screen_title: string;
+  settings_sound_screen_subtitle: string;
+  settings_sound_engine_notice: string;
+  settings_sound_timer_audio: string;
+  settings_sound_timer_audio_desc: string;
+  settings_sound_haptic_title: string;
+  settings_sound_haptic_desc: string;
+
+  // Sound & Haptics Feedback (Phase 17)
+  sound_toggle_label: string;
+  sound_toggle_desc: string;
+  haptic_toggle_label: string;
+  haptic_toggle_desc: string;
+  haptic_unsupported_notice: string;
+  feedback_test_title: string;
+  feedback_test_sound: string;
+  feedback_test_haptic: string;
+  feedback_test_success: string;
+  feedback_sound_disabled: string;
+  feedback_haptic_disabled: string;
+  feedback_playing: string;
+  feedback_vibrated: string;
+  settings_motivation_title: string;
+  settings_motivation_desc: string;
+  settings_history_title: string;
+  settings_history_desc: string;
+  settings_export_title: string;
+  settings_export_desc: string;
+  settings_export_soon: string;
+  settings_reset_stats_title: string;
+  settings_reset_stats_desc: string;
+  settings_terms_title: string;
+  settings_terms_desc: string;
+  settings_about_title: string;
+  settings_about_desc: string;
+  settings_app_version: string;
+  settings_app_name: string;
+  settings_app_framework: string;
+  settings_about_summary: string;
+  settings_privacy_title: string;
+  settings_privacy_desc: string;
+  settings_privacy_modal_title: string;
+  settings_privacy_content: string;
+  nav_settings: string;
 }
 
 

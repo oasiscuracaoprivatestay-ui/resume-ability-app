@@ -1,0 +1,237 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+   PremiumInfoModal.css — Phase 24 Premium Information Modal Styles
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+.prem-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 8, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 1050;
+  animation: premFadeIn 0.2s ease-out;
+}
+
+@keyframes premFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.prem-modal-card {
+  background: #12121b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(245, 158, 11, 0.12);
+  border-radius: var(--radius-lg, 20px);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: premSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes premSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.prem-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem 0.6rem;
+}
+
+.prem-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prem-badge-icon {
+  font-size: 0.75rem;
+}
+
+.prem-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim, #6e6e88);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  min-width: 34px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prem-modal-close:hover {
+  color: var(--text-primary, #eeeef2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.prem-modal-body {
+  padding: 0.5rem 1.35rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.prem-modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.prem-modal-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary, #c8c8d8);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.prem-modal-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md, 14px);
+  padding: 0.85rem 1rem;
+}
+
+.prem-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.prem-feat-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.prem-feat-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary, #eeeef2);
+  line-height: 1.35;
+}
+
+.prem-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.prem-btn-explore {
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  color: #0b0b12;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  border: none;
+  border-radius: var(--radius-md, 14px);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.35);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prem-btn-explore:hover {
+  opacity: 0.95;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+.prem-btn-explore:active {
+  transform: scale(0.98);
+}
+
+.prem-btn-cancel {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  color: var(--text-muted, #8e8ea8);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: color 0.2s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prem-btn-cancel:hover {
+  color: var(--text-primary, #eeeef2);
+}
+
+/* ── Coming Soon State ── */
+.prem-coming-soon-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.2rem;
+}
+
+.prem-coming-soon-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prem-coming-soon-icon {
+  font-size: 1.5rem;
+  color: #f59e0b;
+}
+
+.prem-coming-soon-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.prem-coming-soon-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary, #c8c8d8);
+  line-height: 1.5;
+  margin: 0;
+}

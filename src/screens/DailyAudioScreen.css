@@ -329,3 +329,179 @@
   align-self: flex-start;
   padding-left: 0.25rem;
 }
+
+/* ── Phase 24: View switcher (Quick Play vs Library) ── */
+.daily-view-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.daily-view-tab {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-align: center;
+}
+
+.daily-view-tab:hover {
+  color: var(--text-primary);
+}
+
+.daily-view-tab--active {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Phase 24: Library Track List ── */
+.daily-library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.daily-track-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.daily-track-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.daily-track-item--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.daily-track-item--locked {
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.daily-track-item--locked:hover {
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.12);
+}
+
+.daily-track-icon {
+  font-size: 1.35rem;
+  width: 2rem;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.daily-track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-track-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.daily-track-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.daily-track-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.daily-track-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.daily-track-duration {
+  font-size: 0.72rem;
+  color: var(--text-dim, #71717a);
+  font-weight: 500;
+}
+
+.daily-track-action {
+  font-size: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 1.75rem;
+  text-align: center;
+}
+
+.daily-track-item--locked .daily-track-action {
+  color: #fbbf24;
+}
+
+/* ── Badges ── */
+.prem-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.prem-chip-icon {
+  font-size: 0.6rem;
+}
+
+.free-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}

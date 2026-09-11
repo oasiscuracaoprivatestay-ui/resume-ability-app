@@ -5,6 +5,12 @@ import { useTranslation } from '../i18n';
 import { localizeAudioPath } from '../utils/audioPath';
 import type { Translations } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
+import PremiumInfoModal from '../components/PremiumInfoModal';
+import { hasPremiumAccess } from '../utils/entitlements';
+import {
+  MOTIVATIONAL_AUDIO_TRACKS,
+  type AudioTrackMetadata,
+} from '../data/motivationalAudio';
 import './DailyAudioScreen.css';
 
 // ── Category pools ──
@@ -92,6 +98,12 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
   const { lang, t } = useTranslation();
   const [activeSlot, setActiveSlot] = useState<DailySlot | null>(null);
   const [activeSrcBase, setActiveSrcBase] = useState('');
+  const [activeView, setActiveView] = useState<'slots' | 'library'>('slots');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [selectedPremiumTitle, setSelectedPremiumTitle] = useState<string | undefined>();
+  const [selectedPremiumDesc, setSelectedPremiumDesc] = useState<string | undefined>();
+
+  const hasPremium = hasPremiumAccess();
   const lastSrcRef = useRef<string | null>(null);
   const activeSlotRef = useRef<DailySlot | null>(null);
 
@@ -138,6 +150,28 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
     } else {
       stop();
       startSlot(slot, 'pick');
+    }
+  };
+
+  /** Track click from Library view */
+  const handleLibraryTrackClick = (track: AudioTrackMetadata) => {
+    if (track.isPremium && !hasPremium) {
+      // Locked content must NOT begin playback
+      setSelectedPremiumTitle(t[track.titleKey] as string);
+      setSelectedPremiumDesc(t[track.descKey] as string);
+      setShowPremiumModal(true);
+      return;
+    }
+
+    if (!track.src) return;
+
+    if (activeSrcBase === track.src) {
+      togglePlay();
+    } else {
+      stop();
+      lastSrcRef.current = track.src;
+      setActiveSlot(track.slot);
+      setActiveSrcBase(track.src);
     }
   };
 
@@ -196,41 +230,117 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
           <h2 className="section-heading">{t.daily_heading}</h2>
         </div>
 
-        <div className="daily-slots">
-          {SLOTS.map((slot) => {
-            const isActive = activeSlot === slot.id;
-            const isSlotPlaying = isActive && isPlaying;
-            const isLoading = isActive && loadState === 'loading';
-            const hasError = isActive && loadState === 'error';
-
-            return (
-              <button
-                key={slot.id}
-                className={`daily-slot${isActive ? ' daily-slot--active' : ''}`}
-                onClick={() => handleSlotClick(slot.id)}
-              >
-                <span className="daily-slot-icon">{slot.icon}</span>
-                <div className="daily-slot-text">
-                  <span className="daily-slot-title">
-                    {t[slot.titleKey] as string}
-                  </span>
-                  <span className="daily-slot-desc">
-                    {t[slot.descKey] as string}
-                  </span>
-                </div>
-                <span className="daily-slot-action">
-                  {isLoading
-                    ? '⏳'
-                    : hasError
-                      ? '⚠'
-                      : isSlotPlaying
-                        ? '⏸'
-                        : '▶'}
-                </span>
-              </button>
-            );
-          })}
+        {/* View switcher: Quick Play (Slots) vs Audio Library */}
+        <div className="daily-view-toggle" role="tablist" aria-label={t.mot_lib_tab_all}>
+          <button
+            id="tab-audio-slots"
+            role="tab"
+            aria-selected={activeView === 'slots'}
+            className={`daily-view-tab${activeView === 'slots' ? ' daily-view-tab--active' : ''}`}
+            onClick={() => setActiveView('slots')}
+          >
+            {t.mot_lib_tab_slots}
+          </button>
+          <button
+            id="tab-audio-library"
+            role="tab"
+            aria-selected={activeView === 'library'}
+            className={`daily-view-tab${activeView === 'library' ? ' daily-view-tab--active' : ''}`}
+            onClick={() => setActiveView('library')}
+          >
+            {t.mot_lib_tab_all}
+          </button>
         </div>
+
+        {activeView === 'slots' ? (
+          <div className="daily-slots">
+            {SLOTS.map((slot) => {
+              const isActive = activeSlot === slot.id;
+              const isSlotPlaying = isActive && isPlaying;
+              const isLoading = isActive && loadState === 'loading';
+              const hasError = isActive && loadState === 'error';
+
+              return (
+                <button
+                  key={slot.id}
+                  id={`btn-slot-${slot.id}`}
+                  className={`daily-slot${isActive ? ' daily-slot--active' : ''}`}
+                  onClick={() => handleSlotClick(slot.id)}
+                >
+                  <span className="daily-slot-icon">{slot.icon}</span>
+                  <div className="daily-slot-text">
+                    <span className="daily-slot-title">
+                      {t[slot.titleKey] as string}
+                    </span>
+                    <span className="daily-slot-desc">
+                      {t[slot.descKey] as string}
+                    </span>
+                  </div>
+                  <span className="daily-slot-action">
+                    {isLoading
+                      ? '⏳'
+                      : hasError
+                        ? '⚠'
+                        : isSlotPlaying
+                          ? '⏸'
+                          : '▶'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="daily-library-list" role="list">
+            {MOTIVATIONAL_AUDIO_TRACKS.map((track) => {
+              const isLocked = track.isPremium && !hasPremium;
+              const isCurrent = activeSrcBase === track.src && track.src !== '';
+              const isTrackPlaying = isCurrent && isPlaying;
+              const isLoading = isCurrent && loadState === 'loading';
+
+              const slotConfig = SLOTS.find((s) => s.id === track.slot);
+              const slotIcon = slotConfig?.icon || '✦';
+
+              return (
+                <button
+                  key={track.id}
+                  id={`btn-track-${track.id}`}
+                  role="listitem"
+                  className={`daily-track-item${isCurrent ? ' daily-track-item--active' : ''}${isLocked ? ' daily-track-item--locked' : ''}`}
+                  onClick={() => handleLibraryTrackClick(track)}
+                  aria-label={`${t[track.titleKey] as string} - ${isLocked ? t.prem_badge : t.prem_free_badge}`}
+                >
+                  <span className="daily-track-icon">{slotIcon}</span>
+                  <div className="daily-track-info">
+                    <div className="daily-track-header-row">
+                      <span className="daily-track-title">{t[track.titleKey] as string}</span>
+                      {isLocked ? (
+                        <span className="prem-badge-chip">
+                          <span className="prem-chip-icon" aria-hidden="true">🔒</span>
+                          {t.prem_badge}
+                        </span>
+                      ) : (
+                        <span className="free-badge-chip">{t.prem_free_badge}</span>
+                      )}
+                    </div>
+                    <span className="daily-track-desc">{t[track.descKey] as string}</span>
+                    <div className="daily-track-meta">
+                      <span className="daily-track-duration">{track.durationLabel}</span>
+                    </div>
+                  </div>
+                  <span className="daily-track-action" aria-hidden="true">
+                    {isLocked
+                      ? '🔒'
+                      : isLoading
+                        ? '⏳'
+                        : isTrackPlaying
+                          ? '⏸'
+                          : '▶'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {activeSlot && loadState === 'error' && (
           <p className="daily-error">{t.daily_error}</p>
@@ -284,6 +394,13 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
           </button>
         </div>
       </div>
+
+      <PremiumInfoModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        title={selectedPremiumTitle}
+        description={selectedPremiumDesc}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
 import ScreenHeader from '../components/ScreenHeader';
+import { playFeedback } from '../utils/feedback';
 import './RecommitScreen.css';
 
 interface RecommitScreenProps {
@@ -74,7 +75,7 @@ export default function RecommitScreen({
           setHolding(false);
           setProgress(1);
 
-          if (navigator.vibrate) navigator.vibrate(60);
+          playFeedback('recovery');
 
           // Record Re-Commit event via callback (guarded against multiple triggers)
           onComplete();

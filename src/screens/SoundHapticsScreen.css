@@ -1,0 +1,293 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   Sound & Haptics Screen — Settings Subscreen (Phase 17)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.sound-haptics-screen {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.sound-haptics-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .sound-haptics-inner {
+    padding: 0 1rem;
+  }
+}
+
+.sound-haptics-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.sound-haptics-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.sound-haptics-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sound-haptics-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Card Stack */
+.sound-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sound-setting-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.sound-setting-card:hover {
+  border-color: var(--border-hover);
+}
+
+.sound-setting-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sound-setting-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sound-setting-icon {
+  font-size: 1.15rem;
+}
+
+.sound-setting-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sound-setting-desc {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.haptic-unsupported-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  width: fit-content;
+}
+
+/* ── Toggle Switch ── */
+.feedback-switch {
+  width: 48px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.feedback-switch:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent, #34d399);
+}
+
+.feedback-switch--on {
+  background: var(--accent, #34d399);
+}
+
+.feedback-switch-handle {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-switch--on .feedback-switch-handle {
+  transform: translateX(22px);
+}
+
+/* ── Preview / Test Section ── */
+.feedback-test-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.feedback-test-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.feedback-test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .feedback-test-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feedback-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.feedback-action-btn:hover {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feedback-action-btn--wide {
+  grid-column: 1 / -1;
+}
+
+.feedback-action-btn--active {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.3);
+}
+
+.feedback-btn-icon {
+  font-size: 1rem;
+}
+
+/* Status Banner */
+.feedback-status-banner {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  animation: feedbackFadeIn 0.2s ease;
+}
+
+.feedback-status-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+@keyframes feedbackFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Footer Actions */
+.sound-footer-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.sound-back-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: var(--radius-md, 12px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sound-back-settings-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}

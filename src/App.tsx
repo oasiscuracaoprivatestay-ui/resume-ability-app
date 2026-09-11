@@ -28,12 +28,15 @@ import CommitmentScreen from './screens/CommitmentScreen';
 import StructuredDietScreen from './screens/StructuredDietScreen';
 import SdaTermsScreen from './screens/SdaTermsScreen';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import SoundHapticsScreen from './screens/SoundHapticsScreen';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
 import type { TargetSlipInfo } from './utils/slipInsights';
 import { saveRecommitEvent } from './utils/recommitStorage';
 import { saveInControlEvent, saveCommitEvent } from './utils/inControlStorage';
+import { playFeedback } from './utils/feedback';
 import {
   evaluateNextReminder,
   dispatchBrowserNotification,
@@ -71,8 +74,8 @@ export default function App() {
   // Timer audio preference: true (With Audio, default) or false (Without Audio)
   const [timerAudioEnabled, setTimerAudioEnabled] = useState(true);
 
-  // Tracks whether motivation was requested from 'home', 'check-in' (Near Slip support), or 'home-nav'
-  const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in' | 'home-nav'>('home');
+  // Tracks whether motivation was requested from 'home', 'check-in' (Near Slip support), 'settings', or 'home-nav'
+  const [motivationOrigin, setMotivationOrigin] = useState<'home' | 'check-in' | 'home-nav' | 'settings'>('home');
 
   // Phase 12: Active In-App Reminder
   const { t } = useTranslation();
@@ -88,6 +91,8 @@ export default function App() {
       // Record origin based on where the user navigated from
       if (screenRef.current === 'check-in') {
         setMotivationOrigin('check-in');
+      } else if (screenRef.current === 'settings') {
+        setMotivationOrigin('settings');
       } else {
         setMotivationOrigin('home');
       }
@@ -415,6 +420,7 @@ export default function App() {
       timestamp: Date.now(),
     });
     setActiveInControlId(id);
+    playFeedback('win');
     navigate('control');
   }, [navigate]);
 
@@ -503,6 +509,7 @@ export default function App() {
         <TimerScreen
           session={session}
           audioEnabled={timerAudioEnabled}
+          onAudioToggle={setTimerAudioEnabled}
           onComplete={handleTimerComplete}
           onExtend={handleExtend}
           onRelapse={handleRelapse}
@@ -539,7 +546,12 @@ export default function App() {
       break;
 
     case 'control':
-      content = <ControlScreen onNavigate={navigate} />;
+      content = (
+        <ControlScreen
+          onNavigate={navigate}
+          onCommitSuccess={handleCommitSuccess}
+        />
+      );
       break;
 
     case 'commit':
@@ -564,9 +576,7 @@ export default function App() {
         <DailyAudioScreen
           onNavigate={navigate}
           onBack={() => {
-            if (motivationOrigin === 'check-in') {
-              navigate('check-in');
-            } else if (motivationOrigin === 'home-nav') {
+            if (motivationOrigin === 'home-nav') {
               navigate('home');
             } else {
               navigate('motivation-choice');
@@ -582,6 +592,8 @@ export default function App() {
           onBack={() => {
             if (motivationOrigin === 'check-in') {
               navigate('check-in');
+            } else if (motivationOrigin === 'settings') {
+              navigate('settings');
             } else {
               navigate('home');
             }
@@ -641,6 +653,14 @@ export default function App() {
           onTriggerInAppReminder={cand => setActiveReminder(cand)}
         />
       );
+      break;
+
+    case 'settings':
+      content = <SettingsScreen onNavigate={navigate} />;
+      break;
+
+    case 'sound-haptics':
+      content = <SoundHapticsScreen onNavigate={navigate} />;
       break;
 
     default:

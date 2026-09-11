@@ -3,6 +3,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
 import ScreenHeader from '../components/ScreenHeader';
+import { playFeedback } from '../utils/feedback';
 import './CommitScreen.css';
 
 interface CommitScreenProps {
@@ -74,7 +75,7 @@ export default function CommitScreen({
           setHolding(false);
           setProgress(1);
 
-          if (navigator.vibrate) navigator.vibrate(60);
+          playFeedback('commit');
 
           // Record Commit event via callback (guarded against multiple triggers)
           onComplete();
@@ -88,6 +89,53 @@ export default function CommitScreen({
       rafRef.current = requestAnimationFrame(tick);
     },
     [step, onComplete],
+  );
+
+  // Keyboard accessibility
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if ((e.key === ' ' || e.key === 'Enter') && !holding && !holdCompletedRef.current) {
+        e.preventDefault();
+        if (step !== 'hold') return;
+        setHolding(true);
+        startRef.current = performance.now();
+
+        const tick = (now: number) => {
+          if (startRef.current === null) return;
+          const p = Math.min((now - startRef.current) / HOLD_MS, 1);
+          setProgress(p);
+
+          if (p < 1) {
+            rafRef.current = requestAnimationFrame(tick);
+          } else {
+            holdCompletedRef.current = true;
+            rafRef.current = null;
+            startRef.current = null;
+            setHolding(false);
+            setProgress(1);
+
+            playFeedback('commit');
+            onComplete();
+
+            setTimeout(() => {
+              setStep('success');
+            }, 250);
+          }
+        };
+
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    },
+    [step, holding, onComplete],
+  );
+
+  const handleKeyUp = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        cancelHold();
+      }
+    },
+    [cancelHold],
   );
 
   // Clean up RAF on unmount
@@ -179,13 +227,16 @@ export default function CommitScreen({
 
               <button
                 id="btn-commit-hold"
+                type="button"
                 className={`commit-hold-btn${holding ? ' commit-hold-btn--active' : ''}`}
                 onPointerDown={startHold}
                 onPointerUp={cancelHold}
                 onPointerLeave={cancelHold}
                 onPointerCancel={cancelHold}
+                onKeyDown={handleKeyDown}
+                onKeyUp={handleKeyUp}
                 onContextMenu={(e) => e.preventDefault()}
-                aria-label={t.commit_hold_instruction}
+                aria-label={`${t.commit_hold_instruction} - ${holding ? t.commit_btn_holding : t.commit_btn_hold}`}
               >
                 {holding ? (
                   <span className="commit-hold-pct">{Math.round(progress * 100)}</span>

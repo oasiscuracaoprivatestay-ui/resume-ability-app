@@ -28,6 +28,7 @@ import {
   clearBlockVerification,
   getDailyVerificationStats,
 } from '../utils/dietVerificationStorage';
+import { playFeedback } from '../utils/feedback';
 import type {
   DietBlockVerification,
   DailyDietVerification,
@@ -392,14 +393,18 @@ function BlockCard({
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
 
-  // Build display items list
-  const foodLabels = block.items.map(key =>
-    (t[`sdb_food_${key}` as keyof typeof t] as string | undefined) ?? key
-  );
-  if (block.customText) {
-    const translatedCustom = (t[block.customText as keyof typeof t] as string | undefined) ?? block.customText;
-    foodLabels.push(translatedCustom);
-  }
+  // Determine meal description:
+  // Use custom description/text if present; otherwise fall back to localized meal type name.
+  const rawCustom = block.customText?.trim() ?? '';
+  const translatedCustom = rawCustom
+    ? ((t[rawCustom as keyof typeof t] as string | undefined) ?? rawCustom)
+    : '';
+  const mealDescription = translatedCustom.trim() || typeName;
+
+  // Build secondary food items list without duplicating the primary meal description
+  const foodLabels = block.items
+    .map(key => (t[`sdb_food_${key}` as keyof typeof t] as string | undefined) ?? key)
+    .filter(label => label.trim().toLowerCase() !== mealDescription.trim().toLowerCase());
 
   return (
     <div className={`sdb-block-card ${verification?.status ? `sdb-block-card--${verification.status}` : ''}`}>
@@ -410,17 +415,9 @@ function BlockCard({
         </span>
         <div className="sdb-block-actions">
           <button
-            className="sdb-icon-btn"
-            onClick={onEdit}
-            aria-label={`${t.commit_edit}: ${typeName}`}
-            title={t.commit_edit}
-          >
-            ✎
-          </button>
-          <button
             className="sdb-icon-btn sdb-icon-btn--delete"
             onClick={onDelete}
-            aria-label={`${t.commit_delete}: ${typeName}`}
+            aria-label={`${t.commit_delete}: ${mealDescription}`}
             title={t.commit_delete}
           >
             ✕
@@ -428,9 +425,22 @@ function BlockCard({
         </div>
       </div>
 
-      <div className="sdb-block-type-row">
+      <div className="sdb-block-desc-row">
         <span className="sdb-block-icon">{icon}</span>
-        <span className="sdb-block-type-label">{typeName.toUpperCase()}</span>
+        <span className="sdb-block-meal-desc">{mealDescription}</span>
+      </div>
+
+      <div className="sdb-block-customize-row">
+        <button
+          id={`btn-customize-block-${block.id}`}
+          type="button"
+          className="sdb-customize-btn"
+          onClick={onEdit}
+          aria-label={`${t.sdb_btn_customize}: ${mealDescription}`}
+        >
+          <span className="sdb-customize-icon" aria-hidden="true">✎</span>
+          <span>{t.sdb_btn_customize}</span>
+        </button>
       </div>
 
       {foodLabels.length > 0 && (
@@ -817,6 +827,7 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
       status: 'on-track',
       sourcePlanName: weekly.planName,
     });
+    playFeedback('win');
     refreshVerifications();
   };
 
@@ -926,28 +937,37 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
             )}
           </div>
 
-          {/* ── Compact 7-day selector ── */}
-          <div className="sdb-week-selector" role="tablist" aria-label="Days of the week">
-            {DAY_KEYS.map(k => {
-              const isSelected = k === selectedDayKey;
-              const isTodayPill = k === todayKey;
-              const shortLabel = t[`sdb_day_${k}_short` as keyof typeof t] as string;
-
-              return (
-                <button
-                  key={k}
-                  id={`sdb-day-${k}`}
-                  role="tab"
-                  aria-selected={isSelected}
-                  aria-current={isTodayPill ? 'date' : undefined}
-                  className={`sdb-day-pill ${isSelected ? 'sdb-day-pill--active' : ''} ${isTodayPill ? 'sdb-day-pill--today' : ''}`}
-                  onClick={() => setSelectedDayKey(k)}
-                >
-                  <span className="sdb-day-pill-name">{shortLabel}</span>
-                  {isTodayPill && <span className="sdb-day-pill-dot" title={t.sdb_today} aria-label={t.sdb_today} />}
-                </button>
-              );
-            })}
+          {/* ── Day Selector Dropdown (Phase 22) ── */}
+          <div className="sdb-day-dropdown-card">
+            <div className="sdb-day-dropdown-header">
+              <label htmlFor="sdb-day-select" className="sdb-day-dropdown-label">
+                <span className="sdb-day-dropdown-icon">📅</span>
+                <span>{t.sdb_day_select_label}</span>
+              </label>
+              {isToday && (
+                <span className="sdb-today-badge sdb-today-badge--dropdown">{t.sdb_today}</span>
+              )}
+            </div>
+            <div className="sdb-day-dropdown-wrapper">
+              <select
+                id="sdb-day-select"
+                className="sdb-day-select sdb-day-select--main"
+                value={selectedDayKey}
+                onChange={e => setSelectedDayKey(e.target.value as DayKey)}
+                aria-label={t.sdb_day_select_label}
+              >
+                {DAY_KEYS.map(k => {
+                  const dayName = t[`sdb_day_${k}` as keyof typeof t] as string;
+                  const isTodayPill = k === todayKey;
+                  return (
+                    <option key={k} id={`sdb-day-${k}`} value={k}>
+                      {dayName}{isTodayPill ? ` (${t.sdb_today})` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+              <span className="sdb-day-dropdown-chevron" aria-hidden="true">▾</span>
+            </div>
           </div>
 
           {/* ── Selected day header & Mode toggle ── */}
@@ -1381,6 +1401,7 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
         selectedDayKey={selectedDayKey}
         selectedDayName={(t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string | undefined) ?? selectedDayKey}
         hasExistingDayBlocks={currentDay.blocks.length > 0}
+        onSelectDayKey={setSelectedDayKey}
       />
     </div>
   );

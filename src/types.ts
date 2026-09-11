@@ -26,6 +26,8 @@ export type Screen =
   | 'commitment'
   | 'structured-diet'
   | 'notification-settings'
+  | 'settings'
+  | 'sound-haptics'
   | 'premium';
 
 // ── Timer mode ──

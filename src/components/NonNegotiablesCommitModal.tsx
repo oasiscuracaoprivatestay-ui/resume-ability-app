@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { saveCommitEvent } from '../utils/inControlStorage';
 import { generateId } from '../utils';
+import { playFeedback } from '../utils/feedback';
 import './NonNegotiablesCommitModal.css';
 
 interface NonNegotiablesCommitModalProps {
@@ -93,13 +94,7 @@ export default function NonNegotiablesCommitModal({
     setHolding(false);
     setProgress(1);
 
-    if (navigator.vibrate) {
-      try {
-        navigator.vibrate(60);
-      } catch {
-        // Ignore haptic errors
-      }
-    }
+    playFeedback('commit');
 
     // Persist single CommitEvent with source 'non-negotiables'
     const id = generateId();

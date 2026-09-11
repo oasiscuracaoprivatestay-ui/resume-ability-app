@@ -3,6 +3,7 @@ import { useTranslation } from '../i18n';
 import type { DietTemplate, DietTemplateCategory } from '../data/dietTemplates';
 import { DIET_TEMPLATES } from '../data/dietTemplates';
 import type { DayKey } from '../utils/dietStorage';
+import { DAY_KEYS } from '../utils/dietStorage';
 import './TemplateModal.css';
 
 export interface TemplateModalProps {
@@ -12,6 +13,7 @@ export interface TemplateModalProps {
   selectedDayKey?: DayKey;
   selectedDayName?: string;
   hasExistingDayBlocks?: boolean;
+  onSelectDayKey?: (dayKey: DayKey) => void;
 }
 
 type ModalView = 'list' | 'preview' | 'confirm';
@@ -23,27 +25,30 @@ export default function TemplateModal({
   selectedDayKey = 'mon',
   selectedDayName,
   hasExistingDayBlocks = false,
+  onSelectDayKey,
 }: TemplateModalProps) {
   const { t } = useTranslation();
 
-  const [activeCategory, setActiveCategory] = useState<DietTemplateCategory>('unstructured');
+  const [currentDayKey, setCurrentDayKey] = useState<DayKey>(selectedDayKey);
+  const [activeCategory, setActiveCategory] = useState<DietTemplateCategory>('structured');
   const [selectedTemplate, setSelectedTemplate] = useState<DietTemplate | null>(null);
   const [view, setView] = useState<ModalView>('list');
   const modalRef = useRef<HTMLDivElement>(null);
 
   const resolvedDayName =
+    (t[`sdb_day_${currentDayKey}` as keyof typeof t] as string | undefined) ||
     selectedDayName ||
-    (t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string | undefined) ||
     'Monday';
 
   // Reset state on open
   useEffect(() => {
     if (isOpen) {
-      setActiveCategory('unstructured');
+      setCurrentDayKey(selectedDayKey);
+      setActiveCategory('structured');
       setSelectedTemplate(null);
       setView('list');
     }
-  }, [isOpen]);
+  }, [isOpen, selectedDayKey]);
 
   // ESC key handler
   useEffect(() => {
@@ -121,26 +126,41 @@ export default function TemplateModal({
               </button>
             </div>
 
-            {/* Target Day Indicator Banner */}
+            {/* Target Day Indicator / Dropdown Banner (Phase 22) */}
             <div className="tpl-target-day-banner">
-              <span className="tpl-target-day-icon">📅</span>
-              <span className="tpl-target-day-text">
-                {t.sdb_tpl_apply_to_day.replace('{day}', resolvedDayName)}
-              </span>
+              <div className="tpl-target-day-left">
+                <span className="tpl-target-day-icon">📅</span>
+                <label htmlFor="tpl-day-select" className="tpl-target-day-label">
+                  {t.sdb_day_select_label}:
+                </label>
+              </div>
+              <div className="tpl-day-select-wrap">
+                <select
+                  id="tpl-day-select"
+                  className="tpl-day-select"
+                  value={currentDayKey}
+                  onChange={(e) => {
+                    const nextKey = e.target.value as DayKey;
+                    setCurrentDayKey(nextKey);
+                    onSelectDayKey?.(nextKey);
+                  }}
+                  aria-label={t.sdb_day_select_label}
+                >
+                  {DAY_KEYS.map((k) => {
+                    const dayName = (t[`sdb_day_${k}` as keyof typeof t] as string | undefined) || k;
+                    return (
+                      <option key={k} id={`tpl-day-opt-${k}`} value={k}>
+                        {dayName}
+                      </option>
+                    );
+                  })}
+                </select>
+                <span className="tpl-day-select-chevron" aria-hidden="true">▾</span>
+              </div>
             </div>
 
-            {/* Category tabs */}
+            {/* Category tabs: Structured (LEFT), Unstructured (RIGHT) */}
             <div className="tpl-category-tabs" role="tablist" aria-label={t.sdb_templates}>
-              <button
-                id="btn-tpl-cat-unstructured"
-                type="button"
-                role="tab"
-                aria-selected={activeCategory === 'unstructured'}
-                className={`tpl-cat-tab ${activeCategory === 'unstructured' ? 'tpl-cat-tab--active' : ''}`}
-                onClick={() => setActiveCategory('unstructured')}
-              >
-                {t.sdb_templates_unstructured} (6)
-              </button>
               <button
                 id="btn-tpl-cat-structured"
                 type="button"
@@ -150,6 +170,16 @@ export default function TemplateModal({
                 onClick={() => setActiveCategory('structured')}
               >
                 {t.sdb_templates_structured} (7)
+              </button>
+              <button
+                id="btn-tpl-cat-unstructured"
+                type="button"
+                role="tab"
+                aria-selected={activeCategory === 'unstructured'}
+                className={`tpl-cat-tab ${activeCategory === 'unstructured' ? 'tpl-cat-tab--active' : ''}`}
+                onClick={() => setActiveCategory('unstructured')}
+              >
+                {t.sdb_templates_unstructured} (6)
               </button>
             </div>
 

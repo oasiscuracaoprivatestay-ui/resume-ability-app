@@ -104,6 +104,7 @@
 /* Category tabs */
 .tpl-category-tabs {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   background: rgba(255, 255, 255, 0.04);
   padding: 4px;
@@ -228,19 +229,37 @@
   margin: 0;
 }
 
-/* ── Target Day Banner ── */
+/* ── Target Day Banner & Day Dropdown (Phase 22) ── */
 .tpl-target-day-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   background: rgba(45, 212, 191, 0.08);
   border: 1px solid rgba(45, 212, 191, 0.25);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 8px 12px;
+  box-sizing: border-box;
+}
+
+.tpl-target-day-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .tpl-target-day-icon {
   font-size: 1rem;
+}
+
+.tpl-target-day-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
 }
 
 .tpl-target-day-text {
@@ -248,6 +267,52 @@
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.02em;
+}
+
+.tpl-day-select-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 200px;
+  min-width: 130px;
+}
+
+.tpl-day-select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-radius: 8px;
+  padding: 6px 26px 6px 10px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.tpl-day-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+}
+
+.tpl-day-select option {
+  background: #181d28;
+  color: #f1f5f9;
+}
+
+.tpl-day-select-chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  line-height: 1;
 }
 
 /* ── 24-Hour Preview Timeline ── */
@@ -455,7 +520,30 @@
     padding: 18px 14px;
   }
 
+  .tpl-target-day-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tpl-day-select-wrap {
+    max-width: 160px;
+  }
+
   .tpl-modal-actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 360px) {
+  .tpl-target-day-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .tpl-day-select-wrap {
+    max-width: 100%;
+    width: 100%;
   }
 }

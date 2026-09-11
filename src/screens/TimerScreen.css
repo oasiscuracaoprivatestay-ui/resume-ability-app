@@ -295,7 +295,101 @@
   margin-bottom: -0.4rem;
 }
 
-/* ── Audio section — secondary / supporting layer ── */
+/* ── Audio section — secondary / supporting layer (Phase 7H & 18) ── */
+
+.timer-audio-section-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+}
+
+.timer-audio-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.timer-audio-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-audio-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.timer-audio-status-dot--on {
+  background: var(--accent, #2dd4bf);
+  box-shadow: 0 0 6px var(--accent, #2dd4bf);
+}
+
+.timer-audio-status-dot--off {
+  background: #64748b;
+}
+
+.timer-audio-status-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.timer-audio-segmented-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--surface, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-sm, 8px);
+  padding: 2px;
+  gap: 2px;
+}
+
+.timer-audio-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim, #94a3b8);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.timer-audio-toggle-btn:hover {
+  color: var(--text-primary, #ffffff);
+}
+
+.timer-audio-toggle-btn--active {
+  background: rgba(45, 212, 191, 0.18);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  color: var(--accent, #2dd4bf);
+  font-weight: 700;
+}
+
+.timer-audio-toggle-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
 
 .audio-section {
   display: flex;
@@ -309,23 +403,36 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-md);
   padding: 0.55rem 0.6rem;
-  opacity: 0.88;
+  opacity: 0.95;
+  box-sizing: border-box;
 }
 
 .audio-section--disabled {
-  flex-direction: row;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.audio-disabled-message-row {
+  display: flex;
+  align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.85rem 1rem;
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  opacity: 0.75;
+  text-align: center;
 }
 
 .audio-disabled-icon {
   font-size: 1rem;
   line-height: 1;
   color: var(--text-dim, #64748b);
+  flex-shrink: 0;
 }
 
 .audio-disabled-text {
@@ -333,6 +440,44 @@
   color: var(--text-secondary, #94a3b8);
   font-weight: 500;
   letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+.btn-turn-on-motivational-audio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(45, 212, 191, 0.12);
+  border: 1px solid var(--accent, #2dd4bf);
+  color: var(--accent, #2dd4bf);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+.btn-turn-on-motivational-audio:hover {
+  background: rgba(45, 212, 191, 0.22);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.28);
+  color: var(--accent-hover, #5eead4);
+  border-color: var(--accent-hover, #5eead4);
+}
+
+.btn-turn-on-motivational-audio:active {
+  transform: scale(0.98);
+}
+
+.btn-turn-on-icon {
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 /* ── Audio mode pills ── */

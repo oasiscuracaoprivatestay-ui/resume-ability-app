@@ -11,6 +11,7 @@ export default function ScreenHeader({ onBack, onHome }: ScreenHeaderProps) {
   return (
     <header className="screen-header">
       <button
+        id="btn-header-back"
         className="header-btn"
         onClick={onBack}
         aria-label="Go back"
@@ -18,6 +19,7 @@ export default function ScreenHeader({ onBack, onHome }: ScreenHeaderProps) {
         ←
       </button>
       <button
+        id="btn-header-brand"
         className="screen-brand-btn"
         onClick={onHome}
         aria-label="Go home"
@@ -26,6 +28,7 @@ export default function ScreenHeader({ onBack, onHome }: ScreenHeaderProps) {
         <span className="screen-brand-sub">{t.home_brand}</span>
       </button>
       <button
+        id="btn-header-home"
         className="header-btn"
         onClick={onHome}
         aria-label="Go home"

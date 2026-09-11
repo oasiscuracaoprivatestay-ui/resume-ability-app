@@ -183,17 +183,18 @@
 }
 
 .sdb-block-time {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--success, #34d399);
   letter-spacing: 0.04em;
   line-height: 1.2;
 }
 
 .sdb-block-overnight {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--accent);
   font-style: italic;
+  font-weight: 500;
 }
 
 .sdb-block-actions {
@@ -202,17 +203,82 @@
   flex-shrink: 0;
 }
 
+/* Phase 23 — Meal Description Row (Green, Uppercase, High Prominence) */
+.sdb-block-desc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.sdb-block-icon {
+  font-size: 1.05rem;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.sdb-block-meal-desc {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--success, #34d399);
+  text-transform: uppercase;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Phase 23 — Customize Action Row (Orange, Below Description) */
+.sdb-block-customize-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0.2rem;
+  margin-bottom: 0.1rem;
+}
+
+.sdb-customize-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+  font-family: inherit;
+  line-height: 1.2;
+  width: fit-content;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-customize-btn:hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: #f97316;
+  color: #fb923c;
+}
+
+.sdb-customize-btn:active {
+  transform: scale(0.97);
+}
+
+.sdb-customize-btn:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.sdb-customize-icon {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
 .sdb-block-type-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.1rem;
-}
-
-.sdb-block-icon {
-  font-size: 1rem;
-  line-height: 1;
-  flex-shrink: 0;
 }
 
 .sdb-block-type-label {
@@ -650,6 +716,105 @@
   }
 }
 
+/* ── Phase 22: Day Selector Dropdown Styles ── */
+
+.sdb-day-dropdown-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 10px 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.5rem;
+}
+
+.sdb-day-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sdb-day-dropdown-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.sdb-day-dropdown-icon {
+  font-size: 1rem;
+}
+
+.sdb-today-badge--dropdown {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(45, 212, 191, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sdb-day-dropdown-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 230px;
+  min-width: 140px;
+}
+
+.sdb-day-select--main {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 30px 8px 12px;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sdb-day-select--main:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+  outline: none;
+}
+
+.sdb-day-select--main option {
+  background: #181d28;
+  color: #f1f5f9;
+  padding: 8px;
+}
+
+.sdb-day-dropdown-chevron {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
 /* ── Phase 10: Weekly Day Selector & Planning Styles ── */
 
 .sdb-week-selector {
@@ -812,6 +977,7 @@
 
 .sdb-day-mode-toggle {
   display: flex;
+  flex-direction: row;
   background: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
   padding: 3px;
@@ -1815,6 +1981,24 @@
 }
 
 @media (max-width: 480px) {
+  /* ── 2.5 Day Dropdown Selector Mobile Adaptation ── */
+  .sdb-day-dropdown-card {
+    padding: 8px 12px;
+  }
+
+  .sdb-day-dropdown-label {
+    font-size: 0.76rem;
+  }
+
+  .sdb-day-dropdown-wrapper {
+    max-width: 175px;
+  }
+
+  .sdb-day-select--main {
+    padding: 7px 26px 7px 10px;
+    font-size: 0.86rem;
+  }
+
   /* ── 3. Day Mode Selector Mobile Adaptation ── */
   .sdb-day-mode-row {
     flex-direction: column;
@@ -1825,6 +2009,7 @@
   .sdb-day-mode-toggle {
     width: 100%;
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
   }
 
@@ -1883,6 +2068,17 @@
 
 @media (max-width: 360px) {
   /* ── 6. Ultra-Compact Screen Safety (<= 360px) ── */
+  .sdb-day-dropdown-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sdb-day-dropdown-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
   .sdb-empty-actions {
     grid-template-columns: 1fr;
   }

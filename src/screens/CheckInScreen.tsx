@@ -14,6 +14,7 @@ import { generateId } from '../utils';
 import NonNegotiablesCommitModal from '../components/NonNegotiablesCommitModal';
 import { hasCommittedNonNegotiables } from '../utils/inControlStorage';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
+import { playFeedback } from '../utils/feedback';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
@@ -203,7 +204,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
         startRef.current = null;
         setHolding(false);
         setProgress(1);
-        if (navigator.vibrate) navigator.vibrate(60);
+        playFeedback('check-in');
         setTimeout(() => { setProgress(0); setStep('choice'); }, 250);
       }
     };
@@ -216,12 +217,16 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
     saveCheckIn(selected);
     setSaved(selected);
     setPanel('none');
-    if (navigator.vibrate) navigator.vibrate(40);
 
     if (selected === 'on-structure') {
+      playFeedback('win');
       setCelebVariant(getRandomVariant());
       setStep('celebrate');
+    } else if (selected === 'near-slip') {
+      playFeedback('recovery');
+      setStep('done');
     } else {
+      // Slip report remains neutral — no failure sound, no negative vibration
       setStep('done');
     }
   }, [selected]);
@@ -457,7 +462,13 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               </button>
             ))}
           </div>
-          <button className="ci-back-home" onClick={() => onNavigate('quote')}>{t.ci_back_home}</button>
+          <button
+            id="btn-ci-near-slip-done"
+            className="ci-back-home"
+            onClick={() => onNavigate('quote')}
+          >
+            {t.ci_back_home}
+          </button>
         </div>
       </div>
     );
@@ -486,7 +497,13 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               {t.ci_slip_recovery_cta}
             </button>
           </div>
-          <button className="ci-back-home" onClick={() => onNavigate('quote')}>{t.ci_back_home}</button>
+          <button
+            id="btn-ci-slip-done"
+            className="ci-back-home"
+            onClick={() => onNavigate('quote')}
+          >
+            {t.ci_back_home}
+          </button>
         </div>
       </div>
     );

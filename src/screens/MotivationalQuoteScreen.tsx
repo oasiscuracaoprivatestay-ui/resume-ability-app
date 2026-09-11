@@ -1,25 +1,32 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n';
 import type { Screen } from '../types';
+import type { CheckInStatus } from '../utils/checkInStorage';
+import { getCheckIns } from '../utils/checkInStorage';
+import { getPostCheckInQuoteItem } from '../data/motivationalTexts';
 import './MotivationalQuoteScreen.css';
 
 interface MotivationalQuoteScreenProps {
   onNavigate: (screen: Screen) => void;
+  status?: CheckInStatus | null;
 }
 
-export default function MotivationalQuoteScreen({ onNavigate }: MotivationalQuoteScreenProps) {
-  const { t } = useTranslation();
+export default function MotivationalQuoteScreen({ onNavigate, status }: MotivationalQuoteScreenProps) {
+  const { t, lang } = useTranslation();
 
-  // Pick one quote randomly when the screen is first mounted.
-  // Using lazy state initializer ensures the quote remains strictly stable across any re-renders.
-  const [quote] = useState(() => {
-    const list = t.motivational_quotes;
-    if (!list || list.length === 0) {
-      return 'You don’t need perfection. You need the ability to return.';
-    }
-    const idx = Math.floor(Math.random() * list.length);
-    return list[idx];
+  // Resolve effective check-in status (from prop or latest stored check-in)
+  const resolvedStatus: CheckInStatus = status ?? (() => {
+    const all = getCheckIns();
+    return all.length > 0 ? all[all.length - 1].status : 'on-structure';
+  })();
+
+  // Pick one quote item randomly when the screen is first mounted.
+  // Using lazy state initializer ensures the quote identity remains strictly stable across any re-renders.
+  const [quoteItem] = useState(() => {
+    return getPostCheckInQuoteItem(resolvedStatus);
   });
+
+  const quoteText = quoteItem ? (quoteItem[lang] || quoteItem.en) : '';
 
   const handleReturnHome = () => {
     onNavigate('home');
@@ -43,7 +50,7 @@ export default function MotivationalQuoteScreen({ onNavigate }: MotivationalQuot
           <div className="quote-text-wrap">
             <span className="quote-mark quote-mark-start" aria-hidden="true">“</span>
             <blockquote className="quote-text">
-              {quote}
+              {quoteText}
             </blockquote>
             <span className="quote-mark quote-mark-end" aria-hidden="true">”</span>
           </div>

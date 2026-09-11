@@ -78,6 +78,29 @@
   transform: scale(1.05);
 }
 
+.home-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  color: var(--text-dim);
+}
+
+.home-settings-btn:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.08);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+
 /* ── Exit button (top-right, next to language selector) ── */
 
 .home-exit-btn {
