@@ -232,6 +232,25 @@ body {
   box-shadow: 0 0 8px var(--accent-glow);
 }
 
+@media (max-width: 440px) {
+  .lang-selector {
+    padding: 2px;
+    gap: 1px;
+  }
+  .lang-btn {
+    font-size: 0.62rem;
+    padding: 0.22rem 0.35rem;
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .lang-btn {
+    font-size: 0.56rem;
+    padding: 0.18rem 0.26rem;
+  }
+}
+
 /* ── Shared section labels ── */
 
 .section-label {

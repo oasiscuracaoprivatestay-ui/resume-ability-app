@@ -249,6 +249,7 @@
   align-items: flex-start;
   gap: 0.45rem;
   margin-top: 0.15rem;
+  max-width: 100%;
 }
 
 .sdb-block-icon {
@@ -256,6 +257,40 @@
   line-height: 1.35;
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.sdb-block-desc-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sdb-block-desc-input-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 28px);
+}
+
+.sdb-block-desc-sizer {
+  grid-area: 1 / 1 / 2 / 2;
+  visibility: hidden;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  padding: 3px 6px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  pointer-events: none;
+  border: 1px solid transparent;
+  box-sizing: border-box;
 }
 
 .sdb-block-meal-desc {
@@ -269,8 +304,8 @@
 }
 
 .sdb-block-meal-desc-input {
-  flex: 1;
-  min-width: 0;
+  grid-area: 1 / 1 / 2 / 2;
+  width: 100%;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -305,6 +340,34 @@
   color: var(--text-dim, #64748b);
   text-transform: none;
   font-weight: 500;
+}
+
+.sdb-block-desc-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(52, 211, 153, 0.65);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-block-desc-edit-btn:hover {
+  color: var(--success, #34d399);
+  background: rgba(52, 211, 153, 0.12);
+  transform: scale(1.1);
+}
+
+.sdb-block-desc-edit-btn:active {
+  transform: scale(0.95);
 }
 
 /* Phase 23 — Customize Action Row (Orange, Below Description) */

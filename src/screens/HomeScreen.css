@@ -12,6 +12,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 0.45rem;
+  column-gap: 0.5rem;
 }
 
 .home-brand-btn {
@@ -26,6 +29,8 @@
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
   line-height: 1;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .home-brand-btn:active {
@@ -33,34 +38,50 @@
 }
 
 .home-brand-title {
-  font-size: 1.05rem;
+  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0.02em;
   font-family: var(--font);
+  white-space: nowrap;
 }
 
 .home-brand-sub {
-  font-size: 0.6rem;
+  font-size: clamp(0.5rem, 1.6vw, 0.6rem);
   font-weight: 600;
   color: var(--accent);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-family: var(--font);
+  white-space: nowrap;
 }
 
 .home-top-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+@media (max-width: 440px) {
+  .home-top-bar {
+    row-gap: 0.4rem;
+    column-gap: 0.35rem;
+  }
+  .home-top-right {
+    gap: 0.25rem;
+  }
 }
 
 @media (max-width: 360px) {
   .home-top-bar {
-    gap: 0.25rem;
+    row-gap: 0.35rem;
+    column-gap: 0.25rem;
   }
   .home-top-right {
-    gap: 0.25rem;
+    gap: 0.18rem;
   }
 }
 
@@ -78,6 +99,7 @@
   transition: all 0.2s ease;
   padding: 0;
   color: var(--text-dim);
+  flex-shrink: 0;
 }
 
 .home-reminders-btn:hover {
@@ -101,6 +123,7 @@
   transition: all 0.2s ease;
   padding: 0;
   color: var(--text-dim);
+  flex-shrink: 0;
 }
 
 .home-settings-btn:hover {
@@ -108,6 +131,24 @@
   background: rgba(52, 211, 153, 0.08);
   color: var(--accent);
   transform: scale(1.05);
+}
+
+@media (max-width: 440px) {
+  .home-reminders-btn,
+  .home-settings-btn {
+    width: 25px;
+    height: 25px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .home-reminders-btn,
+  .home-settings-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+  }
 }
 
 /* ── Exit button (top-right, next to language selector) ── */
@@ -128,6 +169,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .home-exit-btn:hover {
@@ -146,6 +189,22 @@
 
 .home-exit-label {
   line-height: 1;
+}
+
+@media (max-width: 440px) {
+  .home-exit-btn {
+    padding: 0.22rem 0.42rem;
+    font-size: 0.62rem;
+    gap: 0.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .home-exit-btn {
+    padding: 0.18rem 0.32rem;
+    font-size: 0.56rem;
+    gap: 0.15rem;
+  }
 }
 
 /* ── Question block ── */
@@ -627,11 +686,11 @@
   border: none;
   border-radius: var(--radius-sm, 6px);
   color: var(--text-dim);
-  font-size: clamp(0.5rem, 1.8vw, 0.62rem);
+  font-size: clamp(0.44rem, 1.8vw, 0.62rem);
   font-family: inherit;
   font-weight: 700;
   cursor: pointer;
-  padding: 0.35rem 0.12rem;
+  padding: 0.35rem 0.08rem;
   min-height: 48px;
   display: flex;
   flex-direction: column;
@@ -639,12 +698,12 @@
   justify-content: center;
   text-align: center;
   white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
   line-height: 1.15;
   transition: color 0.2s ease, background-color 0.2s ease;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
@@ -671,6 +730,10 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  text-align: center;
 }
 
 .nav-link--commitment {
@@ -679,20 +742,29 @@
 
 @media (max-width: 400px) {
   .home-screen {
-    padding: 1rem 0.75rem 1.25rem;
+    padding: 1rem 0.5rem 1.25rem;
+  }
+  .home-nav {
+    gap: 1px;
+  }
+  .nav-link {
+    font-size: clamp(0.41rem, 1.7vw, 0.49rem);
+    letter-spacing: -0.01em;
+    padding: 0.3rem 0.04rem;
   }
 }
 
 @media (max-width: 340px) {
   .home-screen {
-    padding: 0.75rem 0.4rem 1rem;
+    padding: 0.75rem 0.35rem 1rem;
   }
   .nav-link {
-    font-size: 0.48rem;
-    padding: 0.3rem 0.06rem;
+    font-size: 0.39rem;
+    letter-spacing: -0.02em;
+    padding: 0.28rem 0.02rem;
   }
   .nav-icon {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 }
 

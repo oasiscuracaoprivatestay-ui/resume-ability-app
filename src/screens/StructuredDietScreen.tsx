@@ -585,17 +585,40 @@ function BlockCard({
 
       <div className="sdb-block-desc-row">
         <span className="sdb-block-icon" aria-hidden="true">{icon}</span>
-        <textarea
-          ref={textareaRef}
-          id={`input-block-desc-${block.id}`}
-          className="sdb-block-meal-desc-input"
-          value={desc}
-          onChange={handleDescChange}
-          onBlur={handleDescBlur}
-          placeholder={t.sdb_custom_placeholder || 'Meal description...'}
-          rows={1}
-          aria-label={`${t.sdb_custom_label}: ${desc}`}
-        />
+        <div className="sdb-block-desc-wrap">
+          <div className="sdb-block-desc-input-container">
+            <span className="sdb-block-desc-sizer" aria-hidden="true">
+              {desc || t.sdb_custom_placeholder || 'Meal description...'}
+            </span>
+            <textarea
+              ref={textareaRef}
+              id={`input-block-desc-${block.id}`}
+              className="sdb-block-meal-desc-input"
+              value={desc}
+              onChange={handleDescChange}
+              onBlur={handleDescBlur}
+              placeholder={t.sdb_custom_placeholder || 'Meal description...'}
+              rows={1}
+              aria-label={`${t.sdb_custom_label}: ${desc}`}
+            />
+          </div>
+          <button
+            type="button"
+            id={`btn-edit-desc-${block.id}`}
+            className="sdb-block-desc-edit-btn"
+            onClick={() => {
+              const el = textareaRef.current;
+              if (el) {
+                el.focus();
+                el.setSelectionRange(el.value.length, el.value.length);
+              }
+            }}
+            aria-label={`${t.commit_edit || 'Edit'}: ${desc}`}
+            title={t.commit_edit || 'Edit'}
+          >
+            ✎
+          </button>
+        </div>
       </div>
 
       <div className="sdb-block-customize-row">
