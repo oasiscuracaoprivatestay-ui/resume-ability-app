@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import type { Screen } from '../types';
 import ScreenHeader from '../components/ScreenHeader';
@@ -9,6 +9,8 @@ import {
   getFreeMotivationalTexts,
   type MotivationalTextItem,
 } from '../data/motivationalTexts';
+import { recordScoreEvent } from '../utils/scoringEngine';
+import { getLocalDateKey } from '../utils/dietStorage';
 import './MotivationalTextScreen.css';
 
 interface MotivationalTextScreenProps {
@@ -61,6 +63,16 @@ export default function MotivationalTextScreen({
     body: 'You do not need to solve the whole day right now. Choose the next structured action.',
     isPremium: false,
   };
+
+  // Record MOTIVATION_CONSUMED scoring event when user views/reads motivational content
+  useEffect(() => {
+    if (currentItem?.id) {
+      recordScoreEvent({
+        activityType: 'MOTIVATION_CONSUMED',
+        sourceId: `mot_text_${getLocalDateKey()}_${currentItem.id}`,
+      });
+    }
+  }, [currentItem?.id]);
 
   // Next message handler for quick reading
   const handleShowAnother = () => {

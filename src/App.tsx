@@ -26,6 +26,7 @@ import MotivationChoiceScreen from './screens/MotivationChoiceScreen';
 import MotivationalTextScreen from './screens/MotivationalTextScreen';
 import CommitmentScreen from './screens/CommitmentScreen';
 import StructuredDietScreen from './screens/StructuredDietScreen';
+import DailyReviewScreen from './screens/DailyReviewScreen';
 import SdaTermsScreen from './screens/SdaTermsScreen';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import SettingsScreen from './screens/SettingsScreen';
@@ -36,6 +37,9 @@ import FloatingProgramButton from './components/FloatingProgramButton';
 import type { TargetSlipInfo } from './utils/slipInsights';
 import { saveRecommitEvent } from './utils/recommitStorage';
 import { saveInControlEvent, saveCommitEvent } from './utils/inControlStorage';
+import { recordScoreEvent, ensureDayStartScore, SCORE_UPDATED_EVENT } from './utils/scoringEngine';
+import { getCurrentLevel } from './utils/progressionEngine';
+import LevelUpModal, { getCelebratedLevel, setCelebratedLevel } from './components/LevelUpModal';
 import { playFeedback } from './utils/feedback';
 import {
   evaluateNextReminder,
@@ -80,10 +84,48 @@ export default function App() {
   // Phase 12: Active In-App Reminder
   const { t } = useTranslation();
   const [activeReminder, setActiveReminder] = useState<ReminderCandidate | null>(null);
+  const [levelUpToShow, setLevelUpToShow] = useState<number | null>(null);
 
-  // ── Back-button override ──
-  // Track current screen in a ref so the popstate handler always has fresh value.
+  // Initialize day start score and initialize acknowledged level on first run
+  useEffect(() => {
+    ensureDayStartScore();
+    const current = getCurrentLevel();
+    const acknowledged = getCelebratedLevel();
+    if (acknowledged === null) {
+      setCelebratedLevel(current);
+    }
+  }, []);
+
+  // Listen for score events to detect crossing level thresholds
+  useEffect(() => {
+    const handleScoreUpdate = () => {
+      const current = getCurrentLevel();
+      const acknowledged = getCelebratedLevel();
+      if (acknowledged !== null && current > acknowledged) {
+        setLevelUpToShow(current);
+      }
+    };
+    window.addEventListener(SCORE_UPDATED_EVENT, handleScoreUpdate);
+    return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleScoreUpdate);
+  }, []);
+
+  // Sync current screen with history state for back/forward navigation actual previous screen
   const screenRef = useRef<Screen>('home');
+  const historyStackRef = useRef<Screen[]>(['home']);
+
+  const goBack = useCallback(() => {
+    const stack = historyStackRef.current;
+    if (stack.length > 1) {
+      stack.pop(); // Pop current screen
+      const prevScreen = stack[stack.length - 1] || 'home';
+      screenRef.current = prevScreen;
+      setScreen(prevScreen);
+    } else {
+      historyStackRef.current = ['home'];
+      screenRef.current = 'home';
+      setScreen('home');
+    }
+  }, []);
 
   // ── Navigation ──
   const navigate = useCallback((target: Screen) => {
@@ -102,7 +144,15 @@ export default function App() {
       }
     }
 
-    if (target === 'home' || target === 'slip-type') {
+    if (target === 'home') {
+      setSession(null);
+      setPendingContext(null);
+      setTimerOnly(false);
+      setSlipId(null);
+      setCurrentReportedSlip(null);
+      setActiveInControlId(null);
+      historyStackRef.current = ['home'];
+    } else if (target === 'slip-type') {
       setSession(null);
       setPendingContext(null);
       setTimerOnly(false);
@@ -113,16 +163,25 @@ export default function App() {
       setSession(null);
       setPendingContext(null);
       setTimerOnly(false);
-    } else    if (target === 'mode') {
+    } else if (target === 'mode') {
       setSession(null);
       setTimerAudioEnabled(true);
       // keep pendingContext so the user can pick a different mode
     }
+
     // Push a history entry whenever navigating away from home so the
-    // popstate handler has something to intercept.
+    // popstate handler has something to intercept. Avoid navigation loops.
     if (target !== 'home') {
+      const stack = historyStackRef.current;
+      const existingIdx = stack.indexOf(target);
+      if (existingIdx !== -1) {
+        historyStackRef.current = stack.slice(0, existingIdx + 1);
+      } else {
+        historyStackRef.current.push(target);
+      }
       history.pushState({ screen: target }, '');
     }
+
     screenRef.current = target;
     setScreen(target);
   }, []);
@@ -134,6 +193,15 @@ export default function App() {
     setSlipId(null);
     setCurrentReportedSlip(null);
     setPendingContext(null);
+
+    const stack = historyStackRef.current;
+    const existingIdx = stack.indexOf('mode');
+    if (existingIdx !== -1) {
+      historyStackRef.current = stack.slice(0, existingIdx + 1);
+    } else {
+      historyStackRef.current.push('mode');
+    }
+
     history.pushState({ screen: 'mode' }, '');
     screenRef.current = 'mode';
     setScreen('mode');
@@ -146,24 +214,16 @@ export default function App() {
 
     const handlePopState = () => {
       if (screenRef.current !== 'home') {
-        // Navigate to home instead of exiting.
-        screenRef.current = 'home';
-        setScreen('home');
-        setSession(null);
-        setPendingContext(null);
-        setTimerOnly(false);
-        setSlipId(null);
-        setCurrentReportedSlip(null);
-        // Push a replacement entry so subsequent back presses keep firing.
-        history.pushState({ screen: 'home' }, '');
+        goBack();
+        // Keep replacement state active so subsequent back presses keep firing.
+        history.replaceState({ screen: screenRef.current }, '');
       }
       // If already on home: do nothing — the browser/OS handles exit.
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [goBack]);
 
   // ── PWA Push Deep-linking & SW message listener (Phase 14) ──
   useEffect(() => {
@@ -260,6 +320,10 @@ export default function App() {
         status: 'recovered',   // will be updated
         slipType: 'slippery-zone',
       });
+      recordScoreEvent({
+        activityType: 'SLIP_REPORTED',
+        sourceId: `slip_${currentId}`,
+      });
       setSlipId(currentId);
     }
 
@@ -294,6 +358,10 @@ export default function App() {
         status: 'recovered',
         slipType: 'non-negotiable',
         nonNegotiableText: rule,
+      });
+      recordScoreEvent({
+        activityType: 'SLIP_REPORTED',
+        sourceId: `slip_${currentId}`,
       });
       setSlipId(currentId);
     }
@@ -354,6 +422,10 @@ export default function App() {
       }
 
       setLastRecovery({ seconds: durationSeconds, status });
+      recordScoreEvent({
+        activityType: 'TIMER_COMPLETED',
+        sourceId: `timer_${session.startedAt}`,
+      });
       setSession(null);
       setPendingContext(null);
       setSlipId(null);
@@ -410,6 +482,10 @@ export default function App() {
       timestamp: Date.now(),
       slipId: slipId ?? undefined,
     });
+    recordScoreEvent({
+      activityType: 'RECOMMIT',
+      sourceId: `recommit_${id}`,
+    });
   }, [slipId]);
 
   // ── "I Am in Control" Handler ──
@@ -420,6 +496,10 @@ export default function App() {
       timestamp: Date.now(),
     });
     setActiveInControlId(id);
+    recordScoreEvent({
+      activityType: 'I_AM_IN_CONTROL',
+      sourceId: `in_control_${id}`,
+    });
     playFeedback('win');
     navigate('control');
   }, [navigate]);
@@ -432,6 +512,10 @@ export default function App() {
       timestamp: Date.now(),
       source: 'in-control',
       inControlEventId: activeInControlId ?? undefined,
+    });
+    recordScoreEvent({
+      activityType: 'COMMITMENT_COMPLETE',
+      sourceId: `commitment_${id}`,
     });
   }, [activeInControlId]);
 
@@ -564,11 +648,11 @@ export default function App() {
       break;
 
     case 'dashboard':
-      content = <DashboardScreen onNavigate={navigate} />;
+      content = <DashboardScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'history':
-      content = <HistoryScreen onNavigate={navigate} />;
+      content = <HistoryScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'daily-audio':
@@ -619,7 +703,7 @@ export default function App() {
       break;
 
     case 'timer-learn':
-      content = <TimerLearnScreen onNavigate={navigate} />;
+      content = <TimerLearnScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'quiz':
@@ -635,32 +719,42 @@ export default function App() {
       break;
 
     case 'commitment':
-      content = <CommitmentScreen onNavigate={navigate} />;
+      content = <CommitmentScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'structured-diet':
-      content = <StructuredDietScreen onNavigate={navigate} />;
+      content = <StructuredDietScreen onNavigate={navigate} onBack={goBack} />;
+      break;
+
+    case 'daily-review':
+      content = (
+        <DailyReviewScreen
+          onNavigate={navigate}
+          onBack={() => navigate('structured-diet')}
+        />
+      );
       break;
 
     case 'sda-terms':
-      content = <SdaTermsScreen onNavigate={navigate} />;
+      content = <SdaTermsScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'notification-settings':
       content = (
         <NotificationSettingsScreen
           onNavigate={navigate}
+          onBack={goBack}
           onTriggerInAppReminder={cand => setActiveReminder(cand)}
         />
       );
       break;
 
     case 'settings':
-      content = <SettingsScreen onNavigate={navigate} />;
+      content = <SettingsScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'sound-haptics':
-      content = <SoundHapticsScreen onNavigate={navigate} />;
+      content = <SoundHapticsScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     default:
@@ -683,6 +777,12 @@ export default function App() {
         />
       )}
       {content}
+      {levelUpToShow !== null && (
+        <LevelUpModal
+          level={levelUpToShow}
+          onClose={() => setLevelUpToShow(null)}
+        />
+      )}
       <div className="floating-buttons-stack">
         <FloatingProgramButton currentScreen={screen} />
         <FloatingTimerButton currentScreen={screen} onNavigate={navigate} onStartTimer={handleStartTimer} />

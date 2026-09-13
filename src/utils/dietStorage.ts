@@ -1,13 +1,15 @@
 /**
- * Structured Diet Storage — Phase 10 (Weekly / Daily Planning)
+ * Structured Diet Storage — Phase 10 & Phase 26 (Structure Goal / Master Profiles)
  *
- * Upgraded from single-plan (v1) to weekly plan (v2).
- * Stores a 7-day schedule (Mon..Sun) where each day has its own
- * mode ('structured' | 'unstructured') and independent blocks[].
+ * Upgraded from single-plan (v1) to weekly plan (v2) to multi-profile Structure Goal system (v3).
+ * A Structure Goal is a master profile/template representing high-level diet strategies
+ * (e.g. Rapid Fat Loss, Moderate Fat Loss, Maintenance, etc.).
+ * Each profile contains its own isolated 7-day schedule (Mon..Sun), date overrides, and snapshots.
+ * Switching active profiles preserves all profiles without data loss.
  *
- * Pattern: one localStorage key ('resume-ability-diet'), typed interface,
- * versioned (version: 2), safe defaults, idempotent backward-compatible migration.
- * Never throws on read.
+ * Storage key: 'resume-ability-diet'
+ * Version: 3
+ * Fully backward-compatible: automatically migrates v2/v1 data into Moderate Fat Loss.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -37,6 +39,35 @@ export interface WeeklyStructuredDiet {
   version: 2;
   planName: string;
   days: StructuredDietDay[];
+  /** Optional date-specific plan overrides (keyed by "YYYY-MM-DD"). */
+  dateOverrides?: Record<string, StructuredDietDay>;
+  /** Historical snapshots for past dates (keyed by "YYYY-MM-DD") to guarantee immutability. */
+  historySnapshots?: Record<string, StructuredDietDay>;
+}
+
+// Built-in goal identifiers
+export type BuiltInGoalId =
+  | 'rapid_fat_loss'
+  | 'moderate_fat_loss'
+  | 'protecting_current_loss'
+  | 'maintenance'
+  | 'vacation_maintenance'
+  | 'recovery_illness';
+
+export interface StructureGoalProfile {
+  id: string; // BuiltInGoalId or custom "goal_..."
+  type: 'builtin' | 'custom';
+  name: string;
+  description?: string;
+  isDefault?: boolean;
+  createdAt: number;
+  diet: WeeklyStructuredDiet;
+}
+
+export interface StructureDietStore {
+  version: 3;
+  activeProfileId: string;
+  profiles: StructureGoalProfile[];
 }
 
 // Legacy v1 interface for backward compatibility
@@ -49,19 +80,79 @@ export interface StructuredDietPlan {
 
 const STORAGE_KEY = 'resume-ability-diet';
 export const DEFAULT_PLAN_NAME = 'My Structured Diet';
+export const DEFAULT_ACTIVE_GOAL_ID: BuiltInGoalId = 'moderate_fat_loss';
 
-export function createDefaultWeeklyDiet(planName = DEFAULT_PLAN_NAME): WeeklyStructuredDiet {
-  return {
-    version: 2,
-    planName,
-    days: DAY_KEYS.map((dayKey, idx) => ({
-      dayKey,
-      dayOfWeek: idx,
-      mode: 'structured',
-      blocks: [],
-    })),
-  };
-}
+export const BUILT_IN_GOALS: Array<{
+  id: BuiltInGoalId;
+  name: string;
+  description: string;
+  sampleBlocks: Array<Omit<StructuredDietBlock, 'id'>>;
+}> = [
+  {
+    id: 'rapid_fat_loss',
+    name: 'Rapid Fat Loss',
+    description: 'Aggressive fat loss protocol with structured eating windows',
+    sampleBlocks: [
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Spinach'], customText: '' },
+      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Chicken Breast', 'Broccoli', 'Mixed Greens'], customText: '' },
+      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['White Fish', 'Asparagus', 'Zucchini'], customText: '' },
+    ],
+  },
+  {
+    id: 'moderate_fat_loss',
+    name: 'Moderate Fat Loss',
+    description: 'Steady, sustainable fat loss with balanced daily nutrition',
+    sampleBlocks: [
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Oatmeal', 'Berries'], customText: '' },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Breast', 'Rice', 'Broccoli'], customText: '' },
+      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Almonds'], customText: '' },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Salmon', 'Sweet Potato', 'Mixed Greens'], customText: '' },
+    ],
+  },
+  {
+    id: 'protecting_current_loss',
+    name: 'Protecting the Current Loss',
+    description: 'Consolidation phase to protect recent weight loss and reset baseline',
+    sampleBlocks: [
+      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Oatmeal', 'Protein Powder', 'Berries'], customText: '' },
+      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Turkey Breast', 'Quinoa', 'Mixed Greens'], customText: '' },
+      { startTime: '16:30', endTime: '16:50', type: 'Snack', items: ['Apple', 'Almonds'], customText: '' },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Lean Beef', 'Baked Potato', 'Green Beans'], customText: '' },
+    ],
+  },
+  {
+    id: 'maintenance',
+    name: 'Maintenance',
+    description: 'Long-term metabolic balance and flexible lifestyle nutrition',
+    sampleBlocks: [
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Whole Wheat Bread', 'Avocado'], customText: '' },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Salmon', 'Brown Rice', 'Mixed Veggies'], customText: '' },
+      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Berries', 'Walnuts'], customText: '' },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Chicken Breast', 'Pasta', 'Olive Oil', 'Salad'], customText: '' },
+    ],
+  },
+  {
+    id: 'vacation_maintenance',
+    name: 'Vacation Maintenance',
+    description: 'Flexible rhythm with anchor meals to maintain weight while travelling',
+    sampleBlocks: [
+      { startTime: '10:00', endTime: '10:45', type: 'Breakfast', items: ['Eggs', 'Fruit', 'Coffee'], customText: 'Morning brunch' },
+      { startTime: '15:00', endTime: '15:30', type: 'Snack', items: ['Fruit', 'Nuts'], customText: 'Afternoon refuel' },
+      { startTime: '20:00', endTime: '21:00', type: 'Dinner', items: ['Fish', 'Salad'], customText: 'Social evening dinner' },
+    ],
+  },
+  {
+    id: 'recovery_illness',
+    name: 'Recovery During Illness',
+    description: 'Light meals, gentle digestion, and restorative hydration',
+    sampleBlocks: [
+      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Tea', 'Toast', 'Honey'], customText: 'Hydration & light morning' },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Soup', 'Crackers', 'Rice'], customText: 'Recovery lunch' },
+      { startTime: '16:00', endTime: '16:30', type: 'Snack', items: ['Herbal Tea', 'Banana'], customText: 'Rest & fluids' },
+      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['Broth', 'Steamed Veggies', 'Rice'], customText: 'Gentle dinner' },
+    ],
+  },
+];
 
 // ── Block cloning & ID generation ─────────────────────────────────────────────
 
@@ -92,99 +183,462 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
   }));
 }
 
+export function createDefaultWeeklyDiet(planName = DEFAULT_PLAN_NAME): WeeklyStructuredDiet {
+  return {
+    version: 2,
+    planName,
+    days: DAY_KEYS.map((dayKey, idx) => ({
+      dayKey,
+      dayOfWeek: idx,
+      mode: 'structured',
+      blocks: [],
+    })),
+  };
+}
+
+/** Build a WeeklyStructuredDiet from an initial set of template blocks */
+export function createWeeklyDietFromTemplate(
+  planName: string,
+  sampleBlocks: Array<Omit<StructuredDietBlock, 'id'>>,
+): WeeklyStructuredDiet {
+  return {
+    version: 2,
+    planName,
+    days: DAY_KEYS.map((dayKey, idx) => ({
+      dayKey,
+      dayOfWeek: idx,
+      mode: 'structured',
+      blocks: sampleBlocks.map(b => ({
+        ...b,
+        id: generateBlockId(),
+        items: [...b.items],
+      })),
+    })),
+  };
+}
+
+/** Create a built-in profile from its definition */
+export function createBuiltInProfile(id: BuiltInGoalId): StructureGoalProfile {
+  const def = BUILT_IN_GOALS.find(g => g.id === id) ?? BUILT_IN_GOALS[1]; // fallback moderate
+  return {
+    id: def.id,
+    type: 'builtin',
+    name: def.name,
+    description: def.description,
+    isDefault: def.id === DEFAULT_ACTIVE_GOAL_ID,
+    createdAt: 1700000000000,
+    diet: createWeeklyDietFromTemplate(def.name, def.sampleBlocks),
+  };
+}
+
+/** Create initial store containing all 6 built-in goals */
+export function createDefaultStore(): StructureDietStore {
+  return {
+    version: 3,
+    activeProfileId: DEFAULT_ACTIVE_GOAL_ID,
+    profiles: BUILT_IN_GOALS.map(g => createBuiltInProfile(g.id)),
+  };
+}
+
+// ── Display helpers with i18n support ────────────────────────────────────────
+
+/** Returns the display name of a profile, localized if built-in */
+export function getGoalDisplayName(
+  profile: StructureGoalProfile,
+  t?: Record<string, any> | ((key: any) => string),
+): string {
+  if (profile.type === 'builtin' && t) {
+    const key = `sdb_goal_${profile.id}`;
+    if (typeof t === 'function') {
+      const translated = t(key);
+      if (translated && translated !== key) return translated;
+    } else if (typeof t[key] === 'string' && t[key]) {
+      return t[key];
+    }
+  }
+  return profile.name;
+}
+
+/** Returns the display description of a profile, localized if built-in */
+export function getGoalDisplayDescription(
+  profile: StructureGoalProfile,
+  t?: Record<string, any> | ((key: any) => string),
+): string {
+  if (profile.type === 'builtin' && t) {
+    const key = `sdb_goal_${profile.id}_desc`;
+    if (typeof t === 'function') {
+      const translated = t(key);
+      if (translated && translated !== key) return translated;
+    } else if (typeof t[key] === 'string' && t[key]) {
+      return t[key];
+    }
+  }
+  return profile.description || '';
+}
+
 // ── Core persistence & idempotent migration ───────────────────────────────────
 
+/** Parse a raw WeeklyStructuredDiet object safely */
+function parseWeeklyDietObject(rawObj: Record<string, unknown>): WeeklyStructuredDiet {
+  const planName = typeof rawObj.planName === 'string' && rawObj.planName.trim()
+    ? rawObj.planName.trim()
+    : DEFAULT_PLAN_NAME;
+
+  const rawDays = Array.isArray(rawObj.days) ? (rawObj.days as Record<string, unknown>[]) : [];
+  const days: StructuredDietDay[] = DAY_KEYS.map((dayKey, idx) => {
+    const found = rawDays.find(d => d && typeof d === 'object' && d.dayKey === dayKey);
+    if (!found) {
+      return {
+        dayKey,
+        dayOfWeek: idx,
+        mode: 'structured',
+        blocks: [],
+      };
+    }
+    const mode: DayMode = found.mode === 'unstructured' ? 'unstructured' : 'structured';
+    const blocks = Array.isArray(found.blocks)
+      ? (found.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
+      : [];
+    return {
+      dayKey,
+      dayOfWeek: idx,
+      mode,
+      blocks,
+    };
+  });
+
+  // Safe parsing of dateOverrides if present
+  let dateOverrides: Record<string, StructuredDietDay> | undefined = undefined;
+  if (rawObj.dateOverrides && typeof rawObj.dateOverrides === 'object') {
+    dateOverrides = {};
+    for (const [k, v] of Object.entries(rawObj.dateOverrides as Record<string, unknown>)) {
+      if (v && typeof v === 'object' && Array.isArray((v as Record<string, unknown>).blocks)) {
+        const cast = v as Record<string, unknown>;
+        dateOverrides[k] = {
+          dayKey: (cast.dayKey as DayKey) ?? dateKeyToDayKey(k),
+          dayOfWeek: typeof cast.dayOfWeek === 'number' ? cast.dayOfWeek : 0,
+          mode: cast.mode === 'unstructured' ? 'unstructured' : 'structured',
+          blocks: Array.isArray(cast.blocks)
+            ? (cast.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
+            : [],
+        };
+      }
+    }
+  }
+
+  // Safe parsing of historySnapshots if present
+  let historySnapshots: Record<string, StructuredDietDay> | undefined = undefined;
+  if (rawObj.historySnapshots && typeof rawObj.historySnapshots === 'object') {
+    historySnapshots = {};
+    for (const [k, v] of Object.entries(rawObj.historySnapshots as Record<string, unknown>)) {
+      if (v && typeof v === 'object' && Array.isArray((v as Record<string, unknown>).blocks)) {
+        const cast = v as Record<string, unknown>;
+        historySnapshots[k] = {
+          dayKey: (cast.dayKey as DayKey) ?? dateKeyToDayKey(k),
+          dayOfWeek: typeof cast.dayOfWeek === 'number' ? cast.dayOfWeek : 0,
+          mode: cast.mode === 'unstructured' ? 'unstructured' : 'structured',
+          blocks: Array.isArray(cast.blocks)
+            ? (cast.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
+            : [],
+        };
+      }
+    }
+  }
+
+  return {
+    version: 2,
+    planName,
+    days,
+    ...(dateOverrides ? { dateOverrides } : {}),
+    ...(historySnapshots ? { historySnapshots } : {}),
+  };
+}
+
 /**
- * Load the weekly diet plan from localStorage.
- * Detects legacy v1 data ({ name, blocks }) and safely migrates it to v2:
- * duplicating the existing plan across all 7 days with fresh independent block IDs.
- * If data is missing or malformed, safely returns default weekly diet.
+ * Load the complete StructureDietStore from localStorage.
+ * Handles:
+ * 1. Missing storage -> creates default store with 6 built-in goals.
+ * 2. Version 3 data -> validates profiles, ensures all built-in goals exist, and returns.
+ * 3. Version 2 or legacy v1 data -> migrates existing user diet into 'moderate_fat_loss',
+ *    creates built-in profiles for the other goals, persists v3, and returns.
  */
-export function loadWeeklyDiet(): WeeklyStructuredDiet {
+export function loadDietStore(): StructureDietStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return createDefaultWeeklyDiet();
+      const defaultStore = createDefaultStore();
+      saveDietStore(defaultStore);
+      return defaultStore;
     }
 
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (!parsed || typeof parsed !== 'object') {
-      return createDefaultWeeklyDiet();
+      const defaultStore = createDefaultStore();
+      saveDietStore(defaultStore);
+      return defaultStore;
     }
 
-    // Check if already version 2
-    if (parsed.version === 2 && Array.isArray(parsed.days)) {
-      const planName = typeof parsed.planName === 'string' && parsed.planName.trim()
-        ? parsed.planName.trim()
-        : DEFAULT_PLAN_NAME;
+    // ── Check if already version 3 ──────────────────────────────────────────
+    if (parsed.version === 3 && Array.isArray(parsed.profiles)) {
+      const rawProfiles = parsed.profiles as Record<string, unknown>[];
+      const validProfiles: StructureGoalProfile[] = [];
 
-      const rawDays = parsed.days as Record<string, unknown>[];
-      const days: StructuredDietDay[] = DAY_KEYS.map((dayKey, idx) => {
-        const found = rawDays.find(d => d && typeof d === 'object' && d.dayKey === dayKey);
-        if (!found) {
-          return {
-            dayKey,
-            dayOfWeek: idx,
-            mode: 'structured',
-            blocks: [],
-          };
+      for (const p of rawProfiles) {
+        if (!p || typeof p !== 'object' || typeof p.id !== 'string') continue;
+        const id = p.id;
+        const type: 'builtin' | 'custom' = p.type === 'custom' ? 'custom' : 'builtin';
+        const name = typeof p.name === 'string' && p.name.trim() ? p.name.trim() : 'Goal';
+        const description = typeof p.description === 'string' ? p.description.trim() : undefined;
+        const isDefault = Boolean(p.isDefault);
+        const createdAt = typeof p.createdAt === 'number' ? p.createdAt : Date.now();
+        const diet = (p.diet && typeof p.diet === 'object')
+          ? parseWeeklyDietObject(p.diet as Record<string, unknown>)
+          : createDefaultWeeklyDiet(name);
+
+        validProfiles.push({
+          id,
+          type,
+          name,
+          description,
+          isDefault,
+          createdAt,
+          diet,
+        });
+      }
+
+      // Ensure all 6 built-in profiles exist
+      for (const def of BUILT_IN_GOALS) {
+        if (!validProfiles.some(p => p.id === def.id)) {
+          validProfiles.push(createBuiltInProfile(def.id));
         }
-        const mode: DayMode = found.mode === 'unstructured' ? 'unstructured' : 'structured';
-        const blocks = Array.isArray(found.blocks)
-          ? (found.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
-          : [];
-        return {
+      }
+
+      let activeProfileId = typeof parsed.activeProfileId === 'string' && parsed.activeProfileId
+        ? parsed.activeProfileId
+        : DEFAULT_ACTIVE_GOAL_ID;
+
+      // Verify activeProfileId exists
+      if (!validProfiles.some(p => p.id === activeProfileId)) {
+        activeProfileId = DEFAULT_ACTIVE_GOAL_ID;
+      }
+
+      const store: StructureDietStore = {
+        version: 3,
+        activeProfileId,
+        profiles: validProfiles,
+      };
+      return store;
+    }
+
+    // ── Backward-compatible migration from v2 or legacy v1 ──────────────────
+    let userDiet: WeeklyStructuredDiet;
+
+    if (parsed.version === 2 && Array.isArray(parsed.days)) {
+      userDiet = parseWeeklyDietObject(parsed);
+    } else {
+      // Legacy v1 migration
+      const legacyName = typeof parsed.name === 'string' && parsed.name.trim()
+        ? parsed.name.trim()
+        : DEFAULT_PLAN_NAME;
+      const legacyBlocks = Array.isArray(parsed.blocks)
+        ? (parsed.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
+        : [];
+      userDiet = {
+        version: 2,
+        planName: legacyName,
+        days: DAY_KEYS.map((dayKey, idx) => ({
           dayKey,
           dayOfWeek: idx,
-          mode,
-          blocks,
-        };
-      });
-
-      return {
-        version: 2,
-        planName,
-        days,
+          mode: 'structured',
+          blocks: deepCloneBlocks(legacyBlocks),
+        })),
       };
     }
 
-    // Backward-compatible migration from v1 (single StructuredDietPlan)
-    const legacyName = typeof parsed.name === 'string' && parsed.name.trim()
-      ? parsed.name.trim()
-      : DEFAULT_PLAN_NAME;
+    // Build the 6 built-in profiles, placing userDiet into moderate_fat_loss
+    const defaultStore = createDefaultStore();
+    const migratedProfiles = defaultStore.profiles.map(p => {
+      if (p.id === DEFAULT_ACTIVE_GOAL_ID) {
+        return {
+          ...p,
+          diet: userDiet,
+        };
+      }
+      return p;
+    });
 
-    const legacyBlocks = Array.isArray(parsed.blocks)
-      ? (parsed.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
-      : [];
-
-    // Duplicate legacy plan across all 7 days with deep-cloned blocks & fresh IDs
-    const migratedDays: StructuredDietDay[] = DAY_KEYS.map((dayKey, idx) => ({
-      dayKey,
-      dayOfWeek: idx,
-      mode: 'structured',
-      blocks: deepCloneBlocks(legacyBlocks),
-    }));
-
-    const migrated: WeeklyStructuredDiet = {
-      version: 2,
-      planName: legacyName,
-      days: migratedDays,
+    const migratedStore: StructureDietStore = {
+      version: 3,
+      activeProfileId: DEFAULT_ACTIVE_GOAL_ID,
+      profiles: migratedProfiles,
     };
 
-    // Persist migrated structure immediately so subsequent reads are v2
-    saveWeeklyDiet(migrated);
-    return migrated;
+    saveDietStore(migratedStore);
+    return migratedStore;
   } catch {
-    return createDefaultWeeklyDiet();
+    const fallback = createDefaultStore();
+    saveDietStore(fallback);
+    return fallback;
   }
 }
 
-/** Persist the weekly diet plan. Safe to call frequently. */
-export function saveWeeklyDiet(diet: WeeklyStructuredDiet): void {
+/** Persist the entire StructureDietStore to localStorage. */
+export function saveDietStore(store: StructureDietStore): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(diet));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   } catch {
     // Storage quota exceeded or private-mode restriction — fail silently.
+  }
+}
+
+/** Get the currently active profile from store */
+export function getActiveProfile(store = loadDietStore()): StructureGoalProfile {
+  const found = store.profiles.find(p => p.id === store.activeProfileId);
+  if (found) return found;
+  const fallback = store.profiles.find(p => p.id === DEFAULT_ACTIVE_GOAL_ID) ?? store.profiles[0];
+  if (fallback) return fallback;
+  return createBuiltInProfile(DEFAULT_ACTIVE_GOAL_ID);
+}
+
+/** Set the active profile ID and persist */
+export function setActiveProfile(profileId: string): StructureGoalProfile {
+  const store = loadDietStore();
+  const exists = store.profiles.some(p => p.id === profileId);
+  if (!exists) {
+    return getActiveProfile(store);
+  }
+  store.activeProfileId = profileId;
+  saveDietStore(store);
+  return getActiveProfile(store);
+}
+
+/**
+ * Create a new custom Structure Goal profile.
+ * Can optionally clone days/blocks from an existing diet plan.
+ */
+export function createCustomProfile(params: {
+  name: string;
+  description?: string;
+  cloneFromDiet?: WeeklyStructuredDiet;
+}): StructureGoalProfile {
+  const store = loadDietStore();
+  const cleanName = params.name.trim();
+  const cleanDesc = params.description?.trim();
+  const id = `goal_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+
+  let diet: WeeklyStructuredDiet;
+  if (params.cloneFromDiet) {
+    diet = {
+      version: 2,
+      planName: cleanName,
+      days: params.cloneFromDiet.days.map(d => ({
+        ...d,
+        blocks: deepCloneBlocks(d.blocks),
+      })),
+      dateOverrides: params.cloneFromDiet.dateOverrides
+        ? JSON.parse(JSON.stringify(params.cloneFromDiet.dateOverrides))
+        : undefined,
+      historySnapshots: params.cloneFromDiet.historySnapshots
+        ? JSON.parse(JSON.stringify(params.cloneFromDiet.historySnapshots))
+        : undefined,
+    };
+  } else {
+    diet = createDefaultWeeklyDiet(cleanName);
+  }
+
+  const newProfile: StructureGoalProfile = {
+    id,
+    type: 'custom',
+    name: cleanName,
+    description: cleanDesc || undefined,
+    createdAt: Date.now(),
+    diet,
+  };
+
+  store.profiles.push(newProfile);
+  store.activeProfileId = id; // newly created profile becomes active
+  saveDietStore(store);
+  return newProfile;
+}
+
+/**
+ * Update custom profile metadata (name, description).
+ * Built-in profiles cannot have their names updated.
+ */
+export function updateCustomProfile(
+  profileId: string,
+  updates: { name?: string; description?: string },
+): StructureGoalProfile | null {
+  const store = loadDietStore();
+  const profile = store.profiles.find(p => p.id === profileId);
+  if (!profile) return null;
+
+  if (profile.type === 'custom' && typeof updates.name === 'string' && updates.name.trim()) {
+    profile.name = updates.name.trim();
+    profile.diet.planName = updates.name.trim();
+  }
+  if (typeof updates.description === 'string') {
+    profile.description = updates.description.trim() || undefined;
+  }
+
+  saveDietStore(store);
+  return profile;
+}
+
+/**
+ * Delete a custom Structure Goal profile.
+ * Built-in profiles cannot be deleted.
+ * If the deleted profile was active, activeProfileId falls back to Moderate Fat Loss.
+ */
+export function deleteCustomProfile(profileId: string): {
+  success: boolean;
+  newActiveProfile: StructureGoalProfile;
+} {
+  const store = loadDietStore();
+  const profileIdx = store.profiles.findIndex(p => p.id === profileId);
+  if (profileIdx === -1) {
+    return { success: false, newActiveProfile: getActiveProfile(store) };
+  }
+
+  const profile = store.profiles[profileIdx];
+  if (profile.type === 'builtin') {
+    // Built-in goals cannot be deleted
+    return { success: false, newActiveProfile: getActiveProfile(store) };
+  }
+
+  store.profiles.splice(profileIdx, 1);
+
+  if (store.activeProfileId === profileId) {
+    store.activeProfileId = DEFAULT_ACTIVE_GOAL_ID;
+  }
+
+  saveDietStore(store);
+  return { success: true, newActiveProfile: getActiveProfile(store) };
+}
+
+/**
+ * Backward-compatible loadWeeklyDiet:
+ * Returns the weekly diet of the currently active profile.
+ */
+export function loadWeeklyDiet(): WeeklyStructuredDiet {
+  const store = loadDietStore();
+  return getActiveProfile(store).diet;
+}
+
+/**
+ * Backward-compatible saveWeeklyDiet:
+ * Persists the given weekly diet into the currently active profile.
+ */
+export function saveWeeklyDiet(diet: WeeklyStructuredDiet): void {
+  try {
+    const store = loadDietStore();
+    const active = store.profiles.find(p => p.id === store.activeProfileId);
+    if (active) {
+      active.diet = diet;
+      saveDietStore(store);
+    }
+  } catch {
+    // Storage quota exceeded — fail silently.
   }
 }
 
@@ -347,3 +801,149 @@ export function sortBlocks(blocks: StructuredDietBlock[]): StructuredDietBlock[]
     return aMin - bMin;
   });
 }
+
+/**
+ * Returns the stable local date key formatted as "YYYY-MM-DD".
+ * Never uses UTC or toISOString() to prevent day shifts across timezones.
+ */
+export function getLocalDateKey(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Convert a local "YYYY-MM-DD" date key to a DayKey ('mon'..'sun').
+ */
+export function dateKeyToDayKey(dateKey: string): DayKey {
+  const parts = dateKey.split('-').map(Number);
+  const date = new Date(parts[0], (parts[1] ?? 1) - 1, parts[2] ?? 1);
+  const jsDay = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const map: Record<number, DayKey> = {
+    0: 'sun',
+    1: 'mon',
+    2: 'tue',
+    3: 'wed',
+    4: 'thu',
+    5: 'fri',
+    6: 'sat',
+  };
+  return map[jsDay] ?? 'mon';
+}
+
+/**
+ * Returns the effective plan for a specific calendar date (formatted as "YYYY-MM-DD").
+ * Implements the weekly inheritance and history preservation rules:
+ * 1. If dateKey has an explicit override in dateOverrides[dateKey], return it.
+ * 2. If dateKey is in the past (dateKey < todayDateKey):
+ *    - Return historySnapshots[dateKey] if preserved.
+ *    - Does NOT retroactively inherit changes made today.
+ * 3. If dateKey is today or in the future (dateKey >= todayDateKey):
+ *    - Returns the latest recurring weekday structure from diet.days.
+ *    - This achieves same-weekday future inheritance by default.
+ */
+export function getDayPlanForDate(diet: WeeklyStructuredDiet, dateKey: string): StructuredDietDay {
+  // 1. Explicit date override takes precedence
+  if (diet.dateOverrides && diet.dateOverrides[dateKey]) {
+    const override = diet.dateOverrides[dateKey];
+    return {
+      ...override,
+      blocks: deepCloneBlocks(override.blocks),
+    };
+  }
+
+  const todayDateKey = getLocalDateKey();
+  const dayKey = dateKeyToDayKey(dateKey);
+
+  // 2. Historical dates must remain immutable
+  if (dateKey < todayDateKey) {
+    if (diet.historySnapshots && diet.historySnapshots[dateKey]) {
+      const snap = diet.historySnapshots[dateKey];
+      return {
+        ...snap,
+        blocks: deepCloneBlocks(snap.blocks),
+      };
+    }
+  }
+
+  // 3. Default: inherit the latest weekday template
+  const templateDay = getDayPlan(diet, dayKey);
+  return {
+    ...templateDay,
+    blocks: deepCloneBlocks(templateDay.blocks),
+  };
+}
+
+/**
+ * When the user changes a block's start time, shift the end time by the previous block's duration.
+ * Maintains overnight status correctly.
+ */
+export function calculateShiftedEndTime(newStartTime: string, oldStartTime: string, oldEndTime: string): string {
+  const oldStartMin = timeToMinutes(oldStartTime);
+  let oldEndMin = timeToMinutes(oldEndTime);
+  if (oldEndMin <= oldStartMin) {
+    oldEndMin += 24 * 60; // overnight duration
+  }
+  const duration = Math.max(15, oldEndMin - oldStartMin);
+  const newStartMin = timeToMinutes(newStartTime);
+  const newEndMin = (newStartMin + duration) % (24 * 60);
+
+  const endH = Math.floor(newEndMin / 60);
+  const endM = newEndMin % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
+/**
+ * Set an explicit override for a specific calendar date (e.g. future date override).
+ */
+export function setDateOverride(
+  diet: WeeklyStructuredDiet,
+  dateKey: string,
+  dayPlan: StructuredDietDay,
+): WeeklyStructuredDiet {
+  const nextOverrides = {
+    ...(diet.dateOverrides || {}),
+    [dateKey]: {
+      ...dayPlan,
+      blocks: deepCloneBlocks(dayPlan.blocks),
+    },
+  };
+  return { ...diet, dateOverrides: nextOverrides };
+}
+
+/**
+ * Clear an explicit date override.
+ */
+export function clearDateOverride(
+  diet: WeeklyStructuredDiet,
+  dateKey: string,
+): WeeklyStructuredDiet {
+  if (!diet.dateOverrides || !diet.dateOverrides[dateKey]) return diet;
+  const nextOverrides = { ...diet.dateOverrides };
+  delete nextOverrides[dateKey];
+  return { ...diet, dateOverrides: nextOverrides };
+}
+
+/**
+ * Freeze a historical date's plan so future template updates cannot alter it.
+ */
+export function snapshotHistoryDate(
+  diet: WeeklyStructuredDiet,
+  dateKey: string,
+  dayPlan?: StructuredDietDay,
+): WeeklyStructuredDiet {
+  if (diet.historySnapshots && diet.historySnapshots[dateKey]) {
+    return diet; // already snapshotted, keep immutable
+  }
+  const planToFreeze = dayPlan ?? getDayPlan(diet, dateKeyToDayKey(dateKey));
+  const nextSnapshots = {
+    ...(diet.historySnapshots || {}),
+    [dateKey]: {
+      ...planToFreeze,
+      blocks: deepCloneBlocks(planToFreeze.blocks),
+    },
+  };
+  return { ...diet, historySnapshots: nextSnapshots };
+}
+

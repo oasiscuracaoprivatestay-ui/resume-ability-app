@@ -43,6 +43,8 @@ export interface DailyDietVerification {
   dateKey: string;
   dayKey: DayKey;
   sourcePlanName?: string;
+  profileId?: string;
+  profileName?: string;
   entries: DietBlockVerification[];
 }
 
@@ -142,6 +144,8 @@ export function saveBlockVerification(params: {
   actualItems?: string[];
   actualCustomText?: string;
   sourcePlanName?: string;
+  profileId?: string;
+  profileName?: string;
   dateKey?: string;
 }): DietBlockVerification {
   const dateKey = params.dateKey ?? getLocalDateKey();
@@ -151,6 +155,8 @@ export function saveBlockVerification(params: {
     dateKey,
     dayKey: getLocalTodayKey(),
     sourcePlanName: params.sourcePlanName,
+    profileId: params.profileId,
+    profileName: params.profileName,
     entries: [],
   };
 
@@ -196,6 +202,8 @@ export function saveBlockVerification(params: {
   const updatedDaily: DailyDietVerification = {
     ...daily,
     sourcePlanName: params.sourcePlanName ?? daily.sourcePlanName,
+    profileId: params.profileId ?? daily.profileId,
+    profileName: params.profileName ?? daily.profileName,
     entries: nextEntries,
   };
 

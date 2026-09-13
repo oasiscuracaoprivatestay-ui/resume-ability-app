@@ -15,6 +15,7 @@ import NonNegotiablesCommitModal from '../components/NonNegotiablesCommitModal';
 import { hasCommittedNonNegotiables } from '../utils/inControlStorage';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
 import { playFeedback } from '../utils/feedback';
+import { recordScoreEvent } from '../utils/scoringEngine';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
@@ -215,6 +216,11 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const handleConfirm = useCallback(() => {
     if (!selected) return;
     saveCheckIn(selected);
+    recordScoreEvent({
+      activityType: 'DAILY_CHECK_IN',
+      sourceId: `check_in_${Date.now()}`,
+      metadata: { status: selected },
+    });
     setSaved(selected);
     setPanel('none');
 
@@ -255,8 +261,13 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const handleReviewDone = useCallback(() => {
     if (reviewedRef.current) return; // prevent double-tap
     reviewedRef.current = true;
+    const revId = generateId();
     recordNonNegotiableReview();
-    saveReviewEvent({ id: generateId(), timestamp: Date.now() });
+    saveReviewEvent({ id: revId, timestamp: Date.now() });
+    recordScoreEvent({
+      activityType: 'NON_NEGOTIABLES_REVIEW',
+      sourceId: `nn_review_${revId}`,
+    });
     setReviewToast(true);
     setTimeout(() => {
       setReviewToast(false);

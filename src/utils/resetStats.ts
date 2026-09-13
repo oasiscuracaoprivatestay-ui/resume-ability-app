@@ -20,6 +20,9 @@ import { clearAllDietVerifications } from './dietVerificationStorage';
 import { resetPledgeStats } from './pledgeStorage';
 import { clearBalance } from './balanceStorage';
 import { clearNotificationDeliveryState } from './notificationSettingsStorage';
+import { resetScoreStore } from './scoringEngine';
+import { clearAllDailyReviews } from './dailyReviewStorage';
+import { CELEBRATED_LEVEL_KEY } from './progressionEngine';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
@@ -58,6 +61,19 @@ export function resetAllStats(): void {
 
     // 9. Transient notification delivery state (preserves notification settings)
     clearNotificationDeliveryState();
+
+    // 10. Scoring Engine Store
+    resetScoreStore();
+
+    // 11. Daily Reviews
+    clearAllDailyReviews();
+
+    // 12. Level-up acknowledged state
+    try {
+      localStorage.removeItem(CELEBRATED_LEVEL_KEY);
+    } catch {
+      // ignore
+    }
 
     // Notify listeners that stats have reset
     if (typeof window !== 'undefined') {

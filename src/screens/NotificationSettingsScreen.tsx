@@ -35,11 +35,13 @@ import './NotificationSettingsScreen.css';
 interface NotificationSettingsScreenProps {
   onNavigate: (screen: Screen) => void;
   onTriggerInAppReminder?: (candidate: ReminderCandidate) => void;
+  onBack?: () => void;
 }
 
 export default function NotificationSettingsScreen({
   onNavigate,
   onTriggerInAppReminder,
+  onBack,
 }: NotificationSettingsScreenProps) {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
@@ -179,7 +181,7 @@ export default function NotificationSettingsScreen({
   return (
     <div className="screen notification-settings-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 

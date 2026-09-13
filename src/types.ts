@@ -28,7 +28,8 @@ export type Screen =
   | 'notification-settings'
   | 'settings'
   | 'sound-haptics'
-  | 'premium';
+  | 'premium'
+  | 'daily-review';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';

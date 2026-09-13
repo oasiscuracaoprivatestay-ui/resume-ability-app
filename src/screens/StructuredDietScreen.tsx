@@ -4,23 +4,35 @@ import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
 import {
-  loadWeeklyDiet,
   saveWeeklyDiet,
+  loadDietStore,
+  getActiveProfile,
+  setActiveProfile,
+  createCustomProfile,
+  updateCustomProfile,
+  deleteCustomProfile,
+  getGoalDisplayName,
+  getGoalDisplayDescription,
   getDayPlan,
   updateDayPlan,
   setDayMode,
   copyDayPlan,
   getLocalTodayKey,
+  getLocalDateKey,
   generateBlockId,
   isOvernightBlock,
   sortBlocks,
   DAY_KEYS,
+  calculateShiftedEndTime,
+  snapshotHistoryDate,
 } from '../utils/dietStorage';
 import type {
   DayKey,
   DayMode,
   StructuredDietBlock,
   WeeklyStructuredDiet,
+  StructureDietStore,
+  StructureGoalProfile,
 } from '../utils/dietStorage';
 import {
   getDailyDietVerification,
@@ -45,10 +57,13 @@ import QuickBuildModal from '../components/QuickBuildModal';
 import TemplateModal from '../components/TemplateModal';
 import type { DietTemplate } from '../data/dietTemplates';
 import { applyDailyTemplateToDay } from '../data/dietTemplates';
+import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
+import { recordScoreEvent } from '../utils/scoringEngine';
 import './StructuredDietScreen.css';
 
 interface StructuredDietScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
 // ── Block editor modal ─────────────────────────────────────────────────────────
@@ -242,6 +257,15 @@ interface DietSlipModalProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
+const SLIP_NOTE_KEYS = [
+  'ate_off_plan',
+  'late_night',
+  'social_meal',
+  'stress_eating',
+  'extra_portion',
+  'skipped_meal',
+] as const;
+
 function DietSlipModal({
   block,
   initialActualItems = [],
@@ -252,6 +276,13 @@ function DietSlipModal({
 }: DietSlipModalProps) {
   const [actualItems, setActualItems] = useState<string[]>(initialActualItems);
   const [customText, setCustomText] = useState(initialCustomText);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>(() => {
+    const lower = initialCustomText.toLowerCase();
+    return SLIP_NOTE_KEYS.filter(k => {
+      const lbl = (t[`sdb_note_${k}` as keyof typeof t] as string | undefined)?.toLowerCase();
+      return lbl && lower.includes(lbl);
+    });
+  });
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -266,6 +297,28 @@ function DietSlipModal({
     setActualItems(prev =>
       prev.includes(key) ? prev.filter(i => i !== key) : [...prev, key]
     );
+  };
+
+  const toggleNote = (noteKey: string) => {
+    const label = (t[`sdb_note_${noteKey}` as keyof typeof t] as string) || noteKey;
+    setSelectedNotes(prev => {
+      const isSelected = prev.includes(noteKey);
+      const next = isSelected ? prev.filter(k => k !== noteKey) : [...prev, noteKey];
+
+      setCustomText(current => {
+        let items = current ? current.split(',').map(s => s.trim()).filter(Boolean) : [];
+        if (isSelected) {
+          items = items.filter(item => item.toLowerCase() !== label.toLowerCase());
+        } else {
+          if (!items.some(item => item.toLowerCase() === label.toLowerCase())) {
+            items.push(label);
+          }
+        }
+        return items.join(', ');
+      });
+
+      return next;
+    });
   };
 
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
@@ -319,10 +372,34 @@ function DietSlipModal({
                   type="button"
                   className={`sdb-food-chip ${actualItems.includes(key) ? 'sdb-food-chip--active' : ''}`}
                   onClick={() => toggleItem(key)}
+                  aria-pressed={actualItems.includes(key)}
                 >
                   {t[`sdb_food_${key}` as keyof typeof t] as string}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Selectable notes chips */}
+          <div className="sdb-field">
+            <label className="sdb-label">Quick Notes / Tags (tap to toggle):</label>
+            <div className="sdb-food-grid">
+              {SLIP_NOTE_KEYS.map(key => {
+                const isSelected = selectedNotes.includes(key);
+                return (
+                  <button
+                    key={key}
+                    id={`btn-slip-note-${key}`}
+                    type="button"
+                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active' : ''}`}
+                    onClick={() => toggleNote(key)}
+                    aria-pressed={isSelected}
+                  >
+                    {isSelected ? '✓ ' : '+ '}
+                    {t[`sdb_note_${key}` as keyof typeof t] as string}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -374,6 +451,8 @@ interface BlockCardProps {
   onOpenSlipModal?: () => void;
   onClearStatus?: () => void;
   onNavigate?: (screen: Screen) => void;
+  onQuickUpdateTime?: (startTime: string, endTime: string) => void;
+  onQuickUpdateDescription?: (customText: string) => void;
 }
 
 function BlockCard({
@@ -387,6 +466,8 @@ function BlockCard({
   onOpenSlipModal,
   onClearStatus,
   onNavigate,
+  onQuickUpdateTime,
+  onQuickUpdateDescription,
 }: BlockCardProps) {
   const typeKey = block.type as BlockTypeKey;
   const icon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
@@ -399,25 +480,102 @@ function BlockCard({
   const translatedCustom = rawCustom
     ? ((t[rawCustom as keyof typeof t] as string | undefined) ?? rawCustom)
     : '';
-  const mealDescription = translatedCustom.trim() || typeName;
+  const initialMealDescription = translatedCustom.trim() || typeName;
+
+  const [desc, setDesc] = useState(initialMealDescription);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setDesc(initialMealDescription);
+  }, [initialMealDescription, block.id]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${Math.max(el.scrollHeight, 28)}px`;
+    }
+  }, [desc]);
+
+  const saveDescription = (val: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const trimmed = val.trim();
+    if (trimmed !== (block.customText ?? '')) {
+      onQuickUpdateDescription?.(trimmed);
+    }
+  };
+
+  const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const nextVal = e.target.value;
+    setDesc(nextVal);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      saveDescription(nextVal);
+    }, 400);
+  };
+
+  const handleDescBlur = () => {
+    saveDescription(desc);
+  };
+
+  const handleStartTimeChange = (newStart: string) => {
+    const newEnd = calculateShiftedEndTime(newStart, block.startTime, block.endTime);
+    onQuickUpdateTime?.(newStart, newEnd);
+  };
+
+  const handleEndTimeChange = (newEnd: string) => {
+    onQuickUpdateTime?.(block.startTime, newEnd);
+  };
 
   // Build secondary food items list without duplicating the primary meal description
   const foodLabels = block.items
     .map(key => (t[`sdb_food_${key}` as keyof typeof t] as string | undefined) ?? key)
-    .filter(label => label.trim().toLowerCase() !== mealDescription.trim().toLowerCase());
+    .filter(label => label.trim().toLowerCase() !== desc.trim().toLowerCase());
 
   return (
     <div className={`sdb-block-card ${verification?.status ? `sdb-block-card--${verification.status}` : ''}`}>
       <div className="sdb-block-time-row">
-        <span className="sdb-block-time">
-          {formatTime(block.startTime)} → {formatTime(block.endTime)}
+        <div className="sdb-block-time-quick-edit">
+          <select
+            id={`select-block-start-${block.id}`}
+            className="sdb-block-time-select"
+            value={block.startTime}
+            onChange={e => handleStartTimeChange(e.target.value)}
+            aria-label={`${t.sdb_start_time}: ${desc}`}
+          >
+            {TIME_SLOTS.map(s => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <span className="sdb-block-time-sep" aria-hidden="true">→</span>
+          <select
+            id={`select-block-end-${block.id}`}
+            className="sdb-block-time-select"
+            value={block.endTime}
+            onChange={e => handleEndTimeChange(e.target.value)}
+            aria-label={`${t.sdb_end_time}: ${desc}`}
+          >
+            {TIME_SLOTS.map(s => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
           {overnight && <span className="sdb-block-overnight">{' '}({t.sdb_next_day})</span>}
-        </span>
+        </div>
         <div className="sdb-block-actions">
           <button
             className="sdb-icon-btn sdb-icon-btn--delete"
             onClick={onDelete}
-            aria-label={`${t.commit_delete}: ${mealDescription}`}
+            aria-label={`${t.commit_delete}: ${desc}`}
             title={t.commit_delete}
           >
             ✕
@@ -426,8 +584,18 @@ function BlockCard({
       </div>
 
       <div className="sdb-block-desc-row">
-        <span className="sdb-block-icon">{icon}</span>
-        <span className="sdb-block-meal-desc">{mealDescription}</span>
+        <span className="sdb-block-icon" aria-hidden="true">{icon}</span>
+        <textarea
+          ref={textareaRef}
+          id={`input-block-desc-${block.id}`}
+          className="sdb-block-meal-desc-input"
+          value={desc}
+          onChange={handleDescChange}
+          onBlur={handleDescBlur}
+          placeholder={t.sdb_custom_placeholder || 'Meal description...'}
+          rows={1}
+          aria-label={`${t.sdb_custom_label}: ${desc}`}
+        />
       </div>
 
       <div className="sdb-block-customize-row">
@@ -436,7 +604,7 @@ function BlockCard({
           type="button"
           className="sdb-customize-btn"
           onClick={onEdit}
-          aria-label={`${t.sdb_btn_customize}: ${mealDescription}`}
+          aria-label={`${t.sdb_btn_customize}: ${desc}`}
         >
           <span className="sdb-customize-icon" aria-hidden="true">✎</span>
           <span>{t.sdb_btn_customize}</span>
@@ -450,39 +618,19 @@ function BlockCard({
       {/* ── Today Daily Verification Controls ── */}
       {isToday && (
         <div className="sdb-verification-box">
-          {!verification ? (
-            /* Not Reported State */
-            <div className="sdb-verify-actions">
-              <span className="sdb-verify-status-label">{t.sdb_v_not_reported}</span>
-              <div className="sdb-verify-btn-group">
-                <button
-                  id={`btn-verify-ontrack-${block.id}`}
-                  type="button"
-                  className="sdb-verify-btn sdb-verify-btn--ontrack"
-                  onClick={onVerifyOnTrack}
-                >
-                  ✓ {t.sdb_v_on_track}
-                </button>
-                <button
-                  id={`btn-verify-slip-${block.id}`}
-                  type="button"
-                  className="sdb-verify-btn sdb-verify-btn--slip"
-                  onClick={onOpenSlipModal}
-                >
-                  ⚠ {t.sdb_v_slip}
-                </button>
-              </div>
-            </div>
-          ) : verification.status === 'on-track' ? (
-            /* Verified On Track State */
-            <div className="sdb-verified-badge sdb-verified-badge--ontrack">
+          {/* Selected Status Visual Banner if already verified */}
+          {verification && (
+            <div className={`sdb-verified-status-banner sdb-verified-status-banner--${verification.status}`}>
               <div className="sdb-verified-badge-top">
-                <span className="sdb-verified-badge-label">✓ {t.sdb_v_on_track}</span>
+                <span className="sdb-verified-badge-label">
+                  {verification.status === 'on-track' ? `✓ ${t.sdb_v_on_track}` : `⚠ ${t.sdb_v_slip_reported}`}
+                </span>
                 <div className="sdb-verified-controls">
                   <button
+                    id={`btn-change-status-${block.id}`}
                     type="button"
-                    className="sdb-verified-link"
-                    onClick={onOpenSlipModal}
+                    className="sdb-verified-link sdb-verified-link--change"
+                    onClick={verification.status === 'on-track' ? onOpenSlipModal : onVerifyOnTrack}
                   >
                     {t.sdb_v_change_status}
                   </button>
@@ -497,34 +645,9 @@ function BlockCard({
                   </button>
                 </div>
               </div>
-            </div>
-          ) : (
-            /* Verified Slip State */
-            <div className="sdb-verified-badge sdb-verified-badge--slip">
-              <div className="sdb-verified-badge-top">
-                <span className="sdb-verified-badge-label">⚠ {t.sdb_v_slip_reported}</span>
-                <div className="sdb-verified-controls">
-                  <button
-                    type="button"
-                    className="sdb-verified-link"
-                    onClick={onOpenSlipModal}
-                  >
-                    {t.commit_edit}
-                  </button>
-                  <span className="sdb-verified-ctrl-dot">·</span>
-                  <button
-                    id={`btn-clear-status-${block.id}`}
-                    type="button"
-                    className="sdb-verified-link sdb-verified-link--clear"
-                    onClick={onClearStatus}
-                  >
-                    {t.sdb_v_clear_status}
-                  </button>
-                </div>
-              </div>
 
-              {/* Actual consumed details */}
-              {(verification.actualItems?.length || verification.actualCustomText) && (
+              {/* If Slip, show actual consumed details */}
+              {verification.status === 'slip' && (verification.actualItems?.length || verification.actualCustomText) && (
                 <div className="sdb-verified-actual-row">
                   <span className="sdb-actual-label">{t.sdb_v_actual_label}:</span>
                   <span className="sdb-actual-text">
@@ -537,7 +660,7 @@ function BlockCard({
               )}
 
               {/* Practice Resume-Ability secondary link */}
-              {onNavigate && (
+              {verification.status === 'slip' && onNavigate && (
                 <button
                   id={`btn-practice-ra-${block.id}`}
                   type="button"
@@ -549,6 +672,33 @@ function BlockCard({
               )}
             </div>
           )}
+
+          {/* Action buttons: On Track | Slip */}
+          <div className="sdb-verify-actions">
+            {!verification && (
+              <span className="sdb-verify-status-label">{t.sdb_v_not_reported}</span>
+            )}
+            <div className="sdb-verify-btn-group">
+              <button
+                id={`btn-verify-ontrack-${block.id}`}
+                type="button"
+                className={`sdb-verify-btn sdb-verify-btn--ontrack ${verification?.status === 'on-track' ? 'sdb-verify-btn--active' : ''}`}
+                onClick={onVerifyOnTrack}
+                aria-pressed={verification?.status === 'on-track'}
+              >
+                ✓ {t.sdb_v_on_track}
+              </button>
+              <button
+                id={`btn-verify-slip-${block.id}`}
+                type="button"
+                className={`sdb-verify-btn sdb-verify-btn--slip ${verification?.status === 'slip' ? 'sdb-verify-btn--active' : ''}`}
+                onClick={onOpenSlipModal}
+                aria-pressed={verification?.status === 'slip'}
+              >
+                ⚠ {t.sdb_v_slip}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -688,11 +838,594 @@ function CopyDayModal({ sourceDayKey, weekly, onCopy, onCancel, t }: CopyDayModa
   );
 }
 
+// ── Profile Modals (Phase 26) ───────────────────────────────────────────────
+
+interface ProfileSwitcherModalProps {
+  isOpen: boolean;
+  activeProfileId: string;
+  profiles: StructureGoalProfile[];
+  onSelectProfile: (id: string) => void;
+  onOpenCreate: () => void;
+  onOpenEdit: (p: StructureGoalProfile) => void;
+  onOpenDelete: (p: StructureGoalProfile) => void;
+  onClose: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function ProfileSwitcherModal({
+  isOpen,
+  activeProfileId,
+  profiles,
+  onSelectProfile,
+  onOpenCreate,
+  onOpenEdit,
+  onOpenDelete,
+  onClose,
+  t,
+}: ProfileSwitcherModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const builtInProfiles = profiles.filter(p => p.type === 'builtin');
+  const customProfiles = profiles.filter(p => p.type === 'custom');
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-profile-switcher-title"
+    >
+      <div className="sdb-modal sdb-profile-modal" ref={modalRef} role="document">
+        <div className="sdb-modal-header">
+          <div className="sdb-profile-modal-header-title">
+            <span className="sdb-modal-icon">🎯</span>
+            <h2 id="sdb-profile-switcher-title" className="sdb-modal-title">
+              {t.sdb_profile_modal_title}
+            </h2>
+          </div>
+          <button
+            id="btn-close-profile-modal"
+            type="button"
+            className="sdb-modal-close"
+            onClick={onClose}
+            aria-label={t.commit_cancel}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body sdb-profile-modal-body">
+          {/* Built-in Profiles Section */}
+          <div className="sdb-profile-section">
+            <h3 className="sdb-profile-section-title">
+              <span>🌟</span>
+              <span>{t.sdb_profile_builtin_section}</span>
+            </h3>
+            <div className="sdb-profile-list">
+              {builtInProfiles.map(p => {
+                const isActive = p.id === activeProfileId;
+                const displayName = getGoalDisplayName(p, t);
+                const displayDesc = getGoalDisplayDescription(p, t);
+
+                return (
+                  <div
+                    key={p.id}
+                    id={`profile-card-${p.id}`}
+                    className={`sdb-profile-item ${isActive ? 'sdb-profile-item--active' : ''}`}
+                  >
+                    <div className="sdb-profile-item-header">
+                      <div className="sdb-profile-item-title-wrap">
+                        <span className="sdb-profile-item-name">{displayName}</span>
+                        <span className="sdb-goal-type-badge sdb-goal-type-badge--builtin">
+                          {t.sdb_profile_built_in_badge}
+                        </span>
+                        {isActive && (
+                          <span className="sdb-profile-active-tag">
+                            ✓ {t.sdb_profile_active_label}
+                          </span>
+                        )}
+                      </div>
+                      {!isActive && (
+                        <button
+                          id={`btn-select-profile-${p.id}`}
+                          type="button"
+                          className="sdb-profile-select-btn"
+                          onClick={() => onSelectProfile(p.id)}
+                        >
+                          {t.sdb_profile_select_btn}
+                        </button>
+                      )}
+                    </div>
+                    {displayDesc && (
+                      <p className="sdb-profile-item-desc">{displayDesc}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Profiles Section */}
+          <div className="sdb-profile-section">
+            <h3 className="sdb-profile-section-title">
+              <span>✏️</span>
+              <span>{t.sdb_profile_custom_section}</span>
+            </h3>
+            {customProfiles.length === 0 ? (
+              <p className="sdb-profile-empty-hint">{t.sdb_profile_no_custom_hint}</p>
+            ) : (
+              <div className="sdb-profile-list">
+                {customProfiles.map(p => {
+                  const isActive = p.id === activeProfileId;
+
+                  return (
+                    <div
+                      key={p.id}
+                      id={`profile-card-${p.id}`}
+                      className={`sdb-profile-item ${isActive ? 'sdb-profile-item--active' : ''}`}
+                    >
+                      <div className="sdb-profile-item-header">
+                        <div className="sdb-profile-item-title-wrap">
+                          <span className="sdb-profile-item-name">{p.name}</span>
+                          <span className="sdb-goal-type-badge sdb-goal-type-badge--custom">
+                            {t.sdb_profile_custom_badge}
+                          </span>
+                          {isActive && (
+                            <span className="sdb-profile-active-tag">
+                              ✓ {t.sdb_profile_active_label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {p.description && (
+                        <p className="sdb-profile-item-desc">{p.description}</p>
+                      )}
+                      <div className="sdb-profile-item-actions">
+                        {!isActive && (
+                          <button
+                            id={`btn-select-profile-${p.id}`}
+                            type="button"
+                            className="sdb-profile-select-btn"
+                            onClick={() => onSelectProfile(p.id)}
+                          >
+                            {t.sdb_profile_select_btn}
+                          </button>
+                        )}
+                        <button
+                          id={`btn-edit-profile-${p.id}`}
+                          type="button"
+                          className="sdb-profile-edit-btn"
+                          onClick={() => onOpenEdit(p)}
+                        >
+                          ✎ {t.sdb_profile_edit_btn}
+                        </button>
+                        <button
+                          id={`btn-delete-profile-${p.id}`}
+                          type="button"
+                          className="sdb-profile-delete-btn"
+                          onClick={() => onOpenDelete(p)}
+                        >
+                          🗑 {t.sdb_profile_delete_btn}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="sdb-modal-footer sdb-profile-modal-footer">
+          <button
+            id="btn-open-create-profile"
+            type="button"
+            className="sdb-btn sdb-btn--primary"
+            onClick={onOpenCreate}
+          >
+            <span>+</span>
+            <span>{t.sdb_profile_create_btn}</span>
+          </button>
+          <button
+            id="btn-close-profile-switcher"
+            type="button"
+            className="sdb-btn sdb-btn--cancel"
+            onClick={onClose}
+          >
+            {t.commit_cancel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface CreateProfileModalProps {
+  isOpen: boolean;
+  onSave: (name: string, description: string, cloneCurrent: boolean) => void;
+  onClose: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function CreateProfileModal({ isOpen, onSave, onClose, t }: CreateProfileModalProps) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [cloneCurrent, setCloneCurrent] = useState(true);
+  const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName('');
+      setDescription('');
+      setCloneCurrent(true);
+      setError('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = name.trim();
+    if (!cleanName) {
+      setError(t.sdb_profile_name_required);
+      return;
+    }
+    onSave(cleanName, description.trim(), cloneCurrent);
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-create-profile-title"
+    >
+      <div className="sdb-modal sdb-profile-form-modal" ref={modalRef} role="document">
+        <form onSubmit={handleSubmit}>
+          <div className="sdb-modal-header">
+            <h2 id="sdb-create-profile-title" className="sdb-modal-title">
+              {t.sdb_profile_create_modal_title}
+            </h2>
+            <button
+              id="btn-close-create-profile-modal"
+              type="button"
+              className="sdb-modal-close"
+              onClick={onClose}
+              aria-label={t.commit_cancel}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="sdb-modal-body">
+            {error && <div className="sdb-field-error" role="alert">{error}</div>}
+
+            <div className="sdb-field-group">
+              <label htmlFor="input-create-profile-name" className="sdb-field-label">
+                {t.sdb_profile_name_label} *
+              </label>
+              <input
+                id="input-create-profile-name"
+                type="text"
+                className="sdb-field-input"
+                value={name}
+                onChange={e => {
+                  setName(e.target.value);
+                  if (error) setError('');
+                }}
+                placeholder={t.sdb_profile_name_placeholder}
+                maxLength={60}
+                autoFocus
+              />
+            </div>
+
+            <div className="sdb-field-group">
+              <label htmlFor="input-create-profile-desc" className="sdb-field-label">
+                {t.sdb_profile_desc_label}
+              </label>
+              <textarea
+                id="input-create-profile-desc"
+                className="sdb-field-input sdb-field-textarea"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder={t.sdb_profile_desc_placeholder}
+                maxLength={200}
+                rows={3}
+              />
+            </div>
+
+            <div className="sdb-profile-checkbox-wrap">
+              <label className="sdb-checkbox-label">
+                <input
+                  id="chk-create-profile-clone"
+                  type="checkbox"
+                  checked={cloneCurrent}
+                  onChange={e => setCloneCurrent(e.target.checked)}
+                />
+                <span>{t.sdb_profile_clone_from_active}</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="sdb-modal-footer">
+            <button
+              id="btn-cancel-create-profile"
+              type="button"
+              className="sdb-btn sdb-btn--cancel"
+              onClick={onClose}
+            >
+              {t.commit_cancel}
+            </button>
+            <button
+              id="btn-confirm-create-profile"
+              type="submit"
+              className="sdb-btn sdb-btn--save"
+            >
+              {t.sdb_profile_create_btn}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+interface EditProfileModalProps {
+  profile: StructureGoalProfile | null;
+  onSave: (profileId: string, name: string, description: string) => void;
+  onClose: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function EditProfileModal({ profile, onSave, onClose, t }: EditProfileModalProps) {
+  const [name, setName] = useState(profile?.name ?? '');
+  const [description, setDescription] = useState(profile?.description ?? '');
+  const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name);
+      setDescription(profile.description ?? '');
+      setError('');
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (profile) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [profile, onClose]);
+
+  if (!profile) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = name.trim();
+    if (!cleanName) {
+      setError(t.sdb_profile_name_required);
+      return;
+    }
+    onSave(profile.id, cleanName, description.trim());
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-edit-profile-title"
+    >
+      <div className="sdb-modal sdb-profile-form-modal" ref={modalRef} role="document">
+        <form onSubmit={handleSubmit}>
+          <div className="sdb-modal-header">
+            <h2 id="sdb-edit-profile-title" className="sdb-modal-title">
+              {t.sdb_profile_edit_modal_title}
+            </h2>
+            <button
+              id="btn-close-edit-profile-modal"
+              type="button"
+              className="sdb-modal-close"
+              onClick={onClose}
+              aria-label={t.commit_cancel}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="sdb-modal-body">
+            {error && <div className="sdb-field-error" role="alert">{error}</div>}
+
+            <div className="sdb-field-group">
+              <label htmlFor="input-edit-profile-name" className="sdb-field-label">
+                {t.sdb_profile_name_label} *
+              </label>
+              <input
+                id="input-edit-profile-name"
+                type="text"
+                className="sdb-field-input"
+                value={name}
+                onChange={e => {
+                  setName(e.target.value);
+                  if (error) setError('');
+                }}
+                placeholder={t.sdb_profile_name_placeholder}
+                maxLength={60}
+                autoFocus
+              />
+            </div>
+
+            <div className="sdb-field-group">
+              <label htmlFor="input-edit-profile-desc" className="sdb-field-label">
+                {t.sdb_profile_desc_label}
+              </label>
+              <textarea
+                id="input-edit-profile-desc"
+                className="sdb-field-input sdb-field-textarea"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder={t.sdb_profile_desc_placeholder}
+                maxLength={200}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="sdb-modal-footer">
+            <button
+              id="btn-cancel-edit-profile"
+              type="button"
+              className="sdb-btn sdb-btn--cancel"
+              onClick={onClose}
+            >
+              {t.commit_cancel}
+            </button>
+            <button
+              id="btn-confirm-edit-profile"
+              type="submit"
+              className="sdb-btn sdb-btn--save"
+            >
+              {t.commit_save}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+interface DeleteProfileModalProps {
+  profile: StructureGoalProfile | null;
+  isActive: boolean;
+  onConfirm: (profileId: string) => void;
+  onClose: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function DeleteProfileModal({
+  profile,
+  isActive,
+  onConfirm,
+  onClose,
+  t,
+}: DeleteProfileModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (profile) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [profile, onClose]);
+
+  if (!profile) return null;
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-delete-profile-title"
+    >
+      <div className="sdb-modal sdb-confirm-modal" role="document">
+        <div className="sdb-modal-header">
+          <h2 id="sdb-delete-profile-title" className="sdb-modal-title">
+            ⚠️ {t.sdb_profile_delete_confirm_title}
+          </h2>
+          <button
+            id="btn-close-delete-profile-modal"
+            type="button"
+            className="sdb-modal-close"
+            onClick={onClose}
+            aria-label={t.commit_cancel}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body">
+          <div className="sdb-confirm-icon">🗑️</div>
+          <p className="sdb-confirm-prompt">
+            <strong>{profile.name}</strong>
+          </p>
+          {isActive ? (
+            <div className="sdb-delete-active-warning">
+              <span className="sdb-warning-icon">⚠️</span>
+              <p>{t.sdb_profile_delete_active_warning}</p>
+            </div>
+          ) : (
+            <p className="sdb-confirm-prompt">{t.sdb_profile_delete_confirm}</p>
+          )}
+        </div>
+
+        <div className="sdb-modal-footer">
+          <button
+            id="btn-cancel-delete-profile"
+            type="button"
+            className="sdb-btn sdb-btn--cancel"
+            onClick={onClose}
+          >
+            {t.commit_cancel}
+          </button>
+          <button
+            id="btn-confirm-delete-profile"
+            type="button"
+            className="sdb-btn sdb-btn--delete-danger"
+            onClick={() => onConfirm(profile.id)}
+          >
+            {t.sdb_profile_delete_btn}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function StructuredDietScreen({ onNavigate }: StructuredDietScreenProps) {
+export default function StructuredDietScreen({ onNavigate, onBack }: StructuredDietScreenProps) {
   const { t } = useTranslation();
-  const [weekly, setWeekly] = useState<WeeklyStructuredDiet>(() => loadWeeklyDiet());
+  const [dietStore, setDietStore] = useState<StructureDietStore>(() => loadDietStore());
+  const activeProfile = getActiveProfile(dietStore);
+  const [weekly, setWeekly] = useState<WeeklyStructuredDiet>(() => activeProfile.diet);
+  const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
+  const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<StructureGoalProfile | null>(null);
+  const [deletingProfile, setDeletingProfile] = useState<StructureGoalProfile | null>(null);
+
   const [selectedDayKey, setSelectedDayKey] = useState<DayKey>(() => getLocalTodayKey());
   const [editingBlock, setEditingBlock] = useState<StructuredDietBlock | null | 'new'>(null);
   const [editingName, setEditingName] = useState(false);
@@ -713,6 +1446,55 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
   const todayKey = getLocalTodayKey();
   const isToday = selectedDayKey === todayKey;
   const currentDay = getDayPlan(weekly, selectedDayKey);
+  const isReviewCompletedToday = hasCompletedDailyReview(getLocalDateKey(), activeProfile.id);
+
+  const handleHeaderBack = () => {
+    if (showProfileSwitcher) {
+      setShowProfileSwitcher(false);
+      return;
+    }
+    if (showCreateProfileModal) {
+      setShowCreateProfileModal(false);
+      return;
+    }
+    if (editingProfile) {
+      setEditingProfile(null);
+      return;
+    }
+    if (deletingProfile) {
+      setDeletingProfile(null);
+      return;
+    }
+    if (editingBlock) {
+      setEditingBlock(null);
+      return;
+    }
+    if (slipModalBlock) {
+      setSlipModalBlock(null);
+      return;
+    }
+    if (showTemplateModal) {
+      setShowTemplateModal(false);
+      return;
+    }
+    if (showQuickBuildModal) {
+      setShowQuickBuildModal(false);
+      return;
+    }
+    if (showCopyModal) {
+      setShowCopyModal(false);
+      return;
+    }
+    if (showUnstructuredConfirmModal) {
+      setShowUnstructuredConfirmModal(false);
+      return;
+    }
+    if (onBack) {
+      onBack();
+    } else {
+      onNavigate('home');
+    }
+  };
 
   // Reload verifications whenever needed
   const refreshVerifications = useCallback(() => {
@@ -720,29 +1502,75 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
   }, []);
 
   // ── Persist helper ─────────────────────────────────────────────────────────
-  const updateWeekly = useCallback((updater: (w: WeeklyStructuredDiet) => WeeklyStructuredDiet) => {
+  const updateWeekly = (updater: (w: WeeklyStructuredDiet) => WeeklyStructuredDiet) => {
     setWeekly(prev => {
       const next = updater({ ...prev });
       saveWeeklyDiet(next);
+      setDietStore(loadDietStore());
       return next;
     });
-  }, []);
-
-  // ── Plan Name edit ─────────────────────────────────────────────────────────
-  const commitName = () => {
-    const trimmed = nameText.trim();
-    const finalName = trimmed || t.sdb_default_plan_name || 'My Structured Diet';
-    setNameText(finalName);
-    updateWeekly(w => ({ ...w, planName: finalName }));
-    setEditingName(false);
   };
 
-  // ── Day Mode toggle ────────────────────────────────────────────────────────
+  // ── Profile actions (Phase 26) ─────────────────────────────────────────────
+  const handleSelectProfile = (profileId: string) => {
+    const updated = setActiveProfile(profileId);
+    setDietStore(loadDietStore());
+    setWeekly(updated.diet);
+    setNameText(updated.diet.planName);
+    setShowProfileSwitcher(false);
+    playFeedback('neutral');
+  };
+
+  const handleCreateProfile = (name: string, description: string, cloneCurrent: boolean) => {
+    const created = createCustomProfile({
+      name,
+      description: description || undefined,
+      cloneFromDiet: cloneCurrent ? weekly : undefined,
+    });
+    setDietStore(loadDietStore());
+    setWeekly(created.diet);
+    setNameText(created.diet.planName);
+    setShowCreateProfileModal(false);
+    setShowProfileSwitcher(false);
+    playFeedback('win');
+  };
+
+  const handleUpdateProfile = (profileId: string, name: string, description: string) => {
+    const updated = updateCustomProfile(profileId, { name, description });
+    const store = loadDietStore();
+    setDietStore(store);
+    if (store.activeProfileId === profileId && updated) {
+      setWeekly(updated.diet);
+      setNameText(updated.diet.planName);
+    }
+    setEditingProfile(null);
+    playFeedback('neutral');
+  };
+
+  const handleDeleteProfile = (profileId: string) => {
+    const result = deleteCustomProfile(profileId);
+    setDietStore(loadDietStore());
+    setWeekly(result.newActiveProfile.diet);
+    setNameText(result.newActiveProfile.diet.planName);
+    setDeletingProfile(null);
+    playFeedback('neutral');
+  };
+
   const handleSetMode = (mode: DayMode) => {
     updateWeekly(w => setDayMode(w, selectedDayKey, mode));
   };
 
-  // ── Quick Build actions ──────────────────────────────────────────────────
+  const commitName = () => {
+    const trimmed = nameText.trim();
+    if (trimmed) {
+      updateWeekly(w => ({ ...w, planName: trimmed }));
+    } else {
+      setNameText(weekly.planName);
+    }
+    setEditingName(false);
+  };
+
+  // ── Quick Build actions (Task 5: Day-level Quick Build) ────────────────────
   const handleOpenQuickBuild = () => {
     if (currentDay.mode === 'unstructured') {
       setShowUnstructuredConfirmModal(true);
@@ -751,7 +1579,10 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
     }
   };
 
-  const handleQuickBuildConfirm = (newBlocks: StructuredDietBlock[], mode: 'add' | 'replace') => {
+  const handleQuickBuildConfirm = (
+    newBlocks: StructuredDietBlock[],
+    mode: 'add' | 'replace'
+  ) => {
     updateWeekly(w =>
       updateDayPlan(w, selectedDayKey, day => {
         const combined = mode === 'add' ? [...day.blocks, ...newBlocks] : [...newBlocks];
@@ -810,6 +1641,34 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
     );
   };
 
+  // ── Quick Edit block action ────────────────────────────────────────────────
+  const handleQuickUpdateBlock = (blockId: string, updates: Partial<StructuredDietBlock>) => {
+    // 1. Snapshot yesterday / past date if needed to guarantee history immutability
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = getLocalDateKey(yesterdayDate);
+
+    updateWeekly(prevWeekly => {
+      let nextWeekly = prevWeekly;
+      if (!nextWeekly.historySnapshots || !nextWeekly.historySnapshots[yesterdayKey]) {
+        nextWeekly = snapshotHistoryDate(nextWeekly, yesterdayKey);
+      }
+      return updateDayPlan(nextWeekly, selectedDayKey, day => {
+        const nextBlocks = day.blocks.map(b => {
+          if (b.id !== blockId) return b;
+          return {
+            ...b,
+            ...updates,
+          };
+        });
+        return {
+          ...day,
+          blocks: sortBlocks(nextBlocks),
+        };
+      });
+    });
+  };
+
   // ── Copy day action ────────────────────────────────────────────────────────
   const handleExecuteCopy = (targets: DayKey[]) => {
     updateWeekly(w => copyDayPlan(w, selectedDayKey, targets));
@@ -822,10 +1681,24 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
 
   // ── Verification actions ───────────────────────────────────────────────────
   const handleVerifyOnTrack = (block: StructuredDietBlock) => {
+    const existing = todayVerification?.entries.find(e => e.plannedBlockId === block.id);
+    if (existing?.status === 'on-track') {
+      return;
+    }
+    const dateKey = getLocalDateKey();
     saveBlockVerification({
       plannedBlock: block,
       status: 'on-track',
       sourcePlanName: weekly.planName,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
+    });
+    recordScoreEvent({
+      activityType: 'DIET_ON_TRACK',
+      dateKey,
+      sourceId: `diet_block_${dateKey}_${block.id}`,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
     });
     playFeedback('win');
     refreshVerifications();
@@ -833,12 +1706,22 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
 
   const handleSaveSlipVerification = (actualItems: string[], customText: string) => {
     if (!slipModalBlock) return;
+    const dateKey = getLocalDateKey();
     saveBlockVerification({
       plannedBlock: slipModalBlock,
       status: 'slip',
       actualItems,
       actualCustomText: customText,
       sourcePlanName: weekly.planName,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
+    });
+    recordScoreEvent({
+      activityType: 'SLIP_REPORTED',
+      dateKey,
+      sourceId: `diet_block_${dateKey}_${slipModalBlock.id}`,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
     });
     setSlipModalBlock(null);
     refreshVerifications();
@@ -868,7 +1751,7 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
     <div className="screen sdb-screen">
       <div className="sdb-inner">
         <ScreenHeader
-          onBack={() => onNavigate('commitment')}
+          onBack={handleHeaderBack}
           onHome={() => onNavigate('home')}
         />
 
@@ -882,6 +1765,81 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
             <h1 className="sdb-heading">{t.sdb_heading}</h1>
             <p className="sdb-sub">{t.sdb_sub}</p>
             <p className="sdb-desc-hint">{t.sda_term_sd_def}</p>
+          </div>
+
+          {/* ── Structure Goal / Master Profile Card (Phase 26) ── */}
+          <div className="sdb-goal-card" id="sdb-goal-card">
+            <div className="sdb-goal-top">
+              <div className="sdb-goal-badge-wrap">
+                <span className="sdb-goal-icon" aria-hidden="true">🎯</span>
+                <span className="sdb-goal-badge-label">{t.sdb_profile_title}</span>
+                <span className={`sdb-goal-type-badge ${activeProfile.type === 'builtin' ? 'sdb-goal-type-badge--builtin' : 'sdb-goal-type-badge--custom'}`}>
+                  {activeProfile.type === 'builtin' ? t.sdb_profile_built_in_badge : t.sdb_profile_custom_badge}
+                </span>
+              </div>
+              <button
+                id="btn-profile-switcher"
+                type="button"
+                className="sdb-goal-switcher-btn"
+                onClick={() => setShowProfileSwitcher(true)}
+                title={t.sdb_profile_switch_btn}
+              >
+                <span>🔄</span>
+                <span>{t.sdb_profile_switch_btn}</span>
+              </button>
+            </div>
+
+            <div className="sdb-goal-details">
+              <div className="sdb-goal-name-row">
+                <h2 className="sdb-goal-name" id="sdb-active-goal-name">
+                  {getGoalDisplayName(activeProfile, t)}
+                </h2>
+                {activeProfile.type === 'custom' && (
+                  <button
+                    id="btn-edit-active-profile"
+                    type="button"
+                    className="sdb-icon-btn sdb-goal-edit-btn"
+                    onClick={() => setEditingProfile(activeProfile)}
+                    title={t.sdb_profile_edit_btn}
+                    aria-label={t.sdb_profile_edit_btn}
+                  >
+                    ✎
+                  </button>
+                )}
+              </div>
+              {getGoalDisplayDescription(activeProfile, t) && (
+                <p className="sdb-goal-desc">{getGoalDisplayDescription(activeProfile, t)}</p>
+              )}
+            </div>
+          </div>
+
+          {/* ── Daily Review Entry Point (Phase 27) ── */}
+          <div className="sdb-daily-review-card" id="sdb-daily-review-card">
+            <div className="sdb-daily-review-left">
+              <div className="sdb-daily-review-badge-row">
+                <span className="sdb-daily-review-icon">📝</span>
+                <span className="sdb-daily-review-title">{t.dr_entry_title}</span>
+                <span
+                  className={`sdb-daily-review-status-badge ${
+                    isReviewCompletedToday
+                      ? 'sdb-daily-review-status-badge--completed'
+                      : 'sdb-daily-review-status-badge--pending'
+                  }`}
+                >
+                  {isReviewCompletedToday ? t.dr_entry_badge_completed : t.dr_entry_badge_pending}
+                </span>
+              </div>
+              <p className="sdb-daily-review-sub">{t.dr_entry_subtitle}</p>
+            </div>
+            <button
+              id="btn-open-daily-review"
+              type="button"
+              className="sdb-daily-review-btn"
+              onClick={() => onNavigate('daily-review')}
+            >
+              <span>{t.dr_entry_action}</span>
+              <span aria-hidden="true">→</span>
+            </button>
           </div>
 
           {/* ── Overall Weekly Plan Name ── */}
@@ -982,16 +1940,6 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
 
               <div className="sdb-day-actions-header">
                 <button
-                  id="btn-sdb-quick-build-header"
-                  type="button"
-                  className="sdb-quick-build-trigger-btn"
-                  onClick={handleOpenQuickBuild}
-                  title={t.sdb_quick_build}
-                >
-                  <span>⚡</span>
-                  <span className="sdb-qb-btn-text">{t.sdb_quick_build}</span>
-                </button>
-                <button
                   id="btn-sdb-templates-header"
                   type="button"
                   className="sdb-templates-trigger-btn"
@@ -1000,6 +1948,16 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                 >
                   <span>📑</span>
                   <span className="sdb-tpl-btn-text">{t.sdb_templates}</span>
+                </button>
+                <button
+                  id="btn-sdb-quick-build-header"
+                  type="button"
+                  className="sdb-quick-build-trigger-btn"
+                  onClick={handleOpenQuickBuild}
+                  title={t.sdb_quick_build}
+                >
+                  <span>⚡</span>
+                  <span className="sdb-qb-btn-text">{t.sdb_quick_build}</span>
                 </button>
                 <button
                   id="btn-sdb-copy-day"
@@ -1067,20 +2025,20 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                 </div>
                 <div className="sdb-empty-actions">
                   <button
-                    id="btn-sdb-unstructured-qb"
-                    type="button"
-                    className="sdb-empty-qb-btn"
-                    onClick={handleOpenQuickBuild}
-                  >
-                    ⚡ {t.sdb_quick_build}
-                  </button>
-                  <button
                     id="btn-sdb-unstructured-tpl"
                     type="button"
                     className="sdb-empty-tpl-btn"
                     onClick={() => setShowTemplateModal(true)}
                   >
                     📑 {t.sdb_choose_template}
+                  </button>
+                  <button
+                    id="btn-sdb-unstructured-qb"
+                    type="button"
+                    className="sdb-empty-qb-btn"
+                    onClick={handleOpenQuickBuild}
+                  >
+                    ⚡ {t.sdb_quick_build}
                   </button>
                 </div>
               </div>
@@ -1109,6 +2067,8 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                       onOpenSlipModal={() => {}}
                       onClearStatus={() => {}}
                       onNavigate={onNavigate}
+                      onQuickUpdateTime={(startTime, endTime) => handleQuickUpdateBlock(block.id, { startTime, endTime })}
+                      onQuickUpdateDescription={(customText) => handleQuickUpdateBlock(block.id, { customText })}
                     />
                   ))}
                 </div>
@@ -1177,20 +2137,20 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                   <p className="sdb-empty-sub">{t.sdb_empty_sub}</p>
                   <div className="sdb-empty-actions">
                     <button
-                      id="btn-sdb-empty-quick-build"
-                      type="button"
-                      className="sdb-empty-qb-btn"
-                      onClick={handleOpenQuickBuild}
-                    >
-                      ⚡ {t.sdb_quick_build}
-                    </button>
-                    <button
                       id="btn-sdb-empty-template"
                       type="button"
                       className="sdb-empty-tpl-btn"
                       onClick={() => setShowTemplateModal(true)}
                     >
                       📑 {t.sdb_choose_template}
+                    </button>
+                    <button
+                      id="btn-sdb-empty-quick-build"
+                      type="button"
+                      className="sdb-empty-qb-btn"
+                      onClick={handleOpenQuickBuild}
+                    >
+                      ⚡ {t.sdb_quick_build}
                     </button>
                   </div>
                 </div>
@@ -1214,6 +2174,8 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
                         onOpenSlipModal={() => setSlipModalBlock(block)}
                         onClearStatus={() => handleClearStatus(block.id)}
                         onNavigate={onNavigate}
+                        onQuickUpdateTime={(startTime, endTime) => handleQuickUpdateBlock(block.id, { startTime, endTime })}
+                        onQuickUpdateDescription={(customText) => handleQuickUpdateBlock(block.id, { customText })}
                       />
                     );
                   })}
@@ -1402,6 +2364,53 @@ export default function StructuredDietScreen({ onNavigate }: StructuredDietScree
         selectedDayName={(t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string | undefined) ?? selectedDayKey}
         hasExistingDayBlocks={currentDay.blocks.length > 0}
         onSelectDayKey={setSelectedDayKey}
+      />
+
+      {/* ── Structure Goal Profile Switcher Modal ── */}
+      <ProfileSwitcherModal
+        isOpen={showProfileSwitcher}
+        activeProfileId={activeProfile.id}
+        profiles={dietStore.profiles}
+        onSelectProfile={handleSelectProfile}
+        onOpenCreate={() => {
+          setShowProfileSwitcher(false);
+          setShowCreateProfileModal(true);
+        }}
+        onOpenEdit={p => {
+          setShowProfileSwitcher(false);
+          setEditingProfile(p);
+        }}
+        onOpenDelete={p => {
+          setShowProfileSwitcher(false);
+          setDeletingProfile(p);
+        }}
+        onClose={() => setShowProfileSwitcher(false)}
+        t={t}
+      />
+
+      {/* ── Create Profile Modal ── */}
+      <CreateProfileModal
+        isOpen={showCreateProfileModal}
+        onSave={handleCreateProfile}
+        onClose={() => setShowCreateProfileModal(false)}
+        t={t}
+      />
+
+      {/* ── Edit Custom Profile Modal ── */}
+      <EditProfileModal
+        profile={editingProfile}
+        onSave={handleUpdateProfile}
+        onClose={() => setEditingProfile(null)}
+        t={t}
+      />
+
+      {/* ── Delete Profile Confirmation Modal ── */}
+      <DeleteProfileModal
+        profile={deletingProfile}
+        isActive={deletingProfile?.id === activeProfile.id}
+        onConfirm={handleDeleteProfile}
+        onClose={() => setDeletingProfile(null)}
+        t={t}
       />
     </div>
   );

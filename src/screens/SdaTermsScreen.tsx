@@ -5,9 +5,10 @@ import './SdaTermsScreen.css';
 
 interface SdaTermsScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function SdaTermsScreen({ onNavigate }: SdaTermsScreenProps) {
+export default function SdaTermsScreen({ onNavigate, onBack }: SdaTermsScreenProps) {
   const { t } = useTranslation();
 
   const terms = [
@@ -52,7 +53,7 @@ export default function SdaTermsScreen({ onNavigate }: SdaTermsScreenProps) {
   return (
     <div className="screen sda-terms-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 

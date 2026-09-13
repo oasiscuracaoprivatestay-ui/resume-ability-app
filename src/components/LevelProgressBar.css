@@ -1,0 +1,133 @@
+.level-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.85rem 1rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.level-progress-wrap--compact {
+  padding: 0.6rem 0.75rem;
+  gap: 0.4rem;
+}
+
+.level-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.level-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.level-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.level-badge-pill--max {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.level-xp-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary, #f9fafb);
+  letter-spacing: 0.01em;
+}
+
+.level-target-wrap {
+  font-size: 0.75rem;
+  color: var(--text-muted, #9ca3af);
+  text-align: right;
+}
+
+.level-max-tag {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.level-next-tag {
+  color: var(--text-secondary, #d1d5db);
+  font-weight: 500;
+}
+
+.level-next-target-xp {
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.7rem;
+}
+
+/* ── Progress Track ── */
+.level-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.level-progress-wrap--compact .level-track {
+  height: 6px;
+}
+
+.level-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.level-fill--max {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+}
+
+/* ── Footer ── */
+.level-progress-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--text-muted, #9ca3af);
+  gap: 0.5rem;
+}
+
+.level-remaining-text {
+  font-weight: 500;
+  color: var(--text-secondary, #d1d5db);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-pct-text {
+  font-weight: 700;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.level-badge-pill--max ~ .level-progress-footer .level-pct-text {
+  color: #f59e0b;
+}

@@ -2,6 +2,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PROGRAM_URL, FEEDBACK_EMAIL, FEEDBACK_SUBJECT } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
+import GlobalScoreBadge from '../components/GlobalScoreBadge';
 import './HomeScreen.css';
 
 interface HomeScreenProps {
@@ -35,6 +36,7 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           <span className="home-brand-sub">{t.home_brand}</span>
         </button>
         <div className="home-top-right">
+          <GlobalScoreBadge onNavigate={onNavigate} />
           <LanguageSelector />
           <button
             id="btn-header-reminders"
@@ -72,9 +74,6 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             {t.home_question}<br />
             <span className="accent-text">{t.home_question_accent}</span>
           </h1>
-          <p className="home-subtitle">
-            {t.home_subtitle}
-          </p>
         </div>
 
         <div className="home-actions">
@@ -125,6 +124,27 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span>{t.home_structured_diet}</span>
           </button>
 
+          {/* ── Main Menu Direct Access: Commitment & Non-Negotiables ── */}
+          <button
+            id="btn-main-commitment"
+            className="home-btn-action home-btn-action--commitment"
+            onClick={() => onNavigate('commitment')}
+          >
+            <span className="home-btn-icon">🛡️</span>
+            <span>{t.commit_label}</span>
+          </button>
+          <button
+            id="btn-main-non-negotiables"
+            className="home-btn-action home-btn-action--nn"
+            onClick={() => {
+              sessionStorage.setItem('commitment_focus', 'nn');
+              onNavigate('commitment');
+            }}
+          >
+            <span className="home-btn-icon">⭐</span>
+            <span>{t.commit_nn_section}</span>
+          </button>
+
           {/* ── Secondary CTAs — inline, never floating on home ── */}
           <div className="home-secondary-row">
             <button
@@ -172,53 +192,60 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
         </div>
       </div>
 
-      <nav className="home-nav">
+      <nav className="home-nav" aria-label="Bottom Navigation">
         <button
           id="nav-dashboard"
           className="nav-link"
           onClick={() => onNavigate('dashboard')}
+          aria-label={t.home_dashboard}
         >
-          {t.home_dashboard}
+          <span className="nav-icon" aria-hidden="true">📊</span>
+          <span className="nav-label">{t.home_dashboard}</span>
         </button>
-        <span className="nav-dot">·</span>
         <button
           id="nav-daily-audio"
           className="nav-link"
           onClick={() => onNavigate('daily-audio')}
+          aria-label={t.home_daily_audio}
         >
-          {t.home_daily_audio}
+          <span className="nav-icon" aria-hidden="true">🎧</span>
+          <span className="nav-label">{t.home_daily_audio}</span>
         </button>
-        <span className="nav-dot">·</span>
         <button
           id="nav-history"
           className="nav-link"
           onClick={() => onNavigate('history')}
+          aria-label={t.home_history}
         >
-          {t.home_history}
+          <span className="nav-icon" aria-hidden="true">🕒</span>
+          <span className="nav-label">{t.home_history}</span>
         </button>
-        <span className="nav-dot">·</span>
         <button
           id="nav-commitment"
           className="nav-link nav-link--commitment"
           onClick={() => onNavigate('commitment')}
+          aria-label={t.commit_label}
         >
-          {t.commit_label}
+          <span className="nav-icon" aria-hidden="true">🛡️</span>
+          <span className="nav-label">{t.commit_label}</span>
         </button>
-        <span className="nav-dot">·</span>
         <button
           id="nav-reminders"
           className="nav-link"
           onClick={() => onNavigate('notification-settings')}
+          aria-label={t.nav_reminders}
         >
-          {t.nav_reminders}
+          <span className="nav-icon" aria-hidden="true">🔔</span>
+          <span className="nav-label">{t.nav_reminders}</span>
         </button>
-        <span className="nav-dot">·</span>
         <button
           id="nav-settings"
           className="nav-link"
           onClick={() => onNavigate('settings')}
+          aria-label={t.nav_settings}
         >
-          {t.nav_settings}
+          <span className="nav-icon" aria-hidden="true">⚙️</span>
+          <span className="nav-label">{t.nav_settings}</span>
         </button>
       </nav>
 

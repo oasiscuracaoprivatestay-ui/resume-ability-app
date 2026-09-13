@@ -8,9 +8,10 @@ import './SettingsScreen.css';
 
 interface SettingsScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function SettingsScreen({ onNavigate }: SettingsScreenProps) {
+export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenProps) {
   const { lang, setLang, t } = useTranslation();
 
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -49,7 +50,7 @@ export default function SettingsScreen({ onNavigate }: SettingsScreenProps) {
     <div className="screen settings-screen">
       <div className="settings-inner">
         <ScreenHeader
-          onBack={() => onNavigate('home')}
+          onBack={onBack ? onBack : () => onNavigate('home')}
           onHome={() => onNavigate('home')}
         />
 

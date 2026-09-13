@@ -182,6 +182,46 @@
   gap: 0.5rem;
 }
 
+.sdb-block-time-quick-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  max-width: calc(100% - 40px);
+}
+
+.sdb-block-time-select {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: var(--success, #34d399);
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.sdb-block-time-select:hover,
+.sdb-block-time-select:focus {
+  background: rgba(52, 211, 153, 0.16);
+  border-color: var(--success, #34d399);
+  outline: none;
+}
+
+.sdb-block-time-select option {
+  background: #181c20;
+  color: #f1f5f9;
+}
+
+.sdb-block-time-sep {
+  color: var(--text-dim, #94a3b8);
+  font-weight: 700;
+  font-size: 0.85rem;
+  user-select: none;
+}
+
 .sdb-block-time {
   font-size: 0.95rem;
   font-weight: 700;
@@ -203,7 +243,7 @@
   flex-shrink: 0;
 }
 
-/* Phase 23 — Meal Description Row (Green, Uppercase, High Prominence) */
+/* Phase 23 & 26 — Meal Description Row (Green, Uppercase, High Prominence & Quick-Edit) */
 .sdb-block-desc-row {
   display: flex;
   align-items: flex-start;
@@ -215,6 +255,7 @@
   font-size: 1.05rem;
   line-height: 1.35;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .sdb-block-meal-desc {
@@ -225,6 +266,45 @@
   text-transform: uppercase;
   line-height: 1.35;
   word-break: break-word;
+}
+
+.sdb-block-meal-desc-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--success, #34d399);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  padding: 3px 6px;
+  resize: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  word-break: break-word;
+}
+
+.sdb-block-meal-desc-input:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sdb-block-meal-desc-input:focus {
+  background: rgba(52, 211, 153, 0.06);
+  border-color: rgba(52, 211, 153, 0.45);
+  outline: none;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.2);
+}
+
+.sdb-block-meal-desc-input::placeholder {
+  color: var(--text-dim, #64748b);
+  text-transform: none;
+  font-weight: 500;
 }
 
 /* Phase 23 — Customize Action Row (Orange, Below Description) */
@@ -1307,23 +1387,44 @@
   transform: translateY(-1px);
 }
 
-/* Verified Badges */
-.sdb-verified-badge {
+/* Prominent Active Selected Verification Button States */
+.sdb-verify-btn--ontrack.sdb-verify-btn--active {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #22c55e !important;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.45);
+  font-weight: 800;
+}
+
+.sdb-verify-btn--slip.sdb-verify-btn--active {
+  background: #ea580c !important;
+  color: #ffffff !important;
+  border-color: #f97316 !important;
+  box-shadow: 0 0 14px rgba(234, 88, 12, 0.45);
+  font-weight: 800;
+}
+
+/* Verified Badges & Status Banners */
+.sdb-verified-badge,
+.sdb-verified-status-banner {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 8px 12px;
   border-radius: 10px;
+  margin-bottom: 8px;
 }
 
-.sdb-verified-badge--ontrack {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+.sdb-verified-badge--ontrack,
+.sdb-verified-status-banner--ontrack {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1.5px solid rgba(34, 197, 94, 0.35);
 }
 
-.sdb-verified-badge--slip {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.sdb-verified-badge--slip,
+.sdb-verified-status-banner--slip {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
 }
 
 .sdb-verified-badge-top {
@@ -1556,12 +1657,12 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(45, 212, 191, 0.08);
-  border: 1px solid rgba(45, 212, 191, 0.28);
+  background: rgba(45, 212, 191, 0.09);
+  border: 1.5px solid rgba(45, 212, 191, 0.38);
   color: var(--accent);
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1570,10 +1671,10 @@
 }
 
 .sdb-quick-build-trigger-btn:hover {
-  background: rgba(45, 212, 191, 0.16);
+  background: rgba(45, 212, 191, 0.18);
   border-color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
 }
 
 .sdb-add-actions-row,
@@ -1604,7 +1705,7 @@
   color: var(--accent);
   border-radius: 12px;
   padding: 12px 14px;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1624,17 +1725,16 @@
 }
 
 .sdb-empty-qb-btn {
-  margin-top: 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   background: rgba(45, 212, 191, 0.12);
-  border: 1px solid var(--accent);
+  border: 1.5px solid var(--accent);
   color: var(--accent);
   border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 0.84rem;
+  padding: 10px 18px;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1698,13 +1798,13 @@
 .sdb-templates-trigger-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: var(--text-primary);
-  padding: 5px 10px;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1.5px solid rgba(34, 197, 94, 0.42);
+  color: #4ade80;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1713,10 +1813,10 @@
 }
 
 .sdb-templates-trigger-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(34, 197, 94, 0.22);
+  border-color: #4ade80;
   transform: translateY(-1px);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.28);
 }
 
 .sdb-template-btn {
@@ -1725,12 +1825,12 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  color: var(--text-primary);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1.5px dashed rgba(34, 197, 94, 0.45);
+  color: #4ade80;
   border-radius: 12px;
   padding: 12px 14px;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1739,9 +1839,10 @@
 }
 
 .sdb-template-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #4ade80;
   transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.28);
 }
 
 .sdb-template-btn:active {
@@ -1761,12 +1862,12 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-primary);
+  background: rgba(34, 197, 94, 0.12);
+  border: 1.5px solid rgba(34, 197, 94, 0.45);
+  color: #4ade80;
   border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 0.84rem;
+  padding: 10px 18px;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1774,9 +1875,10 @@
 }
 
 .sdb-empty-tpl-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(34, 197, 94, 0.22);
+  border-color: #4ade80;
   transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
 }
 
 /* ── Unstructured Template Guidance (Task 6) ── */
@@ -1882,30 +1984,32 @@
     width: 100%;
   }
 
-  .sdb-quick-build-trigger-btn {
+  .sdb-templates-trigger-btn {
     grid-column: 1;
     width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 7px 8px;
-    font-size: 0.75rem;
+    padding: 8px 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
   }
 
-  .sdb-templates-trigger-btn {
+  .sdb-quick-build-trigger-btn {
     grid-column: 2;
     width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 7px 8px;
-    font-size: 0.75rem;
+    padding: 8px 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1919,14 +2023,14 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 7px 8px;
-    font-size: 0.75rem;
+    padding: 8px 8px;
+    font-size: 0.8rem;
     white-space: nowrap;
     box-sizing: border-box;
   }
 
   /* ── 2. Bottom Planning Actions Responsive Grid ──
-     Row 1: [ Quick Build ] [ Choose Template ]
+     Row 1: [ Choose Template ] [ Quick Build ]
      Row 2: [        + Add Time Block         ]
   */
   .sdb-add-actions-row,
@@ -1939,7 +2043,7 @@
     box-sizing: border-box;
   }
 
-  .sdb-quick-build-btn {
+  .sdb-template-btn {
     grid-column: 1;
     width: 100%;
     display: flex;
@@ -1947,14 +2051,14 @@
     justify-content: center;
     gap: 6px;
     padding: 11px 8px;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
   }
 
-  .sdb-template-btn {
+  .sdb-quick-build-btn {
     grid-column: 2;
     width: 100%;
     display: flex;
@@ -1962,7 +2066,7 @@
     justify-content: center;
     gap: 6px;
     padding: 11px 8px;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2094,5 +2198,522 @@
   }
 }
 
+/* ── Phase 26: Structure Goal / Master Profile Architecture ── */
 
+.sdb-goal-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sdb-goal-card:hover {
+  border-color: rgba(20, 184, 166, 0.4);
+  box-shadow: 0 6px 24px rgba(20, 184, 166, 0.12);
+}
+
+.sdb-goal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sdb-goal-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdb-goal-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.sdb-goal-badge-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.sdb-goal-type-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sdb-goal-type-badge--builtin {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.sdb-goal-type-badge--custom {
+  background: rgba(168, 85, 247, 0.16);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.sdb-goal-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sdb-goal-switcher-btn:hover {
+  background: rgba(20, 184, 166, 0.18);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.sdb-goal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sdb-goal-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdb-goal-name {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.sdb-goal-edit-btn {
+  font-size: 0.95rem;
+  padding: 3px 7px;
+  color: var(--text-muted);
+}
+
+.sdb-goal-edit-btn:hover {
+  color: var(--accent);
+}
+
+.sdb-goal-desc {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 2px 0 0 0;
+}
+
+/* ── Profile Switcher Modal ── */
+
+.sdb-profile-modal {
+  max-width: 580px;
+  width: 94vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sdb-profile-modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdb-profile-modal-body {
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sdb-profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sdb-profile-section-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdb-profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sdb-profile-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sdb-profile-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sdb-profile-item--active {
+  border-color: rgba(20, 184, 166, 0.6);
+  background: rgba(20, 184, 166, 0.09);
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.12);
+}
+
+.sdb-profile-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sdb-profile-item-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdb-profile-item-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sdb-profile-active-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--accent);
+  color: #042f2e;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sdb-profile-item-desc {
+  font-size: 0.81rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sdb-profile-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sdb-profile-select-btn {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sdb-profile-select-btn:hover {
+  background: var(--accent);
+  color: #042f2e;
+  border-color: var(--accent);
+}
+
+.sdb-profile-edit-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sdb-profile-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.sdb-profile-delete-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sdb-profile-delete-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.sdb-profile-empty-hint {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 4px 0;
+}
+
+.sdb-profile-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+}
+
+/* ── Profile Form Modals ── */
+
+.sdb-profile-form-modal {
+  max-width: 480px;
+  width: 92vw;
+}
+
+.sdb-profile-checkbox-wrap {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.sdb-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sdb-checkbox-label input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ── Delete Profile Warning ── */
+
+.sdb-delete-active-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+.sdb-delete-active-warning .sdb-warning-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.sdb-delete-active-warning p {
+  font-size: 0.84rem;
+  color: #fde68a;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.sdb-btn--delete-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+}
+
+.sdb-btn--delete-danger:hover {
+  background: #b91c1c !important;
+}
+
+/* ── Mobile responsiveness for Structure Goal ── */
+
+@media (max-width: 480px) {
+  .sdb-goal-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .sdb-goal-switcher-btn {
+    align-self: flex-start;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sdb-profile-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sdb-profile-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Daily Review Entry Card (Phase 27)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.sdb-daily-review-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.65), rgba(15, 23, 42, 0.75));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 14px;
+  padding: 0.95rem 1.15rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.sdb-daily-review-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+}
+
+.sdb-daily-review-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.sdb-daily-review-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.sdb-daily-review-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.sdb-daily-review-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  letter-spacing: -0.01em;
+}
+
+.sdb-daily-review-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+}
+
+.sdb-daily-review-status-badge--completed {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.sdb-daily-review-status-badge--pending {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.sdb-daily-review-sub {
+  font-size: 0.82rem;
+  color: var(--text-dim, #94a3b8);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sdb-daily-review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.3));
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.sdb-daily-review-btn:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(37, 99, 235, 0.45));
+  border-color: #3b82f6;
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+@media (max-width: 480px) {
+  .sdb-daily-review-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .sdb-daily-review-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
 

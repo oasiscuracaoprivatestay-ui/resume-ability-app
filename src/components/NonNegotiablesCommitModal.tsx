@@ -3,6 +3,7 @@ import { useTranslation } from '../i18n';
 import { saveCommitEvent } from '../utils/inControlStorage';
 import { generateId } from '../utils';
 import { playFeedback } from '../utils/feedback';
+import { recordScoreEvent } from '../utils/scoringEngine';
 import './NonNegotiablesCommitModal.css';
 
 interface NonNegotiablesCommitModalProps {
@@ -102,6 +103,11 @@ export default function NonNegotiablesCommitModal({
       id,
       timestamp: Date.now(),
       source: 'non-negotiables',
+    });
+
+    recordScoreEvent({
+      activityType: 'COMMITMENT_COMPLETE',
+      sourceId: `commitment_${id}`,
     });
 
     onCommitSuccess();

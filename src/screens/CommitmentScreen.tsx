@@ -17,14 +17,33 @@ import './CommitmentScreen.css';
 
 interface CommitmentScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) {
+export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScreenProps) {
   const { t } = useTranslation();
   const [data, setData] = useState<PledgeData>(() => loadPledge());
   const [showResetModal, setShowResetModal] = useState(false);
   const [showCommitModal, setShowCommitModal] = useState(false);
   const [hasCommittedNN, setHasCommittedNN] = useState(() => hasCommittedNonNegotiables());
+
+  // Direct access focus from Main Menu (e.g. Non-Negotiables button)
+  useEffect(() => {
+    try {
+      const focus = sessionStorage.getItem('commitment_focus');
+      if (focus === 'nn') {
+        sessionStorage.removeItem('commitment_focus');
+        setTimeout(() => {
+          const el = document.getElementById('section-non-negotiables');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 120);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Listen to stats reset event to update commitment button label
   useEffect(() => {
@@ -134,12 +153,28 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
     setAddingNN(false);
   };
 
+  const handleBack = () => {
+    if (showResetModal) {
+      setShowResetModal(false);
+      return;
+    }
+    if (showCommitModal) {
+      setShowCommitModal(false);
+      return;
+    }
+    if (onBack) {
+      onBack();
+    } else {
+      onNavigate('home');
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="screen commit-screen">
       <div className="commit-inner">
         <ScreenHeader
-          onBack={() => onNavigate('home')}
+          onBack={handleBack}
           onHome={() => onNavigate('home')}
         />
 
@@ -151,7 +186,7 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
           </div>
 
           {/* ════ WHY I'M DOING THIS ════ */}
-          <section className="commit-section" aria-label={t.commit_why_section}>
+          <section className="commit-section" aria-label={t.commit_why_section} id="section-why">
             <h2 className="commit-section-title">{t.commit_why_section}</h2>
 
             <div className="commit-list">
@@ -255,7 +290,7 @@ export default function CommitmentScreen({ onNavigate }: CommitmentScreenProps) 
           </section>
 
           {/* ════ NON-NEGOTIABLES ════ */}
-          <section className="commit-section" aria-label={t.commit_nn_section}>
+          <section className="commit-section" aria-label={t.commit_nn_section} id="section-non-negotiables">
             <div className="commit-section-header">
               <div className="commit-title-row">
                 <h2 className="commit-section-title">{t.commit_nn_section}</h2>

@@ -11,6 +11,8 @@ import {
   MOTIVATIONAL_AUDIO_TRACKS,
   type AudioTrackMetadata,
 } from '../data/motivationalAudio';
+import { recordScoreEvent } from '../utils/scoringEngine';
+import { getLocalDateKey } from '../utils/dietStorage';
 import './DailyAudioScreen.css';
 
 // ── Category pools ──
@@ -117,6 +119,12 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
   const handleTrackEnd = useCallback(() => {
     const slot = activeSlotRef.current;
     if (!slot) return;
+    if (lastSrcRef.current) {
+      recordScoreEvent({
+        activityType: 'MOTIVATION_CONSUMED',
+        sourceId: `mot_audio_${getLocalDateKey()}_${lastSrcRef.current}`,
+      });
+    }
     const next = nextTrackInSlot(slot, lastSrcRef.current);
     lastSrcRef.current = next;
     setActiveSrcBase(next);

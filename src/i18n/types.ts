@@ -590,6 +590,12 @@ export interface Translations {
   sdb_v_summary_breakdown: string;
   sdb_v_on_track_hint: string;
   sdb_v_slip_hint: string;
+  sdb_note_ate_off_plan: string;
+  sdb_note_late_night: string;
+  sdb_note_social_meal: string;
+  sdb_note_stress_eating: string;
+  sdb_note_extra_portion: string;
+  sdb_note_skipped_meal: string;
   sdb_today_unstructured_title: string;
   sdb_today_unstructured_desc: string;
   dash_diet_today_title: string;
@@ -906,6 +912,171 @@ export interface Translations {
   settings_privacy_modal_title: string;
   settings_privacy_content: string;
   nav_settings: string;
+
+  // ── Structure Goal / Master Profile System ──
+  sdb_profile_title: string;
+  sdb_profile_active_label: string;
+  sdb_profile_switch_btn: string;
+  sdb_profile_create_btn: string;
+  sdb_profile_edit_btn: string;
+  sdb_profile_delete_btn: string;
+  sdb_profile_select_btn: string;
+  sdb_profile_builtin_section: string;
+  sdb_profile_custom_section: string;
+  sdb_profile_no_custom_hint: string;
+  sdb_profile_name_required: string;
+  sdb_profile_built_in_badge: string;
+  sdb_profile_custom_badge: string;
+  sdb_profile_modal_title: string;
+  sdb_profile_create_modal_title: string;
+  sdb_profile_edit_modal_title: string;
+  sdb_profile_name_label: string;
+  sdb_profile_name_placeholder: string;
+  sdb_profile_desc_label: string;
+  sdb_profile_desc_placeholder: string;
+  sdb_profile_save_btn: string;
+  sdb_profile_delete_confirm_title: string;
+  sdb_profile_delete_confirm: string;
+  sdb_profile_delete_active_warning: string;
+  sdb_profile_clone_from_active: string;
+  sdb_profile_built_in_cannot_delete: string;
+
+  // 6 Built-In Goal Names & Descriptions
+  sdb_goal_rapid_fat_loss: string;
+  sdb_goal_rapid_fat_loss_desc: string;
+  sdb_goal_moderate_fat_loss: string;
+  sdb_goal_moderate_fat_loss_desc: string;
+  sdb_goal_protecting_current_loss: string;
+  sdb_goal_protecting_current_loss_desc: string;
+  sdb_goal_maintenance: string;
+  sdb_goal_maintenance_desc: string;
+  sdb_goal_vacation_maintenance: string;
+  sdb_goal_vacation_maintenance_desc: string;
+  sdb_goal_recovery_illness: string;
+  sdb_goal_recovery_illness_desc: string;
+
+  // ── Daily Review Feature ──
+  dr_entry_title: string;
+  dr_entry_subtitle: string;
+  dr_entry_action: string;
+  dr_entry_badge_completed: string;
+  dr_entry_badge_pending: string;
+  dr_screen_title: string;
+  dr_screen_subtitle: string;
+  dr_date_label: string;
+  dr_select_date_picker: string;
+  dr_associated_goal: string;
+  dr_no_diet_warning_title: string;
+  dr_no_diet_warning_desc: string;
+  dr_autosaved: string;
+  dr_save_finish_btn: string;
+  dr_edit_review_btn: string;
+  dr_done_back_btn: string;
+  dr_optional_note_label: string;
+  dr_optional_note_placeholder: string;
+  dr_add_note_btn: string;
+  dr_summary_title: string;
+  dr_summary_subtitle: string;
+  dr_summary_completed_badge: string;
+  dr_summary_key_reflections: string;
+
+  // Questions 1–10
+  dr_q1_text: string;
+  dr_q1_opt_all: string;
+  dr_q1_opt_most: string;
+  dr_q1_opt_partly: string;
+  dr_q1_opt_none: string;
+
+  dr_q2_text: string;
+  dr_q2_opt_yes: string;
+  dr_q2_opt_partly: string;
+  dr_q2_opt_no: string;
+
+  dr_q3_text: string;
+  dr_q3_opt_planned: string;
+  dr_q3_opt_mostly: string;
+  dr_q3_opt_reactive: string;
+  dr_q3_opt_no_flexible: string;
+
+  dr_q4_text: string;
+  dr_q4_opt_yes: string;
+  dr_q4_opt_minor: string;
+  dr_q4_opt_frequent: string;
+
+  dr_q5_text: string;
+  dr_q5_opt_replaced: string;
+  dr_q5_opt_added: string;
+  dr_q5_opt_both: string;
+  dr_q5_opt_none: string;
+
+  dr_q6_text: string;
+  dr_q6_opt_yes: string;
+  dr_q6_opt_delayed: string;
+  dr_q6_opt_no: string;
+
+  dr_q7_text: string;
+  dr_q7_opt_immediate: string;
+  dr_q7_opt_next_block: string;
+  dr_q7_opt_next_day: string;
+  dr_q7_opt_no_slip: string;
+
+  dr_q8_text: string;
+  dr_trigger_stress: string;
+  dr_trigger_social: string;
+  dr_trigger_visual: string;
+  dr_trigger_boredom: string;
+  dr_trigger_hunger: string;
+  dr_trigger_fatigue: string;
+  dr_trigger_celebration: string;
+  dr_trigger_none: string;
+
+  dr_q9_text: string;
+  dr_q9_opt_yes: string;
+  dr_q9_opt_partly: string;
+  dr_q9_opt_no: string;
+
+  dr_q10_text: string;
+  dr_q10_opt_dominant: string;
+  dr_q10_opt_recovering: string;
+  dr_q10_opt_at_risk: string;
+  dr_q10_opt_lost: string;
+
+  // ── Global Score, Progression, and Level-up ──
+  global_score_badge_today: string;
+  global_score_badge_level: string;
+  global_score_badge_title: string;
+  level_label: string;
+  level_max_reached: string;
+  level_progress_to_next: string;
+  level_xp_remaining: string;
+  level_max_description: string;
+  dash_progression_title: string;
+  dash_progression_subtitle: string;
+  dash_today_score_label: string;
+  dash_lifetime_xp_label: string;
+  dash_current_streak_label: string;
+  dash_longest_streak_label: string;
+  dash_total_active_days_label: string;
+  dash_score_breakdown_title: string;
+  dash_score_breakdown_empty: string;
+  dash_view_dashboard: string;
+  level_up_title: string;
+  level_up_subtitle: string;
+  level_up_continue: string;
+  score_cat_day_start: string;
+  score_cat_check_in: string;
+  score_cat_diet_on_track: string;
+  score_cat_slip_reported: string;
+  score_cat_recommit: string;
+  score_cat_daily_review: string;
+  score_cat_commitment: string;
+  score_cat_non_negotiables: string;
+  score_cat_why_review: string;
+  score_cat_diet_review: string;
+  score_cat_in_control: string;
+  score_cat_motivation: string;
+  score_cat_timer: string;
+  score_cat_consistency_bonus: string;
 }
 
 

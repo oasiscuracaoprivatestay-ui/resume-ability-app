@@ -5,6 +5,7 @@ import './TimerLearnScreen.css';
 
 interface TimerLearnScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
 // The four educational sections, keyed into i18n
@@ -15,13 +16,13 @@ const SECTIONS = [
   { icon: '✅', titleKey: 'tl_d_title', bodyKey: 'tl_d_body', delay: '0.2s' },
 ] as const;
 
-export default function TimerLearnScreen({ onNavigate }: TimerLearnScreenProps) {
+export default function TimerLearnScreen({ onNavigate, onBack }: TimerLearnScreenProps) {
   const { t } = useTranslation();
 
   return (
     <div className="screen tl-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 

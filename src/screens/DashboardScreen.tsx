@@ -18,6 +18,16 @@ import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
 import { getDailyVerificationStats } from '../utils/dietVerificationStorage';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
+import {
+  getTodayScore,
+  getDateScoreBreakdown,
+  SCORE_UPDATED_EVENT,
+  type ScoreActivityType,
+} from '../utils/scoringEngine';
+import {
+  getProgressionOverview,
+} from '../utils/progressionEngine';
+import LevelProgressBar from '../components/LevelProgressBar';
 import ResetStatsModal from '../components/ResetStatsModal';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
@@ -69,9 +79,10 @@ function getContextIcon(ctx: string): string {
 
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
+export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenProps) {
   const { t } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -79,8 +90,47 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
   useEffect(() => {
     const handleReset = () => setRefreshKey((k) => k + 1);
     window.addEventListener(STATS_RESET_EVENT, handleReset);
-    return () => window.removeEventListener(STATS_RESET_EVENT, handleReset);
+    window.addEventListener(SCORE_UPDATED_EVENT, handleReset);
+    return () => {
+      window.removeEventListener(STATS_RESET_EVENT, handleReset);
+      window.removeEventListener(SCORE_UPDATED_EVENT, handleReset);
+    };
   }, []);
+
+  const progressionOverview = useMemo(() => {
+    return getProgressionOverview();
+  }, [refreshKey]);
+
+  const todayScore = useMemo(() => {
+    return getTodayScore();
+  }, [refreshKey]);
+
+  const todayBreakdown = useMemo(() => {
+    return getDateScoreBreakdown();
+  }, [refreshKey]);
+
+  const categoryLabels: Record<ScoreActivityType, { label: string; icon: string }> = useMemo(() => ({
+    DAY_START: { label: t.score_cat_day_start, icon: '🌅' },
+    DAILY_CHECK_IN: { label: t.score_cat_check_in, icon: '✓' },
+    DIET_ON_TRACK: { label: t.score_cat_diet_on_track, icon: '🥗' },
+    SLIP_REPORTED: { label: t.score_cat_slip_reported, icon: '⚡' },
+    RECOMMIT: { label: t.score_cat_recommit, icon: '🔁' },
+    DAILY_REVIEW_COMPLETE: { label: t.score_cat_daily_review, icon: '📝' },
+    COMMITMENT_COMPLETE: { label: t.score_cat_commitment, icon: '🤝' },
+    NON_NEGOTIABLES_REVIEW: { label: t.score_cat_non_negotiables, icon: '🛡️' },
+    WHY_REVIEW: { label: t.score_cat_why_review, icon: '💡' },
+    STRUCTURED_DIET_REVIEW: { label: t.score_cat_diet_review, icon: '📋' },
+    I_AM_IN_CONTROL: { label: t.score_cat_in_control, icon: '✊' },
+    MOTIVATION_CONSUMED: { label: t.score_cat_motivation, icon: '🎧' },
+    TIMER_COMPLETED: { label: t.score_cat_timer, icon: '⏱️' },
+    CONSISTENCY_BONUS: { label: t.score_cat_consistency_bonus, icon: '🔥' },
+  }), [t]);
+
+  const activeCategories = useMemo(() => {
+    return (Object.entries(todayBreakdown) as [ScoreActivityType, number][])
+      .filter(([_, pts]) => pts > 0)
+      .sort((a, b) => b[1] - a[1]);
+  }, [todayBreakdown]);
 
   const data = useMemo(() => computeDashboard(loadSlips()), [refreshKey]);
 
@@ -126,7 +176,7 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
   return (
     <div className="screen dashboard-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 
@@ -207,6 +257,104 @@ export default function DashboardScreen({ onNavigate }: DashboardScreenProps) {
             </div>
           )}
         </div>
+
+        {/* ── Super Diet-Ability Progression Section ── */}
+        <section className="dash-prog-section" aria-label={t.dash_progression_title}>
+          <div className="dash-prog-header">
+            <span className="section-label">SUPER DIET-ABILITY</span>
+            <h2 className="section-heading">{t.dash_progression_title}</h2>
+            <p className="dash-prog-subtitle">{t.dash_progression_subtitle}</p>
+          </div>
+
+          {/* Primary Progression Cards */}
+          <div className="dash-prog-cards">
+            <div className="dash-prog-card dash-prog-card--today">
+              <span className="dash-prog-card-lbl">{t.dash_today_score_label}</span>
+              <div className="dash-prog-card-val-row">
+                <span className="dash-prog-card-val dash-prog-card-val--accent" id="dash-today-score-val">
+                  {todayScore}
+                </span>
+                <span className="dash-prog-card-unit">pts</span>
+              </div>
+            </div>
+
+            <div className="dash-prog-card dash-prog-card--level">
+              <span className="dash-prog-card-lbl">{t.level_label}</span>
+              <div className="dash-prog-card-val-row">
+                <span className="dash-prog-card-val dash-prog-card-val--gold" id="dash-current-level-val">
+                  {progressionOverview.isLevel10 ? '👑 10' : `${progressionOverview.currentLevel}`}
+                </span>
+              </div>
+            </div>
+
+            <div className="dash-prog-card dash-prog-card--xp">
+              <span className="dash-prog-card-lbl">{t.dash_lifetime_xp_label}</span>
+              <div className="dash-prog-card-val-row">
+                <span className="dash-prog-card-val" id="dash-lifetime-xp-val">
+                  {progressionOverview.lifetimeXp.toLocaleString()}
+                </span>
+                <span className="dash-prog-card-unit">XP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress to Next Level Indicator */}
+          <LevelProgressBar overview={progressionOverview} />
+
+          {/* Streak & Consistency Stats */}
+          <div className="dash-prog-streak-row">
+            <div className="dash-prog-streak-box">
+              <span className="dash-prog-streak-icon">🔥</span>
+              <span className="dash-prog-streak-val" id="dash-current-streak-val">
+                {progressionOverview.currentStreak}
+              </span>
+              <span className="dash-prog-streak-lbl">{t.dash_current_streak_label}</span>
+            </div>
+
+            <div className="dash-prog-streak-box">
+              <span className="dash-prog-streak-icon">⭐</span>
+              <span className="dash-prog-streak-val" id="dash-longest-streak-val">
+                {progressionOverview.longestStreak}
+              </span>
+              <span className="dash-prog-streak-lbl">{t.dash_longest_streak_label}</span>
+            </div>
+
+            <div className="dash-prog-streak-box">
+              <span className="dash-prog-streak-icon">📅</span>
+              <span className="dash-prog-streak-val" id="dash-active-days-val">
+                {progressionOverview.totalActiveDays}
+              </span>
+              <span className="dash-prog-streak-lbl">{t.dash_total_active_days_label}</span>
+            </div>
+          </div>
+
+          {/* Today's Points Breakdown */}
+          <div className="dash-breakdown-card">
+            <div className="dash-breakdown-header">
+              <span className="dash-breakdown-title">{t.dash_score_breakdown_title}</span>
+              <span className="dash-breakdown-total">{todayScore} pts</span>
+            </div>
+
+            {activeCategories.length === 0 ? (
+              <p className="dash-breakdown-empty">{t.dash_score_breakdown_empty}</p>
+            ) : (
+              <div className="dash-breakdown-list">
+                {activeCategories.map(([actType, pts]) => {
+                  const meta = categoryLabels[actType] || { label: actType, icon: '•' };
+                  return (
+                    <div key={actType} className="dash-breakdown-item">
+                      <div className="dash-breakdown-item-left">
+                        <span className="dash-breakdown-item-icon">{meta.icon}</span>
+                        <span className="dash-breakdown-item-label">{meta.label}</span>
+                      </div>
+                      <span className="dash-breakdown-item-pts">+{pts} pts</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* ── Daily Resume-Ability Score Hero Section ── */}
         <div className="resume-score-section">

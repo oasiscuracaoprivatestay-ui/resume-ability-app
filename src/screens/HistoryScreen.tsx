@@ -91,9 +91,10 @@ function getModeLabel(mode: string): string {
 
 interface HistoryScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
+export default function HistoryScreen({ onNavigate, onBack }: HistoryScreenProps) {
   const { t } = useTranslation();
 
   const [range, setRange] = useState<HistoryRange>('all');
@@ -143,7 +144,7 @@ export default function HistoryScreen({ onNavigate }: HistoryScreenProps) {
   return (
     <div className="screen history-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 

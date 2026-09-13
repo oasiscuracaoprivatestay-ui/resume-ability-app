@@ -13,9 +13,10 @@ import './SoundHapticsScreen.css';
 
 interface SoundHapticsScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function SoundHapticsScreen({ onNavigate }: SoundHapticsScreenProps) {
+export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsScreenProps) {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<FeedbackSettings>(() => loadFeedbackSettings());
   const [hapticsSupported, setHapticsSupported] = useState(true);
@@ -80,7 +81,7 @@ export default function SoundHapticsScreen({ onNavigate }: SoundHapticsScreenPro
     <div className="screen sound-haptics-screen">
       <div className="sound-haptics-inner">
         <ScreenHeader
-          onBack={() => onNavigate('settings')}
+          onBack={onBack ? onBack : () => onNavigate('settings')}
           onHome={() => onNavigate('home')}
         />
 

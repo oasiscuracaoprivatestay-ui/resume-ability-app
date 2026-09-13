@@ -617,3 +617,240 @@
   line-height: 1.45;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUPER DIET-ABILITY PROGRESSION SECTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dash-prog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.25rem 1.25rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.dash-prog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dash-prog-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── Primary KPI Cards ── */
+.dash-prog-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+.dash-prog-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-sizing: border-box;
+}
+
+.dash-prog-card--today {
+  border-left: 3px solid #10b981;
+}
+
+.dash-prog-card--level {
+  border-left: 3px solid #f59e0b;
+}
+
+.dash-prog-card--xp {
+  border-left: 3px solid #6366f1;
+}
+
+.dash-prog-card-lbl {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-prog-card-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.dash-prog-card-val {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.dash-prog-card-val--accent {
+  color: #10b981;
+}
+
+.dash-prog-card-val--gold {
+  color: #f59e0b;
+}
+
+.dash-prog-card-unit {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── Streak & Consistency Stats Row ── */
+.dash-prog-streak-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.dash-prog-streak-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-sm, 10px);
+  padding: 0.65rem 0.4rem;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.dash-prog-streak-icon {
+  font-size: 1.1rem;
+}
+
+.dash-prog-streak-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.dash-prog-streak-lbl {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* ── Today's Points Breakdown ── */
+.dash-breakdown-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dash-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 0.5rem;
+}
+
+.dash-breakdown-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.dash-breakdown-total {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.dash-breakdown-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0;
+  text-align: center;
+}
+
+.dash-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dash-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 0.25rem 0;
+}
+
+.dash-breakdown-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dash-breakdown-item-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.dash-breakdown-item-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.dash-breakdown-item-pts {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 0.82rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 430px) {
+  .dash-prog-cards {
+    gap: 0.45rem;
+  }
+  .dash-prog-card {
+    padding: 0.75rem 0.5rem;
+  }
+  .dash-prog-card-val {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .dash-prog-cards {
+    grid-template-columns: 1fr;
+  }
+  .dash-prog-card {
+    padding: 0.65rem 0.75rem;
+  }
+  .dash-prog-streak-row {
+    gap: 0.35rem;
+  }
+}
+
+
