@@ -1260,7 +1260,7 @@ export const en: Translations = {
   sdb_view_photo: 'View Photo',
   sdb_photo_preview_title: 'Meal / Beverage Photo',
   sdb_close_preview: 'Close',
-  sdb_err_process_photo: 'Unable to process this image. Please choose another.',
+  sdb_err_process_photo: 'Unable to add this photo. Please try another image.',
   sdb_err_save_photo: 'Unable to save this photo.',
   sdb_confirm_remove_photo: 'Remove this photo?',
 
@@ -1270,6 +1270,11 @@ export const en: Translations = {
   sdb_photo_counter: '{current} of {total}',
   sdb_photo_nav_prev: 'Previous',
   sdb_photo_nav_next: 'Next',
+
+  // ── Phase 6C: Android Gallery & Photo Error Keys ──
+  sdb_err_unsupported_format: "This photo format isn't supported on this device. Please choose a JPG, PNG, or WebP image.",
+  sdb_err_photo_too_large: 'This photo is too large to process. Please choose a smaller image.',
+  sdb_err_invalid_image: 'The selected file is not a supported image.',
 };
 
 

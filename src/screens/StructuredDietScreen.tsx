@@ -81,6 +81,8 @@ import {
   deleteFoodPhoto,
   preloadPhotos,
   isPhotoReferenced,
+  isValidImageFile,
+  getLocalizedPhotoErrorMessage,
 } from '../utils/photoStorage';
 import './StructuredDietScreen.css';
 
@@ -322,8 +324,8 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     if (!file) return;
     e.target.value = '';
 
-    if (!file.type.startsWith('image/')) {
-      setPhotoError(t.sdb_err_process_photo);
+    if (!isValidImageFile(file)) {
+      setPhotoError(t.sdb_err_invalid_image);
       return;
     }
 
@@ -339,7 +341,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
       }
     } catch (err) {
       console.error('Error saving photo:', err);
-      setPhotoError(t.sdb_err_save_photo);
+      setPhotoError(getLocalizedPhotoErrorMessage(err, t));
     } finally {
       setIsProcessingPhoto(false);
     }
@@ -356,8 +358,8 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     const targetIdx = replacingIndex;
     e.target.value = '';
 
-    if (!file.type.startsWith('image/')) {
-      setPhotoError(t.sdb_err_process_photo);
+    if (!isValidImageFile(file)) {
+      setPhotoError(t.sdb_err_invalid_image);
       return;
     }
 
@@ -384,7 +386,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
       }
     } catch (err) {
       console.error('Error replacing photo:', err);
-      setPhotoError(t.sdb_err_save_photo);
+      setPhotoError(getLocalizedPhotoErrorMessage(err, t));
     } finally {
       setIsProcessingPhoto(false);
       setReplacingIndex(null);
@@ -483,7 +485,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               ref={addFileInputRef}
               id="sdb-photo-file-input-add"
               type="file"
-              accept="image/*"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
               style={{ display: 'none' }}
               onChange={handleAddPhotoFileSelect}
             />
@@ -493,7 +495,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               ref={replaceFileInputRef}
               id="sdb-photo-file-input-replace"
               type="file"
-              accept="image/*"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
               style={{ display: 'none' }}
               onChange={handleReplacePhotoFileSelect}
             />
@@ -1066,7 +1068,17 @@ function BlockCard({
     return map;
   });
   const [isAddingPhoto, setIsAddingPhoto] = useState(false);
+  const [cardPhotoError, setCardPhotoError] = useState<string | null>(null);
+  const cardPhotoErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cardPhotoErrorTimeoutRef.current) {
+        clearTimeout(cardPhotoErrorTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -1088,7 +1100,19 @@ function BlockCard({
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    if (!file.type.startsWith('image/')) return;
+
+    if (cardPhotoErrorTimeoutRef.current) {
+      clearTimeout(cardPhotoErrorTimeoutRef.current);
+      cardPhotoErrorTimeoutRef.current = null;
+    }
+    setCardPhotoError(null);
+
+    if (!isValidImageFile(file)) {
+      setCardPhotoError(t.sdb_err_invalid_image);
+      cardPhotoErrorTimeoutRef.current = setTimeout(() => setCardPhotoError(null), 5000);
+      return;
+    }
+
     setIsAddingPhoto(true);
     try {
       const meta = await saveFoodPhoto(file);
@@ -1099,6 +1123,9 @@ function BlockCard({
       onQuickAddPhoto?.(block.id, meta);
     } catch (err) {
       console.error('Error adding photo directly:', err);
+      const msg = getLocalizedPhotoErrorMessage(err, t);
+      setCardPhotoError(msg);
+      cardPhotoErrorTimeoutRef.current = setTimeout(() => setCardPhotoError(null), 5000);
     } finally {
       setIsAddingPhoto(false);
     }
@@ -1275,10 +1302,33 @@ function BlockCard({
       <input
         ref={cardFileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
         style={{ display: 'none' }}
         onChange={handleCardPhotoSelect}
       />
+
+      {cardPhotoError && (
+        <div
+          className="sdb-block-photo-card-error"
+          role="alert"
+          onClick={() => setCardPhotoError(null)}
+          title="Click to dismiss"
+        >
+          <span className="sdb-block-photo-card-error-icon" aria-hidden="true">⚠️</span>
+          <span className="sdb-block-photo-card-error-text">{cardPhotoError}</span>
+          <button
+            type="button"
+            className="sdb-block-photo-card-error-close"
+            onClick={(e) => {
+              e.stopPropagation();
+              setCardPhotoError(null);
+            }}
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="sdb-block-desc-row">
         <div className="sdb-block-media-group">

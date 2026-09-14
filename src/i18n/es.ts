@@ -1247,7 +1247,7 @@ export const es: Translations = {
   sdb_view_photo: 'Ver Foto',
   sdb_photo_preview_title: 'Foto de Comida / Bebida',
   sdb_close_preview: 'Cerrar',
-  sdb_err_process_photo: 'No se pudo procesar esta imagen. Por favor, elige otra.',
+  sdb_err_process_photo: 'No se pudo agregar esta foto. Intenta con otra imagen.',
   sdb_err_save_photo: 'No se pudo guardar esta foto.',
   sdb_confirm_remove_photo: '¿Eliminar esta foto?',
 
@@ -1257,6 +1257,11 @@ export const es: Translations = {
   sdb_photo_counter: '{current} de {total}',
   sdb_photo_nav_prev: 'Anterior',
   sdb_photo_nav_next: 'Siguiente',
+
+  // ── Phase 6C: Android Gallery & Photo Error Keys ──
+  sdb_err_unsupported_format: 'Este formato de foto no es compatible con este dispositivo. Elige una imagen JPG, PNG o WebP.',
+  sdb_err_photo_too_large: 'Esta foto es demasiado grande para procesar. Elige una imagen más pequeña.',
+  sdb_err_invalid_image: 'El archivo seleccionado no es una imagen compatible.',
 };
 
 

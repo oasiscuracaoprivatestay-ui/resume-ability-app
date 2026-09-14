@@ -1164,6 +1164,11 @@ export interface Translations {
   sdb_photo_counter: string;
   sdb_photo_nav_prev: string;
   sdb_photo_nav_next: string;
+
+  // ── Phase 6C: Android Gallery & Photo Error Keys ──
+  sdb_err_unsupported_format: string;
+  sdb_err_photo_too_large: string;
+  sdb_err_invalid_image: string;
 }
 
 

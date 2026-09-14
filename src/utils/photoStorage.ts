@@ -54,84 +54,264 @@ function openPhotoDb(): Promise<IDBDatabase> {
   });
 }
 
+export const SUPPORTED_IMAGE_EXTENSIONS = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.heic',
+  '.heif',
+  '.gif',
+  '.avif',
+  '.bmp',
+] as const;
+
+export type PhotoErrorCode =
+  | 'not_image'
+  | 'unsupported_format'
+  | 'too_large'
+  | 'decode_failed'
+  | 'canvas_failed'
+  | 'storage_failed';
+
+export class PhotoProcessingError extends Error {
+  readonly code: PhotoErrorCode;
+  constructor(code: PhotoErrorCode, message?: string) {
+    super(message || code);
+    this.name = 'PhotoProcessingError';
+    this.code = code;
+  }
+}
+
 /**
- * Resize and compress an image client-side via HTML Canvas.
- * Caps maximum dimension to 1280px while preserving aspect ratio.
+ * Check if a file is an HEIC/HEIF photo.
+ */
+export function isHeicFile(file: File | Blob): boolean {
+  if (!file) return false;
+  if (file.type === 'image/heic' || file.type === 'image/heif') return true;
+  if ('name' in file && typeof file.name === 'string') {
+    const lower = file.name.toLowerCase();
+    return lower.endsWith('.heic') || lower.endsWith('.heif');
+  }
+  return false;
+}
+
+/**
+ * Robust image validation for Android Gallery and file pickers.
+ * Accepts files if:
+ * 1. MIME type is an image/* type, OR
+ * 2. MIME is empty / generic octet-stream (common in Android SAF) AND filename has a supported image extension.
+ * Rejects non-images (e.g. .txt, .pdf, audio/video).
+ */
+export function isValidImageFile(file: File | Blob): boolean {
+  if (!file) return false;
+
+  // 1. Valid image MIME
+  if (file.type && file.type.startsWith('image/')) {
+    return true;
+  }
+
+  // 2. Explicit non-image MIME -> reject immediately
+  if (
+    file.type &&
+    file.type !== 'application/octet-stream' &&
+    file.type !== 'binary/octet-stream' &&
+    !file.type.startsWith('image/')
+  ) {
+    return false;
+  }
+
+  // 3. Android Gallery / SAF missing or generic MIME -> inspect extension
+  if ('name' in file && typeof file.name === 'string' && file.name.trim().length > 0) {
+    const lower = file.name.toLowerCase();
+    return SUPPORTED_IMAGE_EXTENSIONS.some(ext => lower.endsWith(ext));
+  }
+
+  return false;
+}
+
+/**
+ * Resolve localized user-facing error message from photo error.
+ */
+export function getLocalizedPhotoErrorMessage(
+  err: unknown,
+  translations: {
+    sdb_err_invalid_image: string;
+    sdb_err_unsupported_format: string;
+    sdb_err_photo_too_large: string;
+    sdb_err_process_photo: string;
+    sdb_err_save_photo: string;
+  }
+): string {
+  if (err instanceof PhotoProcessingError) {
+    switch (err.code) {
+      case 'not_image':
+        return translations.sdb_err_invalid_image;
+      case 'unsupported_format':
+        return translations.sdb_err_unsupported_format;
+      case 'too_large':
+        return translations.sdb_err_photo_too_large;
+      case 'decode_failed':
+      case 'canvas_failed':
+        return translations.sdb_err_process_photo;
+      case 'storage_failed':
+        return translations.sdb_err_save_photo;
+      default:
+        return translations.sdb_err_process_photo;
+    }
+  }
+  return translations.sdb_err_process_photo;
+}
+
+/**
+ * Safe object URL decode fallback with guaranteed revocation.
+ */
+function decodeViaImageElement(file: File | Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+      return reject(new PhotoProcessingError('decode_failed', 'URL.createObjectURL not available'));
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      if (isHeicFile(file)) {
+        reject(new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device."));
+      } else {
+        reject(new PhotoProcessingError('decode_failed', 'Failed to decode image'));
+      }
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Resize and compress an image client-side via HTML Canvas using binary/blob APIs.
+ * Avoids giant Base64 strings from FileReader.readAsDataURL.
+ * Downscales to approximately 1440px while preserving aspect ratio.
  */
 export async function processAndCompressImage(
   file: File | Blob,
-  maxDimension = 1280,
+  maxDimension = 1440,
   quality = 0.82
 ): Promise<{ dataUrl: string; mimeType: string; width: number; height: number }> {
   // Reject non-image files
-  if (file.type && !file.type.startsWith('image/')) {
-    throw new Error('Selected file is not an image');
+  if (!isValidImageFile(file)) {
+    throw new PhotoProcessingError('not_image', 'Selected file is not an image');
   }
 
-  // Fallback for Node/test environments
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
+  // Safety upper limit: 35 MB
+  const MAX_FILE_SIZE_BYTES = 35 * 1024 * 1024;
+  if (file.size && file.size > MAX_FILE_SIZE_BYTES) {
+    throw new PhotoProcessingError('too_large', 'Photo is too large to process');
+  }
+
+  // Fallback for Node/test environments without browser DOM
+  if (typeof window === 'undefined' || typeof document === 'undefined' || typeof document.createElement !== 'function') {
+    if (isHeicFile(file) && (file as any).__simulateUnsupportedHeic) {
+      throw new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device.");
+    }
+    const mockW = (file as any).__mockWidth || 400;
+    const mockH = (file as any).__mockHeight || 300;
+    let finalW = mockW;
+    let finalH = mockH;
+    if (finalW > maxDimension || finalH > maxDimension) {
+      if (finalW > finalH) {
+        finalH = Math.round((finalH * maxDimension) / finalW);
+        finalW = maxDimension;
+      } else {
+        finalW = Math.round((finalW * maxDimension) / finalH);
+        finalH = maxDimension;
+      }
+    }
     return {
       dataUrl: 'data:image/jpeg;base64,mockImageBytes',
       mimeType: 'image/jpeg',
-      width: 400,
-      height: 300,
+      width: finalW,
+      height: finalH,
     };
   }
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Failed to read image file'));
-    reader.onload = () => {
-      const rawDataUrl = reader.result as string;
-      const img = new Image();
-      img.onerror = () => reject(new Error('Failed to decode image'));
-      img.onload = () => {
-        let width = img.naturalWidth || img.width;
-        let height = img.naturalHeight || img.height;
+  // Decode via createImageBitmap (preferred for speed and memory efficiency)
+  let source: ImageBitmap | HTMLImageElement | null = null;
+  let isBitmap = false;
 
-        if (width <= 0 || height <= 0) {
-          return reject(new Error('Invalid image dimensions'));
-        }
+  if (typeof createImageBitmap === 'function') {
+    try {
+      source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      isBitmap = true;
+    } catch {
+      try {
+        source = await createImageBitmap(file);
+        isBitmap = true;
+      } catch (err) {
+        console.warn('createImageBitmap failed, falling back to object URL:', err);
+      }
+    }
+  }
 
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-        }
+  // Fallback to URL.createObjectURL + HTMLImageElement
+  if (!source) {
+    try {
+      source = await decodeViaImageElement(file);
+      isBitmap = false;
+    } catch (err) {
+      if (err instanceof PhotoProcessingError) {
+        throw err;
+      }
+      if (isHeicFile(file)) {
+        throw new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device.");
+      }
+      throw new PhotoProcessingError('decode_failed', 'Failed to decode image');
+    }
+  }
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
+  try {
+    let width = source.width;
+    let height = source.height;
 
-        if (!ctx) {
-          // Fallback to raw data url if 2d context unavailable
-          return resolve({
-            dataUrl: rawDataUrl,
-            mimeType: file.type || 'image/jpeg',
-            width,
-            height,
-          });
-        }
+    if (width <= 0 || height <= 0) {
+      throw new PhotoProcessingError('decode_failed', 'Invalid image dimensions');
+    }
 
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+    // Preserve aspect ratio
+    if (width > maxDimension || height > maxDimension) {
+      if (width > height) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+      } else {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+      }
+    }
 
-        resolve({
-          dataUrl: compressedDataUrl,
-          mimeType: 'image/jpeg',
-          width,
-          height,
-        });
-      };
-      img.src = rawDataUrl;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new PhotoProcessingError('canvas_failed', 'Could not get canvas 2d context');
+    }
+
+    ctx.drawImage(source, 0, 0, width, height);
+    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+    return {
+      dataUrl: compressedDataUrl,
+      mimeType: 'image/jpeg',
+      width,
+      height,
     };
-    reader.readAsDataURL(file);
-  });
+  } finally {
+    if (isBitmap && source && 'close' in source && typeof source.close === 'function') {
+      source.close();
+    }
+  }
 }
 
 /**
@@ -165,8 +345,11 @@ export async function saveFoodPhoto(file: File | Blob): Promise<FoodPhotoMetadat
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
-  } catch (err) {
+  } catch (err: any) {
     console.warn('Could not persist photo to IndexedDB, cached in-memory only:', err);
+    if (err?.name === 'QuotaExceededError') {
+      throw new PhotoProcessingError('storage_failed', 'Storage quota exceeded');
+    }
   }
 
   return { id, createdAt, mimeType };

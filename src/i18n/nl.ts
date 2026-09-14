@@ -1247,7 +1247,7 @@ export const nl: Translations = {
   sdb_view_photo: 'Foto Bekijken',
   sdb_photo_preview_title: 'Maaltijd / Drank Foto',
   sdb_close_preview: 'Sluiten',
-  sdb_err_process_photo: 'Kan deze afbeelding niet verwerken. Kies een andere.',
+  sdb_err_process_photo: 'Kan deze foto niet toevoegen. Probeer een andere afbeelding.',
   sdb_err_save_photo: 'Kan deze foto niet opslaan.',
   sdb_confirm_remove_photo: 'Deze foto verwijderen?',
 
@@ -1257,6 +1257,11 @@ export const nl: Translations = {
   sdb_photo_counter: '{current} van {total}',
   sdb_photo_nav_prev: 'Vorige',
   sdb_photo_nav_next: 'Volgende',
+
+  // ── Phase 6C: Android Gallery & Photo Error Keys ──
+  sdb_err_unsupported_format: 'Dit fotoformaat wordt niet ondersteund op dit apparaat. Kies een JPG-, PNG- of WebP-afbeelding.',
+  sdb_err_photo_too_large: 'Deze foto is te groot om te verwerken. Kies een kleinere afbeelding.',
+  sdb_err_invalid_image: 'Het geselecteerde bestand is geen ondersteunde afbeelding.',
 };
 
 
