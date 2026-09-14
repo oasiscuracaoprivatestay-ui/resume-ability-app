@@ -1157,6 +1157,13 @@ export interface Translations {
   sdb_err_process_photo: string;
   sdb_err_save_photo: string;
   sdb_confirm_remove_photo: string;
+
+  // ── Phase 6B: Multi-Photo UX & Schedule Actions ──
+  sdb_food_photos: string;
+  sdb_add_another_photo: string;
+  sdb_photo_counter: string;
+  sdb_photo_nav_prev: string;
+  sdb_photo_nav_next: string;
 }
 
 

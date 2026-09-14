@@ -34,7 +34,24 @@ export interface StructuredDietBlock {
   items: string[];     // legacy selected options or sample items
   customText: string;  // free-text; empty string if not set
   foodCategories?: FoodCategoryKey[]; // Phase 2: multi-select categories
-  foodPhoto?: FoodPhotoMetadata;      // Phase 6: optional food/beverage photo attachment
+  foodPhoto?: FoodPhotoMetadata;      // Phase 6: legacy single photo attachment
+  foodPhotos?: FoodPhotoMetadata[];   // Phase 6B: multi-photo support (food + beverages)
+}
+
+/**
+ * Extract an array of FoodPhotoMetadata from a block, normalizing legacy single foodPhoto into array.
+ */
+export function getBlockPhotos(
+  block?: { foodPhotos?: FoodPhotoMetadata[]; foodPhoto?: FoodPhotoMetadata } | null
+): FoodPhotoMetadata[] {
+  if (!block) return [];
+  if (Array.isArray(block.foodPhotos) && block.foodPhotos.length > 0) {
+    return block.foodPhotos.filter(p => p && typeof p.id === 'string');
+  }
+  if (block.foodPhoto && typeof block.foodPhoto.id === 'string') {
+    return [block.foodPhoto];
+  }
+  return [];
 }
 
 export interface StructuredDietDay {
@@ -778,12 +795,18 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     ? (b.foodCategories.filter(c => (FOOD_CATEGORY_KEYS as readonly string[]).includes(c)) as FoodCategoryKey[])
     : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []);
 
-  const foodPhoto = b.foodPhoto && typeof b.foodPhoto.id === 'string'
-    ? {
-        id: b.foodPhoto.id,
-        createdAt: typeof b.foodPhoto.createdAt === 'string' ? b.foodPhoto.createdAt : new Date().toISOString(),
-        mimeType: typeof b.foodPhoto.mimeType === 'string' ? b.foodPhoto.mimeType : 'image/jpeg',
-      }
+  // Normalize photos: support both multi-photo foodPhotos and legacy foodPhoto
+  const rawPhotos = getBlockPhotos(b);
+  const foodPhotos: FoodPhotoMetadata[] | undefined = rawPhotos.length > 0
+    ? rawPhotos.map(p => ({
+        id: p.id,
+        createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date().toISOString(),
+        mimeType: typeof p.mimeType === 'string' ? p.mimeType : 'image/jpeg',
+      }))
+    : undefined;
+
+  const foodPhoto: FoodPhotoMetadata | undefined = foodPhotos && foodPhotos.length > 0
+    ? foodPhotos[0]
     : undefined;
 
   return {
@@ -795,6 +818,7 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     customText: typeof b.customText === 'string' ? b.customText : '',
     foodCategories: categories,
     foodPhoto,
+    foodPhotos,
   };
 }
 

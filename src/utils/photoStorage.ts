@@ -329,13 +329,13 @@ export function isPhotoReferenced(
     profiles?: Array<{
       diet: {
         days:
-          | Array<{ blocks: Array<{ foodPhoto?: { id: string } }> }>
-          | Record<string, { blocks: Array<{ foodPhoto?: { id: string } }> }>;
-        historySnapshots?: Record<string, { blocks: Array<{ foodPhoto?: { id: string } }> }>;
+          | Array<{ blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>
+          | Record<string, { blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>;
+        historySnapshots?: Record<string, { blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>;
       };
     }>;
   },
-  verifications?: Record<string, { entries: Array<{ plannedSnapshot?: { foodPhoto?: { id: string } } }> }>
+  verifications?: Record<string, { entries: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }>; plannedSnapshot?: { foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> } }> }>
 ): boolean {
   if (!photoId) return false;
 
@@ -344,14 +344,14 @@ export function isPhotoReferenced(
       if (profile?.diet?.days) {
         const dayList = Array.isArray(profile.diet.days) ? profile.diet.days : Object.values(profile.diet.days);
         for (const day of dayList) {
-          if (day?.blocks?.some(b => b.foodPhoto?.id === photoId)) {
+          if (day?.blocks?.some(b => b.foodPhoto?.id === photoId || b.foodPhotos?.some(p => p.id === photoId))) {
             return true;
           }
         }
       }
       if (profile?.diet?.historySnapshots) {
         for (const snap of Object.values(profile.diet.historySnapshots)) {
-          if (snap?.blocks?.some(b => b.foodPhoto?.id === photoId)) {
+          if (snap?.blocks?.some(b => b.foodPhoto?.id === photoId || b.foodPhotos?.some(p => p.id === photoId))) {
             return true;
           }
         }
@@ -361,7 +361,15 @@ export function isPhotoReferenced(
 
   if (verifications) {
     for (const dailyVerif of Object.values(verifications)) {
-      if (dailyVerif?.entries?.some(e => e.plannedSnapshot?.foodPhoto?.id === photoId)) {
+      if (
+        dailyVerif?.entries?.some(
+          e =>
+            e.foodPhoto?.id === photoId ||
+            e.foodPhotos?.some(p => p.id === photoId) ||
+            e.plannedSnapshot?.foodPhoto?.id === photoId ||
+            e.plannedSnapshot?.foodPhotos?.some(p => p.id === photoId)
+        )
+      ) {
         return true;
       }
     }

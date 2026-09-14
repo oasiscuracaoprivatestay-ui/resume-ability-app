@@ -13,7 +13,7 @@
  */
 
 import type { DayKey, StructuredDietBlock } from './dietStorage';
-import { getLocalTodayKey } from './dietStorage';
+import { getLocalTodayKey, getBlockPhotos } from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
 
@@ -63,6 +63,7 @@ export interface PlannedBlockSnapshot {
   customText?: string;
   foodCategories?: FoodCategoryKey[];
   foodPhoto?: FoodPhotoMetadata;
+  foodPhotos?: FoodPhotoMetadata[];
 }
 
 export interface DietBlockVerification {
@@ -78,6 +79,7 @@ export interface DietBlockVerification {
   actualFoodCategories?: FoodCategoryKey[];
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
+  foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
   verifiedAt: number;        // Epoch ms
 }
 
@@ -207,6 +209,7 @@ export function saveBlockVerification(params: {
   actualFoodCategories?: FoodCategoryKey[];
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;
+  foodPhotos?: FoodPhotoMetadata[];
   sourcePlanName?: string;
   profileId?: string;
   profileName?: string;
@@ -234,6 +237,8 @@ export function saveBlockVerification(params: {
         ? crypto.randomUUID().slice(0, 10)
         : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`);
 
+  const plannedPhotos = getBlockPhotos(params.plannedBlock);
+
   // Preserve existing snapshot if updating, or capture fresh snapshot on first save
   const plannedSnapshot: PlannedBlockSnapshot = existingIdx >= 0
     ? daily.entries[existingIdx].plannedSnapshot
@@ -246,7 +251,8 @@ export function saveBlockVerification(params: {
         foodCategories: Array.isArray(params.plannedBlock.foodCategories)
           ? [...params.plannedBlock.foodCategories]
           : undefined,
-        foodPhoto: params.plannedBlock.foodPhoto,
+        foodPhoto: plannedPhotos[0],
+        foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
       };
 
   // Determine Resumed status: if changing to on-track, reset resumed; otherwise respect explicit param or keep existing
@@ -266,7 +272,15 @@ export function saveBlockVerification(params: {
     resumedAt = daily.entries[existingIdx].resumedAt;
   }
 
-  const assignedPhoto = params.foodPhoto ?? params.plannedBlock.foodPhoto ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodPhoto : undefined);
+  const rawAssignedPhotos = params.foodPhotos
+    ?? (params.foodPhoto ? [params.foodPhoto] : undefined)
+    ?? (existingIdx >= 0
+        ? (daily.entries[existingIdx].foodPhotos ?? (daily.entries[existingIdx].foodPhoto ? [daily.entries[existingIdx].foodPhoto!] : undefined))
+        : undefined)
+    ?? (plannedPhotos.length > 0 ? plannedPhotos : undefined);
+
+  const assignedPhotos = rawAssignedPhotos && rawAssignedPhotos.length > 0 ? rawAssignedPhotos : undefined;
+  const assignedPhoto = assignedPhotos && assignedPhotos.length > 0 ? assignedPhotos[0] : undefined;
 
   const newEntry: DietBlockVerification = {
     id: verificationId,
@@ -281,6 +295,7 @@ export function saveBlockVerification(params: {
     actualFoodCategories: params.actualFoodCategories ? [...params.actualFoodCategories] : undefined,
     actualCustomText: params.actualCustomText?.trim() || undefined,
     foodPhoto: assignedPhoto,
+    foodPhotos: assignedPhotos,
     verifiedAt: Date.now(),
   };
 

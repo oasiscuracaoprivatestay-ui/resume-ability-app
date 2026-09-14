@@ -25,6 +25,7 @@ import {
   DAY_KEYS,
   calculateShiftedEndTime,
   snapshotHistoryDate,
+  getBlockPhotos,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -88,23 +89,87 @@ interface StructuredDietScreenProps {
   onBack?: () => void;
 }
 
-// ── Food Photo Preview Modal (Phase 6) ─────────────────────────────────────────
+// ── Food Photo Preview Modal (Phase 6B Multi-Photo) ───────────────────────────
+
+export interface PhotoPreviewItem {
+  id: string;
+  dataUrl?: string | null;
+  caption?: string;
+}
 
 interface PhotoPreviewModalProps {
-  photoUrl: string;
-  title?: string;
+  photos: PhotoPreviewItem[];
+  initialIndex?: number;
   onClose: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function PhotoPreviewModal({ photoUrl, title, onClose, t }: PhotoPreviewModalProps) {
+function PhotoPreviewModal({ photos, initialIndex = 0, onClose, t }: PhotoPreviewModalProps) {
+  const [currentIndex, setCurrentIndex] = useState(
+    Math.min(Math.max(initialIndex, 0), Math.max(photos.length - 1, 0))
+  );
+
+  const currentPhoto = photos[currentIndex];
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(() => {
+    if (currentPhoto?.dataUrl) return currentPhoto.dataUrl;
+    if (currentPhoto?.id) return getPhotoDataUrlSync(currentPhoto.id);
+    return null;
+  });
+
+  useEffect(() => {
+    if (!currentPhoto) return;
+    if (currentPhoto.dataUrl) {
+      setResolvedUrl(currentPhoto.dataUrl);
+      return;
+    }
+    const sync = getPhotoDataUrlSync(currentPhoto.id);
+    if (sync) {
+      setResolvedUrl(sync);
+      return;
+    }
+    let active = true;
+    getFoodPhoto(currentPhoto.id).then(rec => {
+      if (active && rec?.dataUrl) {
+        setResolvedUrl(rec.dataUrl);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [currentPhoto]);
+
+  const handlePrev = useCallback(() => {
+    if (photos.length <= 1) return;
+    setCurrentIndex(prev => (prev - 1 + photos.length) % photos.length);
+  }, [photos.length]);
+
+  const handleNext = useCallback(() => {
+    if (photos.length <= 1) return;
+    setCurrentIndex(prev => (prev + 1) % photos.length);
+  }, [photos.length]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, handlePrev, handleNext]);
+
+  if (!currentPhoto) return null;
+
+  const title = currentPhoto.caption || t.sdb_photo_preview_title || t.sdb_food_photos;
+  const counterText = t.sdb_photo_counter
+    ? t.sdb_photo_counter
+        .replace('{current}', String(currentIndex + 1))
+        .replace('{total}', String(photos.length))
+    : `${currentIndex + 1} of ${photos.length}`;
 
   return (
     <div
@@ -116,9 +181,15 @@ function PhotoPreviewModal({ photoUrl, title, onClose, t }: PhotoPreviewModalPro
     >
       <div className="sdb-photo-modal-content" onClick={e => e.stopPropagation()}>
         <div className="sdb-photo-modal-header">
-          <span className="sdb-photo-modal-title">{title || t.sdb_food_photo}</span>
+          <div className="sdb-photo-modal-header-info">
+            <span className="sdb-photo-modal-title">{title}</span>
+            {photos.length > 1 && (
+              <span className="sdb-photo-modal-counter">{counterText}</span>
+            )}
+          </div>
           <button
             type="button"
+            id="btn-close-photo-modal"
             className="sdb-photo-modal-close"
             onClick={onClose}
             aria-label={t.sdb_close_preview}
@@ -127,7 +198,37 @@ function PhotoPreviewModal({ photoUrl, title, onClose, t }: PhotoPreviewModalPro
           </button>
         </div>
         <div className="sdb-photo-modal-body">
-          <img src={photoUrl} alt={title || t.sdb_food_photo} className="sdb-photo-modal-img" />
+          {photos.length > 1 && (
+            <button
+              type="button"
+              id="btn-photo-prev"
+              className="sdb-photo-modal-nav sdb-photo-modal-nav--prev"
+              onClick={handlePrev}
+              aria-label={t.sdb_photo_nav_prev}
+              title={t.sdb_photo_nav_prev}
+            >
+              ‹
+            </button>
+          )}
+
+          {resolvedUrl ? (
+            <img src={resolvedUrl} alt={title} className="sdb-photo-modal-img" />
+          ) : (
+            <div className="sdb-photo-modal-loading">...</div>
+          )}
+
+          {photos.length > 1 && (
+            <button
+              type="button"
+              id="btn-photo-next"
+              className="sdb-photo-modal-nav sdb-photo-modal-nav--next"
+              onClick={handleNext}
+              aria-label={t.sdb_photo_nav_next}
+              title={t.sdb_photo_nav_next}
+            >
+              ›
+            </button>
+          )}
         </div>
         <div className="sdb-photo-modal-footer">
           <button type="button" className="sdb-btn sdb-btn--cancel" onClick={onClose}>
@@ -179,34 +280,44 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     return [];
   });
   const [customText, setCustomText] = useState(initial?.customText ?? '');
-  const [foodPhoto, setFoodPhoto] = useState<FoodPhotoMetadata | undefined>(initial?.foodPhoto);
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(() => {
-    if (initial?.foodPhoto?.id) {
-      return getPhotoDataUrlSync(initial.foodPhoto.id);
+
+  // Multi-photo state (Phase 6B)
+  const [foodPhotos, setFoodPhotos] = useState<FoodPhotoMetadata[]>(() => getBlockPhotos(initial));
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<Record<string, string>>(() => {
+    const initialPhotos = getBlockPhotos(initial);
+    const initialMap: Record<string, string> = {};
+    for (const p of initialPhotos) {
+      const sync = getPhotoDataUrlSync(p.id);
+      if (sync) initialMap[p.id] = sync;
     }
-    return null;
+    return initialMap;
   });
+  const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(null);
+  const addFileInputRef = useRef<HTMLInputElement>(null);
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError]         = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isSubscribed = true;
-    if (initial?.foodPhoto?.id && !photoPreviewUrl) {
-      getFoodPhoto(initial.foodPhoto.id).then(record => {
-        if (isSubscribed && record?.dataUrl) {
-          setPhotoPreviewUrl(record.dataUrl);
-        }
-      });
+    for (const p of foodPhotos) {
+      if (!photoPreviewUrls[p.id]) {
+        getFoodPhoto(p.id).then(record => {
+          if (isSubscribed && record?.dataUrl) {
+            setPhotoPreviewUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
+          }
+        });
+      }
     }
     return () => {
       isSubscribed = false;
     };
-  }, [initial?.foodPhoto?.id, photoPreviewUrl]);
+  }, [foodPhotos, photoPreviewUrls]);
 
-  const handlePhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddPhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
@@ -222,8 +333,10 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     try {
       const meta = await saveFoodPhoto(file);
       const dataUrl = getPhotoDataUrlSync(meta.id);
-      setFoodPhoto(meta);
-      setPhotoPreviewUrl(dataUrl);
+      setFoodPhotos(prev => [...prev, meta]);
+      if (dataUrl) {
+        setPhotoPreviewUrls(prev => ({ ...prev, [meta.id]: dataUrl }));
+      }
     } catch (err) {
       console.error('Error saving photo:', err);
       setPhotoError(t.sdb_err_save_photo);
@@ -232,9 +345,64 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     }
   };
 
-  const handleRemovePhoto = () => {
-    setFoodPhoto(undefined);
-    setPhotoPreviewUrl(null);
+  const handleTriggerReplace = (index: number) => {
+    setReplacingIndex(index);
+    replaceFileInputRef.current?.click();
+  };
+
+  const handleReplacePhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || replacingIndex === null) return;
+    const targetIdx = replacingIndex;
+    e.target.value = '';
+
+    if (!file.type.startsWith('image/')) {
+      setPhotoError(t.sdb_err_process_photo);
+      return;
+    }
+
+    setIsProcessingPhoto(true);
+    setPhotoError('');
+
+    try {
+      const oldPhoto = foodPhotos[targetIdx];
+      const newMeta = await saveFoodPhoto(file);
+      const dataUrl = getPhotoDataUrlSync(newMeta.id);
+      setFoodPhotos(prev => prev.map((p, i) => (i === targetIdx ? newMeta : p)));
+      if (dataUrl) {
+        setPhotoPreviewUrls(prev => ({ ...prev, [newMeta.id]: dataUrl }));
+      }
+      // Check if old photo is orphaned
+      if (oldPhoto?.id) {
+        setTimeout(() => {
+          const store = loadDietStore();
+          const verifs = loadAllDietVerifications();
+          if (!isPhotoReferenced(oldPhoto.id, store, verifs)) {
+            deleteFoodPhoto(oldPhoto.id).catch(() => {});
+          }
+        }, 50);
+      }
+    } catch (err) {
+      console.error('Error replacing photo:', err);
+      setPhotoError(t.sdb_err_save_photo);
+    } finally {
+      setIsProcessingPhoto(false);
+      setReplacingIndex(null);
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    const photoToRemove = foodPhotos[index];
+    setFoodPhotos(prev => prev.filter((_, i) => i !== index));
+    if (photoToRemove?.id) {
+      setTimeout(() => {
+        const store = loadDietStore();
+        const verifs = loadAllDietVerifications();
+        if (!isPhotoReferenced(photoToRemove.id, store, verifs)) {
+          deleteFoodPhoto(photoToRemove.id).catch(() => {});
+        }
+      }, 50);
+    }
   };
 
   // Trap focus inside modal
@@ -258,10 +426,15 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   };
 
   const validate = (): boolean => {
-    if (!startTime) { setError(t.sdb_err_start_required); return false; }
-    if (!endTime)   { setError(t.sdb_err_end_required);   return false; }
-    if (!type)      { setError(t.sdb_err_type_required);  return false; }
     setError('');
+    if (!startTime) {
+      setError(t.sdb_err_start_required);
+      return false;
+    }
+    if (!endTime) {
+      setError(t.sdb_err_end_required);
+      return false;
+    }
     return true;
   };
 
@@ -275,7 +448,8 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
       items,
       customText: customText.trim(),
       foodCategories,
-      foodPhoto,
+      foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
+      foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
     onSave(block);
   };
@@ -297,10 +471,111 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
         </div>
 
         <div className="sdb-modal-body">
+          {/* ── Food / Beverage Photo Attachment (Phase 6B: Top of Customize) ── */}
+          <div className="sdb-field sdb-photo-field sdb-photo-field--top">
+            <label className="sdb-label sdb-label--optional">
+              <span>📷 {t.sdb_food_photos}</span>
+              <span className="sdb-optional">{t.sdb_optional}</span>
+            </label>
+
+            {/* Hidden file input for adding a new photo */}
+            <input
+              ref={addFileInputRef}
+              id="sdb-photo-file-input-add"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAddPhotoFileSelect}
+            />
+
+            {/* Hidden file input for replacing a specific photo */}
+            <input
+              ref={replaceFileInputRef}
+              id="sdb-photo-file-input-replace"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleReplacePhotoFileSelect}
+            />
+
+            <div className="sdb-photo-gallery-editor">
+              {foodPhotos.map((photo, idx) => {
+                const url = photoPreviewUrls[photo.id] || getPhotoDataUrlSync(photo.id);
+                return (
+                  <div key={photo.id || idx} className="sdb-photo-item-card">
+                    <button
+                      type="button"
+                      id={`btn-editor-photo-view-${idx}`}
+                      className="sdb-photo-item-thumb-btn"
+                      onClick={() => setPreviewPhotoIndex(idx)}
+                      title={`${t.sdb_view_photo} (${idx + 1}/${foodPhotos.length})`}
+                      aria-label={`${t.sdb_view_photo} ${idx + 1}`}
+                    >
+                      {url ? (
+                        <img
+                          src={url}
+                          alt={`${t.sdb_food_photo} ${idx + 1}`}
+                          className="sdb-photo-item-img"
+                        />
+                      ) : (
+                        <div className="sdb-photo-item-placeholder">📷</div>
+                      )}
+                      <span className="sdb-photo-item-zoom-icon" aria-hidden="true">🔍</span>
+                    </button>
+                    <div className="sdb-photo-item-actions">
+                      <button
+                        type="button"
+                        id={`btn-replace-photo-${idx}`}
+                        className="sdb-btn-photo-mini sdb-btn-photo-mini--replace"
+                        onClick={() => handleTriggerReplace(idx)}
+                        disabled={isProcessingPhoto}
+                        title={t.sdb_replace_photo}
+                        aria-label={`${t.sdb_replace_photo} ${idx + 1}`}
+                      >
+                        🔄
+                      </button>
+                      <button
+                        type="button"
+                        id={`btn-remove-photo-${idx}`}
+                        className="sdb-btn-photo-mini sdb-btn-photo-mini--remove"
+                        onClick={() => handleRemovePhoto(idx)}
+                        disabled={isProcessingPhoto}
+                        title={t.sdb_remove_photo}
+                        aria-label={`${t.sdb_remove_photo} ${idx + 1}`}
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button
+                type="button"
+                id="btn-add-food-photo"
+                className="sdb-btn-add-photo-card"
+                onClick={() => addFileInputRef.current?.click()}
+                disabled={isProcessingPhoto}
+              >
+                <span className="sdb-add-photo-card-icon">📷+</span>
+                <span className="sdb-add-photo-card-text">
+                  {isProcessingPhoto
+                    ? '...'
+                    : foodPhotos.length > 0
+                    ? t.sdb_add_another_photo
+                    : t.sdb_add_photo}
+                </span>
+              </button>
+            </div>
+
+            {photoError && <p className="sdb-photo-error-msg" role="alert">{photoError}</p>}
+          </div>
+
           {/* ── Time range ── */}
           <div className="sdb-field">
             <label className="sdb-label">{t.sdb_start_time}</label>
             <select
+              id="sdb-start-time"
               className="sdb-select"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
@@ -315,6 +590,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
           <div className="sdb-field">
             <label className="sdb-label">{t.sdb_end_time}</label>
             <select
+              id="sdb-end-time"
               className="sdb-select"
               value={endTime}
               onChange={e => setEndTime(e.target.value)}
@@ -327,6 +603,24 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             {overnight && (
               <span className="sdb-overnight-badge">{t.sdb_overnight}</span>
             )}
+          </div>
+
+          {/* ── Custom note / Food Description ── */}
+          <div className="sdb-field">
+            <label className="sdb-label sdb-label--optional">
+              {t.sdb_custom_label}
+              <span className="sdb-optional">{t.sdb_optional}</span>
+            </label>
+            <input
+              id="sdb-custom-text"
+              className="sdb-input"
+              type="text"
+              value={customText}
+              onChange={e => setCustomText(e.target.value)}
+              placeholder={t.sdb_custom_placeholder}
+              maxLength={120}
+              aria-label={t.sdb_custom_label}
+            />
           </div>
 
           {/* ── Food Categories (Primary Quick Food Classification) ── */}
@@ -396,84 +690,6 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             )}
           </div>
 
-          {/* ── Custom note ── */}
-          <div className="sdb-field">
-            <label className="sdb-label sdb-label--optional">
-              {t.sdb_custom_label}
-              <span className="sdb-optional">{t.sdb_optional}</span>
-            </label>
-            <input
-              id="sdb-custom-text"
-              className="sdb-input"
-              type="text"
-              value={customText}
-              onChange={e => setCustomText(e.target.value)}
-              placeholder={t.sdb_custom_placeholder}
-              maxLength={120}
-              aria-label={t.sdb_custom_label}
-            />
-          </div>
-
-          {/* ── Food / Beverage Photo Attachment (Phase 6) ── */}
-          <div className="sdb-field sdb-photo-field">
-            <label className="sdb-label sdb-label--optional">
-              <span>📷 {t.sdb_food_photo}</span>
-              <span className="sdb-optional">{t.sdb_optional}</span>
-            </label>
-
-            <input
-              ref={fileInputRef}
-              id="sdb-photo-file-input"
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handlePhotoFileSelect}
-            />
-
-            {photoPreviewUrl ? (
-              <div className="sdb-photo-preview-box">
-                <img
-                  src={photoPreviewUrl}
-                  alt={t.sdb_food_photo}
-                  className="sdb-photo-preview-img"
-                />
-                <div className="sdb-photo-actions-row">
-                  <button
-                    id="btn-replace-photo"
-                    type="button"
-                    className="sdb-btn-photo-action sdb-btn-photo-replace"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessingPhoto}
-                  >
-                    🔄 {t.sdb_replace_photo}
-                  </button>
-                  <button
-                    id="btn-remove-photo"
-                    type="button"
-                    className="sdb-btn-photo-action sdb-btn-photo-remove"
-                    onClick={handleRemovePhoto}
-                    disabled={isProcessingPhoto}
-                  >
-                    🗑 {t.sdb_remove_photo}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                id="btn-add-food-photo"
-                type="button"
-                className="sdb-btn-add-photo"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessingPhoto}
-              >
-                <span>📷</span>
-                <span>{isProcessingPhoto ? '...' : t.sdb_add_food_photo}</span>
-              </button>
-            )}
-
-            {photoError && <p className="sdb-photo-error-msg" role="alert">{photoError}</p>}
-          </div>
-
           {error && <p className="sdb-error" role="alert">{error}</p>}
         </div>
 
@@ -486,6 +702,19 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
           </button>
         </div>
       </div>
+
+      {previewPhotoIndex !== null && (
+        <PhotoPreviewModal
+          photos={foodPhotos.map((p, idx) => ({
+            id: p.id,
+            dataUrl: photoPreviewUrls[p.id] || getPhotoDataUrlSync(p.id),
+            caption: `${t.sdb_food_photos} (${idx + 1}/${foodPhotos.length})`,
+          }))}
+          initialIndex={previewPhotoIndex}
+          onClose={() => setPreviewPhotoIndex(null)}
+          t={t}
+        />
+      )}
     </div>
   );
 }
@@ -798,7 +1027,8 @@ interface BlockCardProps {
   onQuickUpdateTime?: (startTime: string, endTime: string) => void;
   onQuickUpdateDescription?: (customText: string) => void;
   onQuickUpdateCategories?: (foodCategories: FoodCategoryKey[]) => void;
-  onPreviewPhoto?: (photoUrl: string, title?: string) => void;
+  onPreviewPhotos?: (photos: PhotoPreviewItem[], initialIndex?: number) => void;
+  onQuickAddPhoto?: (blockId: string, photo: FoodPhotoMetadata) => void;
 }
 
 function BlockCard({
@@ -817,39 +1047,62 @@ function BlockCard({
   onQuickUpdateTime,
   onQuickUpdateDescription,
   onQuickUpdateCategories,
-  onPreviewPhoto,
+  onPreviewPhotos,
+  onQuickAddPhoto,
 }: BlockCardProps) {
   const typeKey = block.type as BlockTypeKey;
   const icon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
 
-  // Photo state (Phase 6)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(() => {
-    if (!block.foodPhoto?.id) return null;
-    return getPhotoDataUrlSync(block.foodPhoto.id);
+  // Photos state (Phase 6B: multi-photo support)
+  const photos = getBlockPhotos(block);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    for (const p of photos) {
+      const sync = getPhotoDataUrlSync(p.id);
+      if (sync) map[p.id] = sync;
+    }
+    return map;
   });
+  const [isAddingPhoto, setIsAddingPhoto] = useState(false);
+  const cardFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let isSubscribed = true;
-    if (!block.foodPhoto?.id) {
-      setPhotoUrl(null);
-      return;
-    }
-    const sync = getPhotoDataUrlSync(block.foodPhoto.id);
-    if (sync) {
-      setPhotoUrl(sync);
-      return;
-    }
-    getFoodPhoto(block.foodPhoto.id).then(record => {
-      if (isSubscribed && record?.dataUrl) {
-        setPhotoUrl(record.dataUrl);
+    for (const p of photos) {
+      if (!photoUrls[p.id]) {
+        getFoodPhoto(p.id).then(record => {
+          if (isSubscribed && record?.dataUrl) {
+            setPhotoUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
+          }
+        });
       }
-    });
+    }
     return () => {
       isSubscribed = false;
     };
-  }, [block.foodPhoto?.id]);
+  }, [photos, photoUrls]);
+
+  const handleCardPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) return;
+    setIsAddingPhoto(true);
+    try {
+      const meta = await saveFoodPhoto(file);
+      const sync = getPhotoDataUrlSync(meta.id);
+      if (sync) {
+        setPhotoUrls(prev => ({ ...prev, [meta.id]: sync }));
+      }
+      onQuickAddPhoto?.(block.id, meta);
+    } catch (err) {
+      console.error('Error adding photo directly:', err);
+    } finally {
+      setIsAddingPhoto(false);
+    }
+  };
 
   // Determine meal description:
   // Use custom description/text if present; otherwise fall back to localized meal type name.
@@ -864,6 +1117,16 @@ function BlockCard({
   const [isChanging, setIsChanging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const previewItems: PhotoPreviewItem[] = useMemo(
+    () =>
+      photos.map((p, idx) => ({
+        id: p.id,
+        dataUrl: photoUrls[p.id] || getPhotoDataUrlSync(p.id),
+        caption: `${desc} (${idx + 1}/${photos.length})`,
+      })),
+    [photos, photoUrls, desc]
+  );
 
   useEffect(() => {
     setDesc(initialMealDescription);
@@ -960,9 +1223,13 @@ function BlockCard({
     (verification?.detailedOutcome && (SLIP_OUTCOMES as readonly string[]).includes(verification.detailedOutcome));
 
   return (
-    <div className={`sdb-block-card ${verification?.status ? `sdb-block-card--${verification.status}` : ''}`}>
-      <div className="sdb-block-time-row">
-        <div className="sdb-block-time-quick-edit">
+    <div
+      className={`sdb-block-card ${isToday && verification ? `sdb-block-card--verified sdb-block-card--${verification.status}` : ''}`}
+      id={`sdb-block-${block.id}`}
+    >
+      {/* ── Top row: Times + Delete ── */}
+      <div className="sdb-block-top">
+        <div className="sdb-block-times-row">
           <select
             id={`select-block-start-${block.id}`}
             className="sdb-block-time-select"
@@ -976,7 +1243,7 @@ function BlockCard({
               </option>
             ))}
           </select>
-          <span className="sdb-block-time-sep" aria-hidden="true">→</span>
+          <span className="sdb-block-arrow">→</span>
           <select
             id={`select-block-end-${block.id}`}
             className="sdb-block-time-select"
@@ -1004,25 +1271,88 @@ function BlockCard({
         </div>
       </div>
 
+      {/* Hidden file input for direct photo capture */}
+      <input
+        ref={cardFileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleCardPhotoSelect}
+      />
+
       <div className="sdb-block-desc-row">
-        {photoUrl ? (
-          <button
-            type="button"
-            id={`btn-photo-thumb-${block.id}`}
-            className="sdb-block-photo-thumb-btn"
-            onClick={() => onPreviewPhoto?.(photoUrl, desc)}
-            aria-label={`${t.sdb_view_photo}: ${desc}`}
-            title={t.sdb_view_photo}
-          >
-            <img
-              src={photoUrl}
-              alt={desc || t.sdb_food_photo}
-              className="sdb-block-photo-thumb"
-            />
-          </button>
-        ) : (
-          <span className="sdb-block-icon" aria-hidden="true">{icon}</span>
-        )}
+        <div className="sdb-block-media-group">
+          {photos.length === 0 ? (
+            <>
+              <span className="sdb-block-icon" aria-hidden="true">{icon}</span>
+              <button
+                type="button"
+                id={`btn-direct-add-photo-${block.id}`}
+                className="sdb-block-camera-btn"
+                onClick={() => cardFileInputRef.current?.click()}
+                disabled={isAddingPhoto}
+                aria-label={`${t.sdb_add_photo}: ${desc}`}
+                title={t.sdb_add_photo}
+              >
+                <span className="sdb-camera-icon">📷</span>
+              </button>
+            </>
+          ) : (
+            <div className="sdb-block-photos-cluster">
+              {photos.slice(0, 2).map((p, idx) => {
+                const url = photoUrls[p.id] || getPhotoDataUrlSync(p.id);
+                return (
+                  <button
+                    key={p.id || idx}
+                    type="button"
+                    id={`btn-photo-thumb-${block.id}-${idx}`}
+                    className="sdb-block-photo-thumb-btn"
+                    onClick={() => onPreviewPhotos?.(previewItems, idx)}
+                    aria-label={`${t.sdb_view_photo} ${idx + 1}: ${desc}`}
+                    title={`${t.sdb_view_photo} (${idx + 1}/${photos.length})`}
+                  >
+                    {url ? (
+                      <img
+                        src={url}
+                        alt={`${desc || t.sdb_food_photo} (${idx + 1})`}
+                        className="sdb-block-photo-thumb"
+                      />
+                    ) : (
+                      <div className="sdb-block-photo-thumb-placeholder">📷</div>
+                    )}
+                  </button>
+                );
+              })}
+
+              {photos.length > 2 && (
+                <button
+                  type="button"
+                  id={`btn-photo-more-${block.id}`}
+                  className="sdb-block-photo-more-btn"
+                  onClick={() => onPreviewPhotos?.(previewItems, 2)}
+                  aria-label={`+${photos.length - 2} more photos: ${desc}`}
+                  title={`+${photos.length - 2} more photos`}
+                >
+                  +{photos.length - 2}
+                </button>
+              )}
+
+              <button
+                type="button"
+                id={`btn-direct-add-photo-plus-${block.id}`}
+                className="sdb-block-camera-btn sdb-block-camera-btn--plus"
+                onClick={() => cardFileInputRef.current?.click()}
+                disabled={isAddingPhoto}
+                aria-label={`${t.sdb_add_another_photo}: ${desc}`}
+                title={t.sdb_add_another_photo}
+              >
+                <span className="sdb-camera-icon">📷</span>
+                <span className="sdb-camera-plus-badge">+</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="sdb-block-desc-wrap">
           <div className="sdb-block-desc-input-container">
             <span className="sdb-block-desc-sizer" aria-hidden="true">
@@ -2280,27 +2610,30 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   const [structurePeriod, setStructurePeriod] = useState<StructureTimePeriod>('today');
   // Modal state for reporting a Slip on a block
   const [slipModalBlock, setSlipModalBlock] = useState<StructuredDietBlock | null>(null);
-  // Modal state for food photo preview (Phase 6)
-  const [previewPhoto, setPreviewPhoto] = useState<{ url: string; title?: string } | null>(null);
+  // Modal state for food photo preview (Phase 6B Multi-Photo)
+  const [previewPhotos, setPreviewPhotos] = useState<{ photos: PhotoPreviewItem[]; initialIndex?: number } | null>(null);
 
   const todayKey = getLocalTodayKey();
   const isToday = selectedDayKey === todayKey;
   const currentDay = getDayPlan(weekly, selectedDayKey);
   const isReviewCompletedToday = hasCompletedDailyReview(getLocalDateKey(), activeProfile.id);
 
-  // Preload photos for current day blocks for instant UI rendering (Phase 6)
+  // Preload photos for current day blocks for instant UI rendering (Phase 6B)
   useEffect(() => {
-    const photoIds = currentDay.blocks
-      .map(b => b.foodPhoto?.id)
-      .filter((id): id is string => Boolean(id));
+    const photoIds: string[] = [];
+    for (const b of currentDay.blocks) {
+      for (const p of getBlockPhotos(b)) {
+        if (p?.id) photoIds.push(p.id);
+      }
+    }
     if (photoIds.length > 0) {
       preloadPhotos(photoIds);
     }
   }, [currentDay.blocks]);
 
   const handleHeaderBack = () => {
-    if (previewPhoto) {
-      setPreviewPhoto(null);
+    if (previewPhotos) {
+      setPreviewPhotos(null);
       return;
     }
     if (showProfileSwitcher) {
@@ -2489,23 +2822,57 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
 
   const handleDeleteBlock = (id: string) => {
     const blockToDelete = currentDay.blocks.find(b => b.id === id);
+    const photosToClean = blockToDelete ? getBlockPhotos(blockToDelete) : [];
+
     updateWeekly(w =>
       updateDayPlan(w, selectedDayKey, day => ({
         ...day,
         blocks: day.blocks.filter(b => b.id !== id),
       }))
     );
-    if (blockToDelete?.foodPhoto?.id) {
-      const photoId = blockToDelete.foodPhoto.id;
-      // Asynchronously clean up orphan photo if unreferenced anywhere
+
+    if (photosToClean.length > 0) {
       setTimeout(() => {
         const store = loadDietStore();
         const verifs = loadAllDietVerifications();
-        if (!isPhotoReferenced(photoId, store, verifs)) {
-          deleteFoodPhoto(photoId).catch(() => {});
+        for (const p of photosToClean) {
+          if (!isPhotoReferenced(p.id, store, verifs)) {
+            deleteFoodPhoto(p.id).catch(() => {});
+          }
         }
       }, 50);
     }
+  };
+
+  // ── Direct Schedule Photo Addition (Phase 6B) ──────────────────────────────
+  const handleQuickAddPhoto = (blockId: string, photo: FoodPhotoMetadata) => {
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = getLocalDateKey(yesterdayDate);
+
+    updateWeekly(prevWeekly => {
+      let nextWeekly = prevWeekly;
+      if (!nextWeekly.historySnapshots || !nextWeekly.historySnapshots[yesterdayKey]) {
+        nextWeekly = snapshotHistoryDate(nextWeekly, yesterdayKey);
+      }
+      return updateDayPlan(nextWeekly, selectedDayKey, day => {
+        const nextBlocks = day.blocks.map(b => {
+          if (b.id !== blockId) return b;
+          const existingPhotos = getBlockPhotos(b);
+          const nextPhotos = [...existingPhotos, photo];
+          return {
+            ...b,
+            foodPhotos: nextPhotos,
+            foodPhoto: nextPhotos[0],
+          };
+        });
+        return {
+          ...day,
+          blocks: sortBlocks(nextBlocks),
+        };
+      });
+    });
+    playFeedback('neutral');
   };
 
   // ── Quick Edit block action ────────────────────────────────────────────────
@@ -2969,7 +3336,9 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                       onNavigate={onNavigate}
                       onQuickUpdateTime={(startTime, endTime) => handleQuickUpdateBlock(block.id, { startTime, endTime })}
                       onQuickUpdateDescription={(customText) => handleQuickUpdateBlock(block.id, { customText })}
-                      onPreviewPhoto={(url, title) => setPreviewPhoto({ url, title })}
+                      onQuickUpdateCategories={(foodCategories) => handleQuickUpdateBlock(block.id, { foodCategories })}
+                      onPreviewPhotos={(photos, idx) => setPreviewPhotos({ photos, initialIndex: idx })}
+                      onQuickAddPhoto={handleQuickAddPhoto}
                     />
                   ))}
                 </div>
@@ -3085,7 +3454,8 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                         onQuickUpdateTime={(startTime, endTime) => handleQuickUpdateBlock(block.id, { startTime, endTime })}
                         onQuickUpdateDescription={(customText) => handleQuickUpdateBlock(block.id, { customText })}
                         onQuickUpdateCategories={(foodCategories) => handleQuickUpdateBlock(block.id, { foodCategories })}
-                        onPreviewPhoto={(url, title) => setPreviewPhoto({ url, title })}
+                        onPreviewPhotos={(photos, idx) => setPreviewPhotos({ photos, initialIndex: idx })}
+                        onQuickAddPhoto={handleQuickAddPhoto}
                       />
                     );
                   })}
@@ -3332,12 +3702,12 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
         t={t}
       />
 
-      {/* ── Food Photo Preview Modal (Phase 6) ── */}
-      {previewPhoto && (
+      {/* ── Food Photo Preview Modal (Phase 6B Multi-Photo) ── */}
+      {previewPhotos && (
         <PhotoPreviewModal
-          photoUrl={previewPhoto.url}
-          title={previewPhoto.title}
-          onClose={() => setPreviewPhoto(null)}
+          photos={previewPhotos.photos}
+          initialIndex={previewPhotos.initialIndex}
+          onClose={() => setPreviewPhotos(null)}
           t={t}
         />
       )}

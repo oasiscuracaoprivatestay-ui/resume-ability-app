@@ -1250,6 +1250,13 @@ export const es: Translations = {
   sdb_err_process_photo: 'No se pudo procesar esta imagen. Por favor, elige otra.',
   sdb_err_save_photo: 'No se pudo guardar esta foto.',
   sdb_confirm_remove_photo: '¿Eliminar esta foto?',
+
+  // ── Phase 6B: Multi-Photo UX & Schedule Actions ──
+  sdb_food_photos: 'Fotos de Comida y Bebida',
+  sdb_add_another_photo: 'Añadir Otra Foto',
+  sdb_photo_counter: '{current} de {total}',
+  sdb_photo_nav_prev: 'Anterior',
+  sdb_photo_nav_next: 'Siguiente',
 };
 
 

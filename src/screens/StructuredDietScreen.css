@@ -3485,99 +3485,248 @@
   display: block;
 }
 
+.sdb-block-photo-thumb-placeholder {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px dashed rgba(45, 212, 191, 0.35);
+  font-size: 0.95rem;
+}
+
+/* ── Phase 6B: Schedule Media Group & Direct Camera Action ── */
+.sdb-block-media-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.sdb-block-camera-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  background: rgba(45, 212, 191, 0.09);
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-block-camera-btn:hover {
+  background: rgba(45, 212, 191, 0.18);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.sdb-block-camera-btn:active {
+  transform: scale(0.96);
+}
+
+.sdb-block-camera-btn--plus {
+  gap: 2px;
+  padding: 0 6px;
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.sdb-block-camera-btn--plus:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.sdb-camera-plus-badge {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #38bdf8;
+  line-height: 1;
+}
+
+.sdb-block-photos-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.sdb-block-photo-more-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(45, 212, 191, 0.12);
+  border: 1.5px solid rgba(45, 212, 191, 0.45);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-block-photo-more-btn:hover {
+  background: rgba(45, 212, 191, 0.24);
+  transform: scale(1.05);
+}
+
+/* ── Phase 6B: Block Editor Top Photo Section ── */
 .sdb-photo-field {
   margin-top: 0.85rem;
   margin-bottom: 0.85rem;
 }
 
-.sdb-btn-add-photo {
+.sdb-photo-field--top {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sdb-photo-gallery-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.sdb-photo-item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.4rem;
+  flex-shrink: 0;
+}
+
+.sdb-photo-item-thumb-btn {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  display: block;
+}
+
+.sdb-photo-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid rgba(45, 212, 191, 0.35);
+  display: block;
+}
+
+.sdb-photo-item-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 44px;
-  padding: 0.6rem 1rem;
   background: rgba(255, 255, 255, 0.04);
-  border: 1.5px dashed rgba(45, 212, 191, 0.4);
-  border-radius: 10px;
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+.sdb-photo-item-zoom-icon {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  padding: 1px 3px;
+  color: #fff;
+  opacity: 0.85;
+}
+
+.sdb-photo-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.sdb-btn-photo-mini {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.sdb-btn-photo-mini--replace:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.sdb-btn-photo-mini--remove:hover {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: #f43f5e;
+}
+
+.sdb-btn-add-photo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 78px;
+  min-height: 98px;
+  border: 1.5px dashed rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.05);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-primary);
   transition: all 0.2s ease;
+  padding: 0.5rem 0.4rem;
+  text-align: center;
   font-family: inherit;
 }
 
-.sdb-btn-add-photo:hover {
-  background: rgba(45, 212, 191, 0.08);
+.sdb-btn-add-photo-card:hover {
+  background: rgba(45, 212, 191, 0.12);
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.sdb-photo-preview-box {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0.8rem;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+.sdb-add-photo-card-icon {
+  font-size: 1.25rem;
 }
 
-.sdb-photo-preview-img {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1.5px solid rgba(45, 212, 191, 0.4);
-  flex-shrink: 0;
-}
-
-.sdb-photo-actions-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.sdb-btn-photo-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
+.sdb-add-photo-card-text {
+  font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
-  border: 1px solid transparent;
-  min-height: 36px;
-}
-
-.sdb-btn-photo-replace {
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-.sdb-btn-photo-replace:hover {
-  background: rgba(56, 189, 248, 0.22);
-  border-color: #38bdf8;
-}
-
-.sdb-btn-photo-remove {
-  background: rgba(244, 63, 94, 0.1);
-  color: #fb7185;
-  border-color: rgba(244, 63, 94, 0.25);
-}
-
-.sdb-btn-photo-remove:hover {
-  background: rgba(244, 63, 94, 0.2);
-  border-color: #f43f5e;
+  line-height: 1.2;
 }
 
 .sdb-photo-error-msg {
@@ -3586,11 +3735,11 @@
   margin-top: 0.35rem;
 }
 
-/* Photo Full-Size Preview Modal */
+/* ── Phase 6B: Photo Full-Size Preview Modal with Prev / Next ── */
 .sdb-photo-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.84);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 1200;
@@ -3604,7 +3753,7 @@
   background: #0f172a;
   border: 1px solid var(--border);
   border-radius: 16px;
-  max-width: 480px;
+  max-width: 520px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -3619,6 +3768,14 @@
   justify-content: space-between;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--border);
+  gap: 0.5rem;
+}
+
+.sdb-photo-modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
 .sdb-photo-modal-title {
@@ -3628,6 +3785,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sdb-photo-modal-counter {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(45, 212, 191, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sdb-photo-modal-close {
@@ -3640,6 +3809,7 @@
   border-radius: 6px;
   line-height: 1;
   transition: color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .sdb-photo-modal-close:hover {
@@ -3647,20 +3817,61 @@
 }
 
 .sdb-photo-modal-body {
+  position: relative;
   padding: 0.75rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   background: #020617;
   max-height: 70vh;
+  min-height: 220px;
   overflow: hidden;
+  gap: 0.5rem;
 }
 
 .sdb-photo-modal-img {
-  max-width: 100%;
+  max-width: calc(100% - 90px);
   max-height: 65vh;
   object-fit: contain;
   border-radius: 8px;
+  margin: 0 auto;
+}
+
+.sdb-photo-modal-loading {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: auto;
+}
+
+.sdb-photo-modal-nav {
+  background: rgba(15, 23, 42, 0.8);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  z-index: 10;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-photo-modal-nav:hover {
+  background: rgba(45, 212, 191, 0.3);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+.sdb-photo-modal-nav:active {
+  transform: scale(0.95);
 }
 
 .sdb-photo-modal-footer {

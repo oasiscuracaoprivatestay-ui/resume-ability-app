@@ -1250,6 +1250,13 @@ export const nl: Translations = {
   sdb_err_process_photo: 'Kan deze afbeelding niet verwerken. Kies een andere.',
   sdb_err_save_photo: 'Kan deze foto niet opslaan.',
   sdb_confirm_remove_photo: 'Deze foto verwijderen?',
+
+  // ── Phase 6B: Multi-Photo UX & Schedule Actions ──
+  sdb_food_photos: 'Maaltijd- & Drankfoto\'s',
+  sdb_add_another_photo: 'Nog Een Foto Toevoegen',
+  sdb_photo_counter: '{current} van {total}',
+  sdb_photo_nav_prev: 'Vorige',
+  sdb_photo_nav_next: 'Volgende',
 };
 
 

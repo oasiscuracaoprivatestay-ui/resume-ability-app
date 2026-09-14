@@ -1263,6 +1263,13 @@ export const en: Translations = {
   sdb_err_process_photo: 'Unable to process this image. Please choose another.',
   sdb_err_save_photo: 'Unable to save this photo.',
   sdb_confirm_remove_photo: 'Remove this photo?',
+
+  // ── Phase 6B: Multi-Photo UX & Schedule Actions ──
+  sdb_food_photos: 'Food & Beverage Photos',
+  sdb_add_another_photo: 'Add Another Photo',
+  sdb_photo_counter: '{current} of {total}',
+  sdb_photo_nav_prev: 'Previous',
+  sdb_photo_nav_next: 'Next',
 };
 
 
