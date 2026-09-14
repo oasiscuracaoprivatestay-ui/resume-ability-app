@@ -692,6 +692,60 @@ export const nl: Translations = {
   dash_breakdown_diet_on_track: 'Gestructureerd Dieet — Op Schema',
   dash_breakdown_diet_slip: 'Gestructureerd Dieet — Eerlijke Slip',
 
+  // ── Phase 1 Detailed Outcomes & Separate Resume Tracking ──
+  sdb_outcome_on_track: 'Op Schema',
+  sdb_outcome_adjusted_on_track: 'Aangepast en Op Schema',
+  sdb_outcome_planned_unstructured: 'Gepland Ongestructureerd',
+  sdb_outcome_near_slip: 'Bijna-Slip',
+  sdb_outcome_structured_slip: 'Gestructureerde Slip',
+  sdb_outcome_unstructured_slip: 'Ongestructureerde Slip',
+  sdb_resumed_label: 'Hervat',
+  sdb_mark_resumed: 'Markeren als Hervat',
+  sdb_marked_resumed: 'Hervat ✓',
+  sdb_resume_rate: 'Hervattingspercentage',
+  sdb_resume_count: 'Hervattingen',
+  sdb_select_outcome: 'Selecteer Resultaat',
+  sdb_outcome_select_hint: 'Kies het resultaat dat het beste past bij wat er gebeurde.',
+
+  // ── Phase 2 Food Categories ──
+  sdb_food_categories_label: 'Voedselcategorieën',
+  sdb_cat_protein: 'Eiwitten',
+  sdb_cat_simple_carbs: 'Enkelvoudige Koolhydraten',
+  sdb_cat_complex_carbs: 'Complexe Koolhydraten',
+  sdb_cat_healthy_fats: 'Gezonde Vetten',
+  sdb_cat_vegetables: 'Groenten',
+  sdb_cat_fruits: 'Fruit',
+  sdb_cat_desserts: 'Desserts',
+  sdb_cat_snacks: 'Snacks',
+  sdb_cat_beverages: 'Dranken',
+
+  // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
+  sdb_awareness_title: 'Bewustzijn van Eetstructuur',
+  sdb_awareness_how_structured: 'Hoe gestructureerd was mijn eetpatroon?',
+  sdb_stat_structured: 'Gestructureerd',
+  sdb_stat_unstructured: 'Ongestructureerd',
+  sdb_stat_structured_eating: 'Gestructureerd Eten',
+  sdb_stat_unstructured_eating: 'Ongestructureerd Eten',
+  sdb_stat_structured_pct: '% Gestructureerd',
+  sdb_stat_unstructured_pct: '% Ongestructureerd',
+  sdb_stat_structured_count: 'Aantal Gestructureerd',
+  sdb_stat_unstructured_count: 'Aantal Ongestructureerd',
+  sdb_stat_record: 'registratie',
+  sdb_stat_records: 'registraties',
+  sdb_stat_eating_structure: 'Eetstructuur',
+  sdb_stat_resume_count: 'Aantal Hervattingen',
+  sdb_stat_resume_rate: 'Hervattingspercentage',
+  sdb_stat_food_categories: 'Voedselcategorieën',
+  sdb_stat_category_distribution: 'Categorieverdeling',
+  sdb_period_today: 'Vandaag',
+  sdb_period_7d: '7 Dagen',
+  sdb_period_30d: '30 Dagen',
+  sdb_period_all: 'Alles',
+  sdb_no_structure_data: 'Nog geen structuurgegevens voor deze periode.',
+  sdb_no_category_data: 'Nog geen categoriegegevens voor deze periode.',
+  sdb_resume_summary_format: 'Hervattingspercentage {rate}% — {resumed} van {eligible} herkansingen hervat',
+  sdb_resume_no_slips: 'Geen uitglijders gerapporteerd in deze periode',
+
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'HERINNERINGEN',
   notif_screen_subtitle: 'Kies wanneer Super Diet-Ability je vriendelijk kan herinneren om in te checken en opnieuw verbinding te maken met je structuur.',
@@ -757,9 +811,21 @@ export const nl: Translations = {
   stats_hold_title: 'RESET BEVESTIGEN',
   stats_hold_instruction: 'INGEDRUKT HOUDEN OM TE RESETTEN',
   stats_hold_subtext: 'Houd 2 seconden ingedrukt om je statistieken permanent te wissen.',
-  stats_done_title: 'ALLE STATISTIEKEN GERESET',
+  stats_done_title: 'STATISTIEKEN RESET VOLTOOID',
   stats_done_desc: 'Je statistieken zijn gewist. Je plannen en voorkeuren zijn nog aanwezig.',
   stats_done_btn: 'DOORGAAN',
+
+  // ── Phase 4 Lifetime Reset Protection ──
+  stats_lifetime_choice_title: 'TOTAALSCORE & NIVEAU',
+  stats_lifetime_choice_question: 'Wil je ook je Totaalscore en Niveau resetten?',
+  stats_lifetime_choice_desc: 'Standaard blijven je verdiende punten, huidige niveau en voortgangsgeschiedenis behouden zodat je opgebouwde traject nooit verloren gaat.',
+  stats_btn_keep_lifetime: 'TOTAALSCORE BEHOUDEN (AANBEVOLEN)',
+  stats_btn_reset_lifetime: 'TOTAALSCORE RESETTEN...',
+  stats_lifetime_confirm_title: 'TOTAALSCORE RESETTEN?',
+  stats_lifetime_confirm_warning: 'Dit zal je Totaalscore, huidige Niveau, voortgang en gerelateerde geschiedenis permanent resetten. Deze actie kan niet ongedaan worden gemaakt.',
+  stats_btn_confirm_lifetime_reset: 'PERMANENT TOTAALSCORE RESETTEN',
+  stats_done_lifetime_kept: 'Je activiteitsstatistieken zijn gereset. Je Totaalscore en Niveau zijn veilig behouden.',
+  stats_done_lifetime_reset: 'Je statistieken, Totaalscore en Niveau zijn allemaal volledig gereset.',
 
   // ── Phase 14: Background Push & PWA ──
   push_section_delivery: 'BEZORGINGSMETHODE',
@@ -1135,6 +1201,7 @@ export const nl: Translations = {
 
   // ── Global Score, Progression, and Level-up ──
   global_score_badge_today: 'Vandaag',
+  global_score_badge_lifetime: 'Totaal',
   global_score_badge_level: 'Niv',
   global_score_badge_title: 'Score & Niveauvoortgang',
   level_label: 'Niveau',
@@ -1169,6 +1236,20 @@ export const nl: Translations = {
   score_cat_motivation: 'Motivatie Bekeken',
   score_cat_timer: 'Timersessie',
   score_cat_consistency_bonus: 'Consistentiebonus',
+
+  // ── Phase 6: Food & Beverage Photos ──
+  sdb_add_photo: 'Foto Toevoegen',
+  sdb_add_food_photo: 'Maaltijdfoto Toevoegen',
+  sdb_take_choose_photo: 'Foto Maken of Kiezen',
+  sdb_replace_photo: 'Foto Vervangen',
+  sdb_remove_photo: 'Foto Verwijderen',
+  sdb_food_photo: 'Maaltijdfoto',
+  sdb_view_photo: 'Foto Bekijken',
+  sdb_photo_preview_title: 'Maaltijd / Drank Foto',
+  sdb_close_preview: 'Sluiten',
+  sdb_err_process_photo: 'Kan deze afbeelding niet verwerken. Kies een andere.',
+  sdb_err_save_photo: 'Kan deze foto niet opslaan.',
+  sdb_confirm_remove_photo: 'Deze foto verwijderen?',
 };
 
 

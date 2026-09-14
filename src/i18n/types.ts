@@ -602,6 +602,60 @@ export interface Translations {
   dash_breakdown_diet_on_track: string;
   dash_breakdown_diet_slip: string;
 
+  // ── Phase 1 Detailed Outcomes & Separate Resume Tracking ──
+  sdb_outcome_on_track: string;
+  sdb_outcome_adjusted_on_track: string;
+  sdb_outcome_planned_unstructured: string;
+  sdb_outcome_near_slip: string;
+  sdb_outcome_structured_slip: string;
+  sdb_outcome_unstructured_slip: string;
+  sdb_resumed_label: string;
+  sdb_mark_resumed: string;
+  sdb_marked_resumed: string;
+  sdb_resume_rate: string;
+  sdb_resume_count: string;
+  sdb_select_outcome: string;
+  sdb_outcome_select_hint: string;
+
+  // ── Phase 2 Food Categories ──
+  sdb_food_categories_label: string;
+  sdb_cat_protein: string;
+  sdb_cat_simple_carbs: string;
+  sdb_cat_complex_carbs: string;
+  sdb_cat_healthy_fats: string;
+  sdb_cat_vegetables: string;
+  sdb_cat_fruits: string;
+  sdb_cat_desserts: string;
+  sdb_cat_snacks: string;
+  sdb_cat_beverages: string;
+
+  // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
+  sdb_awareness_title: string;
+  sdb_awareness_how_structured: string;
+  sdb_stat_structured: string;
+  sdb_stat_unstructured: string;
+  sdb_stat_structured_eating: string;
+  sdb_stat_unstructured_eating: string;
+  sdb_stat_structured_pct: string;
+  sdb_stat_unstructured_pct: string;
+  sdb_stat_structured_count: string;
+  sdb_stat_unstructured_count: string;
+  sdb_stat_record: string;
+  sdb_stat_records: string;
+  sdb_stat_eating_structure: string;
+  sdb_stat_resume_count: string;
+  sdb_stat_resume_rate: string;
+  sdb_stat_food_categories: string;
+  sdb_stat_category_distribution: string;
+  sdb_period_today: string;
+  sdb_period_7d: string;
+  sdb_period_30d: string;
+  sdb_period_all: string;
+  sdb_no_structure_data: string;
+  sdb_no_category_data: string;
+  sdb_resume_summary_format: string;
+  sdb_resume_no_slips: string;
+
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: string;
   notif_screen_subtitle: string;
@@ -669,6 +723,17 @@ export interface Translations {
   stats_done_title: string;
   stats_done_desc: string;
   stats_done_btn: string;
+  // ── Phase 4 Lifetime Reset Protection ──
+  stats_lifetime_choice_title: string;
+  stats_lifetime_choice_question: string;
+  stats_lifetime_choice_desc: string;
+  stats_btn_keep_lifetime: string;
+  stats_btn_reset_lifetime: string;
+  stats_lifetime_confirm_title: string;
+  stats_lifetime_confirm_warning: string;
+  stats_btn_confirm_lifetime_reset: string;
+  stats_done_lifetime_kept: string;
+  stats_done_lifetime_reset: string;
   // ── Phase 14: Background Push & PWA ──
   push_section_delivery: string;
   push_channel_push: string;
@@ -1043,6 +1108,7 @@ export interface Translations {
 
   // ── Global Score, Progression, and Level-up ──
   global_score_badge_today: string;
+  global_score_badge_lifetime: string;
   global_score_badge_level: string;
   global_score_badge_title: string;
   level_label: string;
@@ -1077,6 +1143,20 @@ export interface Translations {
   score_cat_motivation: string;
   score_cat_timer: string;
   score_cat_consistency_bonus: string;
+
+  // ── Phase 6: Food & Beverage Photos ──
+  sdb_add_photo: string;
+  sdb_add_food_photo: string;
+  sdb_take_choose_photo: string;
+  sdb_replace_photo: string;
+  sdb_remove_photo: string;
+  sdb_food_photo: string;
+  sdb_view_photo: string;
+  sdb_photo_preview_title: string;
+  sdb_close_preview: string;
+  sdb_err_process_photo: string;
+  sdb_err_save_photo: string;
+  sdb_confirm_remove_photo: string;
 }
 
 

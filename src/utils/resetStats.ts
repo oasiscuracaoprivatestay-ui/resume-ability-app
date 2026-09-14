@@ -26,13 +26,19 @@ import { CELEBRATED_LEVEL_KEY } from './progressionEngine';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
+export interface ResetStatsOptions {
+  resetLifetimeScore?: boolean;
+}
+
 /**
- * Resets all user activity and statistical history.
+ * Resets user activity and statistical history.
  *
  * Safe against malformed data. Never throws.
+ * By default, strictly PRESERVES Lifetime Score, current Level, and progression history
+ * unless options.resetLifetimeScore is explicitly set to true after user confirmation.
  * Emits a window event so active components can refresh state immediately.
  */
-export function resetAllStats(): void {
+export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore: false }): void {
   try {
     // 1. Check-Ins & Check-In Wins
     clearCheckIns();
@@ -62,17 +68,17 @@ export function resetAllStats(): void {
     // 9. Transient notification delivery state (preserves notification settings)
     clearNotificationDeliveryState();
 
-    // 10. Scoring Engine Store
-    resetScoreStore();
-
-    // 11. Daily Reviews
+    // 10. Daily Reviews
     clearAllDailyReviews();
 
-    // 12. Level-up acknowledged state
-    try {
-      localStorage.removeItem(CELEBRATED_LEVEL_KEY);
-    } catch {
-      // ignore
+    // 11. Scoring Engine Store & Level Progression — ONLY when explicitly confirmed!
+    if (options.resetLifetimeScore === true) {
+      resetScoreStore();
+      try {
+        localStorage.removeItem(CELEBRATED_LEVEL_KEY);
+      } catch {
+        // ignore
+      }
     }
 
     // Notify listeners that stats have reset

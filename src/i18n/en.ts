@@ -705,6 +705,60 @@ export const en: Translations = {
   dash_breakdown_diet_on_track: 'Structured Diet — On Track',
   dash_breakdown_diet_slip: 'Structured Diet — Honest Slip',
 
+  // ── Phase 1 Detailed Outcomes & Separate Resume Tracking ──
+  sdb_outcome_on_track: 'On Track',
+  sdb_outcome_adjusted_on_track: 'Adjusted and On Track',
+  sdb_outcome_planned_unstructured: 'Planned Unstructured',
+  sdb_outcome_near_slip: 'Near-Slip',
+  sdb_outcome_structured_slip: 'Structured Slip',
+  sdb_outcome_unstructured_slip: 'Unstructured Slip',
+  sdb_resumed_label: 'Resumed',
+  sdb_mark_resumed: 'Mark as Resumed',
+  sdb_marked_resumed: 'Resumed ✓',
+  sdb_resume_rate: 'Resume Rate',
+  sdb_resume_count: 'Resumes',
+  sdb_select_outcome: 'Select Outcome',
+  sdb_outcome_select_hint: 'Choose the outcome that best matches what happened.',
+
+  // ── Phase 2 Food Categories ──
+  sdb_food_categories_label: 'Food Categories',
+  sdb_cat_protein: 'Protein',
+  sdb_cat_simple_carbs: 'Simple Carbs',
+  sdb_cat_complex_carbs: 'Complex Carbs',
+  sdb_cat_healthy_fats: 'Healthy Fats',
+  sdb_cat_vegetables: 'Vegetables',
+  sdb_cat_fruits: 'Fruits',
+  sdb_cat_desserts: 'Desserts',
+  sdb_cat_snacks: 'Snacks',
+  sdb_cat_beverages: 'Beverages',
+
+  // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
+  sdb_awareness_title: 'Eating Structure Awareness',
+  sdb_awareness_how_structured: 'How structured was my eating?',
+  sdb_stat_structured: 'Structured',
+  sdb_stat_unstructured: 'Unstructured',
+  sdb_stat_structured_eating: 'Structured Eating',
+  sdb_stat_unstructured_eating: 'Unstructured Eating',
+  sdb_stat_structured_pct: 'Structured %',
+  sdb_stat_unstructured_pct: 'Unstructured %',
+  sdb_stat_structured_count: 'Structured Count',
+  sdb_stat_unstructured_count: 'Unstructured Count',
+  sdb_stat_record: 'record',
+  sdb_stat_records: 'records',
+  sdb_stat_eating_structure: 'Eating Structure',
+  sdb_stat_resume_count: 'Resume Count',
+  sdb_stat_resume_rate: 'Resume Rate',
+  sdb_stat_food_categories: 'Food Categories',
+  sdb_stat_category_distribution: 'Category Distribution',
+  sdb_period_today: 'Today',
+  sdb_period_7d: '7 Days',
+  sdb_period_30d: '30 Days',
+  sdb_period_all: 'All Time',
+  sdb_no_structure_data: 'No structure data yet for this period.',
+  sdb_no_category_data: 'No food-category data yet for this period.',
+  sdb_resume_summary_format: 'Resume Rate {rate}% — {resumed} of {eligible} eligible slips resumed',
+  sdb_resume_no_slips: 'No slips reported in this period',
+
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'REMINDERS',
   notif_screen_subtitle: 'Choose when Super Diet-Ability can gently remind you to check in and reconnect with your structure.',
@@ -770,9 +824,21 @@ export const en: Translations = {
   stats_hold_title: 'CONFIRM RESET',
   stats_hold_instruction: 'PRESS AND HOLD TO RESET',
   stats_hold_subtext: 'Press and hold for 2 seconds to permanently clear your statistics.',
-  stats_done_title: 'ALL STATS RESET',
+  stats_done_title: 'STATS RESET COMPLETE',
   stats_done_desc: 'Your statistics have been cleared. Your plans and preferences are still here.',
   stats_done_btn: 'CONTINUE',
+
+  // ── Phase 4 Lifetime Reset Protection ──
+  stats_lifetime_choice_title: 'LIFETIME SCORE & LEVEL',
+  stats_lifetime_choice_question: 'Do you also want to reset your Lifetime Score and Level?',
+  stats_lifetime_choice_desc: 'By default, your lifetime points, current level, and progression history are preserved so you never lose your hard-earned journey.',
+  stats_btn_keep_lifetime: 'KEEP LIFETIME SCORE (RECOMMENDED)',
+  stats_btn_reset_lifetime: 'RESET LIFETIME SCORE...',
+  stats_lifetime_confirm_title: 'RESET LIFETIME SCORE?',
+  stats_lifetime_confirm_warning: 'This will permanently reset your Lifetime Score, current Level, progression, and related lifetime progression history. This action cannot be undone.',
+  stats_btn_confirm_lifetime_reset: 'PERMANENTLY RESET LIFETIME SCORE',
+  stats_done_lifetime_kept: 'Your activity statistics have been reset. Your Lifetime Score and Level were safely kept.',
+  stats_done_lifetime_reset: 'Your statistics, Lifetime Score, and Level have all been reset.',
 
   // ── Phase 14: Background Push & PWA ──
   push_section_delivery: 'DELIVERY METHOD',
@@ -1148,6 +1214,7 @@ export const en: Translations = {
 
   // ── Global Score, Progression, and Level-up ──
   global_score_badge_today: 'Today',
+  global_score_badge_lifetime: 'Lifetime',
   global_score_badge_level: 'Lvl',
   global_score_badge_title: 'Score & Level Progression',
   level_label: 'Level',
@@ -1182,6 +1249,20 @@ export const en: Translations = {
   score_cat_motivation: 'Motivation Consumed',
   score_cat_timer: 'Timer Session',
   score_cat_consistency_bonus: 'Consistency Bonus',
+
+  // ── Phase 6: Food & Beverage Photos ──
+  sdb_add_photo: 'Add Photo',
+  sdb_add_food_photo: 'Add Food Photo',
+  sdb_take_choose_photo: 'Take or Choose Photo',
+  sdb_replace_photo: 'Replace Photo',
+  sdb_remove_photo: 'Remove Photo',
+  sdb_food_photo: 'Food Photo',
+  sdb_view_photo: 'View Photo',
+  sdb_photo_preview_title: 'Meal / Beverage Photo',
+  sdb_close_preview: 'Close',
+  sdb_err_process_photo: 'Unable to process this image. Please choose another.',
+  sdb_err_save_photo: 'Unable to save this photo.',
+  sdb_confirm_remove_photo: 'Remove this photo?',
 };
 
 

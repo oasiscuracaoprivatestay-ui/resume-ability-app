@@ -12,6 +12,13 @@
  * Fully backward-compatible: automatically migrates v2/v1 data into Moderate Fat Loss.
  */
 
+import {
+  FoodCategoryKey,
+  FOOD_CATEGORY_KEYS,
+  mapLegacyItemsToCategories,
+} from '../data/dietData';
+import type { FoodPhotoMetadata } from './photoStorage';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
@@ -24,8 +31,10 @@ export interface StructuredDietBlock {
   startTime: string;   // 24h "HH:MM"
   endTime: string;     // 24h "HH:MM"
   type: string;        // from BLOCK_TYPES or 'Custom'
-  items: string[];     // selected from FOOD_OPTIONS
+  items: string[];     // legacy selected options or sample items
   customText: string;  // free-text; empty string if not set
+  foodCategories?: FoodCategoryKey[]; // Phase 2: multi-select categories
+  foodPhoto?: FoodPhotoMetadata;      // Phase 6: optional food/beverage photo attachment
 }
 
 export interface StructuredDietDay {
@@ -93,9 +102,9 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Rapid Fat Loss',
     description: 'Aggressive fat loss protocol with structured eating windows',
     sampleBlocks: [
-      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Spinach'], customText: '' },
-      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Chicken Breast', 'Broccoli', 'Mixed Greens'], customText: '' },
-      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['White Fish', 'Asparagus', 'Zucchini'], customText: '' },
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Spinach'], customText: '', foodCategories: ['protein', 'vegetables'] },
+      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Chicken Breast', 'Broccoli', 'Mixed Greens'], customText: '', foodCategories: ['protein', 'vegetables'] },
+      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['White Fish', 'Asparagus', 'Zucchini'], customText: '', foodCategories: ['protein', 'vegetables'] },
     ],
   },
   {
@@ -103,10 +112,10 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Moderate Fat Loss',
     description: 'Steady, sustainable fat loss with balanced daily nutrition',
     sampleBlocks: [
-      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Oatmeal', 'Berries'], customText: '' },
-      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Breast', 'Rice', 'Broccoli'], customText: '' },
-      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Almonds'], customText: '' },
-      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Salmon', 'Sweet Potato', 'Mixed Greens'], customText: '' },
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Oatmeal', 'Berries'], customText: '', foodCategories: ['protein', 'complex_carbs', 'fruits'] },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Breast', 'Rice', 'Broccoli'], customText: '', foodCategories: ['protein', 'complex_carbs', 'vegetables'] },
+      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Almonds'], customText: '', foodCategories: ['protein', 'healthy_fats', 'snacks'] },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Salmon', 'Sweet Potato', 'Mixed Greens'], customText: '', foodCategories: ['protein', 'healthy_fats', 'complex_carbs', 'vegetables'] },
     ],
   },
   {
@@ -114,10 +123,10 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Protecting the Current Loss',
     description: 'Consolidation phase to protect recent weight loss and reset baseline',
     sampleBlocks: [
-      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Oatmeal', 'Protein Powder', 'Berries'], customText: '' },
-      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Turkey Breast', 'Quinoa', 'Mixed Greens'], customText: '' },
-      { startTime: '16:30', endTime: '16:50', type: 'Snack', items: ['Apple', 'Almonds'], customText: '' },
-      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Lean Beef', 'Baked Potato', 'Green Beans'], customText: '' },
+      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Oatmeal', 'Protein Powder', 'Berries'], customText: '', foodCategories: ['protein', 'complex_carbs', 'fruits'] },
+      { startTime: '13:00', endTime: '13:30', type: 'Lunch', items: ['Turkey Breast', 'Quinoa', 'Mixed Greens'], customText: '', foodCategories: ['protein', 'complex_carbs', 'vegetables'] },
+      { startTime: '16:30', endTime: '16:50', type: 'Snack', items: ['Apple', 'Almonds'], customText: '', foodCategories: ['fruits', 'healthy_fats', 'snacks'] },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Lean Beef', 'Baked Potato', 'Green Beans'], customText: '', foodCategories: ['protein', 'complex_carbs', 'vegetables'] },
     ],
   },
   {
@@ -125,10 +134,10 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Maintenance',
     description: 'Long-term metabolic balance and flexible lifestyle nutrition',
     sampleBlocks: [
-      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Whole Wheat Bread', 'Avocado'], customText: '' },
-      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Salmon', 'Brown Rice', 'Mixed Veggies'], customText: '' },
-      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Berries', 'Walnuts'], customText: '' },
-      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Chicken Breast', 'Pasta', 'Olive Oil', 'Salad'], customText: '' },
+      { startTime: '08:00', endTime: '08:30', type: 'Breakfast', items: ['Eggs', 'Whole Wheat Bread', 'Avocado'], customText: '', foodCategories: ['protein', 'complex_carbs', 'healthy_fats'] },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Salmon', 'Brown Rice', 'Mixed Veggies'], customText: '', foodCategories: ['protein', 'healthy_fats', 'complex_carbs', 'vegetables'] },
+      { startTime: '16:00', endTime: '16:20', type: 'Snack', items: ['Greek Yogurt', 'Berries', 'Walnuts'], customText: '', foodCategories: ['protein', 'fruits', 'healthy_fats', 'snacks'] },
+      { startTime: '19:30', endTime: '20:00', type: 'Dinner', items: ['Chicken Breast', 'Pasta', 'Olive Oil', 'Salad'], customText: '', foodCategories: ['protein', 'complex_carbs', 'healthy_fats', 'vegetables'] },
     ],
   },
   {
@@ -136,9 +145,9 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Vacation Maintenance',
     description: 'Flexible rhythm with anchor meals to maintain weight while travelling',
     sampleBlocks: [
-      { startTime: '10:00', endTime: '10:45', type: 'Breakfast', items: ['Eggs', 'Fruit', 'Coffee'], customText: 'Morning brunch' },
-      { startTime: '15:00', endTime: '15:30', type: 'Snack', items: ['Fruit', 'Nuts'], customText: 'Afternoon refuel' },
-      { startTime: '20:00', endTime: '21:00', type: 'Dinner', items: ['Fish', 'Salad'], customText: 'Social evening dinner' },
+      { startTime: '10:00', endTime: '10:45', type: 'Breakfast', items: ['Eggs', 'Fruit', 'Coffee'], customText: 'Morning brunch', foodCategories: ['protein', 'fruits', 'beverages'] },
+      { startTime: '15:00', endTime: '15:30', type: 'Snack', items: ['Fruit', 'Nuts'], customText: 'Afternoon refuel', foodCategories: ['fruits', 'healthy_fats', 'snacks'] },
+      { startTime: '20:00', endTime: '21:00', type: 'Dinner', items: ['Fish', 'Salad'], customText: 'Social evening dinner', foodCategories: ['protein', 'vegetables'] },
     ],
   },
   {
@@ -146,10 +155,10 @@ export const BUILT_IN_GOALS: Array<{
     name: 'Recovery During Illness',
     description: 'Light meals, gentle digestion, and restorative hydration',
     sampleBlocks: [
-      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Tea', 'Toast', 'Honey'], customText: 'Hydration & light morning' },
-      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Soup', 'Crackers', 'Rice'], customText: 'Recovery lunch' },
-      { startTime: '16:00', endTime: '16:30', type: 'Snack', items: ['Herbal Tea', 'Banana'], customText: 'Rest & fluids' },
-      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['Broth', 'Steamed Veggies', 'Rice'], customText: 'Gentle dinner' },
+      { startTime: '08:30', endTime: '09:00', type: 'Breakfast', items: ['Tea', 'Toast', 'Honey'], customText: 'Hydration & light morning', foodCategories: ['beverages', 'simple_carbs'] },
+      { startTime: '12:30', endTime: '13:00', type: 'Lunch', items: ['Chicken Soup', 'Crackers', 'Rice'], customText: 'Recovery lunch', foodCategories: ['protein', 'simple_carbs', 'complex_carbs'] },
+      { startTime: '16:00', endTime: '16:30', type: 'Snack', items: ['Herbal Tea', 'Banana'], customText: 'Rest & fluids', foodCategories: ['beverages', 'fruits', 'snacks'] },
+      { startTime: '19:00', endTime: '19:30', type: 'Dinner', items: ['Broth', 'Steamed Veggies', 'Rice'], customText: 'Gentle dinner', foodCategories: ['beverages', 'vegetables', 'complex_carbs'] },
     ],
   },
 ];
@@ -180,6 +189,9 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
     type: b.type,
     items: Array.isArray(b.items) ? [...b.items] : [],
     customText: typeof b.customText === 'string' ? b.customText : '',
+    foodCategories: Array.isArray(b.foodCategories)
+      ? [...b.foodCategories]
+      : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []),
   }));
 }
 
@@ -212,6 +224,9 @@ export function createWeeklyDietFromTemplate(
         ...b,
         id: generateBlockId(),
         items: [...b.items],
+        foodCategories: Array.isArray(b.foodCategories)
+          ? [...b.foodCategories]
+          : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []),
       })),
     })),
   };
@@ -758,7 +773,19 @@ function isValidBlock(b: unknown): b is StructuredDietBlock {
   );
 }
 
-function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
+export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
+  const categories: FoodCategoryKey[] = Array.isArray(b.foodCategories)
+    ? (b.foodCategories.filter(c => (FOOD_CATEGORY_KEYS as readonly string[]).includes(c)) as FoodCategoryKey[])
+    : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []);
+
+  const foodPhoto = b.foodPhoto && typeof b.foodPhoto.id === 'string'
+    ? {
+        id: b.foodPhoto.id,
+        createdAt: typeof b.foodPhoto.createdAt === 'string' ? b.foodPhoto.createdAt : new Date().toISOString(),
+        mimeType: typeof b.foodPhoto.mimeType === 'string' ? b.foodPhoto.mimeType : 'image/jpeg',
+      }
+    : undefined;
+
   return {
     id: b.id,
     startTime: b.startTime,
@@ -766,6 +793,8 @@ function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     type: b.type,
     items: Array.isArray(b.items) ? b.items.filter(i => typeof i === 'string') : [],
     customText: typeof b.customText === 'string' ? b.customText : '',
+    foodCategories: categories,
+    foodPhoto,
   };
 }
 

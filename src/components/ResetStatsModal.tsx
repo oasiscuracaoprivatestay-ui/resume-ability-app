@@ -9,7 +9,7 @@ interface ResetStatsModalProps {
   onResetComplete?: () => void;
 }
 
-type ModalStep = 'warning' | 'hold' | 'success';
+type ModalStep = 'warning' | 'hold' | 'lifetime_choice' | 'lifetime_confirm' | 'success';
 
 const HOLD_DURATION_MS = 2500;
 const RADIUS = 44;
@@ -24,6 +24,7 @@ export default function ResetStatsModal({
   const [step, setStep] = useState<ModalStep>('warning');
   const [holding, setHolding] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [resetLifetimeConfirmed, setResetLifetimeConfirmed] = useState(false);
 
   const startRef = useRef<number | null>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -36,6 +37,7 @@ export default function ResetStatsModal({
       setStep('warning');
       setHolding(false);
       setProgress(0);
+      setResetLifetimeConfirmed(false);
       holdCompletedRef.current = false;
     } else {
       if (animFrameRef.current) {
@@ -81,15 +83,12 @@ export default function ResetStatsModal({
     setProgress(0);
   }, []);
 
-  const triggerReset = useCallback(() => {
+  const handleHoldSuccess = useCallback(() => {
     holdCompletedRef.current = true;
     setHolding(false);
     setProgress(1);
-
-    // Centrally reset all activity/statistical storage
-    resetAllStats();
-
-    setStep('success');
+    // Move to separate Lifetime Score decision (Phase 4)
+    setStep('lifetime_choice');
   }, []);
 
   const startHold = useCallback(() => {
@@ -105,14 +104,20 @@ export default function ResetStatsModal({
       setProgress(p);
 
       if (p >= 1) {
-        triggerReset();
+        handleHoldSuccess();
       } else {
         animFrameRef.current = requestAnimationFrame(loop);
       }
     };
 
     animFrameRef.current = requestAnimationFrame(loop);
-  }, [step, triggerReset]);
+  }, [step, handleHoldSuccess]);
+
+  const executeReset = (resetLifetime: boolean) => {
+    setResetLifetimeConfirmed(resetLifetime);
+    resetAllStats({ resetLifetimeScore: resetLifetime });
+    setStep('success');
+  };
 
   const handleFinishSuccess = () => {
     onClose();
@@ -164,6 +169,7 @@ export default function ResetStatsModal({
             <div className="reset-modal-actions">
               <button
                 type="button"
+                id="btn-reset-cancel-step1"
                 className="reset-modal-btn reset-modal-btn--cancel"
                 onClick={handleCancel}
               >
@@ -171,6 +177,7 @@ export default function ResetStatsModal({
               </button>
               <button
                 type="button"
+                id="btn-reset-proceed-hold"
                 className="reset-modal-btn reset-modal-btn--danger"
                 onClick={() => setStep('hold')}
               >
@@ -247,7 +254,81 @@ export default function ResetStatsModal({
           </div>
         )}
 
-        {/* STEP 3: SUCCESS FEEDBACK */}
+        {/* STEP 3: LIFETIME SCORE SEPARATE DECISION (Phase 4) */}
+        {step === 'lifetime_choice' && (
+          <div className="reset-modal-content">
+            <div className="reset-modal-icon-badge reset-modal-icon-badge--choice" aria-hidden="true">
+              ⚡
+            </div>
+            <h2 id="reset-modal-title" className="reset-modal-title">
+              {t.stats_lifetime_choice_title}
+            </h2>
+            <div className="reset-modal-body">
+              <p className="reset-modal-choice-question">{t.stats_lifetime_choice_question}</p>
+              <div className="reset-modal-preservation-box">
+                <span className="reset-modal-shield" aria-hidden="true">🛡️</span>
+                <p>{t.stats_lifetime_choice_desc}</p>
+              </div>
+            </div>
+            <div className="reset-modal-actions reset-modal-actions--stacked">
+              <button
+                type="button"
+                id="btn-keep-lifetime-score"
+                className="reset-modal-btn reset-modal-btn--keep reset-modal-btn--full"
+                onClick={() => executeReset(false)}
+                autoFocus
+              >
+                ✓ {t.stats_btn_keep_lifetime}
+              </button>
+              <button
+                type="button"
+                id="btn-prompt-reset-lifetime"
+                className="reset-modal-btn reset-modal-btn--reset-subtle reset-modal-btn--full"
+                onClick={() => setStep('lifetime_confirm')}
+              >
+                ⚠️ {t.stats_btn_reset_lifetime}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: DESTRUCTIVE CONFIRMATION BARRIER (Phase 4) */}
+        {step === 'lifetime_confirm' && (
+          <div className="reset-modal-content">
+            <div className="reset-modal-icon-badge" aria-hidden="true">
+              💥
+            </div>
+            <h2 id="reset-modal-title" className="reset-modal-title reset-modal-title--danger">
+              {t.stats_lifetime_confirm_title}
+            </h2>
+            <div className="reset-modal-body">
+              <div className="reset-modal-danger-box">
+                <p className="reset-modal-danger-text">{t.stats_lifetime_confirm_warning}</p>
+              </div>
+            </div>
+            <div className="reset-modal-actions reset-modal-actions--stacked">
+              <button
+                type="button"
+                id="btn-cancel-lifetime-destructive"
+                className="reset-modal-btn reset-modal-btn--keep reset-modal-btn--full"
+                onClick={() => executeReset(false)}
+                autoFocus
+              >
+                {t.stats_btn_keep_lifetime}
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-lifetime-wipe"
+                className="reset-modal-btn reset-modal-btn--danger-destruct reset-modal-btn--full"
+                onClick={() => executeReset(true)}
+              >
+                {t.stats_btn_confirm_lifetime_reset}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: SUCCESS FEEDBACK */}
         {step === 'success' && (
           <div className="reset-modal-content">
             <div className="reset-modal-icon-badge reset-modal-icon-badge--success" aria-hidden="true">
@@ -256,7 +337,11 @@ export default function ResetStatsModal({
             <h2 id="reset-modal-title" className="reset-modal-title">
               {t.stats_done_title}
             </h2>
-            <p className="reset-modal-success-desc">{t.stats_done_desc}</p>
+            <p className="reset-modal-success-desc">
+              {resetLifetimeConfirmed
+                ? t.stats_done_lifetime_reset
+                : t.stats_done_lifetime_kept}
+            </p>
 
             <button
               type="button"

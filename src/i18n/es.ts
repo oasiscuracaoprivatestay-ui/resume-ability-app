@@ -692,6 +692,60 @@ export const es: Translations = {
   dash_breakdown_diet_on_track: 'Dieta Estructurada — En Rumbo',
   dash_breakdown_diet_slip: 'Dieta Estructurada — Desliz Honesto',
 
+  // ── Phase 1 Detailed Outcomes & Separate Resume Tracking ──
+  sdb_outcome_on_track: 'En Rumbo',
+  sdb_outcome_adjusted_on_track: 'Ajustado y En Rumbo',
+  sdb_outcome_planned_unstructured: 'No Estructurado Planificado',
+  sdb_outcome_near_slip: 'Casi Desliz',
+  sdb_outcome_structured_slip: 'Desliz Estructurado',
+  sdb_outcome_unstructured_slip: 'Desliz No Estructurado',
+  sdb_resumed_label: 'Reanudado',
+  sdb_mark_resumed: 'Marcar como Reanudado',
+  sdb_marked_resumed: 'Reanudado ✓',
+  sdb_resume_rate: 'Tasa de Reanudación',
+  sdb_resume_count: 'Reanudaciones',
+  sdb_select_outcome: 'Seleccionar Resultado',
+  sdb_outcome_select_hint: 'Elige el resultado que mejor describe lo ocurrido.',
+
+  // ── Phase 2 Food Categories ──
+  sdb_food_categories_label: 'Categorías de Alimentos',
+  sdb_cat_protein: 'Proteínas',
+  sdb_cat_simple_carbs: 'Carbohidratos Simples',
+  sdb_cat_complex_carbs: 'Carbohidratos Complejos',
+  sdb_cat_healthy_fats: 'Grasas Saludables',
+  sdb_cat_vegetables: 'Verduras',
+  sdb_cat_fruits: 'Frutas',
+  sdb_cat_desserts: 'Postres',
+  sdb_cat_snacks: 'Snacks',
+  sdb_cat_beverages: 'Bebidas',
+
+  // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
+  sdb_awareness_title: 'Consciencia de Estructura Alimentaria',
+  sdb_awareness_how_structured: '¿Qué tan estructurada fue mi alimentación?',
+  sdb_stat_structured: 'Estructurado',
+  sdb_stat_unstructured: 'No estructurado',
+  sdb_stat_structured_eating: 'Alimentación Estructurada',
+  sdb_stat_unstructured_eating: 'Alimentación No Estructurada',
+  sdb_stat_structured_pct: '% Estructurado',
+  sdb_stat_unstructured_pct: '% No estructurado',
+  sdb_stat_structured_count: 'Cantidad Estructurada',
+  sdb_stat_unstructured_count: 'Cantidad No Estructurada',
+  sdb_stat_record: 'registro',
+  sdb_stat_records: 'registros',
+  sdb_stat_eating_structure: 'Estructura Alimentaria',
+  sdb_stat_resume_count: 'Cantidad de Retomadas',
+  sdb_stat_resume_rate: 'Tasa de Retomada',
+  sdb_stat_food_categories: 'Categorías de Alimentos',
+  sdb_stat_category_distribution: 'Distribución de Categorías',
+  sdb_period_today: 'Hoy',
+  sdb_period_7d: '7 Días',
+  sdb_period_30d: '30 Días',
+  sdb_period_all: 'Todo el tiempo',
+  sdb_no_structure_data: 'Aún no hay datos de estructura para este período.',
+  sdb_no_category_data: 'Aún no hay datos de categorías para este período.',
+  sdb_resume_summary_format: 'Tasa de Retomada {rate}% — {resumed} de {eligible} tropiezos elegibles retomados',
+  sdb_resume_no_slips: 'Sin tropiezos reportados en este período',
+
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'RECORDATORIOS',
   notif_screen_subtitle: 'Elige cuándo Super Diet-Ability puede recordarte suavemente registrarte y reconectar con tu estructura.',
@@ -757,9 +811,21 @@ export const es: Translations = {
   stats_hold_title: 'CONFIRMAR REINICIO',
   stats_hold_instruction: 'MANTÉN PRESIONADO PARA REINICIAR',
   stats_hold_subtext: 'Mantén presionado durante 2 segundos para borrar tus estadísticas.',
-  stats_done_title: 'TODAS LAS ESTADÍSTICAS REINICIADAS',
+  stats_done_title: 'REINICIO DE ESTADÍSTICAS COMPLETADO',
   stats_done_desc: 'Tus estadísticas se han borrado. Tus planes y preferencias permanecen intactos.',
   stats_done_btn: 'CONTINUAR',
+
+  // ── Phase 4 Lifetime Reset Protection ──
+  stats_lifetime_choice_title: 'PUNTUACIÓN TOTAL Y NIVEL',
+  stats_lifetime_choice_question: '¿Deseas también reiniciar tu Puntuación Total y Nivel?',
+  stats_lifetime_choice_desc: 'Por defecto, tus puntos acumulados, tu nivel actual y tu historial de progresión se conservan para que nunca pierdas tu trayectoria lograda.',
+  stats_btn_keep_lifetime: 'CONSERVAR PUNTUACIÓN TOTAL (RECOMENDADO)',
+  stats_btn_reset_lifetime: 'REINICIAR PUNTUACIÓN TOTAL...',
+  stats_lifetime_confirm_title: '¿REINICIAR PUNTUACIÓN TOTAL?',
+  stats_lifetime_confirm_warning: 'Esto reiniciará permanentemente tu Puntuación Total, Nivel actual, progresión e historial relacionado. Esta acción no se puede deshacer.',
+  stats_btn_confirm_lifetime_reset: 'REINICIAR PERMANENTEMENTE PUNTUACIÓN TOTAL',
+  stats_done_lifetime_kept: 'Tus estadísticas de actividad se han reiniciado. Tu Puntuación Total y Nivel se conservaron a salvo.',
+  stats_done_lifetime_reset: 'Tus estadísticas, Puntuación Total y Nivel se han reiniciado por completo.',
 
   // ── Phase 14: Background Push & PWA ──
   push_section_delivery: 'MÉTODO DE ENTREGA',
@@ -1135,6 +1201,7 @@ export const es: Translations = {
 
   // ── Global Score, Progression, and Level-up ──
   global_score_badge_today: 'Hoy',
+  global_score_badge_lifetime: 'Total',
   global_score_badge_level: 'Niv',
   global_score_badge_title: 'Puntuación y Progreso de Nivel',
   level_label: 'Nivel',
@@ -1169,6 +1236,20 @@ export const es: Translations = {
   score_cat_motivation: 'Motivación Consumida',
   score_cat_timer: 'Sesión de Temporizador',
   score_cat_consistency_bonus: 'Bonus de Constancia',
+
+  // ── Phase 6: Food & Beverage Photos ──
+  sdb_add_photo: 'Añadir Foto',
+  sdb_add_food_photo: 'Añadir Foto de Comida',
+  sdb_take_choose_photo: 'Tomar o Elegir Foto',
+  sdb_replace_photo: 'Reemplazar Foto',
+  sdb_remove_photo: 'Eliminar Foto',
+  sdb_food_photo: 'Foto de Comida',
+  sdb_view_photo: 'Ver Foto',
+  sdb_photo_preview_title: 'Foto de Comida / Bebida',
+  sdb_close_preview: 'Cerrar',
+  sdb_err_process_photo: 'No se pudo procesar esta imagen. Por favor, elige otra.',
+  sdb_err_save_photo: 'No se pudo guardar esta foto.',
+  sdb_confirm_remove_photo: '¿Eliminar esta foto?',
 };
 
 

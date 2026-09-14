@@ -59,7 +59,7 @@ export default function ProgressionQuickModal({
           </button>
         </div>
 
-        {/* Score & Level Banner */}
+        {/* Score, Level, and Lifetime XP Banner */}
         <div className="pq-hero-banner">
           <div className="pq-hero-col">
             <span className="pq-hero-label">{t.dash_today_score_label}</span>
@@ -71,6 +71,11 @@ export default function ProgressionQuickModal({
             <span className="pq-hero-val pq-hero-val--level">
               {overview.isLevel10 ? '👑 10' : `Lvl ${overview.currentLevel}`}
             </span>
+          </div>
+          <div className="pq-hero-divider" />
+          <div className="pq-hero-col">
+            <span className="pq-hero-label">{t.dash_lifetime_xp_label}</span>
+            <span className="pq-hero-val pq-hero-val--lifetime">{overview.lifetimeXp.toLocaleString()} <small>XP</small></span>
           </div>
         </div>
 

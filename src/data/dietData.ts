@@ -36,7 +36,134 @@ export const BLOCK_TYPE_ICONS: Record<BlockTypeKey, string> = {
   custom:         '✏️',
 };
 
-// ── Food / structure options ──────────────────────────────────────────────────
+// ── Food categories (Phase 2) ──────────────────────────────────────────────
+// Language-independent stable keys for actual food-content classification.
+export const FOOD_CATEGORY_KEYS = [
+  'protein',
+  'simple_carbs',
+  'complex_carbs',
+  'healthy_fats',
+  'vegetables',
+  'fruits',
+  'desserts',
+  'snacks',
+  'beverages',
+] as const;
+
+export type FoodCategoryKey = (typeof FOOD_CATEGORY_KEYS)[number];
+
+export const FOOD_CATEGORY_ICONS: Record<FoodCategoryKey, string> = {
+  protein:       '🥩',
+  simple_carbs:  '⚡',
+  complex_carbs: '🌾',
+  healthy_fats:  '🥑',
+  vegetables:    '🥦',
+  fruits:        '🍓',
+  desserts:      '🍰',
+  snacks:        '🥨',
+  beverages:     '💧',
+};
+
+/**
+ * Maps legacy food options or sample items into food category keys for seamless backward compatibility.
+ */
+export function mapLegacyItemsToCategories(items: string[]): FoodCategoryKey[] {
+  const result = new Set<FoodCategoryKey>();
+  for (const item of items) {
+    const lower = item.toLowerCase().trim();
+    if (
+      lower === 'protein' ||
+      lower === 'protein_rich_food' ||
+      lower === 'protein_shake' ||
+      lower === 'eggs' ||
+      lower === 'chicken breast' ||
+      lower === 'salmon' ||
+      lower === 'white fish' ||
+      lower === 'turkey breast' ||
+      lower === 'lean beef'
+    ) {
+      result.add('protein');
+    }
+    if (
+      lower === 'simple_carbs' ||
+      lower === 'sugar' ||
+      lower === 'candy' ||
+      lower === 'honey' ||
+      lower === 'crackers' ||
+      lower === 'toast'
+    ) {
+      result.add('simple_carbs');
+    }
+    if (
+      lower === 'complex_carbs' ||
+      lower === 'minimal_carbs' ||
+      lower === 'rice' ||
+      lower === 'brown rice' ||
+      lower === 'quinoa' ||
+      lower === 'sweet potato' ||
+      lower === 'baked potato' ||
+      lower === 'oatmeal' ||
+      lower === 'whole wheat bread' ||
+      lower === 'pasta'
+    ) {
+      result.add('complex_carbs');
+    }
+    if (
+      lower === 'healthy_fats' ||
+      lower === 'avocado' ||
+      lower === 'almonds' ||
+      lower === 'walnuts' ||
+      lower === 'nuts' ||
+      lower === 'olive oil'
+    ) {
+      result.add('healthy_fats');
+    }
+    if (
+      lower === 'vegetables' ||
+      lower === 'spinach' ||
+      lower === 'broccoli' ||
+      lower === 'asparagus' ||
+      lower === 'zucchini' ||
+      lower === 'mixed greens' ||
+      lower === 'green beans' ||
+      lower === 'salad' ||
+      lower === 'steamed veggies'
+    ) {
+      result.add('vegetables');
+    }
+    if (
+      lower === 'fruits' ||
+      lower === 'berries' ||
+      lower === 'apple' ||
+      lower === 'fruit' ||
+      lower === 'banana'
+    ) {
+      result.add('fruits');
+    }
+    if (lower === 'desserts') {
+      result.add('desserts');
+    }
+    if (lower === 'snacks' || lower === 'greek yogurt') {
+      result.add('snacks');
+    }
+    if (
+      lower === 'beverages' ||
+      lower === 'unsweetened_beverages' ||
+      lower === 'black_coffee' ||
+      lower === 'tea' ||
+      lower === 'herbal_drink' ||
+      lower === 'coffee' ||
+      lower === 'herbal tea' ||
+      lower === 'broth' ||
+      lower === 'water'
+    ) {
+      result.add('beverages');
+    }
+  }
+  return Array.from(result);
+}
+
+// ── Legacy Food / structure options (Preserved for compatibility) ──────────────
 
 export const FOOD_OPTION_KEYS = [
   'unsweetened_beverages',
@@ -53,18 +180,18 @@ export const FOOD_OPTION_KEYS = [
 
 export type FoodOptionKey = (typeof FOOD_OPTION_KEYS)[number];
 
-// ── 30-minute time slots ──────────────────────────────────────────────────────
+// ── 15-minute time slots ──────────────────────────────────────────────────────
 
-/** All 48 half-hour slots in 12-hour display format. Internal value is 24h "HH:MM". */
+/** All 96 15-minute slots in 12-hour display format. Internal value is 24h "HH:MM". */
 export interface TimeSlot {
-  value: string;   // "00:00" ... "23:30"
-  label: string;   // "12:00 AM" ... "11:30 PM"
+  value: string;   // "00:00" ... "23:45"
+  label: string;   // "12:00 AM" ... "11:45 PM"
 }
 
 function buildTimeSlots(): TimeSlot[] {
   const slots: TimeSlot[] = [];
   for (let h = 0; h < 24; h++) {
-    for (const m of [0, 30]) {
+    for (const m of [0, 15, 30, 45]) {
       const hh = String(h).padStart(2, '0');
       const mm = String(m).padStart(2, '0');
       const value = `${hh}:${mm}`;

@@ -151,6 +151,13 @@
   gap: 0.75rem;
 }
 
+.reset-modal-actions--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 .reset-modal-btn {
   flex: 1;
   padding: 0.85rem 1rem;
@@ -206,6 +213,60 @@
 .reset-modal-btn--success:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   box-shadow: 0 6px 18px rgba(22, 163, 74, 0.5);
+}
+
+.reset-modal-btn--keep {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  font-size: 0.98rem;
+  padding: 0.95rem 1.1rem;
+}
+
+.reset-modal-btn--keep:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+  transform: translateY(-1px);
+}
+
+.reset-modal-btn--reset-subtle {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+}
+
+.reset-modal-btn--reset-subtle:hover {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.6);
+  color: #ffe4e6;
+}
+
+.reset-modal-danger-box {
+  background: rgba(69, 10, 10, 0.45);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.reset-modal-danger-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.reset-modal-danger-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #fca5a5;
+  font-weight: 500;
 }
 
 /* ── Hold Interaction ── */

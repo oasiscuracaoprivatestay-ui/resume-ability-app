@@ -14,10 +14,46 @@
 
 import type { DayKey, StructuredDietBlock } from './dietStorage';
 import { getLocalTodayKey } from './dietStorage';
+import type { FoodCategoryKey } from '../data/dietData';
+import type { FoodPhotoMetadata } from './photoStorage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type DietVerificationStatus = 'on-track' | 'slip';
+
+/**
+ * Detailed outcome vocabulary for Phase 1.
+ * First-level choice is ON TRACK or SLIP.
+ * These detailed outcomes are selected within those categories.
+ */
+export type DetailedBlockOutcome =
+  | 'on_track'
+  | 'adjusted_on_track'
+  | 'planned_unstructured'
+  | 'near_slip'
+  | 'structured_slip'
+  | 'unstructured_slip';
+
+export const ALL_DETAILED_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'on_track',
+  'adjusted_on_track',
+  'planned_unstructured',
+  'near_slip',
+  'structured_slip',
+  'unstructured_slip',
+] as const;
+
+export const ON_TRACK_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'on_track',
+  'adjusted_on_track',
+  'planned_unstructured',
+] as const;
+
+export const SLIP_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'near_slip',
+  'structured_slip',
+  'unstructured_slip',
+] as const;
 
 export interface PlannedBlockSnapshot {
   startTime: string;
@@ -25,6 +61,8 @@ export interface PlannedBlockSnapshot {
   type: string;
   items: string[];
   customText?: string;
+  foodCategories?: FoodCategoryKey[];
+  foodPhoto?: FoodPhotoMetadata;
 }
 
 export interface DietBlockVerification {
@@ -33,8 +71,13 @@ export interface DietBlockVerification {
   plannedBlockId: string;
   plannedSnapshot: PlannedBlockSnapshot;
   status: DietVerificationStatus;
+  detailedOutcome?: DetailedBlockOutcome; // Optional for backward compatibility with legacy records
+  isResumed?: boolean;                    // Measured separately from slip outcome
+  resumedAt?: number;                     // Epoch ms when marked resumed
   actualItems?: string[];
+  actualFoodCategories?: FoodCategoryKey[];
   actualCustomText?: string;
+  foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   verifiedAt: number;        // Epoch ms
 }
 
@@ -48,11 +91,28 @@ export interface DailyDietVerification {
   entries: DietBlockVerification[];
 }
 
+export interface ResumeStats {
+  resumeCount: number;
+  eligibleCount: number;
+  resumeRate: number; // 0 to 100 percentage
+}
+
+export interface StructureAwarenessStats {
+  structuredCount: number;
+  unstructuredCount: number;
+  totalCount: number;
+  structuredRate: number;
+  unstructuredRate: number;
+}
+
 export interface DailyVerificationStats {
   plannedCount: number;
   reportedCount: number;
   onTrackCount: number;
   slipCount: number;
+  resumeCount: number;
+  eligibleSlipCount: number;
+  resumeRate: number;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -141,8 +201,12 @@ export function getTodayDietVerification(): DailyDietVerification {
 export function saveBlockVerification(params: {
   plannedBlock: StructuredDietBlock;
   status: DietVerificationStatus;
+  detailedOutcome?: DetailedBlockOutcome;
+  isResumed?: boolean;
   actualItems?: string[];
+  actualFoodCategories?: FoodCategoryKey[];
   actualCustomText?: string;
+  foodPhoto?: FoodPhotoMetadata;
   sourcePlanName?: string;
   profileId?: string;
   profileName?: string;
@@ -179,7 +243,30 @@ export function saveBlockVerification(params: {
         type: params.plannedBlock.type,
         items: Array.isArray(params.plannedBlock.items) ? [...params.plannedBlock.items] : [],
         customText: params.plannedBlock.customText,
+        foodCategories: Array.isArray(params.plannedBlock.foodCategories)
+          ? [...params.plannedBlock.foodCategories]
+          : undefined,
+        foodPhoto: params.plannedBlock.foodPhoto,
       };
+
+  // Determine Resumed status: if changing to on-track, reset resumed; otherwise respect explicit param or keep existing
+  let isResumed: boolean | undefined;
+  let resumedAt: number | undefined;
+
+  if (params.status === 'on-track') {
+    isResumed = false;
+    resumedAt = undefined;
+  } else if (params.isResumed !== undefined) {
+    isResumed = params.isResumed;
+    resumedAt = params.isResumed
+      ? (existingIdx >= 0 && daily.entries[existingIdx].resumedAt ? daily.entries[existingIdx].resumedAt : Date.now())
+      : undefined;
+  } else if (existingIdx >= 0) {
+    isResumed = daily.entries[existingIdx].isResumed;
+    resumedAt = daily.entries[existingIdx].resumedAt;
+  }
+
+  const assignedPhoto = params.foodPhoto ?? params.plannedBlock.foodPhoto ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodPhoto : undefined);
 
   const newEntry: DietBlockVerification = {
     id: verificationId,
@@ -187,8 +274,13 @@ export function saveBlockVerification(params: {
     plannedBlockId: params.plannedBlock.id,
     plannedSnapshot,
     status: params.status,
+    detailedOutcome: params.detailedOutcome ?? (existingIdx >= 0 ? daily.entries[existingIdx].detailedOutcome : undefined),
+    isResumed,
+    resumedAt,
     actualItems: params.actualItems ? [...params.actualItems] : undefined,
+    actualFoodCategories: params.actualFoodCategories ? [...params.actualFoodCategories] : undefined,
     actualCustomText: params.actualCustomText?.trim() || undefined,
+    foodPhoto: assignedPhoto,
     verifiedAt: Date.now(),
   };
 
@@ -214,6 +306,63 @@ export function saveBlockVerification(params: {
 }
 
 /**
+ * Toggles the Resumed status for an existing verification record.
+ * Returns the updated record or null if not found.
+ */
+export function toggleBlockResumed(
+  plannedBlockId: string,
+  dateKey = getLocalDateKey()
+): DietBlockVerification | null {
+  const all = loadAllDietVerifications();
+  const daily = all[dateKey];
+  if (!daily) return null;
+
+  const idx = daily.entries.findIndex(e => e.plannedBlockId === plannedBlockId);
+  if (idx < 0) return null;
+
+  const current = daily.entries[idx];
+  const nextResumed = !current.isResumed;
+  const updatedEntry: DietBlockVerification = {
+    ...current,
+    isResumed: nextResumed,
+    resumedAt: nextResumed ? Date.now() : undefined,
+  };
+
+  daily.entries[idx] = updatedEntry;
+  all[dateKey] = daily;
+  saveAllDietVerifications(all);
+  return updatedEntry;
+}
+
+/**
+ * Explicitly sets the Resumed status for a verified block.
+ */
+export function setBlockResumed(
+  plannedBlockId: string,
+  isResumed: boolean,
+  dateKey = getLocalDateKey()
+): DietBlockVerification | null {
+  const all = loadAllDietVerifications();
+  const daily = all[dateKey];
+  if (!daily) return null;
+
+  const idx = daily.entries.findIndex(e => e.plannedBlockId === plannedBlockId);
+  if (idx < 0) return null;
+
+  const current = daily.entries[idx];
+  const updatedEntry: DietBlockVerification = {
+    ...current,
+    isResumed,
+    resumedAt: isResumed ? (current.resumedAt || Date.now()) : undefined,
+  };
+
+  daily.entries[idx] = updatedEntry;
+  all[dateKey] = daily;
+  saveAllDietVerifications(all);
+  return updatedEntry;
+}
+
+/**
  * Remove verification status for a planned block (Clear Status).
  */
 export function clearBlockVerification(
@@ -234,6 +383,99 @@ export function clearBlockVerification(
   saveAllDietVerifications(all);
 }
 
+// ── Resume & Structure Statistics Foundation ──────────────────────────────────
+
+/**
+ * Returns whether a record is an eligible slip record for resume tracking.
+ * Includes both new detailed slip outcomes ('near_slip', 'structured_slip', 'unstructured_slip')
+ * and legacy general slip records ('slip' without detailedOutcome).
+ */
+export function isEligibleSlipRecord(record: DietBlockVerification): boolean {
+  if (record.status === 'slip') return true;
+  if (record.detailedOutcome && (SLIP_OUTCOMES as readonly string[]).includes(record.detailedOutcome)) return true;
+  return false;
+}
+
+/**
+ * Calculates Resume statistics from a list of verification records.
+ * Formula: (eligible slip records marked Resumed / total eligible slip records) * 100.
+ * Reusable across Dashboard and future analytics.
+ */
+export function calculateResumeStats(records: DietBlockVerification[]): ResumeStats {
+  const eligible = records.filter(isEligibleSlipRecord);
+  const eligibleCount = eligible.length;
+  const resumeCount = eligible.filter(r => r.isResumed === true).length;
+  const resumeRate = eligibleCount > 0 ? Math.round((resumeCount / eligibleCount) * 100) : 0;
+  return {
+    resumeCount,
+    eligibleCount,
+    resumeRate,
+  };
+}
+
+/**
+ * Structured vs Unstructured categorization helpers for future analytics foundation.
+ * Structured eating includes: on_track, adjusted_on_track, near_slip, structured_slip, or legacy on-track.
+ * Unstructured eating includes: planned_unstructured, unstructured_slip.
+ */
+export function isStructuredOutcome(
+  detailedOutcome?: DetailedBlockOutcome,
+  status?: DietVerificationStatus
+): boolean {
+  if (detailedOutcome) {
+    return (
+      detailedOutcome === 'on_track' ||
+      detailedOutcome === 'adjusted_on_track' ||
+      detailedOutcome === 'near_slip' ||
+      detailedOutcome === 'structured_slip'
+    );
+  }
+  // Legacy record fallback: legacy on-track is structured
+  return status === 'on-track';
+}
+
+export function isUnstructuredOutcome(
+  detailedOutcome?: DetailedBlockOutcome,
+  _status?: DietVerificationStatus
+): boolean {
+  if (detailedOutcome) {
+    return (
+      detailedOutcome === 'planned_unstructured' ||
+      detailedOutcome === 'unstructured_slip'
+    );
+  }
+  // Note: legacy slip with no detailed outcome is not assumed unstructured unless categorized
+  return false;
+}
+
+/**
+ * Calculates structured vs unstructured awareness statistics from verification records.
+ */
+export function calculateStructureStats(records: DietBlockVerification[]): StructureAwarenessStats {
+  let structuredCount = 0;
+  let unstructuredCount = 0;
+
+  for (const r of records) {
+    if (isStructuredOutcome(r.detailedOutcome, r.status)) {
+      structuredCount++;
+    } else if (isUnstructuredOutcome(r.detailedOutcome, r.status)) {
+      unstructuredCount++;
+    }
+  }
+
+  const totalCount = structuredCount + unstructuredCount;
+  const structuredRate = totalCount > 0 ? Math.round((structuredCount / totalCount) * 100) : 0;
+  const unstructuredRate = totalCount > 0 ? Math.round((unstructuredCount / totalCount) * 100) : 0;
+
+  return {
+    structuredCount,
+    unstructuredCount,
+    totalCount,
+    structuredRate,
+    unstructuredRate,
+  };
+}
+
 /**
  * Calculate verification statistics for a specific date given planned block count.
  */
@@ -248,6 +490,9 @@ export function getDailyVerificationStats(
       reportedCount: 0,
       onTrackCount: 0,
       slipCount: 0,
+      resumeCount: 0,
+      eligibleSlipCount: 0,
+      resumeRate: 0,
     };
   }
 
@@ -265,11 +510,17 @@ export function getDailyVerificationStats(
     else if (entry.status === 'slip') slipCount++;
   }
 
+  const uniqueRecords = Array.from(uniqueMap.values());
+  const resumeStats = calculateResumeStats(uniqueRecords);
+
   return {
     plannedCount: plannedBlocksCount,
     reportedCount: onTrackCount + slipCount,
     onTrackCount,
     slipCount,
+    resumeCount: resumeStats.resumeCount,
+    eligibleSlipCount: resumeStats.eligibleCount,
+    resumeRate: resumeStats.resumeRate,
   };
 }
 
@@ -288,10 +539,18 @@ function isValidDailyVerification(v: unknown): v is DailyDietVerification {
 function isValidVerificationEntry(e: unknown): e is DietBlockVerification {
   if (!e || typeof e !== 'object') return false;
   const obj = e as Record<string, unknown>;
+  const validStatus = obj.status === 'on-track' || obj.status === 'slip';
+  const validDetailed =
+    obj.detailedOutcome === undefined ||
+    typeof obj.detailedOutcome === 'string';
+  const validResumed =
+    obj.isResumed === undefined || typeof obj.isResumed === 'boolean';
   return (
     typeof obj.id === 'string' &&
     typeof obj.plannedBlockId === 'string' &&
-    (obj.status === 'on-track' || obj.status === 'slip') &&
+    validStatus &&
+    validDetailed &&
+    validResumed &&
     typeof obj.verifiedAt === 'number'
   );
 }
@@ -304,4 +563,5 @@ export function clearAllDietVerifications(): void {
     // Fail silently in private/restricted storage mode
   }
 }
+
 
