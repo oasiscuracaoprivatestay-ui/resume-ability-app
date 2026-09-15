@@ -26,6 +26,7 @@ import {
   calculateShiftedEndTime,
   snapshotHistoryDate,
   getBlockPhotos,
+  sanitiseBlock,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -34,6 +35,7 @@ import type {
   WeeklyStructuredDiet,
   StructureDietStore,
   StructureGoalProfile,
+  MealTypeKey,
 } from '../utils/dietStorage';
 import {
   getDailyDietVerification,
@@ -67,6 +69,12 @@ import {
   mapLegacyItemsToCategories,
 } from '../data/dietData';
 import type { BlockTypeKey, FoodCategoryKey } from '../data/dietData';
+import {
+  getFoodOptionsForCategory,
+  findFoodOption,
+  type FoodSelectionsMap,
+  type CustomFoodsMap,
+} from '../data/foodOptions';
 import QuickBuildModal from '../components/QuickBuildModal';
 import TemplateModal from '../components/TemplateModal';
 import type { DietTemplate } from '../data/dietTemplates';
@@ -282,6 +290,25 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     return [];
   });
   const [customText, setCustomText] = useState(initial?.customText ?? '');
+  const [mealType, setMealType] = useState<MealTypeKey | undefined>(initial?.mealType);
+
+  // Specific Foods & Submenus state (Phase 7C)
+  const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>(() => {
+    if (initial?.foodSelections) return JSON.parse(JSON.stringify(initial.foodSelections));
+    return {};
+  });
+  const [customFoods, setCustomFoods] = useState<CustomFoodsMap>(() => {
+    if (initial?.customFoods) return JSON.parse(JSON.stringify(initial.customFoods));
+    return {};
+  });
+  const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(() => {
+    if (initial?.foodCategories && initial.foodCategories.length > 0) {
+      return initial.foodCategories[0];
+    }
+    return null;
+  });
+  const [customFoodInputs, setCustomFoodInputs] = useState<Record<string, string>>({});
+  const [customFoodErrors, setCustomFoodErrors] = useState<Record<string, string>>({});
 
   // Multi-photo state (Phase 6B)
   const [foodPhotos, setFoodPhotos] = useState<FoodPhotoMetadata[]>(() => getBlockPhotos(initial));
@@ -311,13 +338,13 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
           if (isSubscribed && record?.dataUrl) {
             setPhotoPreviewUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
           }
-        });
+        }).catch(() => {});
       }
     }
     return () => {
       isSubscribed = false;
     };
-  }, [foodPhotos, photoPreviewUrls]);
+  }, [foodPhotos]);
 
   const handleAddPhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,7 +367,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
         setPhotoPreviewUrls(prev => ({ ...prev, [meta.id]: dataUrl }));
       }
     } catch (err) {
-      console.error('Error saving photo:', err);
+      console.error('Error adding photo:', err);
       setPhotoError(getLocalizedPhotoErrorMessage(err, t));
     } finally {
       setIsProcessingPhoto(false);
@@ -416,9 +443,75 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   }, []);
 
   const toggleCategory = (key: FoodCategoryKey) => {
-    setFoodCategories(prev =>
-      prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]
-    );
+    const isSelected = foodCategories.includes(key);
+    if (isSelected) {
+      if (activeCategorySubmenu === key) {
+        // Deselect category, close submenu, clear specific & custom foods for this category
+        setFoodCategories(prev => prev.filter(c => c !== key));
+        setFoodSelections(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setCustomFoods(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setActiveCategorySubmenu(null);
+      } else {
+        // Category is selected, switch active submenu to it
+        setActiveCategorySubmenu(key);
+      }
+    } else {
+      // Select category and open its submenu
+      setFoodCategories(prev => [...prev, key]);
+      setActiveCategorySubmenu(key);
+    }
+  };
+
+  const toggleSpecificFood = (cat: FoodCategoryKey, foodKey: string) => {
+    setFoodSelections(prev => {
+      const curList = prev[cat] || [];
+      const nextList = curList.includes(foodKey)
+        ? curList.filter(f => f !== foodKey)
+        : [...curList, foodKey];
+      return { ...prev, [cat]: nextList };
+    });
+  };
+
+  const handleAddCustomFood = (cat: FoodCategoryKey) => {
+    const raw = (customFoodInputs[cat] || '').trim();
+    if (!raw) return;
+
+    const curCanonical = foodSelections[cat] || [];
+    const curCustom = customFoods[cat] || [];
+
+    const isCanonicalDup = curCanonical.some(k => {
+      const opt = findFoodOption(cat, k);
+      const label = opt ? (t[opt.i18nKey as keyof typeof t] as string | undefined) : k;
+      return k.toLowerCase() === raw.toLowerCase() || label?.toLowerCase() === raw.toLowerCase();
+    });
+    const isCustomDup = curCustom.some(c => c.toLowerCase() === raw.toLowerCase());
+
+    if (isCanonicalDup || isCustomDup) {
+      setCustomFoodErrors(prev => ({ ...prev, [cat]: t.sdb_custom_food_duplicate }));
+      return;
+    }
+
+    setCustomFoods(prev => ({
+      ...prev,
+      [cat]: [...(prev[cat] || []), raw],
+    }));
+    setCustomFoodInputs(prev => ({ ...prev, [cat]: '' }));
+    setCustomFoodErrors(prev => ({ ...prev, [cat]: '' }));
+  };
+
+  const handleRemoveCustomFood = (cat: FoodCategoryKey, foodText: string) => {
+    setCustomFoods(prev => ({
+      ...prev,
+      [cat]: (prev[cat] || []).filter(f => f !== foodText),
+    }));
   };
 
   const toggleItem = (key: string) => {
@@ -449,11 +542,14 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
       type,
       items,
       customText: customText.trim(),
+      mealType,
       foodCategories,
+      foodSelections,
+      customFoods,
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
-    onSave(block);
+    onSave(sanitiseBlock(block));
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -607,6 +703,28 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             )}
           </div>
 
+          {/* ── Meal Type (Optional) (Phase 7B) ── */}
+          <div className="sdb-field">
+            <label className="sdb-label sdb-label--optional" htmlFor="sdb-meal-type-select">
+              {t.sdb_meal_type_label}
+              <span className="sdb-optional">{t.sdb_optional}</span>
+            </label>
+            <select
+              id="sdb-meal-type-select"
+              className="sdb-select"
+              value={mealType || ''}
+              onChange={e => setMealType((e.target.value || undefined) as MealTypeKey | undefined)}
+              aria-label={t.sdb_meal_type_label}
+            >
+              <option value="">{t.sdb_meal_type_none}</option>
+              <option value="breakfast">{t.sdb_meal_type_breakfast}</option>
+              <option value="lunch">{t.sdb_meal_type_lunch}</option>
+              <option value="dinner">{t.sdb_meal_type_dinner}</option>
+              <option value="snack">{t.sdb_meal_type_snack}</option>
+              <option value="other">{t.sdb_meal_type_other}</option>
+            </select>
+          </div>
+
           {/* ── Custom note / Food Description ── */}
           <div className="sdb-field">
             <label className="sdb-label sdb-label--optional">
@@ -631,21 +749,128 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             <div className="sdb-food-grid">
               {FOOD_CATEGORY_KEYS.map(key => {
                 const isSelected = foodCategories.includes(key);
+                const isSubmenuOpen = isSelected && activeCategorySubmenu === key;
                 return (
                   <button
                     key={key}
                     id={`btn-cat-chip-${key}`}
                     type="button"
-                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active sdb-cat-chip--active' : ''}`}
+                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active sdb-cat-chip--active' : ''} ${isSubmenuOpen ? 'sdb-cat-chip--open' : ''}`}
                     onClick={() => toggleCategory(key)}
                     aria-pressed={isSelected}
                   >
                     <span className="sdb-chip-icon">{FOOD_CATEGORY_ICONS[key]}</span>
                     <span>{t[`sdb_cat_${key}` as keyof typeof t] as string}</span>
+                    {isSelected && (
+                      <span className="sdb-cat-chip-arrow" aria-hidden="true">
+                        {isSubmenuOpen ? ' ▲' : ' ▼'}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
+
+            {/* ── Phase 7C: Category Specific Food Submenu Accordion ── */}
+            {activeCategorySubmenu && foodCategories.includes(activeCategorySubmenu) && (
+              <div className="sdb-cat-submenu-container" id={`sdb-cat-submenu-${activeCategorySubmenu}`}>
+                <div className="sdb-cat-submenu-header">
+                  <span className="sdb-cat-submenu-title">
+                    {FOOD_CATEGORY_ICONS[activeCategorySubmenu]} {t[`sdb_cat_${activeCategorySubmenu}` as keyof typeof t] as string}: {t.sdb_food_submenu_title}
+                  </span>
+                  <button
+                    type="button"
+                    id={`btn-close-submenu-${activeCategorySubmenu}`}
+                    className="sdb-cat-submenu-close"
+                    onClick={() => setActiveCategorySubmenu(null)}
+                    title="Collapse submenu"
+                    aria-label="Collapse submenu"
+                  >
+                    ▲
+                  </button>
+                </div>
+
+                {/* Canonical Specific Food Chips */}
+                <div className="sdb-specific-food-grid">
+                  {getFoodOptionsForCategory(activeCategorySubmenu).map(opt => {
+                    const isFoodSelected = (foodSelections[activeCategorySubmenu] || []).includes(opt.key);
+                    const foodLabel = (t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        id={`btn-food-chip-${opt.key}`}
+                        type="button"
+                        className={`sdb-food-child-chip ${isFoodSelected ? 'sdb-food-child-chip--active' : ''}`}
+                        onClick={() => toggleSpecificFood(activeCategorySubmenu, opt.key)}
+                        aria-pressed={isFoodSelected}
+                      >
+                        {isFoodSelected && <span className="sdb-child-chip-check">✓ </span>}
+                        <span>{foodLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Foods List & Input */}
+                <div className="sdb-custom-food-section">
+                  {(customFoods[activeCategorySubmenu] || []).length > 0 && (
+                    <div className="sdb-custom-foods-list">
+                      {(customFoods[activeCategorySubmenu] || []).map(customItem => (
+                        <span key={customItem} className="sdb-custom-food-badge">
+                          <span>{customItem}</span>
+                          <button
+                            type="button"
+                            id={`btn-remove-custom-${customItem}`}
+                            className="sdb-custom-food-remove"
+                            onClick={() => handleRemoveCustomFood(activeCategorySubmenu, customItem)}
+                            aria-label={`${t.sdb_remove_custom_food} ${customItem}`}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="sdb-custom-food-input-row">
+                    <input
+                      id={`sdb-custom-food-input-${activeCategorySubmenu}`}
+                      type="text"
+                      className="sdb-custom-food-input"
+                      value={customFoodInputs[activeCategorySubmenu] || ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setCustomFoodInputs(prev => ({ ...prev, [activeCategorySubmenu]: val }));
+                        if (customFoodErrors[activeCategorySubmenu]) {
+                          setCustomFoodErrors(prev => ({ ...prev, [activeCategorySubmenu]: '' }));
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomFood(activeCategorySubmenu);
+                        }
+                      }}
+                      placeholder={t.sdb_custom_food_placeholder}
+                      maxLength={50}
+                    />
+                    <button
+                      type="button"
+                      id={`btn-add-custom-food-${activeCategorySubmenu}`}
+                      className="sdb-btn-add-custom"
+                      onClick={() => handleAddCustomFood(activeCategorySubmenu)}
+                    >
+                      {t.sdb_add_custom_food_btn}
+                    </button>
+                  </div>
+                  {customFoodErrors[activeCategorySubmenu] && (
+                    <p className="sdb-custom-food-error" role="alert">
+                      {customFoodErrors[activeCategorySubmenu]}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Block type ── */}
@@ -1285,6 +1510,11 @@ function BlockCard({
             ))}
           </select>
           {overnight && <span className="sdb-block-overnight">{' '}({t.sdb_next_day})</span>}
+          {block.mealType && (
+            <span className="sdb-block-meal-type-badge" id={`sdb-meal-type-badge-${block.id}`}>
+              {(t[`sdb_meal_type_${block.mealType}` as keyof typeof t] as string | undefined) || block.mealType}
+            </span>
+          )}
         </div>
         <div className="sdb-block-actions">
           <button
@@ -1476,6 +1706,46 @@ function BlockCard({
           })}
         </div>
       )}
+
+      {/* ── Phase 7C: Specific Food Selections Summary Line ── */}
+      {(() => {
+        const specificLabels: string[] = [];
+        if (block.foodSelections) {
+          for (const [cat, foods] of Object.entries(block.foodSelections)) {
+            if (Array.isArray(foods)) {
+              for (const foodKey of foods) {
+                const opt = findFoodOption(cat as FoodCategoryKey, foodKey);
+                const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
+                if (label && !specificLabels.includes(label)) specificLabels.push(label);
+              }
+            }
+          }
+        }
+        if (block.customFoods) {
+          for (const [, customList] of Object.entries(block.customFoods)) {
+            if (Array.isArray(customList)) {
+              for (const cFood of customList) {
+                if (cFood && !specificLabels.includes(cFood)) specificLabels.push(cFood);
+              }
+            }
+          }
+        }
+        if (specificLabels.length === 0) return null;
+
+        const maxVisible = 4;
+        const visibleLabels = specificLabels.slice(0, maxVisible);
+        const remainingCount = specificLabels.length - maxVisible;
+
+        return (
+          <div className="sdb-block-specific-foods" id={`sdb-specific-foods-${block.id}`}>
+            <span className="sdb-specific-foods-bullet">•</span>
+            <span className="sdb-specific-foods-text">
+              {visibleLabels.join(' • ')}
+              {remainingCount > 0 && ` • +${remainingCount}`}
+            </span>
+          </div>
+        );
+      })()}
 
       {foodLabels.length > 0 && (
         <p className="sdb-block-items">{foodLabels.join(', ')}</p>
@@ -2641,6 +2911,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   const [deletingProfile, setDeletingProfile] = useState<StructureGoalProfile | null>(null);
 
   const [selectedDayKey, setSelectedDayKey] = useState<DayKey>(() => getLocalTodayKey());
+  const [activeView, setActiveView] = useState<'daily' | 'settings'>('daily');
   const [editingBlock, setEditingBlock] = useState<StructuredDietBlock | null | 'new'>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameText, setNameText] = useState(weekly.planName);
@@ -2682,6 +2953,10 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   }, [currentDay.blocks]);
 
   const handleHeaderBack = () => {
+    if (activeView === 'settings') {
+      setActiveView('daily');
+      return;
+    }
     if (previewPhotos) {
       setPreviewPhotos(null);
       return;
@@ -2838,9 +3113,12 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     }, 2800);
   };
 
-  // ── Template actions (Task 6: Daily Scope) ────────────────────────────────
-  const handleApplyTemplate = (template: DietTemplate) => {
-    const { mode, blocks } = applyDailyTemplateToDay(template);
+  // ── Template actions (Task 6 & Phase 7B: Daily Scope & Builder) ───────────
+  const handleApplyTemplate = (template: DietTemplate, configuredBlocks?: StructuredDietBlock[]) => {
+    const mode = template.targetMode;
+    const blocks = configuredBlocks && configuredBlocks.length > 0
+      ? configuredBlocks
+      : applyDailyTemplateToDay(template).blocks;
     updateWeekly(w =>
       updateDayPlan(w, selectedDayKey, d => ({
         ...d,
@@ -3064,144 +3342,203 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
         />
 
         <div className="sdb-content">
-          {/* ── Heading ── */}
-          <div className="sdb-heading-block">
-            <div className="sdb-title-row">
-              <span className="section-label">{t.sdb_label}</span>
-              <TermHelp termKey="sd" btnId="btn-help-sd" />
-            </div>
-            <h1 className="sdb-heading">{t.sdb_heading}</h1>
-            <p className="sdb-sub">{t.sdb_sub}</p>
-            <p className="sdb-desc-hint">{t.sda_term_sd_def}</p>
-          </div>
-
-          {/* ── Structure Goal / Master Profile Card (Phase 26) ── */}
-          <div className="sdb-goal-card" id="sdb-goal-card">
-            <div className="sdb-goal-top">
-              <div className="sdb-goal-badge-wrap">
-                <span className="sdb-goal-icon" aria-hidden="true">🎯</span>
-                <span className="sdb-goal-badge-label">{t.sdb_profile_title}</span>
-                <span className={`sdb-goal-type-badge ${activeProfile.type === 'builtin' ? 'sdb-goal-type-badge--builtin' : 'sdb-goal-type-badge--custom'}`}>
-                  {activeProfile.type === 'builtin' ? t.sdb_profile_built_in_badge : t.sdb_profile_custom_badge}
-                </span>
+          {activeView === 'settings' ? (
+            /* ── SETTINGS VIEW (Phase 7B) ── */
+            <div className="sdb-settings-view" id="sdb-settings-view">
+              {/* Back to Daily button */}
+              <div className="sdb-settings-nav-bar">
+                <button
+                  id="btn-sdb-back-to-daily"
+                  type="button"
+                  className="sdb-btn-back-to-daily"
+                  onClick={() => setActiveView('daily')}
+                >
+                  ← {t.sdb_back_to_daily}
+                </button>
               </div>
-              <button
-                id="btn-profile-switcher"
-                type="button"
-                className="sdb-goal-switcher-btn"
-                onClick={() => setShowProfileSwitcher(true)}
-                title={t.sdb_profile_switch_btn}
-              >
-                <span>🔄</span>
-                <span>{t.sdb_profile_switch_btn}</span>
-              </button>
-            </div>
 
-            <div className="sdb-goal-details">
-              <div className="sdb-goal-name-row">
-                <h2 className="sdb-goal-name" id="sdb-active-goal-name">
-                  {getGoalDisplayName(activeProfile, t)}
-                </h2>
-                {activeProfile.type === 'custom' && (
+              <div className="sdb-settings-heading">
+                <h2 className="sdb-settings-title">{t.sdb_structure_settings}</h2>
+                <p className="sdb-settings-desc">{t.sdb_settings_desc}</p>
+              </div>
+
+              {/* ── Structure Goal / Master Profile Card (Phase 26) ── */}
+              <div className="sdb-goal-card" id="sdb-goal-card">
+                <div className="sdb-goal-top">
+                  <div className="sdb-goal-badge-wrap">
+                    <span className="sdb-goal-icon" aria-hidden="true">🎯</span>
+                    <span className="sdb-goal-badge-label">{t.sdb_profile_title}</span>
+                    <span className={`sdb-goal-type-badge ${activeProfile.type === 'builtin' ? 'sdb-goal-type-badge--builtin' : 'sdb-goal-type-badge--custom'}`}>
+                      {activeProfile.type === 'builtin' ? t.sdb_profile_built_in_badge : t.sdb_profile_custom_badge}
+                    </span>
+                  </div>
                   <button
-                    id="btn-edit-active-profile"
+                    id="btn-profile-switcher"
                     type="button"
-                    className="sdb-icon-btn sdb-goal-edit-btn"
-                    onClick={() => setEditingProfile(activeProfile)}
-                    title={t.sdb_profile_edit_btn}
-                    aria-label={t.sdb_profile_edit_btn}
+                    className="sdb-goal-switcher-btn"
+                    onClick={() => setShowProfileSwitcher(true)}
+                    title={t.sdb_profile_switch_btn}
                   >
-                    ✎
+                    <span>🔄</span>
+                    <span>{t.sdb_profile_switch_btn}</span>
                   </button>
+                </div>
+
+                <div className="sdb-goal-details">
+                  <div className="sdb-goal-name-row">
+                    <h2 className="sdb-goal-name" id="sdb-active-goal-name">
+                      {getGoalDisplayName(activeProfile, t)}
+                    </h2>
+                    {activeProfile.type === 'custom' && (
+                      <button
+                        id="btn-edit-active-profile"
+                        type="button"
+                        className="sdb-icon-btn sdb-goal-edit-btn"
+                        onClick={() => setEditingProfile(activeProfile)}
+                        title={t.sdb_profile_edit_btn}
+                        aria-label={t.sdb_profile_edit_btn}
+                      >
+                        ✎
+                      </button>
+                    )}
+                  </div>
+                  {getGoalDisplayDescription(activeProfile, t) && (
+                    <p className="sdb-goal-desc">{getGoalDisplayDescription(activeProfile, t)}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Overall Weekly Plan Name ── */}
+              <div className="sdb-plan-name-row">
+                {editingName ? (
+                  <div className="sdb-name-edit">
+                    <input
+                      id="sdb-plan-name-input"
+                      className="sdb-name-input"
+                      value={nameText}
+                      onChange={e => setNameText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') commitName();
+                        if (e.key === 'Escape') {
+                          setNameText(weekly.planName);
+                          setEditingName(false);
+                        }
+                      }}
+                      autoFocus
+                      maxLength={60}
+                      aria-label={t.sdb_plan_name_label}
+                    />
+                    <div className="sdb-name-actions">
+                      <button className="commit-btn commit-btn--save" onClick={commitName}>
+                        {t.commit_save}
+                      </button>
+                      <button
+                        className="commit-btn commit-btn--cancel"
+                        onClick={() => {
+                          setNameText(weekly.planName);
+                          setEditingName(false);
+                        }}
+                      >
+                        {t.commit_cancel}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="sdb-name-display">
+                    <span className="sdb-plan-name">{weekly.planName}</span>
+                    <button
+                      className="sdb-icon-btn"
+                      onClick={() => {
+                        setNameText(weekly.planName);
+                        setEditingName(true);
+                      }}
+                      aria-label={t.sdb_rename_plan}
+                      title={t.sdb_rename_plan}
+                    >
+                      ✎
+                    </button>
+                  </div>
                 )}
               </div>
-              {getGoalDisplayDescription(activeProfile, t) && (
-                <p className="sdb-goal-desc">{getGoalDisplayDescription(activeProfile, t)}</p>
-              )}
-            </div>
-          </div>
 
-          {/* ── Daily Review Entry Point (Phase 27) ── */}
-          <div className="sdb-daily-review-card" id="sdb-daily-review-card">
-            <div className="sdb-daily-review-left">
-              <div className="sdb-daily-review-badge-row">
-                <span className="sdb-daily-review-icon">📝</span>
-                <span className="sdb-daily-review-title">{t.dr_entry_title}</span>
-                <span
-                  className={`sdb-daily-review-status-badge ${
-                    isReviewCompletedToday
-                      ? 'sdb-daily-review-status-badge--completed'
-                      : 'sdb-daily-review-status-badge--pending'
-                  }`}
+              {/* ── Daily Review Entry Point (Phase 27) ── */}
+              <div className="sdb-daily-review-card" id="sdb-daily-review-card">
+                <div className="sdb-daily-review-left">
+                  <div className="sdb-daily-review-badge-row">
+                    <span className="sdb-daily-review-icon">📝</span>
+                    <span className="sdb-daily-review-title">{t.dr_entry_title}</span>
+                    <span
+                      className={`sdb-daily-review-status-badge ${
+                        isReviewCompletedToday
+                          ? 'sdb-daily-review-status-badge--completed'
+                          : 'sdb-daily-review-status-badge--pending'
+                      }`}
+                    >
+                      {isReviewCompletedToday ? t.dr_entry_badge_completed : t.dr_entry_badge_pending}
+                    </span>
+                  </div>
+                  <p className="sdb-daily-review-sub">{t.dr_entry_subtitle}</p>
+                </div>
+                <button
+                  id="btn-open-daily-review"
+                  type="button"
+                  className="sdb-daily-review-btn"
+                  onClick={() => onNavigate('daily-review')}
                 >
-                  {isReviewCompletedToday ? t.dr_entry_badge_completed : t.dr_entry_badge_pending}
-                </span>
+                  <span>{t.dr_entry_action}</span>
+                  <span aria-hidden="true">→</span>
+                </button>
               </div>
-              <p className="sdb-daily-review-sub">{t.dr_entry_subtitle}</p>
-            </div>
-            <button
-              id="btn-open-daily-review"
-              type="button"
-              className="sdb-daily-review-btn"
-              onClick={() => onNavigate('daily-review')}
-            >
-              <span>{t.dr_entry_action}</span>
-              <span aria-hidden="true">→</span>
-            </button>
-          </div>
 
-          {/* ── Overall Weekly Plan Name ── */}
-          <div className="sdb-plan-name-row">
-            {editingName ? (
-              <div className="sdb-name-edit">
-                <input
-                  id="sdb-plan-name-input"
-                  className="sdb-name-input"
-                  value={nameText}
-                  onChange={e => setNameText(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') commitName();
-                    if (e.key === 'Escape') {
-                      setNameText(weekly.planName);
-                      setEditingName(false);
-                    }
-                  }}
-                  autoFocus
-                  maxLength={60}
-                  aria-label={t.sdb_plan_name_label}
-                />
-                <div className="sdb-name-actions">
-                  <button className="commit-btn commit-btn--save" onClick={commitName}>
-                    {t.commit_save}
-                  </button>
+              <div className="sdb-settings-done-row">
+                <button
+                  id="btn-sdb-done-settings"
+                  type="button"
+                  className="sdb-btn-done-settings"
+                  onClick={() => setActiveView('daily')}
+                >
+                  ✓ {t.sdb_back_to_daily}
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ── DAILY-FIRST VIEW (Phase 7B) ── */
+            <div className="sdb-daily-view" id="sdb-daily-view">
+              {/* ── Heading ── */}
+              <div className="sdb-heading-block">
+                <div className="sdb-title-row">
+                  <span className="section-label">{t.sdb_label}</span>
+                  <TermHelp termKey="sd" btnId="btn-help-sd" />
+                </div>
+                <h1 className="sdb-heading">{t.sdb_heading}</h1>
+                <p className="sdb-sub">{t.sdb_sub}</p>
+                <p className="sdb-desc-hint">{t.sda_term_sd_def}</p>
+              </div>
+
+              {/* ── Compact Profile Bar with Structure Settings Button (Phase 7B) ── */}
+              <div className="sdb-daily-profile-bar" id="sdb-daily-profile-bar">
+                <div className="sdb-daily-profile-info">
+                  <span className="sdb-daily-profile-icon" aria-hidden="true">🎯</span>
+                  <div className="sdb-daily-profile-names">
+                    <span className="sdb-daily-profile-label">{t.sdb_active_profile_label}:</span>
+                    <strong className="sdb-daily-profile-name" id="sdb-daily-active-goal-name">
+                      {getGoalDisplayName(activeProfile, t)}
+                    </strong>
+                  </div>
+                </div>
+                <div className="sdb-daily-profile-actions">
                   <button
-                    className="commit-btn commit-btn--cancel"
-                    onClick={() => {
-                      setNameText(weekly.planName);
-                      setEditingName(false);
-                    }}
+                    id="btn-sdb-open-settings"
+                    type="button"
+                    className="sdb-btn-open-settings"
+                    onClick={() => setActiveView('settings')}
+                    title={t.sdb_structure_settings}
                   >
-                    {t.commit_cancel}
+                    <span>⚙️</span>
+                    <span>{t.sdb_structure_settings}</span>
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="sdb-name-display">
-                <span className="sdb-plan-name">{weekly.planName}</span>
-                <button
-                  className="sdb-icon-btn"
-                  onClick={() => {
-                    setNameText(weekly.planName);
-                    setEditingName(true);
-                  }}
-                  aria-label={t.sdb_rename_plan}
-                  title={t.sdb_rename_plan}
-                >
-                  ✎
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* ── Day Selector Dropdown (Phase 22) ── */}
           <div className="sdb-day-dropdown-card">
@@ -3582,7 +3919,9 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
             </>
           )}
         </div>
-      </div>
+      )}
+    </div>
+  </div>
 
       {/* ── Block editor modal ── */}
       {editingBlock && (

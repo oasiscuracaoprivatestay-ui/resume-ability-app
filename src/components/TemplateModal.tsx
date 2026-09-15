@@ -1,15 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from '../i18n';
 import type { DietTemplate, DietTemplateCategory } from '../data/dietTemplates';
 import { DIET_TEMPLATES } from '../data/dietTemplates';
-import type { DayKey } from '../utils/dietStorage';
+import type { DayKey, StructuredDietBlock } from '../utils/dietStorage';
 import { DAY_KEYS } from '../utils/dietStorage';
+import { TIME_SLOTS } from '../data/dietData';
+import {
+  generateTemplateBlocks,
+  SCHEDULE_INTERVAL_OPTIONS,
+  BLOCK_COUNT_OPTIONS,
+} from '../utils/scheduleGenerator';
 import './TemplateModal.css';
 
 export interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (template: DietTemplate) => void;
+  onApply: (template: DietTemplate, configuredBlocks?: StructuredDietBlock[]) => void;
   selectedDayKey?: DayKey;
   selectedDayName?: string;
   hasExistingDayBlocks?: boolean;
@@ -35,6 +41,11 @@ export default function TemplateModal({
   const [view, setView] = useState<ModalView>('list');
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Template Time-Block Builder State (Phase 7B)
+  const [startTime, setStartTime] = useState<string>('08:00');
+  const [blockCount, setBlockCount] = useState<number>(4);
+  const [intervalMinutes, setIntervalMinutes] = useState<number>(180); // 3 hours default
+
   const resolvedDayName =
     (t[`sdb_day_${currentDayKey}` as keyof typeof t] as string | undefined) ||
     selectedDayName ||
@@ -47,8 +58,31 @@ export default function TemplateModal({
       setActiveCategory('structured');
       setSelectedTemplate(null);
       setView('list');
+      setStartTime('08:00');
+      setBlockCount(4);
+      setIntervalMinutes(180);
     }
   }, [isOpen, selectedDayKey]);
+
+  // When a template is selected, set smart default block count based on template blocks
+  const handleSelectTemplate = (tpl: DietTemplate) => {
+    setSelectedTemplate(tpl);
+    const count = Math.min(Math.max(tpl.blocks?.length || 4, 2), 8);
+    setBlockCount(count);
+    setStartTime('08:00');
+    setIntervalMinutes(180);
+    setView('preview');
+  };
+
+  // Compute generated blocks and check midnight overflow using shared scheduleGenerator
+  const generatedResult = useMemo(() => {
+    if (!selectedTemplate) {
+      return { blocks: [], times: [], isOverflow: false, mode: 'structured' as const };
+    }
+    return generateTemplateBlocks(selectedTemplate, startTime, blockCount, intervalMinutes);
+  }, [selectedTemplate, startTime, blockCount, intervalMinutes]);
+
+  const isOverflow = generatedResult.isOverflow;
 
   // ESC key handler
   useEffect(() => {
@@ -74,13 +108,8 @@ export default function TemplateModal({
     tpl => tpl.category === activeCategory
   );
 
-  const handleSelectTemplate = (tpl: DietTemplate) => {
-    setSelectedTemplate(tpl);
-    setView('preview');
-  };
-
   const handleApplyClick = () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || isOverflow) return;
     if (hasExistingDayBlocks) {
       setView('confirm');
     } else {
@@ -89,8 +118,8 @@ export default function TemplateModal({
   };
 
   const handleConfirmApply = () => {
-    if (!selectedTemplate) return;
-    onApply(selectedTemplate);
+    if (!selectedTemplate || isOverflow) return;
+    onApply(selectedTemplate, generatedResult.blocks);
     onClose();
   };
 
@@ -302,12 +331,105 @@ export default function TemplateModal({
               })}
             </div>
 
+            {/* ── Template Time-Block Builder (Phase 7B) ── */}
+            <div className="tpl-builder-card" id="tpl-builder-card">
+              <div className="tpl-builder-header">
+                <span className="tpl-builder-icon">⚙️</span>
+                <h3 className="tpl-builder-title">{t.sdb_tpl_builder_title}</h3>
+              </div>
+
+              <div className="tpl-builder-grid">
+                {/* 1. Starting Time */}
+                <div className="tpl-builder-field">
+                  <label htmlFor="tpl-select-start-time" className="tpl-builder-label">
+                    {t.sdb_tpl_start_time}
+                  </label>
+                  <select
+                    id="tpl-select-start-time"
+                    className="tpl-builder-select"
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                  >
+                    {TIME_SLOTS.map(slot => (
+                      <option key={slot.value} value={slot.value}>
+                        {slot.value} ({slot.label})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Number of Blocks */}
+                <div className="tpl-builder-field">
+                  <label htmlFor="tpl-select-block-count" className="tpl-builder-label">
+                    {t.sdb_tpl_num_blocks}
+                  </label>
+                  <select
+                    id="tpl-select-block-count"
+                    className="tpl-builder-select"
+                    value={blockCount}
+                    onChange={e => setBlockCount(Number(e.target.value))}
+                  >
+                    {BLOCK_COUNT_OPTIONS.map(num => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 3. Interval */}
+                <div className="tpl-builder-field">
+                  <label htmlFor="tpl-select-interval" className="tpl-builder-label">
+                    {t.sdb_tpl_interval}
+                  </label>
+                  <select
+                    id="tpl-select-interval"
+                    className="tpl-builder-select"
+                    value={intervalMinutes}
+                    onChange={e => setIntervalMinutes(Number(e.target.value))}
+                  >
+                    {SCHEDULE_INTERVAL_OPTIONS.map(opt => {
+                      const hoursLabel = opt.hours === 1
+                        ? t.sdb_qb_hour_unit_singular || '1 hour'
+                        : opt.hours === 0.5
+                        ? '30 min'
+                        : opt.hours === 0.75
+                        ? '45 min'
+                        : (t.sdb_qb_hours_unit || '{hours} hours').replace('{hours}', String(opt.hours));
+                      return (
+                        <option key={opt.minutes} value={opt.minutes}>
+                          {hoursLabel}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              {/* Generated Schedule Preview */}
+              <div className="tpl-builder-preview-box">
+                <div className="tpl-builder-preview-label">{t.sdb_tpl_preview_times}:</div>
+                {isOverflow ? (
+                  <p className="tpl-builder-overflow-msg">⚠️ {t.sdb_tpl_overflow_warning}</p>
+                ) : (
+                  <div className="tpl-builder-times-row">
+                    {generatedResult.blocks.map((block, idx) => (
+                      <span key={idx} className="tpl-builder-time-chip" id={`tpl-time-chip-${idx}`}>
+                        {block.startTime}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="tpl-modal-actions">
               <button
                 id="btn-tpl-apply-trigger"
                 type="button"
                 className="tpl-btn tpl-btn--primary"
                 onClick={handleApplyClick}
+                disabled={isOverflow}
               >
                 ✓ {t.sdb_tpl_apply_to_day.replace('{day}', resolvedDayName).toUpperCase()}
               </button>

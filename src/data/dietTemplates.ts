@@ -23,12 +23,20 @@ export interface DailyTemplatePoint {
   isNextDay?: boolean;    // true for overnight points (00:00, 02:00, 04:00, 06:00 next day)
 }
 
+import type { MealTypeKey } from '../utils/dietStorage';
+import type { FoodCategoryKey } from './dietData';
+import type { FoodSelectionsMap, CustomFoodsMap } from './foodOptions';
+
 export interface TemplateBlock {
   startTime: string; // 24h "HH:MM"
   endTime: string;   // 24h "HH:MM"
   type: string;      // 'custom' | 'micro_fasting'
   items?: string[];
   customText?: string;
+  mealType?: MealTypeKey;
+  foodCategories?: FoodCategoryKey[];
+  foodSelections?: FoodSelectionsMap;
+  customFoods?: CustomFoodsMap;
 }
 
 export interface TemplateDay {

@@ -3927,4 +3927,414 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   Phase 7B: Daily-First Structured Diet UX & Optional Meal Type
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Daily-first view container ── */
+.sdb-daily-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: sdbFadeIn 0.2s ease-out;
+}
+
+/* ── Compact Profile Bar ── */
+.sdb-daily-profile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  margin-top: -0.25rem;
+}
+
+.sdb-daily-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.sdb-daily-profile-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.sdb-daily-profile-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.sdb-daily-profile-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim, #94a3b8);
+  white-space: nowrap;
+}
+
+.sdb-daily-profile-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent, #38bdf8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sdb-daily-profile-actions {
+  flex-shrink: 0;
+}
+
+.sdb-btn-open-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.sdb-btn-open-settings:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+/* ── Structure Settings View ── */
+.sdb-settings-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: sdbFadeIn 0.2s ease-out;
+}
+
+.sdb-settings-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sdb-btn-back-to-daily {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  color: #38bdf8;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sdb-btn-back-to-daily:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.6);
+  transform: translateX(-2px);
+}
+
+.sdb-settings-nav-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  margin: 0;
+}
+
+.sdb-settings-done-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sdb-btn-done-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.75rem;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  transition: all 0.18s ease;
+}
+
+.sdb-btn-done-settings:hover {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ── Meal Type Pill Badge (Phase 7B) ── */
+.sdb-block-meal-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
+/* ── Phase 7C: Specific Food Submenus & Custom Foods ── */
+.sdb-cat-chip--open {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  border-color: #38bdf8 !important;
+}
+
+.sdb-cat-chip-arrow {
+  font-size: 0.65rem;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
+.sdb-cat-submenu-container {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  animation: sdbSubmenuSlideDown 0.2s ease-out;
+}
+
+@keyframes sdbSubmenuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sdb-cat-submenu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sdb-cat-submenu-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.01em;
+}
+
+.sdb-cat-submenu-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.sdb-cat-submenu-close:hover {
+  color: var(--text-primary, #f8fafc);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sdb-specific-food-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.sdb-food-child-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.65rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sdb-food-child-chip:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+}
+
+.sdb-food-child-chip--active {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #0284c7;
+  color: #38bdf8;
+  font-weight: 600;
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.2);
+}
+
+.sdb-child-chip-check {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.sdb-custom-food-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.sdb-custom-foods-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sdb-custom-food-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 6px;
+  color: #d8b4fe;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sdb-custom-food-remove {
+  background: transparent;
+  border: none;
+  color: #c084fc;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.sdb-custom-food-remove:hover {
+  color: #f87171;
+}
+
+.sdb-custom-food-input-row {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.sdb-custom-food-input {
+  flex: 1;
+  padding: 0.4rem 0.65rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.sdb-custom-food-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.sdb-btn-add-custom {
+  padding: 0.4rem 0.75rem;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 8px;
+  color: #d8b4fe;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sdb-btn-add-custom:hover {
+  background: rgba(168, 85, 247, 0.3);
+  border-color: #a855f7;
+  color: #ffffff;
+}
+
+.sdb-custom-food-error {
+  color: #f87171;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* ── Block Card Specific Foods Summary ── */
+.sdb-block-specific-foods {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0.2rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  border-left: 2px solid #38bdf8;
+}
+
+.sdb-specific-foods-bullet {
+  color: #38bdf8;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.sdb-specific-foods-text {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 

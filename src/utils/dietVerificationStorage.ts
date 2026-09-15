@@ -12,7 +12,7 @@
  * Deterministic local date handling (YYYY-MM-DD), never uses UTC date shifts.
  */
 
-import type { DayKey, StructuredDietBlock } from './dietStorage';
+import type { DayKey, StructuredDietBlock, MealTypeKey } from './dietStorage';
 import { getLocalTodayKey, getBlockPhotos } from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
@@ -61,7 +61,10 @@ export interface PlannedBlockSnapshot {
   type: string;
   items: string[];
   customText?: string;
+  mealType?: MealTypeKey;
   foodCategories?: FoodCategoryKey[];
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
 }
@@ -75,8 +78,13 @@ export interface DietBlockVerification {
   detailedOutcome?: DetailedBlockOutcome; // Optional for backward compatibility with legacy records
   isResumed?: boolean;                    // Measured separately from slip outcome
   resumedAt?: number;                     // Epoch ms when marked resumed
+  mealType?: MealTypeKey;                 // Phase 7B: preserved meal type
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C
   actualItems?: string[];
   actualFoodCategories?: FoodCategoryKey[];
+  actualFoodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+  actualCustomFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
@@ -197,6 +205,32 @@ export function getTodayDietVerification(): DailyDietVerification {
 }
 
 /**
+ * Creates a clean snapshot of a planned block for verification records.
+ */
+export function createPlannedBlockSnapshot(plannedBlock: StructuredDietBlock): PlannedBlockSnapshot {
+  const plannedPhotos = getBlockPhotos(plannedBlock);
+  return {
+    startTime: plannedBlock.startTime,
+    endTime: plannedBlock.endTime,
+    type: plannedBlock.type,
+    items: Array.isArray(plannedBlock.items) ? [...plannedBlock.items] : [],
+    customText: plannedBlock.customText,
+    mealType: plannedBlock.mealType,
+    foodCategories: Array.isArray(plannedBlock.foodCategories)
+      ? [...plannedBlock.foodCategories]
+      : undefined,
+    foodSelections: plannedBlock.foodSelections
+      ? JSON.parse(JSON.stringify(plannedBlock.foodSelections))
+      : undefined,
+    customFoods: plannedBlock.customFoods
+      ? JSON.parse(JSON.stringify(plannedBlock.customFoods))
+      : undefined,
+    foodPhoto: plannedPhotos[0],
+    foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
+  };
+}
+
+/**
  * Save or update a single planned block verification for a given date (defaults to today).
  * Updates existing entry if plannedBlockId already exists on that date, preventing duplicates.
  */
@@ -207,6 +241,8 @@ export function saveBlockVerification(params: {
   isResumed?: boolean;
   actualItems?: string[];
   actualFoodCategories?: FoodCategoryKey[];
+  actualFoodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+  actualCustomFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
@@ -237,23 +273,10 @@ export function saveBlockVerification(params: {
         ? crypto.randomUUID().slice(0, 10)
         : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`);
 
-  const plannedPhotos = getBlockPhotos(params.plannedBlock);
-
   // Preserve existing snapshot if updating, or capture fresh snapshot on first save
   const plannedSnapshot: PlannedBlockSnapshot = existingIdx >= 0
     ? daily.entries[existingIdx].plannedSnapshot
-    : {
-        startTime: params.plannedBlock.startTime,
-        endTime: params.plannedBlock.endTime,
-        type: params.plannedBlock.type,
-        items: Array.isArray(params.plannedBlock.items) ? [...params.plannedBlock.items] : [],
-        customText: params.plannedBlock.customText,
-        foodCategories: Array.isArray(params.plannedBlock.foodCategories)
-          ? [...params.plannedBlock.foodCategories]
-          : undefined,
-        foodPhoto: plannedPhotos[0],
-        foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
-      };
+    : createPlannedBlockSnapshot(params.plannedBlock);
 
   // Determine Resumed status: if changing to on-track, reset resumed; otherwise respect explicit param or keep existing
   let isResumed: boolean | undefined;
@@ -277,7 +300,7 @@ export function saveBlockVerification(params: {
     ?? (existingIdx >= 0
         ? (daily.entries[existingIdx].foodPhotos ?? (daily.entries[existingIdx].foodPhoto ? [daily.entries[existingIdx].foodPhoto!] : undefined))
         : undefined)
-    ?? (plannedPhotos.length > 0 ? plannedPhotos : undefined);
+    ?? plannedSnapshot.foodPhotos;
 
   const assignedPhotos = rawAssignedPhotos && rawAssignedPhotos.length > 0 ? rawAssignedPhotos : undefined;
   const assignedPhoto = assignedPhotos && assignedPhotos.length > 0 ? assignedPhotos[0] : undefined;
@@ -291,8 +314,13 @@ export function saveBlockVerification(params: {
     detailedOutcome: params.detailedOutcome ?? (existingIdx >= 0 ? daily.entries[existingIdx].detailedOutcome : undefined),
     isResumed,
     resumedAt,
+    mealType: params.plannedBlock.mealType,
+    foodSelections: params.plannedBlock.foodSelections,
+    customFoods: params.plannedBlock.customFoods,
     actualItems: params.actualItems ? [...params.actualItems] : undefined,
     actualFoodCategories: params.actualFoodCategories ? [...params.actualFoodCategories] : undefined,
+    actualFoodSelections: params.actualFoodSelections ? { ...params.actualFoodSelections } : undefined,
+    actualCustomFoods: params.actualCustomFoods ? { ...params.actualCustomFoods } : undefined,
     actualCustomText: params.actualCustomText?.trim() || undefined,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,

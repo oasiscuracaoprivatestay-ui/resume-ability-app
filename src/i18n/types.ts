@@ -1206,6 +1206,143 @@ export interface Translations {
   sz_last_reviewed: string;
   sz_points_awarded: string;
   sz_points_already_awarded: string;
+
+  // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
+  sdb_structure_settings: string;
+  sdb_back_to_daily: string;
+  sdb_active_profile_label: string;
+  sdb_settings_desc: string;
+  sdb_meal_type_label: string;
+  sdb_meal_type_none: string;
+  sdb_meal_type_breakfast: string;
+  sdb_meal_type_lunch: string;
+  sdb_meal_type_dinner: string;
+  sdb_meal_type_snack: string;
+  sdb_meal_type_other: string;
+  sdb_tpl_builder_title: string;
+  sdb_tpl_start_time: string;
+  sdb_tpl_num_blocks: string;
+  sdb_tpl_interval: string;
+  sdb_tpl_preview_times: string;
+  sdb_tpl_overflow_warning: string;
+  sdb_tpl_apply_builder_btn: string;
+
+  // ── Phase 7C: Food Submenus & Specific Foods ──
+  sdb_food_submenu_title: string;
+  sdb_add_custom_food: string;
+  sdb_custom_food_placeholder: string;
+  sdb_add_custom_food_btn: string;
+  sdb_custom_food_duplicate: string;
+  sdb_more_foods_indicator: string;
+  sdb_remove_custom_food: string;
+
+  // Canonical specific food item labels
+  sdb_food_opt_chicken: string;
+  sdb_food_opt_turkey: string;
+  sdb_food_opt_beef: string;
+  sdb_food_opt_pork: string;
+  sdb_food_opt_fish: string;
+  sdb_food_opt_salmon: string;
+  sdb_food_opt_tuna: string;
+  sdb_food_opt_shrimp_seafood: string;
+  sdb_food_opt_eggs: string;
+  sdb_food_opt_greek_yogurt: string;
+  sdb_food_opt_cottage_cheese: string;
+  sdb_food_opt_cheese: string;
+  sdb_food_opt_tofu: string;
+  sdb_food_opt_tempeh: string;
+  sdb_food_opt_beans_legumes: string;
+  sdb_food_opt_protein_shake: string;
+
+  sdb_food_opt_white_bread: string;
+  sdb_food_opt_white_rice: string;
+  sdb_food_opt_pasta: string;
+  sdb_food_opt_tortilla_wrap: string;
+  sdb_food_opt_crackers: string;
+  sdb_food_opt_cereal: string;
+  sdb_food_opt_pastry: string;
+  sdb_food_opt_sugary_cereal: string;
+
+  sdb_food_opt_brown_rice: string;
+  sdb_food_opt_oats: string;
+  sdb_food_opt_quinoa: string;
+  sdb_food_opt_whole_grain_bread: string;
+  sdb_food_opt_whole_grain_pasta: string;
+  sdb_food_opt_sweet_potato: string;
+  sdb_food_opt_potato: string;
+  sdb_food_opt_lentils: string;
+
+  sdb_food_opt_avocado: string;
+  sdb_food_opt_olive_oil: string;
+  sdb_food_opt_nuts: string;
+  sdb_food_opt_almonds: string;
+  sdb_food_opt_walnuts: string;
+  sdb_food_opt_seeds: string;
+  sdb_food_opt_peanut_butter: string;
+  sdb_food_opt_nut_butter: string;
+  sdb_food_opt_olives: string;
+
+  sdb_food_opt_broccoli: string;
+  sdb_food_opt_spinach: string;
+  sdb_food_opt_lettuce_salad_greens: string;
+  sdb_food_opt_tomato: string;
+  sdb_food_opt_cucumber: string;
+  sdb_food_opt_carrot: string;
+  sdb_food_opt_bell_pepper: string;
+  sdb_food_opt_onion: string;
+  sdb_food_opt_zucchini: string;
+  sdb_food_opt_cauliflower: string;
+  sdb_food_opt_cabbage: string;
+  sdb_food_opt_green_beans: string;
+  sdb_food_opt_asparagus: string;
+  sdb_food_opt_mushrooms: string;
+  sdb_food_opt_mixed_vegetables: string;
+
+  sdb_food_opt_apple: string;
+  sdb_food_opt_banana: string;
+  sdb_food_opt_orange: string;
+  sdb_food_opt_berries: string;
+  sdb_food_opt_strawberry: string;
+  sdb_food_opt_blueberry: string;
+  sdb_food_opt_mango: string;
+  sdb_food_opt_pineapple: string;
+  sdb_food_opt_grapes: string;
+  sdb_food_opt_watermelon: string;
+  sdb_food_opt_melon: string;
+  sdb_food_opt_peach: string;
+  sdb_food_opt_pear: string;
+  sdb_food_opt_kiwi: string;
+  sdb_food_opt_papaya: string;
+
+  sdb_food_opt_cake: string;
+  sdb_food_opt_cookies: string;
+  sdb_food_opt_chocolate: string;
+  sdb_food_opt_ice_cream: string;
+  sdb_food_opt_candy: string;
+  sdb_food_opt_pudding: string;
+  sdb_food_opt_sweet_dessert: string;
+
+  sdb_food_opt_yogurt: string;
+  sdb_food_opt_fruit: string;
+  sdb_food_opt_protein_bar: string;
+  sdb_food_opt_granola_bar: string;
+  sdb_food_opt_chips: string;
+  sdb_food_opt_popcorn: string;
+  sdb_food_opt_sandwich: string;
+  sdb_food_opt_other_snack: string;
+
+  sdb_food_opt_water: string;
+  sdb_food_opt_sparkling_water: string;
+  sdb_food_opt_black_coffee: string;
+  sdb_food_opt_coffee: string;
+  sdb_food_opt_tea: string;
+  sdb_food_opt_herbal_tea: string;
+  sdb_food_opt_milk: string;
+  sdb_food_opt_juice: string;
+  sdb_food_opt_soft_drink: string;
+  sdb_food_opt_diet_soft_drink: string;
+  sdb_food_opt_energy_drink: string;
+  sdb_food_opt_smoothie: string;
 }
 
 

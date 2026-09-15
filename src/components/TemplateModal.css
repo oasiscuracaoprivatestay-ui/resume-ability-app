@@ -515,6 +515,110 @@
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
 }
 
+/* ── Template Time-Block Builder (Phase 7B) ── */
+.tpl-builder-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tpl-builder-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tpl-builder-icon {
+  font-size: 1.1rem;
+}
+
+.tpl-builder-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+}
+
+.tpl-builder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.tpl-builder-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tpl-builder-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
+
+.tpl-builder-select {
+  background: #1a202c;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: var(--text-primary, #f1f5f9);
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.tpl-builder-select:focus {
+  border-color: var(--accent, #2dd4bf);
+}
+
+.tpl-builder-preview-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tpl-builder-preview-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent, #2dd4bf);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tpl-builder-times-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tpl-builder-time-chip {
+  background: rgba(45, 212, 191, 0.15);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  color: var(--accent, #2dd4bf);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.tpl-builder-overflow-msg {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #f87171;
+  line-height: 1.4;
+}
+
 @media (max-width: 480px) {
   .tpl-body {
     padding: 18px 14px;

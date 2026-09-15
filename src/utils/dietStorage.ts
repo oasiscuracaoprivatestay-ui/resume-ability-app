@@ -17,6 +17,7 @@ import {
   FOOD_CATEGORY_KEYS,
   mapLegacyItemsToCategories,
 } from '../data/dietData';
+import { isValidCanonicalFood } from '../data/foodOptions';
 import type { FoodPhotoMetadata } from './photoStorage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -26,6 +27,10 @@ export type DayMode = 'structured' | 'unstructured';
 
 export const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
+// ── Meal Type (Phase 7B: Optional Descriptive Metadata) ─────────────────────
+export const MEAL_TYPE_KEYS = ['breakfast', 'lunch', 'dinner', 'snack', 'other'] as const;
+export type MealTypeKey = typeof MEAL_TYPE_KEYS[number];
+
 export interface StructuredDietBlock {
   id: string;
   startTime: string;   // 24h "HH:MM"
@@ -33,7 +38,10 @@ export interface StructuredDietBlock {
   type: string;        // from BLOCK_TYPES or 'Custom'
   items: string[];     // legacy selected options or sample items
   customText: string;  // free-text; empty string if not set
+  mealType?: MealTypeKey; // Phase 7B: optional descriptive meal type
   foodCategories?: FoodCategoryKey[]; // Phase 2: multi-select categories
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C: canonical specific food keys per category
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C: custom food strings per category
   foodPhoto?: FoodPhotoMetadata;      // Phase 6: legacy single photo attachment
   foodPhotos?: FoodPhotoMetadata[];   // Phase 6B: multi-photo support (food + beverages)
 }
@@ -206,9 +214,14 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
     type: b.type,
     items: Array.isArray(b.items) ? [...b.items] : [],
     customText: typeof b.customText === 'string' ? b.customText : '',
+    mealType: b.mealType,
     foodCategories: Array.isArray(b.foodCategories)
       ? [...b.foodCategories]
       : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []),
+    foodSelections: b.foodSelections ? JSON.parse(JSON.stringify(b.foodSelections)) : undefined,
+    customFoods: b.customFoods ? JSON.parse(JSON.stringify(b.customFoods)) : undefined,
+    foodPhoto: b.foodPhoto ? { ...b.foodPhoto } : undefined,
+    foodPhotos: b.foodPhotos ? b.foodPhotos.map(p => ({ ...p })) : undefined,
   }));
 }
 
@@ -809,6 +822,51 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     ? foodPhotos[0]
     : undefined;
 
+  const mealType: MealTypeKey | undefined = (MEAL_TYPE_KEYS as readonly string[]).includes(b.mealType as string)
+    ? (b.mealType as MealTypeKey)
+    : undefined;
+
+  // Prune and sanitize specific food selections by valid category
+  let foodSelections: Partial<Record<FoodCategoryKey, string[]>> | undefined;
+  if (b.foodSelections && typeof b.foodSelections === 'object') {
+    const nextSel: Partial<Record<FoodCategoryKey, string[]>> = {};
+    let hasAny = false;
+    for (const cat of categories) {
+      const arr = b.foodSelections[cat];
+      if (Array.isArray(arr)) {
+        const valid = arr.filter(
+          item => typeof item === 'string' && item.trim().length > 0 && isValidCanonicalFood(cat, item.trim())
+        );
+        if (valid.length > 0) {
+          nextSel[cat] = Array.from(new Set(valid.map(s => s.trim())));
+          hasAny = true;
+        }
+      }
+    }
+    if (hasAny) foodSelections = nextSel;
+  }
+
+  // Prune and sanitize custom food strings by valid category
+  let customFoods: Partial<Record<FoodCategoryKey, string[]>> | undefined;
+  if (b.customFoods && typeof b.customFoods === 'object') {
+    const nextCustom: Partial<Record<FoodCategoryKey, string[]>> = {};
+    let hasAny = false;
+    for (const cat of categories) {
+      const arr = b.customFoods[cat];
+      if (Array.isArray(arr)) {
+        const valid = arr
+          .map(s => (typeof s === 'string' ? s.trim() : ''))
+          .filter(s => s.length > 0);
+        const unique = Array.from(new Set(valid));
+        if (unique.length > 0) {
+          nextCustom[cat] = unique;
+          hasAny = true;
+        }
+      }
+    }
+    if (hasAny) customFoods = nextCustom;
+  }
+
   return {
     id: b.id,
     startTime: b.startTime,
@@ -816,7 +874,10 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     type: b.type,
     items: Array.isArray(b.items) ? b.items.filter(i => typeof i === 'string') : [],
     customText: typeof b.customText === 'string' ? b.customText : '',
+    mealType,
     foodCategories: categories,
+    foodSelections,
+    customFoods,
     foodPhoto,
     foodPhotos,
   };

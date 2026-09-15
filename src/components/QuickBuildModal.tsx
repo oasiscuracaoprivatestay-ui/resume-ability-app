@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { DayKey, StructuredDietBlock } from '../utils/dietStorage';
-import { generateBlockId, timeToMinutes } from '../utils/dietStorage';
 import { TIME_SLOTS, formatTime } from '../data/dietData';
 import { useTranslation } from '../i18n';
+import { generateQuickBuildBlocks, IntervalOption } from '../utils/scheduleGenerator';
 import './QuickBuildModal.css';
 
 export interface QuickBuildModalProps {
@@ -15,11 +15,6 @@ export interface QuickBuildModalProps {
 }
 
 type ModalStep = 'config' | 'conflict';
-
-interface IntervalOption {
-  minutes: number;
-  hours: number;
-}
 
 const INTERVAL_OPTIONS: IntervalOption[] = [
   { minutes: 60, hours: 1 },
@@ -70,43 +65,12 @@ export default function QuickBuildModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Compute generated blocks and check midnight overflow
+  // Compute generated blocks and check midnight overflow using shared scheduleGenerator
   const { generatedBlocks, isOverflow } = useMemo(() => {
-    const startMins = timeToMinutes(startTime);
-    const blocks: StructuredDietBlock[] = [];
-    let overflow = false;
-
-    for (let i = 0; i < blockCount; i++) {
-      const blockStartMins = startMins + i * intervalMinutes;
-      const blockEndMins = blockStartMins + 30; // 30-minute block duration
-
-      // Current day ends at 24:00 (1440 minutes)
-      if (blockEndMins > 1440) {
-        overflow = true;
-        break;
-      }
-
-      const sh = Math.floor(blockStartMins / 60);
-      const sm = blockStartMins % 60;
-      const eh = Math.floor(blockEndMins / 60);
-      const em = blockEndMins % 60;
-
-      const sStr = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
-      const eStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
-
-      blocks.push({
-        id: generateBlockId(),
-        startTime: sStr,
-        endTime: eStr,
-        type: 'custom',
-        items: [],
-        customText: '',
-      });
-    }
-
+    const result = generateQuickBuildBlocks(startTime, blockCount, intervalMinutes);
     return {
-      generatedBlocks: overflow ? [] : blocks,
-      isOverflow: overflow,
+      generatedBlocks: result.blocks,
+      isOverflow: result.isOverflow,
     };
   }, [startTime, intervalMinutes, blockCount]);
 

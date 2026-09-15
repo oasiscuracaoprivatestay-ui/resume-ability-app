@@ -332,10 +332,162 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   };
 }
 
+// ── Specific Food Distribution Analytics (Phase 7C) ───────────────────────────
+
+export interface SpecificFoodOccurrence {
+  key: string;
+  category: FoodCategoryKey;
+  isCustom: boolean;
+}
+
+export interface SpecificFoodDistributionItem {
+  key: string;
+  category: FoodCategoryKey;
+  isCustom: boolean;
+  count: number;
+  categoryPercentage: number; // percentage within parent category
+  overallPercentage: number;  // percentage of all specific food selections
+}
+
+export interface SpecificFoodStatsResult {
+  totalSpecificFoodOccurrences: number;
+  items: SpecificFoodDistributionItem[];
+  byCategory: Record<FoodCategoryKey, { total: number; items: SpecificFoodDistributionItem[] }>;
+  topFoods: SpecificFoodDistributionItem[];
+  hasData: boolean;
+}
+
+/**
+ * Extracts specific food occurrences (canonical + custom) from a verification record.
+ * Prioritizes actual selections if reported, falling back to planned snapshot.
+ */
+export function getRecordSpecificFoods(record: DietBlockVerification): SpecificFoodOccurrence[] {
+  const result: SpecificFoodOccurrence[] = [];
+  const foodSelections = record.actualFoodSelections || record.foodSelections || record.plannedSnapshot?.foodSelections;
+  const customFoods = record.actualCustomFoods || record.customFoods || record.plannedSnapshot?.customFoods;
+
+  if (foodSelections && typeof foodSelections === 'object') {
+    for (const [cat, foods] of Object.entries(foodSelections)) {
+      if ((FOOD_CATEGORY_KEYS as readonly string[]).includes(cat) && Array.isArray(foods)) {
+        for (const food of foods) {
+          if (typeof food === 'string' && food.trim().length > 0) {
+            result.push({
+              key: food.trim(),
+              category: cat as FoodCategoryKey,
+              isCustom: false,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  if (customFoods && typeof customFoods === 'object') {
+    for (const [cat, foods] of Object.entries(customFoods)) {
+      if ((FOOD_CATEGORY_KEYS as readonly string[]).includes(cat) && Array.isArray(foods)) {
+        for (const food of foods) {
+          if (typeof food === 'string' && food.trim().length > 0) {
+            result.push({
+              key: food.trim(),
+              category: cat as FoodCategoryKey,
+              isCustom: true,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Calculates specific food occurrence counts and percentages across verified records.
+ * Denominator within category: specific food count / total specific food selections in that category * 100.
+ */
+export function getSpecificFoodStats(records: DietBlockVerification[]): SpecificFoodStatsResult {
+  const categoryTotals: Record<FoodCategoryKey, number> = {
+    protein: 0,
+    simple_carbs: 0,
+    complex_carbs: 0,
+    healthy_fats: 0,
+    vegetables: 0,
+    fruits: 0,
+    desserts: 0,
+    snacks: 0,
+    beverages: 0,
+  };
+
+  const itemMap = new Map<string, { key: string; category: FoodCategoryKey; isCustom: boolean; count: number }>();
+  let totalSpecificFoodOccurrences = 0;
+
+  for (const record of records) {
+    const specificFoods = getRecordSpecificFoods(record);
+    for (const food of specificFoods) {
+      totalSpecificFoodOccurrences++;
+      categoryTotals[food.category] = (categoryTotals[food.category] || 0) + 1;
+
+      const mapKey = `${food.category}::${food.isCustom ? 'custom' : 'canonical'}::${food.key.toLowerCase()}`;
+      const existing = itemMap.get(mapKey);
+      if (existing) {
+        existing.count++;
+      } else {
+        itemMap.set(mapKey, {
+          key: food.key,
+          category: food.category,
+          isCustom: food.isCustom,
+          count: 1,
+        });
+      }
+    }
+  }
+
+  const items: SpecificFoodDistributionItem[] = Array.from(itemMap.values()).map(raw => {
+    const catTotal = categoryTotals[raw.category] || 0;
+    const categoryPercentage = catTotal > 0 ? formatPercentage((raw.count / catTotal) * 100) : 0;
+    const overallPercentage =
+      totalSpecificFoodOccurrences > 0
+        ? formatPercentage((raw.count / totalSpecificFoodOccurrences) * 100)
+        : 0;
+
+    return {
+      key: raw.key,
+      category: raw.category,
+      isCustom: raw.isCustom,
+      count: raw.count,
+      categoryPercentage,
+      overallPercentage,
+    };
+  });
+
+  // Sort descending by count
+  items.sort((a, b) => b.count - a.count);
+
+  const byCategory: Record<FoodCategoryKey, { total: number; items: SpecificFoodDistributionItem[] }> = {
+    protein: { total: categoryTotals.protein, items: items.filter(i => i.category === 'protein') },
+    simple_carbs: { total: categoryTotals.simple_carbs, items: items.filter(i => i.category === 'simple_carbs') },
+    complex_carbs: { total: categoryTotals.complex_carbs, items: items.filter(i => i.category === 'complex_carbs') },
+    healthy_fats: { total: categoryTotals.healthy_fats, items: items.filter(i => i.category === 'healthy_fats') },
+    vegetables: { total: categoryTotals.vegetables, items: items.filter(i => i.category === 'vegetables') },
+    fruits: { total: categoryTotals.fruits, items: items.filter(i => i.category === 'fruits') },
+    desserts: { total: categoryTotals.desserts, items: items.filter(i => i.category === 'desserts') },
+    snacks: { total: categoryTotals.snacks, items: items.filter(i => i.category === 'snacks') },
+    beverages: { total: categoryTotals.beverages, items: items.filter(i => i.category === 'beverages') },
+  };
+
+  return {
+    totalSpecificFoodOccurrences,
+    items,
+    byCategory,
+    topFoods: items.slice(0, 10),
+    hasData: totalSpecificFoodOccurrences > 0,
+  };
+}
+
 // ── Combined Awareness Summary ────────────────────────────────────────────────
 
 /**
- * High-level helper returning all three awareness metrics for a given period and profile.
+ * High-level helper returning all awareness metrics for a given period and profile.
  */
 export function getAwarenessSummary(
   allVerifications: Record<string, DailyDietVerification>,
@@ -358,3 +510,4 @@ export function getAwarenessSummary(
     categoryStats,
   };
 }
+
