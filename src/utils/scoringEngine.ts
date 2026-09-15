@@ -27,6 +27,7 @@ export type ScoreActivityType =
   | 'NON_NEGOTIABLES_REVIEW'
   | 'WHY_REVIEW'
   | 'STRUCTURED_DIET_REVIEW'
+  | 'SLIPPERY_ZONES_REVIEW'
   | 'I_AM_IN_CONTROL'
   | 'MOTIVATION_CONSUMED'
   | 'TIMER_COMPLETED'
@@ -49,6 +50,7 @@ export const ACTIVITY_RULES: Record<ScoreActivityType, ActivityRule> = {
   NON_NEGOTIABLES_REVIEW: { points: 15, maxPerDay: 1, description: 'Non-negotiables reviewed' },
   WHY_REVIEW: { points: 10, maxPerDay: 1, description: 'Why reasons reviewed' },
   STRUCTURED_DIET_REVIEW: { points: 10, maxPerDay: 1, description: 'Structured diet reviewed' },
+  SLIPPERY_ZONES_REVIEW: { points: 15, maxPerDay: 1, description: 'Slippery zones reviewed' },
   I_AM_IN_CONTROL: { points: 10, maxPerDay: 2, description: 'I am in control win' },
   MOTIVATION_CONSUMED: { points: 5, maxPerDay: 2, description: 'Motivation text or audio' },
   TIMER_COMPLETED: { points: 10, maxPerDay: 2, description: 'Timer session completed' },
@@ -298,6 +300,7 @@ export function getDateScoreBreakdown(
     NON_NEGOTIABLES_REVIEW: 0,
     WHY_REVIEW: 0,
     STRUCTURED_DIET_REVIEW: 0,
+    SLIPPERY_ZONES_REVIEW: 0,
     I_AM_IN_CONTROL: 0,
     MOTIVATION_CONSUMED: 0,
     TIMER_COMPLETED: 0,

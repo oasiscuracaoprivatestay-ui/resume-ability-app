@@ -554,6 +554,120 @@
   transform: translateY(0);
 }
 
+/* ── Phase 7A: My Commitments Card on Home ── */
+.home-btn-action--my-commitments {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(168, 85, 247, 0.14));
+  border: 1.5px solid rgba(99, 102, 241, 0.45);
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 1.1rem 1.4rem;
+  gap: 0.9rem;
+}
+
+.home-btn-action--my-commitments:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.22));
+  border-color: #818cf8;
+  box-shadow: 0 6px 26px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.home-btn-action--my-commitments:active {
+  transform: translateY(0);
+}
+
+.home-btn-text-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.home-btn-primary-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.home-btn-sub-text {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #cbd5e1;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.home-btn-chevron {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.home-btn-action--my-commitments:hover .home-btn-chevron {
+  transform: translateX(3px);
+  color: #fff;
+}
+
+/* ── Shortcuts Row (Slippery Zones & Non-Negotiables) ── */
+.home-commitments-shortcuts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.home-btn-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-lg, 14px);
+  font-family: var(--font);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  color: #fff;
+}
+
+.home-btn-shortcut--sz {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.home-btn-shortcut--sz:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.home-btn-shortcut--nn {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.home-btn-shortcut--nn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.home-btn-shortcut-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.home-btn-shortcut-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .home-btn-icon {
   font-size: 1.25rem;
   line-height: 1;

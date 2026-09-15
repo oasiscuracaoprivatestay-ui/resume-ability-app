@@ -124,25 +124,54 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span>{t.home_structured_diet}</span>
           </button>
 
-          {/* ── Main Menu Direct Access: Commitment & Non-Negotiables ── */}
+          {/* ── My Commitments Hub & Shortcuts (Phase 7A) ── */}
+          <button
+            id="btn-my-commitments"
+            className="home-btn-action home-btn-action--my-commitments"
+            onClick={() => onNavigate('my-commitments')}
+          >
+            <span className="home-btn-icon">🤝</span>
+            <div className="home-btn-text-col">
+              <span className="home-btn-primary-text">{t.home_my_commitments}</span>
+              <span className="home-btn-sub-text">{t.home_my_commitments_sub}</span>
+            </div>
+            <span className="home-btn-chevron" aria-hidden="true">→</span>
+          </button>
+
+          {/* Quick Access Row for Slippery Zones and Non-Negotiables */}
+          <div className="home-commitments-shortcuts-row">
+            <button
+              id="btn-home-slippery-zones"
+              className="home-btn-shortcut home-btn-shortcut--sz"
+              onClick={() => onNavigate('my-slippery-zones')}
+              title={t.sz_screen_title}
+            >
+              <span className="home-btn-shortcut-icon">⚠️</span>
+              <span className="home-btn-shortcut-label">{t.home_slippery_zones_shortcut}</span>
+            </button>
+            <button
+              id="btn-main-non-negotiables"
+              className="home-btn-shortcut home-btn-shortcut--nn"
+              onClick={() => {
+                sessionStorage.setItem('commitment_focus', 'nn');
+                onNavigate('commitment');
+              }}
+              title={t.commit_nn_section}
+            >
+              <span className="home-btn-shortcut-icon">🛡️</span>
+              <span className="home-btn-shortcut-label">{t.commit_nn_section}</span>
+            </button>
+          </div>
+
+          {/* Backward compatibility alias for btn-main-commitment */}
           <button
             id="btn-main-commitment"
-            className="home-btn-action home-btn-action--commitment"
+            style={{ display: 'none' }}
+            aria-hidden="true"
+            tabIndex={-1}
             onClick={() => onNavigate('commitment')}
           >
-            <span className="home-btn-icon">🛡️</span>
-            <span>{t.commit_label}</span>
-          </button>
-          <button
-            id="btn-main-non-negotiables"
-            className="home-btn-action home-btn-action--nn"
-            onClick={() => {
-              sessionStorage.setItem('commitment_focus', 'nn');
-              onNavigate('commitment');
-            }}
-          >
-            <span className="home-btn-icon">⭐</span>
-            <span>{t.commit_nn_section}</span>
+            {t.commit_label}
           </button>
 
           {/* ── Secondary CTAs — inline, never floating on home ── */}

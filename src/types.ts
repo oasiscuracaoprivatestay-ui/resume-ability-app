@@ -29,7 +29,9 @@ export type Screen =
   | 'settings'
   | 'sound-haptics'
   | 'premium'
-  | 'daily-review';
+  | 'daily-review'
+  | 'my-commitments'
+  | 'my-slippery-zones';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';

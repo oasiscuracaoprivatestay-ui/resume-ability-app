@@ -1169,6 +1169,43 @@ export interface Translations {
   sdb_err_unsupported_format: string;
   sdb_err_photo_too_large: string;
   sdb_err_invalid_image: string;
+
+  // ── Phase 7A: My Commitments Hub & My Slippery Zones ──
+  score_cat_slippery_zones: string;
+  home_my_commitments: string;
+  home_my_commitments_sub: string;
+  home_slippery_zones_shortcut: string;
+  my_commitments_title: string;
+  my_commitments_subtitle: string;
+  my_commitments_card_commitment_title: string;
+  my_commitments_card_commitment_desc: string;
+  my_commitments_card_nn_title: string;
+  my_commitments_card_nn_desc: string;
+  my_commitments_card_sz_title: string;
+  my_commitments_card_sz_desc: string;
+  sz_screen_title: string;
+  sz_screen_subtitle: string;
+  sz_awareness_banner: string;
+  sz_add_zone_btn: string;
+  sz_empty_title: string;
+  sz_empty_desc: string;
+  sz_add_modal_title: string;
+  sz_edit_modal_title: string;
+  sz_input_placeholder: string;
+  sz_save_btn: string;
+  sz_cancel_btn: string;
+  sz_delete_confirm: string;
+  sz_edit_btn: string;
+  sz_delete_btn: string;
+  sz_hold_to_review: string;
+  sz_holding_review: string;
+  sz_review_success: string;
+  sz_reviews_count: string;
+  sz_never_reviewed: string;
+  sz_reviewed_today: string;
+  sz_last_reviewed: string;
+  sz_points_awarded: string;
+  sz_points_already_awarded: string;
 }
 
 

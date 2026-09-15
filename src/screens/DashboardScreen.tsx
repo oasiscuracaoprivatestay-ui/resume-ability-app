@@ -120,6 +120,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     NON_NEGOTIABLES_REVIEW: { label: t.score_cat_non_negotiables, icon: '🛡️' },
     WHY_REVIEW: { label: t.score_cat_why_review, icon: '💡' },
     STRUCTURED_DIET_REVIEW: { label: t.score_cat_diet_review, icon: '📋' },
+    SLIPPERY_ZONES_REVIEW: { label: t.score_cat_slippery_zones, icon: '⚠️' },
     I_AM_IN_CONTROL: { label: t.score_cat_in_control, icon: '✊' },
     MOTIVATION_CONSUMED: { label: t.score_cat_motivation, icon: '🎧' },
     TIMER_COMPLETED: { label: t.score_cat_timer, icon: '⏱️' },

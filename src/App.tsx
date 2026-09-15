@@ -31,6 +31,8 @@ import SdaTermsScreen from './screens/SdaTermsScreen';
 import NotificationSettingsScreen from './screens/NotificationSettingsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import SoundHapticsScreen from './screens/SoundHapticsScreen';
+import { MyCommitmentsScreen } from './screens/MyCommitmentsScreen';
+import { MySlipperyZonesScreen } from './screens/MySlipperyZonesScreen';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
@@ -716,6 +718,14 @@ export default function App() {
 
     case 'quote':
       content = <MotivationalQuoteScreen onNavigate={navigate} />;
+      break;
+
+    case 'my-commitments':
+      content = <MyCommitmentsScreen onNavigate={navigate} />;
+      break;
+
+    case 'my-slippery-zones':
+      content = <MySlipperyZonesScreen onNavigate={navigate} />;
       break;
 
     case 'commitment':
