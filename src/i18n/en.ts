@@ -1271,8 +1271,8 @@ export const en: Translations = {
   sdb_photo_nav_prev: 'Previous',
   sdb_photo_nav_next: 'Next',
 
-  // ── Phase 6C: Android Gallery & Photo Error Keys ──
-  sdb_err_unsupported_format: "This photo format isn't supported on this device. Please choose a JPG, PNG, or WebP image.",
+  // ── Phase 6C/6D: Photo Error Keys ──
+  sdb_err_unsupported_format: "We couldn't process this photo. Please try another photo.",
   sdb_err_photo_too_large: 'This photo is too large to process. Please choose a smaller image.',
   sdb_err_invalid_image: 'The selected file is not a supported image.',
 };

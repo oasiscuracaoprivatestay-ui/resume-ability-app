@@ -1258,8 +1258,8 @@ export const es: Translations = {
   sdb_photo_nav_prev: 'Anterior',
   sdb_photo_nav_next: 'Siguiente',
 
-  // ── Phase 6C: Android Gallery & Photo Error Keys ──
-  sdb_err_unsupported_format: 'Este formato de foto no es compatible con este dispositivo. Elige una imagen JPG, PNG o WebP.',
+  // ── Phase 6C/6D: Photo Error Keys ──
+  sdb_err_unsupported_format: 'No pudimos procesar esta foto. Intenta con otra foto.',
   sdb_err_photo_too_large: 'Esta foto es demasiado grande para procesar. Elige una imagen más pequeña.',
   sdb_err_invalid_image: 'El archivo seleccionado no es una imagen compatible.',
 };

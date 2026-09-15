@@ -485,7 +485,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               ref={addFileInputRef}
               id="sdb-photo-file-input-add"
               type="file"
-              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
               style={{ display: 'none' }}
               onChange={handleAddPhotoFileSelect}
             />
@@ -495,7 +495,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               ref={replaceFileInputRef}
               id="sdb-photo-file-input-replace"
               type="file"
-              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
               style={{ display: 'none' }}
               onChange={handleReplacePhotoFileSelect}
             />
@@ -527,7 +527,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                     <div className="sdb-photo-item-actions">
                       <button
                         type="button"
-                        id={`btn-replace-photo-${idx}`}
+                        id={`btn-editor-photo-replace-${idx}`}
                         className="sdb-btn-photo-mini sdb-btn-photo-mini--replace"
                         onClick={() => handleTriggerReplace(idx)}
                         disabled={isProcessingPhoto}
@@ -538,7 +538,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                       </button>
                       <button
                         type="button"
-                        id={`btn-remove-photo-${idx}`}
+                        id={`btn-editor-photo-remove-${idx}`}
                         className="sdb-btn-photo-mini sdb-btn-photo-mini--remove"
                         onClick={() => handleRemovePhoto(idx)}
                         disabled={isProcessingPhoto}
@@ -565,7 +565,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                     ? '...'
                     : foodPhotos.length > 0
                     ? t.sdb_add_another_photo
-                    : t.sdb_add_photo}
+                    : t.sdb_take_choose_photo || t.sdb_add_photo}
                 </span>
               </button>
             </div>
@@ -1302,7 +1302,7 @@ function BlockCard({
       <input
         ref={cardFileInputRef}
         type="file"
-        accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif"
+        accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
         style={{ display: 'none' }}
         onChange={handleCardPhotoSelect}
       />

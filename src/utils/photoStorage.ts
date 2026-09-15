@@ -164,6 +164,60 @@ export function getLocalizedPhotoErrorMessage(
 }
 
 /**
+ * Check if the first bytes of a Blob/File match an HEIF/HEIC container box.
+ */
+export async function isHeicBlobByHeader(file: File | Blob): Promise<boolean> {
+  try {
+    if (!file || typeof file.slice !== 'function' || file.size < 12) return false;
+    const slice = file.slice(0, 16);
+    const buffer = await slice.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    // bytes 4-7 must be 'ftyp' (0x66, 0x74, 0x79, 0x70)
+    if (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
+      const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]).toLowerCase();
+      return ['heic', 'heix', 'heim', 'heis', 'mif1', 'msf1', 'hevc'].includes(brand);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Convert HEIC / HEIF image blob to JPEG blob client-side using dynamic on-demand import.
+ * This ensures normal JPEG/PNG/WebP uploads never incur bundle size or processing overhead.
+ */
+export async function convertHeicToJpegBlob(file: File | Blob): Promise<Blob> {
+  // Test / Node environments without browser DOM
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    if ((file as any).__simulateConversionFailure) {
+      throw new PhotoProcessingError(
+        'unsupported_format',
+        "We couldn't process this photo. Please try another photo."
+      );
+    }
+    return new Blob(['mock-converted-jpeg-data'], { type: 'image/jpeg' });
+  }
+
+  try {
+    const heic2anyModule = await import('heic2any');
+    const heic2any = heic2anyModule.default || (heic2anyModule as any);
+    const converted = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9,
+    });
+    return Array.isArray(converted) ? converted[0] : converted;
+  } catch (conversionErr) {
+    console.warn('Client-side HEIC conversion failed:', conversionErr);
+    throw new PhotoProcessingError(
+      'unsupported_format',
+      "We couldn't process this photo. Please try another photo."
+    );
+  }
+}
+
+/**
  * Safe object URL decode fallback with guaranteed revocation.
  */
 function decodeViaImageElement(file: File | Blob): Promise<HTMLImageElement> {
@@ -179,11 +233,7 @@ function decodeViaImageElement(file: File | Blob): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      if (isHeicFile(file)) {
-        reject(new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device."));
-      } else {
-        reject(new PhotoProcessingError('decode_failed', 'Failed to decode image'));
-      }
+      reject(new PhotoProcessingError('decode_failed', 'Failed to decode image'));
     };
     img.src = url;
   });
@@ -212,8 +262,8 @@ export async function processAndCompressImage(
 
   // Fallback for Node/test environments without browser DOM
   if (typeof window === 'undefined' || typeof document === 'undefined' || typeof document.createElement !== 'function') {
-    if (isHeicFile(file) && (file as any).__simulateUnsupportedHeic) {
-      throw new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device.");
+    if (isHeicFile(file) && ((file as any).__simulateConversionFailure || (file as any).__simulateUnsupportedHeic)) {
+      throw new PhotoProcessingError('unsupported_format', "We couldn't process this photo. Please try another photo.");
     }
     const mockW = (file as any).__mockWidth || 400;
     const mockH = (file as any).__mockHeight || 300;
@@ -236,7 +286,7 @@ export async function processAndCompressImage(
     };
   }
 
-  // Decode via createImageBitmap (preferred for speed and memory efficiency)
+  // 1. Attempt native browser decoding via createImageBitmap
   let source: ImageBitmap | HTMLImageElement | null = null;
   let isBitmap = false;
 
@@ -259,15 +309,44 @@ export async function processAndCompressImage(
     try {
       source = await decodeViaImageElement(file);
       isBitmap = false;
-    } catch (err) {
-      if (err instanceof PhotoProcessingError) {
-        throw err;
-      }
-      if (isHeicFile(file)) {
-        throw new PhotoProcessingError('unsupported_format', "This photo format isn't supported on this device.");
-      }
-      throw new PhotoProcessingError('decode_failed', 'Failed to decode image');
+    } catch {
+      // Native decoding failed; proceed to check HEIC conversion
     }
+  }
+
+  // 2. If native decoding failed, check if image is HEIC/HEIF and convert client-side
+  if (!source) {
+    const isHeic = isHeicFile(file) || (await isHeicBlobByHeader(file));
+    if (isHeic) {
+      console.info('Native HEIC decoding not supported by browser. Converting client-side...');
+      try {
+        const convertedBlob = await convertHeicToJpegBlob(file);
+        if (typeof createImageBitmap === 'function') {
+          try {
+            source = await createImageBitmap(convertedBlob, { imageOrientation: 'from-image' });
+            isBitmap = true;
+          } catch {
+            source = await createImageBitmap(convertedBlob);
+            isBitmap = true;
+          }
+        }
+        if (!source) {
+          source = await decodeViaImageElement(convertedBlob);
+          isBitmap = false;
+        }
+      } catch (convErr) {
+        console.warn('Client-side HEIC conversion failed:', convErr);
+        throw new PhotoProcessingError(
+          'unsupported_format',
+          "We couldn't process this photo. Please try another photo."
+        );
+      }
+    }
+  }
+
+  // 3. If decoding still failed after all strategies, fail gracefully
+  if (!source) {
+    throw new PhotoProcessingError('decode_failed', 'Failed to decode image');
   }
 
   try {
