@@ -148,9 +148,251 @@
   color: #fbbf24;
 }
 
-/* ── Mobile Responsiveness ── */
+/* ── PROMINENT SCORE SUMMARY CARD (Phase 4 Hero Presentation) ── */
+
+.global-score-card-prominent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(15, 23, 42, 0.92) 55%, rgba(6, 78, 59, 0.22) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 1.15rem;
+  padding: 1.1rem 1.35rem;
+  margin: 0.85rem 0 1.25rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45),
+              0 0 24px rgba(16, 185, 129, 0.16);
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.global-score-card-prominent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.global-score-card-prominent:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.96) 55%, rgba(6, 78, 59, 0.3) 100%);
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55),
+              0 0 32px rgba(16, 185, 129, 0.28);
+  transform: translateY(-2px);
+}
+
+.global-score-card-prominent:active {
+  transform: scale(0.985);
+}
+
+.global-score-card-prominent--bumping {
+  animation: gsbProminentPulse 0.55s ease-out;
+}
+
+@keyframes gsbProminentPulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.025);
+    border-color: #34d399;
+    box-shadow: 0 0 36px rgba(52, 211, 153, 0.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ── Prominent Pillars ── */
+
+.gsb-prominent-pillar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.22rem;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.gsb-prominent-pillar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gsb-prominent-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.gsb-prominent-icon--today {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+}
+
+.gsb-prominent-icon--level {
+  font-size: 1.05rem;
+}
+
+.gsb-prominent-icon--lifetime {
+  font-size: 1.15rem;
+  color: #f59e0b;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+}
+
+.gsb-prominent-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.gsb-prominent-val-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  line-height: 1;
+}
+
+.gsb-prominent-value {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.gsb-prominent-value--today {
+  color: #34d399;
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.45);
+}
+
+.gsb-prominent-value--level {
+  color: #38bdf8;
+  text-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+.gsb-prominent-value--max {
+  color: #fbbf24;
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.45);
+}
+
+.gsb-prominent-value--lifetime {
+  color: #f8fafc;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+.gsb-prominent-unit {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.9);
+  letter-spacing: 0.02em;
+}
+
+.gsb-prominent-hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Level Progress in Prominent Card */
+.gsb-prominent-progress-wrap {
+  width: 100%;
+  max-width: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  margin-top: 0.15rem;
+}
+
+.gsb-prominent-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gsb-prominent-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8 0%, #34d399 100%);
+  border-radius: 999px;
+  transition: width 0.4s ease-out;
+}
+
+.gsb-prominent-progress-text {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+/* Dividers */
+.gsb-prominent-divider {
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.18), transparent);
+  flex-shrink: 0;
+}
+
+.gsb-prominent-chevron {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: rgba(148, 163, 184, 0.45);
+  margin-left: 0.2rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.global-score-card-prominent:hover .gsb-prominent-chevron {
+  color: #34d399;
+  transform: translateX(2px);
+}
+
+/* ── Mobile Responsiveness for Header and Prominent Card ── */
 
 @media (max-width: 440px) {
+  .global-score-card-prominent {
+    padding: 0.85rem 0.95rem;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    margin: 0.65rem 0 1rem;
+  }
+
+  .gsb-prominent-value {
+    font-size: 1.45rem;
+  }
+
+  .gsb-prominent-label {
+    font-size: 0.64rem;
+  }
+
+  .gsb-prominent-hint {
+    font-size: 0.58rem;
+  }
+
+  .gsb-prominent-divider {
+    height: 40px;
+  }
+
   .global-score-badge {
     padding: 0.26rem 0.48rem;
     gap: 0.32rem;
@@ -187,6 +429,27 @@
 }
 
 @media (max-width: 360px) {
+  .global-score-card-prominent {
+    padding: 0.75rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .gsb-prominent-value {
+    font-size: 1.25rem;
+  }
+
+  .gsb-prominent-unit {
+    font-size: 0.68rem;
+  }
+
+  .gsb-prominent-label {
+    font-size: 0.58rem;
+  }
+
+  .gsb-prominent-chevron {
+    display: none;
+  }
+
   .global-score-badge {
     padding: 0.22rem 0.38rem;
     gap: 0.25rem;
@@ -204,4 +467,5 @@
     font-size: 0.48rem;
   }
 }
+
 

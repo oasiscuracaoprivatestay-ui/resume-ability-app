@@ -41,6 +41,10 @@ export interface StructureAwarenessStatsResult {
   unstructuredPercentage: number; // 0 - 100
   hasData: boolean;               // True when totalClassified > 0; prevents false 0%/100% display
   unclassifiedCount: number;      // e.g. Legacy slips without detailed outcome
+  nearSlipCount: number;          // Approaches boundary but stopped
+  structuredSlipCount: number;    // True slip that retained structure
+  unstructuredSlipCount: number;  // True slip without structure
+  totalSlips: number;             // Total true slips (structured_slip + unstructured_slip + legacy slip)
 }
 
 export interface ResumeAwarenessStatsResult {
@@ -53,10 +57,11 @@ export interface ResumeAwarenessStatsResult {
 export interface CategoryDistributionItem {
   category: FoodCategoryKey;
   count: number;
-  percentage: number;             // 0 - 100
+  percentage: number;             // 0 - 100 (percentage of blocks containing this category)
 }
 
 export interface FoodCategoryStatsResult {
+  totalBlocks: number;
   totalCategoryOccurrences: number;
   items: CategoryDistributionItem[];
   hasData: boolean;
@@ -187,8 +192,24 @@ export function getStructureStats(
   let structuredCount = 0;
   let unstructuredCount = 0;
   let unclassifiedCount = 0;
+  let nearSlipCount = 0;
+  let structuredSlipCount = 0;
+  let unstructuredSlipCount = 0;
+  let totalSlips = 0;
 
   for (const r of records) {
+    if (r.detailedOutcome === 'near_slip') {
+      nearSlipCount++;
+    } else if (r.detailedOutcome === 'structured_slip') {
+      structuredSlipCount++;
+    } else if (r.detailedOutcome === 'unstructured_slip') {
+      unstructuredSlipCount++;
+    }
+
+    if (isEligibleSlipRecord(r)) {
+      totalSlips++;
+    }
+
     if (isStructuredOutcome(r.detailedOutcome, r.status)) {
       structuredCount++;
     } else if (isUnstructuredOutcome(r.detailedOutcome, r.status)) {
@@ -227,6 +248,10 @@ export function getStructureStats(
     unstructuredPercentage,
     hasData,
     unclassifiedCount,
+    nearSlipCount,
+    structuredSlipCount,
+    unstructuredSlipCount,
+    totalSlips,
   };
 }
 
@@ -295,6 +320,7 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   }
 
   let totalCategoryOccurrences = 0;
+  const totalBlocks = records.length;
 
   for (const record of records) {
     const cats = getRecordFoodCategories(record);
@@ -309,8 +335,8 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   const items: CategoryDistributionItem[] = FOOD_CATEGORY_KEYS.map(key => {
     const count = counts[key] || 0;
     const percentage =
-      totalCategoryOccurrences > 0
-        ? formatPercentage((count / totalCategoryOccurrences) * 100)
+      totalBlocks > 0
+        ? formatPercentage((count / totalBlocks) * 100)
         : 0;
     return {
       category: key,
@@ -326,9 +352,10 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   });
 
   return {
+    totalBlocks,
     totalCategoryOccurrences,
     items,
-    hasData: totalCategoryOccurrences > 0,
+    hasData: totalBlocks > 0 && totalCategoryOccurrences > 0,
   };
 }
 

@@ -430,13 +430,23 @@ export function clearBlockVerification(
 
 /**
  * Returns whether a record is an eligible slip record for resume tracking.
- * Includes both new detailed slip outcomes ('near_slip', 'structured_slip', 'unstructured_slip')
- * and legacy general slip records ('slip' without detailedOutcome).
+ * Eligible:
+ *   - 'structured_slip'
+ *   - 'unstructured_slip'
+ *   - legacy records with status === 'slip' and no detailedOutcome (for backward compatibility)
+ * Not eligible:
+ *   - 'near_slip' (stopped before fully crossing the boundary; not a completed slip requiring resume)
+ *   - 'on_track', 'adjusted_on_track', 'planned_unstructured', or legacy 'on-track'
  */
 export function isEligibleSlipRecord(record: DietBlockVerification): boolean {
-  if (record.status === 'slip') return true;
-  if (record.detailedOutcome && (SLIP_OUTCOMES as readonly string[]).includes(record.detailedOutcome)) return true;
-  return false;
+  if (record.detailedOutcome) {
+    return (
+      record.detailedOutcome === 'structured_slip' ||
+      record.detailedOutcome === 'unstructured_slip'
+    );
+  }
+  // Legacy record fallback: legacy slip with no detailed outcome is eligible
+  return record.status === 'slip';
 }
 
 /**
@@ -469,7 +479,6 @@ export function isStructuredOutcome(
     return (
       detailedOutcome === 'on_track' ||
       detailedOutcome === 'adjusted_on_track' ||
-      detailedOutcome === 'near_slip' ||
       detailedOutcome === 'structured_slip'
     );
   }

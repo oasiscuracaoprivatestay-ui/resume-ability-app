@@ -333,6 +333,7 @@ export interface Translations {
   sdb_plan_name_label: string;
   sdb_rename_plan: string;
   sdb_add_block: string;
+  sdb_log_food: string;
   sdb_edit_block: string;
   sdb_editor_title: string;
   sdb_start_time: string;
@@ -609,6 +610,12 @@ export interface Translations {
   sdb_outcome_near_slip: string;
   sdb_outcome_structured_slip: string;
   sdb_outcome_unstructured_slip: string;
+  sdb_outcome_def_on_track: string;
+  sdb_outcome_def_adjusted_on_track: string;
+  sdb_outcome_def_planned_unstructured: string;
+  sdb_outcome_def_near_slip: string;
+  sdb_outcome_def_structured_slip: string;
+  sdb_outcome_def_unstructured_slip: string;
   sdb_resumed_label: string;
   sdb_mark_resumed: string;
   sdb_marked_resumed: string;
@@ -655,6 +662,10 @@ export interface Translations {
   sdb_no_category_data: string;
   sdb_resume_summary_format: string;
   sdb_resume_no_slips: string;
+  sdb_stat_near_slips: string;
+  sdb_stat_structured_slips: string;
+  sdb_stat_unstructured_slips: string;
+  sdb_stat_total_slips: string;
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: string;
@@ -1206,6 +1217,8 @@ export interface Translations {
   sz_last_reviewed: string;
   sz_points_awarded: string;
   sz_points_already_awarded: string;
+  sz_review_completed: string;
+  sz_back_to_menu: string;
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: string;

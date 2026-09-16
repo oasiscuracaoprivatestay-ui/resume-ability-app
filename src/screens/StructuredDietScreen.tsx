@@ -1104,6 +1104,7 @@ function DietSlipModal({
             <div className="sdb-outcome-modal-grid">
               {SLIP_OUTCOMES.map(key => {
                 const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
+                const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
                 const isSelected = outcome === key;
                 return (
                   <button
@@ -1113,6 +1114,7 @@ function DietSlipModal({
                     className={`sdb-outcome-chip sdb-outcome-chip--slip ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
                     onClick={() => setOutcome(key)}
                     aria-pressed={isSelected}
+                    title={def || label}
                   >
                     {isSelected ? '✓ ' : ''}{label}
                   </button>
@@ -1931,6 +1933,7 @@ function BlockCard({
                   <div className="sdb-outcome-chips-grid">
                     {ON_TRACK_OUTCOMES.map(key => {
                       const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
+                      const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
                       const isSelected = verification?.detailedOutcome === key;
                       return (
                         <button
@@ -1939,6 +1942,7 @@ function BlockCard({
                           type="button"
                           className={`sdb-outcome-chip sdb-outcome-chip--ontrack ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
                           onClick={() => handleSelectOutcome(key, 'on-track')}
+                          title={def || label}
                         >
                           {isSelected ? '✓ ' : ''}{label}
                         </button>
@@ -1980,6 +1984,7 @@ function BlockCard({
                   <div className="sdb-outcome-chips-grid">
                     {SLIP_OUTCOMES.map(key => {
                       const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
+                      const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
                       const isSelected = verification?.detailedOutcome === key;
                       return (
                         <button
@@ -1988,6 +1993,7 @@ function BlockCard({
                           type="button"
                           className={`sdb-outcome-chip sdb-outcome-chip--slip ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
                           onClick={() => handleSelectOutcome(key, 'slip')}
+                          title={def || label}
                         >
                           {isSelected ? '⚠ ' : ''}{label}
                         </button>
@@ -2828,6 +2834,28 @@ function StructureAwarenessCard({
                   {structureStats.unstructuredCount} {structureStats.unstructuredCount === 1 ? t.sdb_stat_record : t.sdb_stat_records}
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* ── Secondary Awareness Metrics Grid ── */}
+          <div className="sdb-secondary-metrics-grid" id="sdb-secondary-metrics-grid">
+            <div className="sdb-sec-metric-card" id="sdb-metric-near-slips">
+              <span className="sdb-sec-metric-value">{structureStats.nearSlipCount}</span>
+              <span className="sdb-sec-metric-label">{t.sdb_stat_near_slips}</span>
+            </div>
+            <div className="sdb-sec-metric-card" id="sdb-metric-structured-slips">
+              <span className="sdb-sec-metric-value">{structureStats.structuredSlipCount}</span>
+              <span className="sdb-sec-metric-label">{t.sdb_stat_structured_slips}</span>
+            </div>
+            <div className="sdb-sec-metric-card" id="sdb-metric-unstructured-slips">
+              <span className="sdb-sec-metric-value">{structureStats.unstructuredSlipCount}</span>
+              <span className="sdb-sec-metric-label">{t.sdb_stat_unstructured_slips}</span>
+            </div>
+            <div className="sdb-sec-metric-card" id="sdb-metric-resume-rate">
+              <span className="sdb-sec-metric-value">
+                {resumeStats.hasEligibleSlips ? `${resumeStats.resumeRate}%` : '—'}
+              </span>
+              <span className="sdb-sec-metric-label">{t.sdb_stat_resume_rate}</span>
             </div>
           </div>
         </div>
@@ -3750,7 +3778,17 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                     {t.sdb_choose_template}
                   </button>
                   <button
+                    id="btn-sdb-log-food"
+                    type="button"
+                    className="sdb-log-food-btn"
+                    onClick={() => setEditingBlock('new')}
+                  >
+                    <span className="sdb-add-btn-icon">🍽️</span>
+                    {t.sdb_log_food}
+                  </button>
+                  <button
                     id="btn-sdb-add-block"
+                    type="button"
                     className="sdb-add-btn"
                     onClick={() => setEditingBlock('new')}
                   >
@@ -3908,7 +3946,17 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                   {t.sdb_choose_template}
                 </button>
                 <button
+                  id="btn-sdb-log-food"
+                  type="button"
+                  className="sdb-log-food-btn"
+                  onClick={() => setEditingBlock('new')}
+                >
+                  <span className="sdb-add-btn-icon">🍽️</span>
+                  {t.sdb_log_food}
+                </button>
+                <button
                   id="btn-sdb-add-block"
+                  type="button"
                   className="sdb-add-btn"
                   onClick={() => setEditingBlock('new')}
                 >

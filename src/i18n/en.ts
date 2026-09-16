@@ -385,6 +385,7 @@ export const en: Translations = {
   sdb_plan_name_label: 'Plan name',
   sdb_rename_plan: 'Rename plan',
   sdb_add_block: 'Add Time Block',
+  sdb_log_food: 'Log Food',
   sdb_edit_block: 'Edit Time Block',
   sdb_editor_title: 'Time Block',
   sdb_start_time: 'Start Time',
@@ -712,6 +713,12 @@ export const en: Translations = {
   sdb_outcome_near_slip: 'Near-Slip',
   sdb_outcome_structured_slip: 'Structured Slip',
   sdb_outcome_unstructured_slip: 'Unstructured Slip',
+  sdb_outcome_def_on_track: 'Followed the commitment as planned.',
+  sdb_outcome_def_adjusted_on_track: 'Changed the plan, but stayed within diet principles and non-negotiables.',
+  sdb_outcome_def_planned_unstructured: 'Flexibility was intentionally scheduled beforehand. Not considered a slip.',
+  sdb_outcome_def_near_slip: 'Came close to breaking a commitment but stopped before fully crossing the boundary.',
+  sdb_outcome_def_structured_slip: 'Broke one commitment, but kept some structure and quickly contained it.',
+  sdb_outcome_def_unstructured_slip: 'Abandoned planned boundaries during that period.',
   sdb_resumed_label: 'Resumed',
   sdb_mark_resumed: 'Mark as Resumed',
   sdb_marked_resumed: 'Resumed ✓',
@@ -758,6 +765,10 @@ export const en: Translations = {
   sdb_no_category_data: 'No food-category data yet for this period.',
   sdb_resume_summary_format: 'Resume Rate {rate}% — {resumed} of {eligible} eligible slips resumed',
   sdb_resume_no_slips: 'No slips reported in this period',
+  sdb_stat_near_slips: 'Near-Slips',
+  sdb_stat_structured_slips: 'Structured Slips',
+  sdb_stat_unstructured_slips: 'Unstructured Slips',
+  sdb_stat_total_slips: 'True Slips',
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'REMINDERS',
@@ -1312,6 +1323,8 @@ export const en: Translations = {
   sz_last_reviewed: 'Last reviewed: {date}',
   sz_points_awarded: '+15 points earned for reviewing your slippery zones!',
   sz_points_already_awarded: 'Already reviewed today. Awareness reinforced!',
+  sz_review_completed: 'Review Completed',
+  sz_back_to_menu: 'Back to Main Menu',
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: 'Structure Settings',

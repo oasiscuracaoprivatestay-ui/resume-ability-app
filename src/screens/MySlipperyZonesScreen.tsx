@@ -40,6 +40,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
   const [progress, setProgress] = useState(0);
   const [reviewMessage, setReviewMessage] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [reviewCompleted, setReviewCompleted] = useState(false);
 
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -96,6 +97,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
     const msg = result.scoreAwarded ? t.sz_points_awarded : t.sz_points_already_awarded;
     setReviewMessage(msg);
     setShowCelebration(true);
+    setReviewCompleted(true);
 
     if (messageTimeoutRef.current) {
       clearTimeout(messageTimeoutRef.current);
@@ -104,7 +106,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
       setShowCelebration(false);
       holdCompletedRef.current = false;
       setProgress(0);
-    }, 4000);
+    }, 6000);
   }, [t]);
 
   // ── Start Hold Loop ───────────────────────────────────────
@@ -220,12 +222,13 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           <p className="sz-screen-sub">{t.sz_screen_subtitle}</p>
         </div>
 
-        {/* Awareness Shield Banner */}
+        {/* 1. Review Introduction / Awareness Shield Banner */}
         <div className="sz-awareness-card" id="sz-awareness-card">
           <div className="sz-awareness-header">
             <span className="sz-awareness-icon" aria-hidden="true">🛡️</span>
             <p className="sz-awareness-text">{t.sz_awareness_banner}</p>
           </div>
+          {/* 2. Last Reviewed / Reviews Information */}
           <div className="sz-stats-row">
             <div className="sz-stat-badge" id="sz-stat-last-reviewed">
               <span className="sz-stat-dot" aria-hidden="true" />
@@ -237,71 +240,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           </div>
         </div>
 
-        {/* Celebration / Feedback State */}
-        {showCelebration && (
-          <div className="sz-celebration-banner" role="status" aria-live="polite">
-            <div className="sz-celebration-badge">✓ {t.sz_review_success}</div>
-            <p className="sz-celebration-message">{reviewMessage}</p>
-          </div>
-        )}
-
-        {/* Hold to Confirm Review Section */}
-        <div className="sz-review-action-section">
-          <div className={`sz-ring-wrap${holding ? ' sz-ring-wrap--holding' : ''}`}>
-            <svg className="sz-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <defs>
-                <linearGradient id="sz-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-              </defs>
-              <circle
-                className="sz-ring-track"
-                cx={RING_CX}
-                cy={RING_CY}
-                r={RING_R}
-                fill="none"
-                strokeWidth="5"
-              />
-              {(holding || progress > 0) && (
-                <circle
-                  className="sz-ring-arc"
-                  cx={RING_CX}
-                  cy={RING_CY}
-                  r={RING_R}
-                  fill="none"
-                  stroke="url(#sz-ring-grad)"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRC}
-                  strokeDashoffset={strokeDashoffset}
-                  transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
-                />
-              )}
-            </svg>
-
-            <button
-              id="btn-sz-hold-review"
-              className={`sz-hold-btn${holding ? ' sz-hold-btn--active' : ''}`}
-              onPointerDown={handlePointerDown}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerLeave}
-              onKeyDown={handleKeyDown}
-              onKeyUp={handleKeyUp}
-              aria-label={holding ? t.sz_holding_review : t.sz_hold_to_review}
-              type="button"
-            >
-              <span className="sz-hold-btn-icon" aria-hidden="true">
-                {holding ? '⚡' : '⚠️'}
-              </span>
-              <span className="sz-hold-btn-text">
-                {holding ? t.sz_holding_review : t.sz_hold_to_review}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Zone List Header & Add Button */}
+        {/* 3. MY SLIPPERY ZONES Header & 5. + Add Slippery Zone */}
         <div className="sz-list-header">
           <h2 className="sz-list-title">{t.my_commitments_card_sz_title}</h2>
           <button
@@ -314,7 +253,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           </button>
         </div>
 
-        {/* Zone Cards List */}
+        {/* 4. Existing Slippery Zone List */}
         <div className="sz-zones-list" id="sz-zones-list">
           {data.zones.length === 0 ? (
             <div className="sz-empty-state" id="sz-empty-state">
@@ -368,6 +307,79 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               </div>
             ))
           )}
+        </div>
+
+        {/* 6. Hold to Confirm Review Section (Below Slippery Zones) */}
+        <div className="sz-review-action-section" id="sz-review-action-section">
+          {/* Celebration / Feedback State + Back to Main Menu */}
+          {(showCelebration || reviewCompleted) && (
+            <div className="sz-celebration-banner" id="sz-celebration-banner" role="status" aria-live="polite">
+              <div className="sz-celebration-badge">✓ {t.sz_review_completed || t.sz_review_success}</div>
+              {reviewMessage && <p className="sz-celebration-message">{reviewMessage}</p>}
+              <button
+                type="button"
+                id="btn-sz-back-to-menu"
+                className="sz-btn-back-menu"
+                onClick={() => onNavigate('home')}
+              >
+                <span className="sz-btn-back-menu-icon" aria-hidden="true">🏠</span>
+                <span>{t.sz_back_to_menu || 'Back to Main Menu'}</span>
+              </button>
+            </div>
+          )}
+
+          <div className={`sz-ring-wrap${holding ? ' sz-ring-wrap--holding' : ''}`}>
+            <svg className="sz-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="sz-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
+                </linearGradient>
+              </defs>
+              <circle
+                className="sz-ring-track"
+                cx={RING_CX}
+                cy={RING_CY}
+                r={RING_R}
+                fill="none"
+                strokeWidth="5"
+              />
+              {(holding || progress > 0) && (
+                <circle
+                  className="sz-ring-arc"
+                  cx={RING_CX}
+                  cy={RING_CY}
+                  r={RING_R}
+                  fill="none"
+                  stroke="url(#sz-ring-grad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={RING_CIRC}
+                  strokeDashoffset={strokeDashoffset}
+                  transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
+                />
+              )}
+            </svg>
+
+            <button
+              id="btn-sz-hold-review"
+              className={`sz-hold-btn${holding ? ' sz-hold-btn--active' : ''}`}
+              onPointerDown={handlePointerDown}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerLeave}
+              onKeyDown={handleKeyDown}
+              onKeyUp={handleKeyUp}
+              aria-label={holding ? t.sz_holding_review : t.sz_hold_to_review}
+              type="button"
+            >
+              <span className="sz-hold-btn-icon" aria-hidden="true">
+                {holding ? '⚡' : '⚠️'}
+              </span>
+              <span className="sz-hold-btn-text">
+                {holding ? t.sz_holding_review : t.sz_hold_to_review}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -76,6 +76,9 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           </h1>
         </div>
 
+        {/* ── Prominent Score & Level Hero Summary (Phase 4) ── */}
+        <GlobalScoreBadge mode="prominent" onNavigate={onNavigate} />
+
         <div className="home-actions">
           {/* ── Daily Check-In entry ── PRIMARY ACTION ── */}
           <button

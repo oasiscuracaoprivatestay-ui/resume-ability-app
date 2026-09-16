@@ -374,6 +374,7 @@ export const es: Translations = {
   sdb_plan_name_label: 'Nombre del plan',
   sdb_rename_plan: 'Renombrar plan',
   sdb_add_block: 'Añadir bloque de tiempo',
+  sdb_log_food: 'Registrar Comida',
   sdb_edit_block: 'Editar bloque de tiempo',
   sdb_editor_title: 'Bloque de tiempo',
   sdb_start_time: 'Hora de inicio',
@@ -699,6 +700,12 @@ export const es: Translations = {
   sdb_outcome_near_slip: 'Casi Desliz',
   sdb_outcome_structured_slip: 'Desliz Estructurado',
   sdb_outcome_unstructured_slip: 'Desliz No Estructurado',
+  sdb_outcome_def_on_track: 'Siguió el compromiso según lo planificado.',
+  sdb_outcome_def_adjusted_on_track: 'Cambió el plan, pero se mantuvo dentro de los principios de la dieta.',
+  sdb_outcome_def_planned_unstructured: 'La flexibilidad fue programada intencionalmente de antemano.',
+  sdb_outcome_def_near_slip: 'Estuvo a punto de romper un compromiso pero se detuvo antes de cruzar el límite.',
+  sdb_outcome_def_structured_slip: 'Rompió un compromiso, pero mantuvo algo de estructura y lo contuvo rápido.',
+  sdb_outcome_def_unstructured_slip: 'Abandonó los límites planificados durante ese período.',
   sdb_resumed_label: 'Reanudado',
   sdb_mark_resumed: 'Marcar como Reanudado',
   sdb_marked_resumed: 'Reanudado ✓',
@@ -745,6 +752,10 @@ export const es: Translations = {
   sdb_no_category_data: 'Aún no hay datos de categorías para este período.',
   sdb_resume_summary_format: 'Tasa de Retomada {rate}% — {resumed} de {eligible} tropiezos elegibles retomados',
   sdb_resume_no_slips: 'Sin tropiezos reportados en este período',
+  sdb_stat_near_slips: 'Casi Deslices',
+  sdb_stat_structured_slips: 'Deslices Estructurados',
+  sdb_stat_unstructured_slips: 'Deslices No Estructurados',
+  sdb_stat_total_slips: 'Deslices Reales',
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'RECORDATORIOS',
@@ -1299,6 +1310,8 @@ export const es: Translations = {
   sz_last_reviewed: 'Última revisión: {date}',
   sz_points_awarded: '¡+15 puntos ganados por revisar tus zonas resbaladizas!',
   sz_points_already_awarded: 'Ya revisado hoy. ¡Conciencia reforzada!',
+  sz_review_completed: 'Revisión Completada',
+  sz_back_to_menu: 'Volver al Menú Principal',
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: 'Configuración de Estructura',

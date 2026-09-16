@@ -374,6 +374,7 @@ export const nl: Translations = {
   sdb_plan_name_label: 'Plannaam',
   sdb_rename_plan: 'Plan hernoemen',
   sdb_add_block: 'Tijdblok toevoegen',
+  sdb_log_food: 'Voeding Vastleggen',
   sdb_edit_block: 'Tijdblok bewerken',
   sdb_editor_title: 'Tijdblok',
   sdb_start_time: 'Begintijd',
@@ -699,6 +700,12 @@ export const nl: Translations = {
   sdb_outcome_near_slip: 'Bijna-Slip',
   sdb_outcome_structured_slip: 'Gestructureerde Slip',
   sdb_outcome_unstructured_slip: 'Ongestructureerde Slip',
+  sdb_outcome_def_on_track: 'Volgde de afspraak zoals gepland.',
+  sdb_outcome_def_adjusted_on_track: 'Veranderde het plan, maar bleef binnen de dieetprincipes.',
+  sdb_outcome_def_planned_unstructured: 'Flexibiliteit was vooraf bewust ingepland.',
+  sdb_outcome_def_near_slip: 'Kwam dicht bij het verbreken van een afspraak, maar stopte op tijd.',
+  sdb_outcome_def_structured_slip: 'Brak één afspraak, maar behield structuur en begrensde het snel.',
+  sdb_outcome_def_unstructured_slip: 'Liet de geplande grenzen tijdens die periode varen.',
   sdb_resumed_label: 'Hervat',
   sdb_mark_resumed: 'Markeren als Hervat',
   sdb_marked_resumed: 'Hervat ✓',
@@ -745,6 +752,10 @@ export const nl: Translations = {
   sdb_no_category_data: 'Nog geen categoriegegevens voor deze periode.',
   sdb_resume_summary_format: 'Hervattingspercentage {rate}% — {resumed} van {eligible} herkansingen hervat',
   sdb_resume_no_slips: 'Geen uitglijders gerapporteerd in deze periode',
+  sdb_stat_near_slips: 'Bijna-Uitglijders',
+  sdb_stat_structured_slips: 'Gestructureerde Uitglijders',
+  sdb_stat_unstructured_slips: 'Ongestructureerde Uitglijders',
+  sdb_stat_total_slips: 'Echte Uitglijders',
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'HERINNERINGEN',
@@ -1299,6 +1310,8 @@ export const nl: Translations = {
   sz_last_reviewed: 'Laatste evaluatie: {date}',
   sz_points_awarded: '+15 punten verdiend voor het evalueren van je gevaarlijke zones!',
   sz_points_already_awarded: 'Vandaag al geëvalueerd. Bewustzijn versterkt!',
+  sz_review_completed: 'Evaluatie Voltooid',
+  sz_back_to_menu: 'Terug naar Hoofdmenu',
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: 'Structuurinstellingen',
