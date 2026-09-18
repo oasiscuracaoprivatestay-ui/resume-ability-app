@@ -109,6 +109,35 @@
   margin: 0;
 }
 
+.prem-modal-slogan-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+}
+
+.prem-modal-slogan-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--accent, #34d399);
+  letter-spacing: 0.08em;
+  background: rgba(52, 211, 153, 0.15);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.prem-modal-slogan {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent, #34d399);
+  line-height: 1.35;
+  margin: 0;
+}
+
 .prem-modal-desc {
   font-size: 0.88rem;
   color: var(--text-secondary, #c8c8d8);

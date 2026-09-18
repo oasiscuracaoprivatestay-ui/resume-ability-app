@@ -1,0 +1,200 @@
+.hold-commit-ritual-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1.25rem 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Direction cue header */
+.hold-commit-instruction-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hold-commit-cue-text {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #10b981);
+  transition: color 0.2s ease;
+}
+
+.hold-commit-ritual--recommit .hold-commit-cue-text {
+  color: #4ade80;
+}
+
+.hold-commit-ritual--review .hold-commit-cue-text {
+  color: #fbbf24;
+}
+
+/* Gated banner when disabled */
+.hold-commit-gated-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-md, 10px);
+  color: #fcd34d;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.hold-commit-gated-icon {
+  font-size: 0.95rem;
+}
+
+/* Ring wrap */
+.hold-commit-ring-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hold-commit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hold-commit-ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+/* Central interactive button */
+.hold-commit-button {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--surface, #1e293b);
+  border: 2px solid var(--border, #334155);
+  color: var(--text-primary, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  z-index: 2;
+}
+
+.hold-commit-button:hover:not(:disabled) {
+  border-color: var(--accent, #10b981);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+  transform: scale(1.02);
+}
+
+.hold-commit-ritual--recommit .hold-commit-button:hover:not(:disabled) {
+  border-color: #4ade80;
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+}
+
+.hold-commit-ritual--review .hold-commit-button:hover:not(:disabled) {
+  border-color: #fbbf24;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.35);
+}
+
+/* Holding state */
+.hold-commit-button--active {
+  transform: scale(0.93) !important;
+  background: #064e3b;
+  border-color: #10b981;
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.5) !important;
+}
+
+.hold-commit-ritual--recommit .hold-commit-button--active {
+  background: #14532d;
+  border-color: #4ade80;
+  box-shadow: 0 0 32px rgba(74, 222, 128, 0.5) !important;
+}
+
+.hold-commit-ritual--review .hold-commit-button--active {
+  background: #78350f;
+  border-color: #fbbf24;
+  box-shadow: 0 0 32px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* Disabled state */
+.hold-commit-ritual--disabled .hold-commit-button {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.hold-commit-ritual--disabled .hold-commit-cue-text {
+  opacity: 0.6;
+}
+
+/* Button center contents */
+.hold-commit-center-icon {
+  font-size: 1.85rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.hold-commit-pct {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent, #10b981);
+}
+
+.hold-commit-ritual--recommit .hold-commit-pct {
+  color: #4ade80;
+}
+
+.hold-commit-ritual--review .hold-commit-pct {
+  color: #fbbf24;
+}
+
+/* Sub-instruction */
+.hold-commit-sub-instruction {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 360px) {
+  .hold-commit-ring-wrap {
+    width: 124px;
+    height: 124px;
+  }
+  .hold-commit-button {
+    width: 84px;
+    height: 84px;
+  }
+  .hold-commit-cue-text {
+    font-size: 0.8rem;
+  }
+}

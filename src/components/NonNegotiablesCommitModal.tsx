@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '../i18n';
 import { saveCommitEvent } from '../utils/inControlStorage';
 import { generateId } from '../utils';
-import { playFeedback } from '../utils/feedback';
 import { recordScoreEvent } from '../utils/scoringEngine';
+import CheckableCommitmentItem from './CheckableCommitmentItem';
+import HoldCommitButton from './HoldCommitButton';
 import './NonNegotiablesCommitModal.css';
 
 interface NonNegotiablesCommitModalProps {
@@ -16,13 +17,6 @@ interface NonNegotiablesCommitModalProps {
 
 type ModalStep = 'hold' | 'success';
 
-// ── Geometry & timing ────────────────────────────────────────────────────────
-const HOLD_MS = 2200; // 2.2s deliberate hold (meets 2.0–2.5s requirement)
-const RING_R = 48;
-const RING_CX = 60;
-const RING_CY = 60;
-const RING_CIRC = 2 * Math.PI * RING_R;
-
 export default function NonNegotiablesCommitModal({
   isOpen,
   nonNegotiables,
@@ -32,28 +26,13 @@ export default function NonNegotiablesCommitModal({
 }: NonNegotiablesCommitModalProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<ModalStep>('hold');
-  const [holding, setHolding] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  // Animation & duplicate protection refs
-  const startRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const holdCompletedRef = useRef(false);
-  const holdBtnRef = useRef<HTMLButtonElement>(null);
+  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
 
   // Reset state whenever modal opens or closes
   useEffect(() => {
     if (isOpen) {
       setStep('hold');
-      setHolding(false);
-      setProgress(0);
-      holdCompletedRef.current = false;
-      startRef.current = null;
-    } else {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
+      setCheckedItems({});
     }
   }, [isOpen]);
 
@@ -62,7 +41,6 @@ export default function NonNegotiablesCommitModal({
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && step !== 'success') {
-        cancelHold();
         onClose();
       }
     };
@@ -70,33 +48,24 @@ export default function NonNegotiablesCommitModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, step, onClose]);
 
-  // Cancel hold if pointer lifts, leaves, or key releases
-  const cancelHold = useCallback(() => {
-    if (holdCompletedRef.current) return;
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    startRef.current = null;
-    setHolding(false);
-    setProgress(0);
+  const toggleCheckItem = useCallback((idx: number) => {
+    setCheckedItems((prev) => ({
+      ...prev,
+      [idx]: !prev[idx],
+    }));
   }, []);
 
-  // Complete commitment action (guarded against duplicate executions)
+  const checkedCount = useMemo(() => {
+    return nonNegotiables.filter((_, idx) => !!checkedItems[idx]).length;
+  }, [nonNegotiables, checkedItems]);
+
+  const allChecked = useMemo(() => {
+    if (nonNegotiables.length === 0) return true;
+    return nonNegotiables.every((_, idx) => !!checkedItems[idx]);
+  }, [nonNegotiables, checkedItems]);
+
+  // Complete commitment action
   const completeCommit = useCallback(() => {
-    if (holdCompletedRef.current) return;
-    holdCompletedRef.current = true;
-
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    startRef.current = null;
-    setHolding(false);
-    setProgress(1);
-
-    playFeedback('commit');
-
     // Persist single CommitEvent with source 'non-negotiables'
     const id = generateId();
     saveCommitEvent({
@@ -113,61 +82,10 @@ export default function NonNegotiablesCommitModal({
     onCommitSuccess();
 
     // Transition to success confirmation
-    setTimeout(() => {
-      setStep('success');
-    }, 150);
+    setStep('success');
   }, [onCommitSuccess]);
 
-  // Start hold countdown loop
-  const startHold = useCallback(() => {
-    if (step !== 'hold' || holdCompletedRef.current || holding) return;
-    setHolding(true);
-    startRef.current = performance.now();
-
-    const tick = (now: number) => {
-      if (startRef.current === null) return;
-      const elapsed = now - startRef.current;
-      const p = Math.min(elapsed / HOLD_MS, 1);
-      setProgress(p);
-
-      if (p >= 1) {
-        completeCommit();
-      } else {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [step, holding, completeCommit]);
-
-  // Pointer event handlers
-  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    // Only respond to primary click/touch
-    if (e.button !== 0) return;
-    e.preventDefault();
-    startHold();
-  };
-
-  // Keyboard accessibility: Space & Enter hold support
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      if (!e.repeat && !holding && !holdCompletedRef.current) {
-        startHold();
-      }
-    }
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      cancelHold();
-    }
-  };
-
   if (!isOpen) return null;
-
-  const strokeDashoffset = RING_CIRC * (1 - progress);
 
   return (
     <div
@@ -175,121 +93,77 @@ export default function NonNegotiablesCommitModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="nn-commit-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && step !== 'success') {
-          cancelHold();
-          onClose();
-        }
-      }}
     >
-      <div className="nn-commit-modal" role="document">
-        {step === 'hold' ? (
-          <div className="nn-commit-body">
-            {/* Header */}
-            <div className="nn-commit-header">
-              <div className="nn-commit-badge-wrap">
-                <span className="nn-commit-badge">⚡ {t.nn_commit_modal_title}</span>
-              </div>
-              <button
-                id="btn-nn-commit-close"
-                className="nn-commit-close-btn"
-                onClick={() => {
-                  cancelHold();
-                  onClose();
-                }}
-                aria-label={t.commit_cancel}
-              >
-                ✕
-              </button>
-            </div>
+      <div className="nn-commit-backdrop" onClick={step === 'success' ? undefined : onClose} />
 
-            {/* Supportive Affirmation Message */}
-            <div className="nn-commit-affirmation-card">
-              <p className="nn-commit-affirmation-text">
-                "{t.nn_commit_affirmation}"
+      <div className="nn-commit-dialog">
+        {/* Close Button */}
+        {step !== 'success' && (
+          <button
+            type="button"
+            className="nn-commit-close-btn"
+            onClick={onClose}
+            aria-label={t.sz_cancel_btn || 'Close'}
+          >
+            ✕
+          </button>
+        )}
+
+        {step === 'hold' ? (
+          <div className="nn-commit-main">
+            {/* Header / Context */}
+            <div className="nn-commit-header">
+              <span className="section-label">{t.commit_badge}</span>
+              <h2 id="nn-commit-modal-title" className="nn-commit-title">
+                {t.commit_title}
+              </h2>
+              <p className="nn-commit-subtitle">
+                {t.commit_subtitle}
               </p>
             </div>
 
-            {/* User's Non-Negotiables List */}
+            {/* User's Non-Negotiables List (Individually Checkable) */}
             <div className="nn-commit-list-section">
-              <span className="nn-commit-list-label">{t.commit_nn_section}</span>
-              <div className="nn-commit-list">
+              <div className="nn-commit-list-header-row">
+                <span className="nn-commit-list-label">{t.commit_nn_section}</span>
+                {nonNegotiables.length > 0 && (
+                  <span className="nn-commit-count-badge">
+                    {checkedCount} / {nonNegotiables.length}
+                  </span>
+                )}
+              </div>
+              <div
+                className="nn-commit-list"
+                role="group"
+                aria-label={t.commit_nn_section}
+              >
                 {nonNegotiables.map((nn, idx) => (
-                  <div key={idx} className="nn-commit-list-item">
-                    <span className="nn-commit-item-num" aria-hidden="true">{idx + 1}</span>
-                    <span className="nn-commit-item-text">{nn}</span>
-                  </div>
+                  <CheckableCommitmentItem
+                    key={idx}
+                    id={`modal-nn-check-${idx}`}
+                    index={idx}
+                    text={nn}
+                    checked={!!checkedItems[idx]}
+                    onToggle={() => toggleCheckItem(idx)}
+                  />
                 ))}
               </div>
             </div>
 
-            {/* Deliberate Press-and-Hold Section */}
+            {/* Standardized Hold to Commit Ritual */}
             <div className="nn-commit-hold-container">
-              <div className={`nn-commit-ring-wrap${holding ? ' nn-commit-ring-wrap--holding' : ''}`}>
-                <svg
-                  className="nn-commit-ring-svg"
-                  viewBox="0 0 120 120"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient id="nn-commit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#34d399" />
-                      <stop offset="100%" stopColor="#10b981" />
-                    </linearGradient>
-                  </defs>
-                  {/* Track */}
-                  <circle
-                    className="nn-commit-ring-track"
-                    cx={RING_CX}
-                    cy={RING_CY}
-                    r={RING_R}
-                    fill="none"
-                    strokeWidth="5"
-                  />
-                  {/* Active Arc */}
-                  {(holding || progress > 0) && (
-                    <circle
-                      className="nn-commit-ring-arc"
-                      cx={RING_CX}
-                      cy={RING_CY}
-                      r={RING_R}
-                      fill="none"
-                      stroke="url(#nn-commit-grad)"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      strokeDasharray={RING_CIRC}
-                      strokeDashoffset={strokeDashoffset}
-                      transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
-                    />
-                  )}
-                </svg>
-
-                <button
-                  ref={holdBtnRef}
-                  id="btn-nn-hold-commit"
-                  className={`nn-commit-hold-btn${holding ? ' nn-commit-hold-btn--active' : ''}`}
-                  onPointerDown={handlePointerDown}
-                  onPointerUp={cancelHold}
-                  onPointerLeave={cancelHold}
-                  onPointerCancel={cancelHold}
-                  onKeyDown={handleKeyDown}
-                  onKeyUp={handleKeyUp}
-                  onContextMenu={(e) => e.preventDefault()}
-                  aria-label={t.nn_commit_hold_instruction}
-                  role="button"
-                  tabIndex={0}
-                >
-                  {holding ? (
-                    <span className="nn-commit-hold-pct">{Math.round(progress * 100)}%</span>
-                  ) : (
-                    <span className="nn-commit-hold-icon">⚡</span>
-                  )}
-                </button>
-              </div>
-
-              <p className="nn-commit-hold-instruction" aria-live="polite">
-                {t.nn_commit_hold_instruction}
-              </p>
+              <HoldCommitButton
+                id="btn-nn-hold-commit"
+                variant="commit"
+                label={`→ ${t.commit_hold_btn || 'HOLD TO COMMIT'}`}
+                disabled={!allChecked}
+                disabledReason={
+                  !allChecked
+                    ? `${t.nn_review_check_all_first || 'Review each Non-Negotiable first'} (${checkedCount}/${nonNegotiables.length})`
+                    : undefined
+                }
+                onComplete={completeCommit}
+              />
             </div>
           </div>
         ) : (

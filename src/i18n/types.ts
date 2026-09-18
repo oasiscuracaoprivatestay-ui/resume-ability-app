@@ -607,12 +607,14 @@ export interface Translations {
   sdb_outcome_on_track: string;
   sdb_outcome_adjusted_on_track: string;
   sdb_outcome_planned_unstructured: string;
+  sdb_outcome_twenty_percent_off_track: string;
   sdb_outcome_near_slip: string;
   sdb_outcome_structured_slip: string;
   sdb_outcome_unstructured_slip: string;
   sdb_outcome_def_on_track: string;
   sdb_outcome_def_adjusted_on_track: string;
   sdb_outcome_def_planned_unstructured: string;
+  sdb_outcome_def_twenty_percent_off_track: string;
   sdb_outcome_def_near_slip: string;
   sdb_outcome_def_structured_slip: string;
   sdb_outcome_def_unstructured_slip: string;
@@ -623,6 +625,19 @@ export interface Translations {
   sdb_resume_count: string;
   sdb_select_outcome: string;
   sdb_outcome_select_hint: string;
+  // ── DietSlipModal localized strings ──
+  sdb_slip_modal_badge: string;
+  sdb_slip_actual_items_label: string;
+  sdb_slip_notes_label: string;
+  sdb_slip_notes_placeholder: string;
+  // ── FoodLogModal — unplanned / in-the-moment food logging ──
+  sdb_food_log_modal_title: string;
+  sdb_food_log_modal_badge: string;
+  sdb_food_log_desc_label: string;
+  sdb_food_log_desc_placeholder: string;
+  sdb_food_log_outcome_label: string;
+  sdb_food_log_save_btn: string;
+  sdb_food_log_unplanned_tag: string;
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: string;
@@ -666,6 +681,31 @@ export interface Translations {
   sdb_stat_structured_slips: string;
   sdb_stat_unstructured_slips: string;
   sdb_stat_total_slips: string;
+  // ── Phase 26C Structure Awareness & Food Category Foundation ──
+  sdb_stat_structured_core: string;
+  sdb_stat_outside_core: string;
+  sdb_stat_flex_off_track: string;
+  sdb_stat_risk_near_slip: string;
+  sdb_stat_slip_bucket: string;
+  sdb_category_awareness_title: string;
+  sdb_category_rate_note: string;
+  sdb_stat_eligible_slips: string;
+  sdb_detailed_outcomes_title: string;
+  sdb_no_eligible_slips: string;
+  sdb_records_with_categories: string;
+  sdb_no_outcomes_in_period: string;
+  // ── Phase 26D Drift Lifecycle & Recovery ──
+  sdb_drift_title: string;
+  sdb_drift_start: string;
+  sdb_drift_still: string;
+  sdb_drift_stopped: string;
+  sdb_drift_entered: string;
+  sdb_drift_currently: string;
+  sdb_drift_stopped_stat: string;
+  sdb_drift_rate: string;
+  sdb_recovery_group_title: string;
+  sdb_recovery_section_title: string;
+  sdb_no_drift_entered: string;
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: string;
@@ -740,6 +780,9 @@ export interface Translations {
   stats_lifetime_choice_desc: string;
   stats_btn_keep_lifetime: string;
   stats_btn_reset_lifetime: string;
+  stats_btn_reset_current_only: string;
+  stats_btn_reset_with_lifetime: string;
+  stats_lifetime_preserved_note: string;
   stats_lifetime_confirm_title: string;
   stats_lifetime_confirm_warning: string;
   stats_btn_confirm_lifetime_reset: string;
@@ -1131,6 +1174,7 @@ export interface Translations {
   dash_progression_subtitle: string;
   dash_today_score_label: string;
   dash_lifetime_xp_label: string;
+  dash_lifetime_score_label: string;
   dash_current_streak_label: string;
   dash_longest_streak_label: string;
   dash_total_active_days_label: string;
@@ -1143,6 +1187,7 @@ export interface Translations {
   score_cat_day_start: string;
   score_cat_check_in: string;
   score_cat_diet_on_track: string;
+  score_cat_diet_twenty_percent_off_track: string;
   score_cat_slip_reported: string;
   score_cat_recommit: string;
   score_cat_daily_review: string;
@@ -1219,6 +1264,20 @@ export interface Translations {
   sz_points_already_awarded: string;
   sz_review_completed: string;
   sz_back_to_menu: string;
+
+  // ── Phase 26E: Commitment Checkmarks & Unified Hold Ritual ──
+  commit_hold_btn: string;
+  recommit_hold_btn: string;
+  sz_hold_to_confirm_review: string;
+  nn_review_check_all_first: string;
+  sz_review_confirmed: string;
+  recommit_why_reminder: string;
+  recommit_unlimited_hint: string;
+  review_nn_section_title: string;
+  review_nn_section_sub: string;
+  nn_review_progress_status: string;
+  nn_checked_label: string;
+  nn_unchecked_label: string;
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: string;
@@ -1356,6 +1415,10 @@ export interface Translations {
   sdb_food_opt_diet_soft_drink: string;
   sdb_food_opt_energy_drink: string;
   sdb_food_opt_smoothie: string;
+
+  // ── Phase 26H Global SDA Branding & Slogan ──
+  sda_slogan: string;
+  sda_slogan_tagline: string;
 }
 
 

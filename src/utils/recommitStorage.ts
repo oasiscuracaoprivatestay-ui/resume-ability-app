@@ -24,18 +24,14 @@ export function loadRecommitEvents(): RecommitEvent[] {
 }
 
 /**
- * Persist a RecommitEvent with duplicate prevention.
- * If a slipId is provided, prevents recording multiple recommits for the same slip.
+ * Persist a RecommitEvent.
+ * In Phase 26E, Re-Commit is behaviorally unlimited — users can recommit
+ * as many times as desired, reinforcing their mental commitment.
  */
 export function saveRecommitEvent(event: RecommitEvent): boolean {
   const events = loadRecommitEvents();
 
-  // Guard against duplicate recording for the same slip session
-  if (event.slipId && events.some((e) => e.slipId === event.slipId)) {
-    return false;
-  }
-
-  // Guard against duplicate event IDs
+  // Guard against exact duplicate event IDs only
   if (events.some((e) => e.id === event.id)) {
     return false;
   }

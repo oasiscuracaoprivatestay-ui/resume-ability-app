@@ -16,7 +16,8 @@ import {
 } from '../utils/checkInStorage';
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
-import { getDailyVerificationStats } from '../utils/dietVerificationStorage';
+import { getDailyVerificationStats, loadAllDietVerifications } from '../utils/dietVerificationStorage';
+import { getAwarenessSummary } from '../utils/dietStructureAnalytics';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
 import {
   getTodayScore,
@@ -113,6 +114,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     DAY_START: { label: t.score_cat_day_start, icon: '🌅' },
     DAILY_CHECK_IN: { label: t.score_cat_check_in, icon: '✓' },
     DIET_ON_TRACK: { label: t.score_cat_diet_on_track, icon: '🥗' },
+    DIET_TWENTY_PERCENT_OFF_TRACK: { label: t.score_cat_diet_twenty_percent_off_track, icon: '🍎' },
     SLIP_REPORTED: { label: t.score_cat_slip_reported, icon: '⚡' },
     RECOMMIT: { label: t.score_cat_recommit, icon: '🔁' },
     DAILY_REVIEW_COMPLETE: { label: t.score_cat_daily_review, icon: '📝' },
@@ -152,6 +154,11 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     const todayPlan = getDayPlan(weekly, todayKey);
     const plannedCount = todayPlan.mode === 'structured' ? todayPlan.blocks.length : 0;
     return getDailyVerificationStats(plannedCount);
+  }, [refreshKey]);
+
+  const todayAwareness = useMemo(() => {
+    const all = loadAllDietVerifications();
+    return getAwarenessSummary(all, 'today');
   }, [refreshKey]);
 
   const feedbackMessage = useMemo(() => {
@@ -244,16 +251,29 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
                 <span className="dash-card-icon">🥗</span>
               </div>
               {dietStats.reportedCount > 0 && (
-                <div className="dash-diet-breakdown">
-                  <span className="dash-diet-badge dash-diet-badge--on-track">
-                    ✓ {dietStats.onTrackCount} {t.sdb_v_on_track}
-                  </span>
-                  {dietStats.slipCount > 0 && (
-                    <span className="dash-diet-badge dash-diet-badge--slip">
-                      ⚡ {dietStats.slipCount} {t.sdb_v_slip}
+                <>
+                  <div className="dash-diet-breakdown">
+                    <span className="dash-diet-badge dash-diet-badge--on-track">
+                      ✓ {dietStats.onTrackCount} {t.sdb_v_on_track}
                     </span>
+                    {dietStats.slipCount > 0 && (
+                      <span className="dash-diet-badge dash-diet-badge--slip">
+                        ⚡ {dietStats.slipCount} {t.sdb_v_slip}
+                      </span>
+                    )}
+                  </div>
+                  {todayAwareness.structureStats.hasData && (
+                    <div className="dash-diet-awareness-row" id="dash-diet-awareness-row">
+                      <span className="dash-diet-awareness-item dash-diet-awareness-item--core">
+                        {t.sdb_stat_structured_core}: {todayAwareness.structureStats.structuredCorePercentage}%
+                      </span>
+                      <span className="dash-diet-awareness-divider">•</span>
+                      <span className="dash-diet-awareness-item dash-diet-awareness-item--outside">
+                        {t.sdb_stat_outside_core}: {todayAwareness.structureStats.outsideCorePercentage}%
+                      </span>
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           )}
@@ -264,6 +284,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
           <div className="dash-prog-header">
             <span className="section-label">SUPER DIET-ABILITY</span>
             <h2 className="section-heading">{t.dash_progression_title}</h2>
+            <p className="dash-prog-slogan">{t.sda_slogan}</p>
             <p className="dash-prog-subtitle">{t.dash_progression_subtitle}</p>
           </div>
 
@@ -275,7 +296,6 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
                 <span className="dash-prog-card-val dash-prog-card-val--accent" id="dash-today-score-val">
                   {todayScore}
                 </span>
-                <span className="dash-prog-card-unit">pts</span>
               </div>
             </div>
 
@@ -289,12 +309,11 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
             </div>
 
             <div className="dash-prog-card dash-prog-card--xp">
-              <span className="dash-prog-card-lbl">{t.dash_lifetime_xp_label}</span>
+              <span className="dash-prog-card-lbl">{t.dash_lifetime_score_label}</span>
               <div className="dash-prog-card-val-row">
                 <span className="dash-prog-card-val" id="dash-lifetime-xp-val">
                   {progressionOverview.lifetimeXp.toLocaleString()}
                 </span>
-                <span className="dash-prog-card-unit">XP</span>
               </div>
             </div>
           </div>

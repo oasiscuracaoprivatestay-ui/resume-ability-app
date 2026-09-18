@@ -29,6 +29,15 @@
   color: #ffffff;
 }
 
+.sda-terms-slogan {
+  margin: 4px 0 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent, #34d399);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
 .sda-terms-subtitle {
   margin: 0;
   font-size: 0.9rem;

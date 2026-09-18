@@ -638,6 +638,14 @@
   gap: 0.35rem;
 }
 
+.dash-prog-slogan {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.35;
+  margin: 0.15rem 0 0.1rem;
+}
+
 .dash-prog-subtitle {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -693,7 +701,7 @@
 }
 
 .dash-prog-card-val {
-  font-size: 1.3rem;
+  font-size: 1.65rem;
   font-weight: 800;
   line-height: 1.1;
   color: var(--text-primary);
@@ -851,6 +859,59 @@
   .dash-prog-streak-row {
     gap: 0.35rem;
   }
+}
+
+/* ── Diet Today Awareness Card Styles (Phase 26C) ── */
+.dash-diet-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.dash-diet-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.dash-diet-badge--on-track {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.dash-diet-badge--slip {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dash-diet-awareness-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  flex-wrap: wrap;
+}
+
+.dash-diet-awareness-item {
+  font-weight: 600;
+}
+
+.dash-diet-awareness-item--core {
+  color: #4ade80;
+}
+
+.dash-diet-awareness-item--outside {
+  color: #a5b4fc;
+}
+
+.dash-diet-awareness-divider {
+  color: rgba(148, 163, 184, 0.4);
 }
 
 

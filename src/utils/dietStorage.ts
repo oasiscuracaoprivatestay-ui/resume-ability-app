@@ -17,7 +17,7 @@ import {
   FOOD_CATEGORY_KEYS,
   mapLegacyItemsToCategories,
 } from '../data/dietData';
-import { isValidCanonicalFood } from '../data/foodOptions';
+import { isValidCanonicalFood, findFoodOption } from '../data/foodOptions';
 import type { FoodPhotoMetadata } from './photoStorage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -60,6 +60,140 @@ export function getBlockPhotos(
     return [block.foodPhoto];
   }
   return [];
+}
+
+/**
+ * Helper to determine the primary display description for a Structured Diet block or food log.
+ *
+ * Sergio's Phase 26I Requirement:
+ * Prioritizes WHAT THE USER ACTUALLY PLANS TO EAT over generic meal/block types.
+ * E.g., Fruit > Banana => Main description is "Banana" (instead of "Breakfast").
+ *
+ * Deterministic Fallback Hierarchy:
+ * 1. Explicit actual food description in `customText` (if non-empty and not just matching the generic block type).
+ * 2. Specific selected foods in `foodSelections` and `customFoods` (e.g. ['banana'] => "Banana", or multi-foods joined).
+ * 3. Legacy food items in `items` (if non-empty and not just category keys).
+ * 4. Special structure blocks (Micro-Fasting, Kitchen Closed) => localized structure block name.
+ * 5. Ordinary meal/block type fallback => localized block type name (e.g. "Breakfast", "Lunch", "Dinner").
+ */
+export function getBlockPrimaryDescription(
+  block?: {
+    type?: string;
+    customText?: string;
+    items?: string[];
+    foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+    customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  } | null,
+  t?: Record<string, any>
+): string {
+  if (!block) return '';
+
+  const blockType = (block.type || '').trim().toLowerCase();
+  const rawCustom = (block.customText || '').trim();
+
+  // Helper to translate or fallback a block type key
+  const getTypeName = (k: string) => {
+    if (!k) return '';
+    if (t) {
+      const trans = t[`sdb_type_${k}`] || t[`sdb_type_${k.toLowerCase()}`];
+      if (trans && typeof trans === 'string') return trans;
+    }
+    // Fallback: title case
+    return k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
+  };
+
+  const typeName = getTypeName(blockType);
+
+  // 1. Check if customText has genuine actual-food text
+  // (Ignore if customText is just an old stored copy of the block type name itself)
+  if (rawCustom) {
+    const rawLower = rawCustom.toLowerCase();
+    const isJustType = rawLower === blockType || (typeName && rawLower === typeName.toLowerCase());
+    if (!isJustType) {
+      if (t && t[rawCustom]) {
+        return t[rawCustom];
+      }
+      return rawCustom;
+    }
+  }
+
+  // 2. Extract specific selected foods from foodSelections and customFoods
+  const specificFoods: string[] = [];
+
+  if (block.foodSelections) {
+    for (const [cat, foodKeys] of Object.entries(block.foodSelections)) {
+      if (Array.isArray(foodKeys)) {
+        for (const fKey of foodKeys) {
+          if (!fKey) continue;
+          const opt = findFoodOption(cat as FoodCategoryKey, fKey);
+          let label = '';
+          if (opt && t && t[opt.i18nKey]) {
+            label = t[opt.i18nKey];
+          } else if (opt) {
+            label = opt.key.charAt(0).toUpperCase() + opt.key.slice(1).replace(/_/g, ' ');
+          } else {
+            label = fKey.charAt(0).toUpperCase() + fKey.slice(1).replace(/_/g, ' ');
+          }
+          if (label && !specificFoods.includes(label)) {
+            specificFoods.push(label);
+          }
+        }
+      }
+    }
+  }
+
+  if (block.customFoods) {
+    for (const [, customList] of Object.entries(block.customFoods)) {
+      if (Array.isArray(customList)) {
+        for (const cFood of customList) {
+          const trimmed = (cFood || '').trim();
+          if (trimmed && !specificFoods.includes(trimmed)) {
+            specificFoods.push(trimmed);
+          }
+        }
+      }
+    }
+  }
+
+  if (specificFoods.length > 0) {
+    return specificFoods.join(', ');
+  }
+
+  // 3. Legacy items fallback (if items contains specific food items, not category keys)
+  if (Array.isArray(block.items) && block.items.length > 0) {
+    const legacyFoodLabels: string[] = [];
+    for (const item of block.items) {
+      const lower = item.trim().toLowerCase();
+      // Skip if item is just a category key or structure key
+      if ((FOOD_CATEGORY_KEYS as readonly string[]).includes(lower)) continue;
+      if (lower === 'micro_fasting' || lower === 'kitchen_closed') continue;
+
+      let label = '';
+      if (t && t[`sdb_food_${item}`]) {
+        label = t[`sdb_food_${item}`];
+      } else {
+        label = item.charAt(0).toUpperCase() + item.slice(1).replace(/_/g, ' ');
+      }
+      if (label && !legacyFoodLabels.includes(label)) {
+        legacyFoodLabels.push(label);
+      }
+    }
+    if (legacyFoodLabels.length > 0) {
+      return legacyFoodLabels.join(', ');
+    }
+  }
+
+  // 4. Special structure blocks (micro_fasting, kitchen_closed)
+  if (blockType === 'micro_fasting' || blockType === 'kitchen_closed') {
+    return typeName || (blockType === 'micro_fasting' ? 'Micro-Fasting' : 'Kitchen Closed');
+  }
+
+  // 5. Fallback: rawCustom if present, else block type name
+  if (rawCustom) {
+    return rawCustom;
+  }
+
+  return typeName || 'Breakfast';
 }
 
 export interface StructuredDietDay {

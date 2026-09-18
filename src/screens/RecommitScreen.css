@@ -100,6 +100,25 @@
 
 /* ── Press & Hold Area ── */
 
+.recommit-ritual-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.recommit-unlimited-hint {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.4;
+  margin: 0;
+}
+
 .recommit-ring-area {
   display: flex;
   flex-direction: column;

@@ -81,6 +81,10 @@ export default function PremiumInfoModal({
               <h2 id="prem-modal-title" className="prem-modal-title">
                 {title || t.prem_info_title}
               </h2>
+              <div className="prem-modal-slogan-wrap">
+                <span className="prem-modal-slogan-badge">SDA</span>
+                <p className="prem-modal-slogan">{t.sda_slogan_tagline}</p>
+              </div>
               <p className="prem-modal-desc">
                 {description || t.prem_info_desc}
               </p>

@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import ScreenHeader from '../components/ScreenHeader';
 import { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { playFeedback } from '../utils/feedback';
+import { loadPledge, recordNonNegotiableReview } from '../utils/pledgeStorage';
+import { recordScoreEvent } from '../utils/scoringEngine';
+import { getLocalDateKey } from '../utils/dietStorage';
+import CheckableCommitmentItem from '../components/CheckableCommitmentItem';
+import HoldCommitButton from '../components/HoldCommitButton';
 import {
   loadSlipperyZones,
   addSlipperyZone,
@@ -19,12 +24,6 @@ interface MySlipperyZonesScreenProps {
   onNavigate: (screen: Screen) => void;
 }
 
-const HOLD_MS = 2500;
-const RING_R = 46;
-const RING_CX = 60;
-const RING_CY = 60;
-const RING_CIRC = 2 * Math.PI * RING_R;
-
 export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ onNavigate }) => {
   const { t } = useTranslation();
 
@@ -35,130 +34,61 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
   const [inputError, setInputError] = useState('');
   const [zoneToDelete, setZoneToDelete] = useState<PersonalSlipperyZone | null>(null);
 
-  // Press-and-hold review state
-  const [holding, setHolding] = useState(false);
-  const [progress, setProgress] = useState(0);
+  // Review celebration & completion state
   const [reviewMessage, setReviewMessage] = useState<string | null>(null);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [reviewCompleted, setReviewCompleted] = useState(false);
 
-  const startRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const holdCompletedRef = useRef(false);
-  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Load user's Why reason and Non-Negotiables directly from pledge storage
+  const pledge = useMemo(() => loadPledge(), []);
+  const firstReason = useMemo(() => {
+    return pledge.reasons.find((r) => r.trim().length > 0) ?? null;
+  }, [pledge.reasons]);
 
-  // Sync data on mount
-  useEffect(() => {
-    setData(loadSlipperyZones());
+  const nonNegotiables = pledge.nonNegotiables;
+
+  // Session-based review checkmarks state (not permanent "completed forever")
+  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+
+  const toggleCheckItem = useCallback((idx: number) => {
+    setCheckedItems((prev) => ({
+      ...prev,
+      [idx]: !prev[idx],
+    }));
   }, []);
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      if (messageTimeoutRef.current !== null) {
-        clearTimeout(messageTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Gating condition: All displayed non-negotiables must be checked before final review
+  const checkedCount = useMemo(() => {
+    return nonNegotiables.filter((_, idx) => !!checkedItems[idx]).length;
+  }, [nonNegotiables, checkedItems]);
 
-  // ── Cancel Hold ──────────────────────────────────────────
-  const cancelHold = useCallback(() => {
-    if (holdCompletedRef.current) return;
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    startRef.current = null;
-    setHolding(false);
-    setProgress(0);
-  }, []);
+  const allChecked = useMemo(() => {
+    if (nonNegotiables.length === 0) return true;
+    return nonNegotiables.every((_, idx) => !!checkedItems[idx]);
+  }, [nonNegotiables, checkedItems]);
 
-  // ── Complete Review Confirmation ──────────────────────────
+  // Complete Review Confirmation
   const completeReview = useCallback(() => {
-    if (holdCompletedRef.current) return;
-    holdCompletedRef.current = true;
+    playFeedback('win');
 
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    startRef.current = null;
-    setHolding(false);
-    setProgress(1);
-
-    playFeedback('commit');
-
+    // Record review metadata
     const result = recordSlipperyZonesReview();
     setData(result.updatedData);
 
+    // Record Non-Negotiables review in pledge storage
+    recordNonNegotiableReview();
+
+    // Deterministic scoring for Non-Negotiables review (+15 max 1/day)
+    recordScoreEvent({
+      activityType: 'NON_NEGOTIABLES_REVIEW',
+      sourceId: `nn_review_${getLocalDateKey()}`,
+    });
+
     const msg = result.scoreAwarded ? t.sz_points_awarded : t.sz_points_already_awarded;
     setReviewMessage(msg);
-    setShowCelebration(true);
     setReviewCompleted(true);
-
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-    }
-    messageTimeoutRef.current = setTimeout(() => {
-      setShowCelebration(false);
-      holdCompletedRef.current = false;
-      setProgress(0);
-    }, 6000);
   }, [t]);
 
-  // ── Start Hold Loop ───────────────────────────────────────
-  const startHold = useCallback(() => {
-    if (holding || holdCompletedRef.current) return;
-    setHolding(true);
-    startRef.current = performance.now();
-
-    const tick = (now: number) => {
-      if (startRef.current === null) return;
-      const elapsed = now - startRef.current;
-      const p = Math.min(elapsed / HOLD_MS, 1);
-      setProgress(p);
-
-      if (p >= 1) {
-        completeReview();
-      } else {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [holding, completeReview]);
-
-  // Pointer event handlers for hold button
-  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    startHold();
-  };
-
-  const handlePointerUp = () => cancelHold();
-  const handlePointerLeave = () => cancelHold();
-
-  // Keyboard accessibility
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      if (!e.repeat && !holding && !holdCompletedRef.current) {
-        startHold();
-      }
-    }
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      cancelHold();
-    }
-  };
-
-  // ── Zone CRUD handlers ────────────────────────────────────
+  // Modal Handlers
   const handleOpenAddModal = () => {
     setModalMode('add');
     setEditingZone(null);
@@ -206,8 +136,6 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
     }
   };
 
-  const strokeDashoffset = RING_CIRC * (1 - progress);
-
   return (
     <div className="screen my-slippery-zones-screen" id="my-slippery-zones-screen">
       <ScreenHeader
@@ -225,10 +153,11 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
         {/* 1. Review Introduction / Awareness Shield Banner */}
         <div className="sz-awareness-card" id="sz-awareness-card">
           <div className="sz-awareness-header">
-            <span className="sz-awareness-icon" aria-hidden="true">🛡️</span>
+            <span className="sz-awareness-icon" aria-hidden="true">
+              🛡️
+            </span>
             <p className="sz-awareness-text">{t.sz_awareness_banner}</p>
           </div>
-          {/* 2. Last Reviewed / Reviews Information */}
           <div className="sz-stats-row">
             <div className="sz-stat-badge" id="sz-stat-last-reviewed">
               <span className="sz-stat-dot" aria-hidden="true" />
@@ -240,7 +169,81 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           </div>
         </div>
 
-        {/* 3. MY SLIPPERY ZONES Header & 5. + Add Slippery Zone */}
+        {/* 2. WHY / COMMITMENT CONTEXT */}
+        <div className="sz-why-card" id="sz-why-card">
+          <div className="sz-why-header">
+            <span className="sz-why-label">{t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}</span>
+            <button
+              id="btn-sz-manage-why"
+              type="button"
+              className="sz-why-manage-btn"
+              onClick={() => onNavigate('commitment')}
+              aria-label={`${t.pledge_why_manage} ${t.pledge_why_title}`}
+            >
+              {t.commit_why_link || 'Manage'} ›
+            </button>
+          </div>
+          <p className={`sz-why-text ${firstReason ? '' : 'sz-why-text--empty'}`}>
+            {firstReason || t.commit_why_empty || 'No Why specified yet.'}
+          </p>
+        </div>
+
+        {/* 3. NON-NEGOTIABLES REVIEW SECTION (INDIVIDUALLY CHECKABLE) */}
+        <div className="sz-nn-review-section" id="sz-nn-review-section">
+          <div className="sz-nn-header">
+            <div className="sz-nn-header-text">
+              <h2 className="sz-nn-title">{t.review_nn_section_title || 'NON-NEGOTIABLES REVIEW'}</h2>
+              <p className="sz-nn-subtitle">
+                {t.review_nn_section_sub || 'Acknowledge each rule before confirming'}
+              </p>
+            </div>
+            {nonNegotiables.length > 0 && (
+              <span className="sz-nn-progress-badge" id="sz-nn-progress-badge">
+                {t.nn_review_progress_status
+                  ? t.nn_review_progress_status
+                      .replace('{checked}', String(checkedCount))
+                      .replace('{total}', String(nonNegotiables.length))
+                  : `${checkedCount} of ${nonNegotiables.length} reviewed`}
+              </span>
+            )}
+          </div>
+
+          {nonNegotiables.length === 0 ? (
+            <div className="sz-nn-empty" id="sz-nn-empty">
+              <p className="sz-nn-empty-text">
+                {t.pledge_review_empty || 'No Non-Negotiables set yet.'}
+              </p>
+              <button
+                type="button"
+                className="btn-sz-add-nn"
+                id="btn-sz-add-nn"
+                onClick={() => onNavigate('commitment')}
+              >
+                + {t.commit_nn_add || 'Add Non-Negotiables'}
+              </button>
+            </div>
+          ) : (
+            <div
+              className="sz-nn-list"
+              id="sz-nn-list"
+              role="group"
+              aria-label={t.review_nn_section_title || 'Non-Negotiables'}
+            >
+              {nonNegotiables.map((nn, idx) => (
+                <CheckableCommitmentItem
+                  key={idx}
+                  id={`nn-review-item-${idx}`}
+                  index={idx}
+                  text={nn}
+                  checked={!!checkedItems[idx]}
+                  onToggle={() => toggleCheckItem(idx)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 4. SLIPPERY ZONES SECTION */}
         <div className="sz-list-header">
           <h2 className="sz-list-title">{t.my_commitments_card_sz_title}</h2>
           <button
@@ -253,11 +256,13 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           </button>
         </div>
 
-        {/* 4. Existing Slippery Zone List */}
+        {/* Existing Slippery Zone List */}
         <div className="sz-zones-list" id="sz-zones-list">
           {data.zones.length === 0 ? (
             <div className="sz-empty-state" id="sz-empty-state">
-              <span className="sz-empty-icon" aria-hidden="true">📝</span>
+              <span className="sz-empty-icon" aria-hidden="true">
+                📝
+              </span>
               <h3 className="sz-empty-title">{t.sz_empty_title}</h3>
               <p className="sz-empty-desc">{t.sz_empty_desc}</p>
               <button
@@ -271,11 +276,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
             </div>
           ) : (
             data.zones.map((zone, index) => (
-              <div
-                key={zone.id}
-                className="sz-zone-card"
-                id={`sz-zone-card-${zone.id}`}
-              >
+              <div key={zone.id} className="sz-zone-card" id={`sz-zone-card-${zone.id}`}>
                 <div className="sz-zone-num" aria-hidden="true">
                   {index + 1}
                 </div>
@@ -309,12 +310,18 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
           )}
         </div>
 
-        {/* 6. Hold to Confirm Review Section (Below Slippery Zones) */}
+        {/* 5. FINAL HOLD ACTION SECTION (STRICTLY BELOW SLIPPERY ZONES) */}
         <div className="sz-review-action-section" id="sz-review-action-section">
-          {/* Celebration / Feedback State + Back to Main Menu */}
-          {(showCelebration || reviewCompleted) && (
-            <div className="sz-celebration-banner" id="sz-celebration-banner" role="status" aria-live="polite">
-              <div className="sz-celebration-badge">✓ {t.sz_review_completed || t.sz_review_success}</div>
+          {reviewCompleted ? (
+            <div
+              className="sz-celebration-banner"
+              id="sz-celebration-banner"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="sz-celebration-badge">
+                ✓ {t.sz_review_confirmed || 'Review confirmed ✓'}
+              </div>
               {reviewMessage && <p className="sz-celebration-message">{reviewMessage}</p>}
               <button
                 type="button"
@@ -322,111 +329,62 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
                 className="sz-btn-back-menu"
                 onClick={() => onNavigate('home')}
               >
-                <span className="sz-btn-back-menu-icon" aria-hidden="true">🏠</span>
+                <span className="sz-btn-back-menu-icon" aria-hidden="true">
+                  🏠
+                </span>
                 <span>{t.sz_back_to_menu || 'Back to Main Menu'}</span>
               </button>
             </div>
-          )}
-
-          <div className={`sz-ring-wrap${holding ? ' sz-ring-wrap--holding' : ''}`}>
-            <svg className="sz-ring-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <defs>
-                <linearGradient id="sz-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-              </defs>
-              <circle
-                className="sz-ring-track"
-                cx={RING_CX}
-                cy={RING_CY}
-                r={RING_R}
-                fill="none"
-                strokeWidth="5"
-              />
-              {(holding || progress > 0) && (
-                <circle
-                  className="sz-ring-arc"
-                  cx={RING_CX}
-                  cy={RING_CY}
-                  r={RING_R}
-                  fill="none"
-                  stroke="url(#sz-ring-grad)"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRC}
-                  strokeDashoffset={strokeDashoffset}
-                  transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
-                />
-              )}
-            </svg>
-
-            <button
+          ) : (
+            <HoldCommitButton
               id="btn-sz-hold-review"
-              className={`sz-hold-btn${holding ? ' sz-hold-btn--active' : ''}`}
-              onPointerDown={handlePointerDown}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerLeave}
-              onKeyDown={handleKeyDown}
-              onKeyUp={handleKeyUp}
-              aria-label={holding ? t.sz_holding_review : t.sz_hold_to_review}
-              type="button"
-            >
-              <span className="sz-hold-btn-icon" aria-hidden="true">
-                {holding ? '⚡' : '⚠️'}
-              </span>
-              <span className="sz-hold-btn-text">
-                {holding ? t.sz_holding_review : t.sz_hold_to_review}
-              </span>
-            </button>
-          </div>
+              variant="review"
+              label={`→ ${t.sz_hold_to_confirm_review || 'HOLD TO CONFIRM REVIEW'}`}
+              disabled={!allChecked}
+              disabledReason={
+                !allChecked
+                  ? `${t.nn_review_check_all_first || 'Review each Non-Negotiable first'} (${checkedCount}/${nonNegotiables.length})`
+                  : undefined
+              }
+              onComplete={completeReview}
+            />
+          )}
         </div>
       </div>
 
       {/* Add / Edit Modal */}
       {modalMode && (
-        <div
-          className="sz-modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) handleCloseModal();
-          }}
-        >
-          <div className="sz-modal-card" role="document">
+        <div className="sz-modal-overlay" role="dialog" aria-modal="true">
+          <div className="sz-modal-content">
             <h3 className="sz-modal-title">
               {modalMode === 'add' ? t.sz_add_modal_title : t.sz_edit_modal_title}
             </h3>
-            <form onSubmit={handleSaveZone}>
-              <div className="sz-input-group">
-                <textarea
-                  id="input-sz-title"
-                  className="sz-textarea"
-                  rows={3}
-                  value={zoneTitleInput}
-                  onChange={(e) => {
-                    setZoneTitleInput(e.target.value);
-                    if (inputError) setInputError('');
-                  }}
-                  placeholder={t.sz_input_placeholder}
-                  autoFocus
-                />
-                {inputError && <p className="sz-error-msg">{inputError}</p>}
-              </div>
-              <div className="sz-modal-actions">
+            <form onSubmit={handleSaveZone} className="sz-modal-form">
+              <label htmlFor="sz-zone-input" className="sz-modal-label">
+                {t.my_commitments_card_sz_title}
+              </label>
+              <textarea
+                id="sz-zone-input"
+                className="sz-modal-textarea"
+                rows={3}
+                placeholder={t.sz_input_placeholder}
+                value={zoneTitleInput}
+                onChange={(e) => {
+                  setZoneTitleInput(e.target.value);
+                  if (inputError) setInputError('');
+                }}
+                autoFocus
+              />
+              {inputError && <p className="sz-input-error">{inputError}</p>}
+              <div className="sz-modal-buttons">
                 <button
                   type="button"
-                  id="btn-sz-cancel"
-                  className="sz-btn sz-btn-cancel"
+                  className="btn-sz-modal-cancel"
                   onClick={handleCloseModal}
                 >
                   {t.sz_cancel_btn}
                 </button>
-                <button
-                  type="submit"
-                  id="btn-sz-save"
-                  className="sz-btn sz-btn-save"
-                >
+                <button type="submit" className="btn-sz-modal-save">
                   {t.sz_save_btn}
                 </button>
               </div>
@@ -437,31 +395,22 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
 
       {/* Delete Confirmation Modal */}
       {zoneToDelete && (
-        <div
-          className="sz-modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setZoneToDelete(null);
-          }}
-        >
-          <div className="sz-modal-card sz-delete-modal-card" role="document">
+        <div className="sz-modal-overlay" role="dialog" aria-modal="true">
+          <div className="sz-modal-content sz-modal-delete">
             <h3 className="sz-modal-title">{t.sz_delete_btn}</h3>
-            <p className="sz-delete-confirm-text">{t.sz_delete_confirm}</p>
-            <p className="sz-delete-zone-preview">"{zoneToDelete.title}"</p>
-            <div className="sz-modal-actions">
+            <p className="sz-delete-warning">{t.sz_delete_confirm}</p>
+            <p className="sz-delete-item-title">"{zoneToDelete.title}"</p>
+            <div className="sz-modal-buttons">
               <button
                 type="button"
-                id="btn-sz-delete-cancel"
-                className="sz-btn sz-btn-cancel"
+                className="btn-sz-modal-cancel"
                 onClick={() => setZoneToDelete(null)}
               >
                 {t.sz_cancel_btn}
               </button>
               <button
                 type="button"
-                id="btn-sz-delete-confirm"
-                className="sz-btn sz-btn-danger"
+                className="btn-sz-modal-delete"
                 onClick={handleDeleteConfirm}
               >
                 {t.sz_delete_btn}
@@ -473,3 +422,5 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
     </div>
   );
 };
+
+export default MySlipperyZonesScreen;

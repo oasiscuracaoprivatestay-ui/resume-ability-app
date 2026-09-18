@@ -20,6 +20,7 @@ export type ScoreActivityType =
   | 'DAY_START'
   | 'DAILY_CHECK_IN'
   | 'DIET_ON_TRACK'
+  | 'DIET_TWENTY_PERCENT_OFF_TRACK'
   | 'SLIP_REPORTED'
   | 'RECOMMIT'
   | 'DAILY_REVIEW_COMPLETE'
@@ -43,6 +44,7 @@ export const ACTIVITY_RULES: Record<ScoreActivityType, ActivityRule> = {
   DAY_START: { points: 10, maxPerDay: 1, description: 'Daily base score' },
   DAILY_CHECK_IN: { points: 10, maxPerDay: 4, description: 'Daily check-in' },
   DIET_ON_TRACK: { points: 8, maxPerDay: 10, description: 'Diet block on track' },
+  DIET_TWENTY_PERCENT_OFF_TRACK: { points: 5, maxPerDay: 10, description: 'Diet block 20% off track (acceptable flexibility)' },
   SLIP_REPORTED: { points: 8, maxPerDay: 5, description: 'Slip reported honestly' },
   RECOMMIT: { points: 15, maxPerDay: 2, description: 'Re-commit after slip' },
   DAILY_REVIEW_COMPLETE: { points: 40, maxPerDay: 1, description: 'Daily reflection review' },
@@ -293,6 +295,7 @@ export function getDateScoreBreakdown(
     DAY_START: 0,
     DAILY_CHECK_IN: 0,
     DIET_ON_TRACK: 0,
+    DIET_TWENTY_PERCENT_OFF_TRACK: 0,
     SLIP_REPORTED: 0,
     RECOMMIT: 0,
     DAILY_REVIEW_COMPLETE: 0,

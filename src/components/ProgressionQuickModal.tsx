@@ -63,19 +63,19 @@ export default function ProgressionQuickModal({
         <div className="pq-hero-banner">
           <div className="pq-hero-col">
             <span className="pq-hero-label">{t.dash_today_score_label}</span>
-            <span className="pq-hero-val pq-hero-val--score">{todayScore} <small>pts</small></span>
+            <span className="pq-hero-val pq-hero-val--score">{todayScore}</span>
           </div>
           <div className="pq-hero-divider" />
           <div className="pq-hero-col">
             <span className="pq-hero-label">{t.level_label}</span>
             <span className="pq-hero-val pq-hero-val--level">
-              {overview.isLevel10 ? '👑 10' : `Lvl ${overview.currentLevel}`}
+              {overview.isLevel10 ? '👑 10' : `${overview.currentLevel}`}
             </span>
           </div>
           <div className="pq-hero-divider" />
           <div className="pq-hero-col">
-            <span className="pq-hero-label">{t.dash_lifetime_xp_label}</span>
-            <span className="pq-hero-val pq-hero-val--lifetime">{overview.lifetimeXp.toLocaleString()} <small>XP</small></span>
+            <span className="pq-hero-label">{t.dash_lifetime_score_label}</span>
+            <span className="pq-hero-val pq-hero-val--lifetime">{overview.lifetimeXp.toLocaleString()}</span>
           </div>
         </div>
 

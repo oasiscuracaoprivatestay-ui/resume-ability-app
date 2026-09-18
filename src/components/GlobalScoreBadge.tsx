@@ -93,15 +93,13 @@ export default function GlobalScoreBadge({
           <div className="gsb-prominent-pillar gsb-prominent-pillar--today">
             <div className="gsb-prominent-pillar-header">
               <span className="gsb-prominent-icon gsb-prominent-icon--today" aria-hidden="true">⚡</span>
-              <span className="gsb-prominent-label">{t.global_score_badge_today}</span>
+              <span className="gsb-prominent-label">{t.dash_today_score_label}</span>
             </div>
             <div className="gsb-prominent-val-row">
               <span id="val-score-today" className="gsb-prominent-value gsb-prominent-value--today">
                 {todayScore}
               </span>
-              <span className="gsb-prominent-unit">XP</span>
             </div>
-            <span className="gsb-prominent-hint">{t.dash_today_score_label}</span>
           </div>
 
           <div className="gsb-prominent-divider" aria-hidden="true" />
@@ -110,7 +108,7 @@ export default function GlobalScoreBadge({
           <div className="gsb-prominent-pillar gsb-prominent-pillar--level">
             <div className="gsb-prominent-pillar-header">
               <span className="gsb-prominent-icon gsb-prominent-icon--level" aria-hidden="true">🛡️</span>
-              <span className="gsb-prominent-label">{t.global_score_badge_level}</span>
+              <span className="gsb-prominent-label">{t.level_label}</span>
             </div>
             <div className="gsb-prominent-val-row">
               <span
@@ -119,7 +117,7 @@ export default function GlobalScoreBadge({
                   currentLevel === 10 ? 'gsb-prominent-value--max' : ''
                 }`}
               >
-                {currentLevel}
+                {currentLevel === 10 ? '👑 10' : currentLevel}
               </span>
             </div>
             <div className="gsb-prominent-progress-wrap">
@@ -143,15 +141,13 @@ export default function GlobalScoreBadge({
           <div className="gsb-prominent-pillar gsb-prominent-pillar--lifetime">
             <div className="gsb-prominent-pillar-header">
               <span className="gsb-prominent-icon gsb-prominent-icon--lifetime" aria-hidden="true">🏆</span>
-              <span className="gsb-prominent-label">{t.global_score_badge_lifetime}</span>
+              <span className="gsb-prominent-label">{t.dash_lifetime_score_label}</span>
             </div>
             <div className="gsb-prominent-val-row">
               <span id="val-score-lifetime" className="gsb-prominent-value gsb-prominent-value--lifetime">
                 {lifetimeScore.toLocaleString()}
               </span>
-              <span className="gsb-prominent-unit">XP</span>
             </div>
-            <span className="gsb-prominent-hint">{t.dash_lifetime_xp_label}</span>
           </div>
 
           <div className="gsb-prominent-chevron" aria-hidden="true">›</div>

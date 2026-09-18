@@ -16,6 +16,7 @@ import { hasCommittedNonNegotiables } from '../utils/inControlStorage';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
 import { playFeedback } from '../utils/feedback';
 import { recordScoreEvent } from '../utils/scoringEngine';
+import CheckableCommitmentItem from '../components/CheckableCommitmentItem';
 import './CheckInScreen.css';
 
 interface CheckInScreenProps {
@@ -152,6 +153,14 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   const [reviewToast, setReviewToast] = useState(false);
   const [showCommitModal, setShowCommitModal] = useState(false);
   const [hasCommittedNN, setHasCommittedNN] = useState(() => hasCommittedNonNegotiables());
+  const [reviewChecked, setReviewChecked] = useState<Record<number, boolean>>({});
+
+  const toggleReviewCheck = useCallback((idx: number) => {
+    setReviewChecked((prev) => ({
+      ...prev,
+      [idx]: !prev[idx],
+    }));
+  }, []);
 
   // Listen to stats reset event to update commitment button label
   useEffect(() => {
@@ -255,6 +264,7 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
   // ── Review: open + close ───────────────────────────────────────────────────
   const openReview = () => {
     reviewedRef.current = false; // reset so this opening can count once
+    setReviewChecked({});
     setStep('review');
   };
 
@@ -355,14 +365,18 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
                 </button>
               </div>
             ) : (
-              <ol className="ci-review-list" aria-label={t.pledge_review_heading}>
+              <div className="ci-review-list" role="group" aria-label={t.pledge_review_heading}>
                 {pledge.nonNegotiables.map((nn, idx) => (
-                  <li key={idx} className="ci-review-item">
-                    <span className="ci-review-num" aria-hidden="true">{idx + 1}</span>
-                    <span className="ci-review-text">{nn}</span>
-                  </li>
+                  <CheckableCommitmentItem
+                    key={idx}
+                    id={`ci-nn-check-${idx}`}
+                    index={idx}
+                    text={nn}
+                    checked={!!reviewChecked[idx]}
+                    onToggle={() => toggleReviewCheck(idx)}
+                  />
                 ))}
-              </ol>
+              </div>
             )}
           </div>
 
@@ -371,10 +385,30 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
               id="btn-review-done"
               className="btn btn-primary btn-large"
               onClick={handleReviewDone}
-              disabled={reviewToast}
+              disabled={
+                reviewToast ||
+                (pledge.nonNegotiables.length > 0 &&
+                  !pledge.nonNegotiables.every((_, idx) => !!reviewChecked[idx]))
+              }
             >
               {t.pledge_review_done}
             </button>
+            {pledge.nonNegotiables.length > 0 &&
+              !pledge.nonNegotiables.every((_, idx) => !!reviewChecked[idx]) && (
+                <p
+                  className="ci-review-gated-hint"
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--text-muted, #94a3b8)',
+                    textAlign: 'center',
+                    marginTop: '0.5rem',
+                  }}
+                >
+                  {t.nn_review_check_all_first || 'Review each Non-Negotiable first'} (
+                  {pledge.nonNegotiables.filter((_, i) => !!reviewChecked[i]).length}/
+                  {pledge.nonNegotiables.length})
+                </p>
+              )}
           </div>
 
           {/* Subtle win toast */}

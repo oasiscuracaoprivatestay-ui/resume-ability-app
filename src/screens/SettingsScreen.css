@@ -284,6 +284,23 @@
   border: 1px solid var(--border);
 }
 
+.settings-about-slogan-box {
+  background: rgba(52, 211, 153, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+.settings-about-slogan {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.4;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
 .settings-about-summary {
   font-size: 0.82rem;
   color: var(--text-secondary);

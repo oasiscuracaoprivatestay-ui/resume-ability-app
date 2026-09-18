@@ -27,6 +27,7 @@ import {
   snapshotHistoryDate,
   getBlockPhotos,
   sanitiseBlock,
+  getBlockPrimaryDescription,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -41,9 +42,13 @@ import {
   getDailyDietVerification,
   loadAllDietVerifications,
   saveBlockVerification,
+  saveUnplannedFoodLog,
   clearBlockVerification,
   toggleBlockResumed,
   getDailyVerificationStats,
+  setBlockDriftState,
+  isEligibleSlipForDrift,
+  type DriftState,
   ON_TRACK_OUTCOMES,
   SLIP_OUTCOMES,
 } from '../utils/dietVerificationStorage';
@@ -80,7 +85,7 @@ import TemplateModal from '../components/TemplateModal';
 import type { DietTemplate } from '../data/dietTemplates';
 import { applyDailyTemplateToDay } from '../data/dietTemplates';
 import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
-import { recordScoreEvent } from '../utils/scoringEngine';
+import { recordScoreEvent, type ScoreActivityType } from '../utils/scoringEngine';
 import {
   type FoodPhotoMetadata,
   saveFoodPhoto,
@@ -473,9 +478,24 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   const toggleSpecificFood = (cat: FoodCategoryKey, foodKey: string) => {
     setFoodSelections(prev => {
       const curList = prev[cat] || [];
-      const nextList = curList.includes(foodKey)
-        ? curList.filter(f => f !== foodKey)
-        : [...curList, foodKey];
+      const isAdding = !curList.includes(foodKey);
+      const nextList = isAdding
+        ? [...curList, foodKey]
+        : curList.filter(f => f !== foodKey);
+
+      // Sergio's Phase 26I: When user selects a food item, prioritize actual food as main description
+      const opt = findFoodOption(cat, foodKey);
+      const foodLabel = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
+      const formattedFood = foodLabel.charAt(0).toUpperCase() + foodLabel.slice(1).replace(/_/g, ' ');
+
+      const defaultTypeName = (t[`sdb_type_${type}` as keyof typeof t] as string | undefined) || type;
+      const curCustom = customText.trim();
+      const isGenericDesc = !curCustom || curCustom.toLowerCase() === defaultTypeName.toLowerCase() || curCustom.toLowerCase() === type.toLowerCase();
+
+      if (isAdding && isGenericDesc) {
+        setCustomText(formattedFood);
+      }
+
       return { ...prev, [cat]: nextList };
     });
   };
@@ -497,6 +517,10 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
     if (isCanonicalDup || isCustomDup) {
       setCustomFoodErrors(prev => ({ ...prev, [cat]: t.sdb_custom_food_duplicate }));
       return;
+    }
+
+    if (!customText.trim() || customText.trim().toLowerCase() === type.toLowerCase()) {
+      setCustomText(raw);
     }
 
     setCustomFoods(prev => ({
@@ -535,13 +559,26 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
 
   const handleSave = () => {
     if (!validate()) return;
+
+    let finalCustom = customText.trim();
+    if (!finalCustom && (Object.keys(foodSelections).length > 0 || Object.keys(customFoods).length > 0)) {
+      const derived = getBlockPrimaryDescription({
+        type,
+        foodSelections,
+        customFoods,
+      }, t);
+      if (derived && derived.toLowerCase() !== type.toLowerCase()) {
+        finalCustom = derived;
+      }
+    }
+
     const block: StructuredDietBlock = {
       id: initial?.id ?? generateBlockId(),
       startTime,
       endTime,
       type,
       items,
-      customText: customText.trim(),
+      customText: finalCustom,
       mealType,
       foodCategories,
       foodSelections,
@@ -703,28 +740,6 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             )}
           </div>
 
-          {/* ── Meal Type (Optional) (Phase 7B) ── */}
-          <div className="sdb-field">
-            <label className="sdb-label sdb-label--optional" htmlFor="sdb-meal-type-select">
-              {t.sdb_meal_type_label}
-              <span className="sdb-optional">{t.sdb_optional}</span>
-            </label>
-            <select
-              id="sdb-meal-type-select"
-              className="sdb-select"
-              value={mealType || ''}
-              onChange={e => setMealType((e.target.value || undefined) as MealTypeKey | undefined)}
-              aria-label={t.sdb_meal_type_label}
-            >
-              <option value="">{t.sdb_meal_type_none}</option>
-              <option value="breakfast">{t.sdb_meal_type_breakfast}</option>
-              <option value="lunch">{t.sdb_meal_type_lunch}</option>
-              <option value="dinner">{t.sdb_meal_type_dinner}</option>
-              <option value="snack">{t.sdb_meal_type_snack}</option>
-              <option value="other">{t.sdb_meal_type_other}</option>
-            </select>
-          </div>
-
           {/* ── Custom note / Food Description ── */}
           <div className="sdb-field">
             <label className="sdb-label sdb-label--optional">
@@ -744,8 +759,8 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
           </div>
 
           {/* ── Food Categories (Primary Quick Food Classification) ── */}
-          <div className="sdb-field">
-            <label className="sdb-label">{t.sdb_food_categories_label}</label>
+          <div className="sdb-field sdb-field--food-categories">
+            <label className="sdb-label sdb-label--primary-heading">{t.sdb_food_categories_label}</label>
             <div className="sdb-food-grid">
               {FOOD_CATEGORY_KEYS.map(key => {
                 const isSelected = foodCategories.includes(key);
@@ -873,9 +888,9 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
             )}
           </div>
 
-          {/* ── Block type ── */}
-          <div className="sdb-field">
-            <label className="sdb-label">{t.sdb_block_type}</label>
+          {/* ── Meal / Block Type (Secondary Metadata, Below Food Categories) ── */}
+          <div className="sdb-field sdb-field--block-type">
+            <label className="sdb-label sdb-label--secondary">{t.sdb_block_type}</label>
             <div className="sdb-type-grid">
               {BLOCK_TYPE_KEYS.map(key => (
                 <button
@@ -888,6 +903,27 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                   <span className="sdb-chip-label">{t[`sdb_type_${key}` as keyof typeof t] as string}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Optional Specific Meal Type designation (Phase 7B) */}
+            <div className="sdb-meal-type-subrow">
+              <label className="sdb-sublabel" htmlFor="sdb-meal-type-select">
+                {t.sdb_meal_type_label} <span className="sdb-optional">({t.sdb_optional})</span>:
+              </label>
+              <select
+                id="sdb-meal-type-select"
+                className="sdb-select sdb-select--sm"
+                value={mealType || ''}
+                onChange={e => setMealType((e.target.value || undefined) as MealTypeKey | undefined)}
+                aria-label={t.sdb_meal_type_label}
+              >
+                <option value="">{t.sdb_meal_type_none}</option>
+                <option value="breakfast">{t.sdb_meal_type_breakfast}</option>
+                <option value="lunch">{t.sdb_meal_type_lunch}</option>
+                <option value="dinner">{t.sdb_meal_type_dinner}</option>
+                <option value="snack">{t.sdb_meal_type_snack}</option>
+                <option value="other">{t.sdb_meal_type_other}</option>
+              </select>
             </div>
           </div>
 
@@ -952,6 +988,7 @@ interface DietSlipModalProps {
   block: StructuredDietBlock;
   initialOutcome?: DetailedBlockOutcome;
   initialResumed?: boolean;
+  initialDriftState?: DriftState;
   initialActualItems?: string[];
   initialActualCategories?: FoodCategoryKey[];
   initialCustomText?: string;
@@ -960,7 +997,8 @@ interface DietSlipModalProps {
     customText: string,
     outcome?: DetailedBlockOutcome,
     isResumed?: boolean,
-    actualCategories?: FoodCategoryKey[]
+    actualCategories?: FoodCategoryKey[],
+    driftState?: DriftState
   ) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
@@ -979,6 +1017,7 @@ function DietSlipModal({
   block,
   initialOutcome,
   initialResumed = false,
+  initialDriftState = 'none',
   initialActualItems = [],
   initialActualCategories,
   initialCustomText = '',
@@ -992,6 +1031,7 @@ function DietSlipModal({
       : 'structured_slip'
   );
   const [isResumed, setIsResumed] = useState<boolean>(initialResumed);
+  const [driftState, setDriftState] = useState<DriftState>(initialDriftState);
   const [actualItems, setActualItems] = useState<string[]>(initialActualItems);
   const [actualCategories, setActualCategories] = useState<FoodCategoryKey[]>(() => {
     if (initialActualCategories && initialActualCategories.length > 0) {
@@ -1057,6 +1097,7 @@ function DietSlipModal({
     });
   };
 
+  const primaryDesc = getBlockPrimaryDescription(block, t);
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const isFoodBlock = ['breakfast', 'lunch', 'dinner', 'snack', 'protein_shake'].includes(block.type);
 
@@ -1075,7 +1116,7 @@ function DietSlipModal({
       <div className="sdb-modal sdb-slip-modal" ref={modalRef}>
         <div className="sdb-modal-header">
           <div className="sdb-slip-modal-header-text">
-            <span className="sdb-slip-modal-badge">SLIP VERIFICATION</span>
+            <span className="sdb-slip-modal-badge">{t.sdb_slip_modal_badge}</span>
             <h2 id="sdb-slip-modal-title" className="sdb-modal-title">
               {isFoodBlock ? t.sdb_v_what_had : t.sdb_v_what_happened}
             </h2>
@@ -1090,7 +1131,7 @@ function DietSlipModal({
           <div className="sdb-slip-planned-context">
             <span className="sdb-slip-planned-label">Planned:</span>
             <span className="sdb-slip-planned-val">
-              {formatTime(block.startTime)} - {formatTime(block.endTime)} · {typeName}
+              {formatTime(block.startTime)} - {formatTime(block.endTime)} · {primaryDesc.toLowerCase() !== typeName.toLowerCase() ? `${primaryDesc} (${typeName})` : primaryDesc}
             </span>
           </div>
 
@@ -1139,6 +1180,47 @@ function DietSlipModal({
             </button>
           </div>
 
+          {/* Drift Lifecycle Selection (Eligible Slips) */}
+          {(outcome === 'structured_slip' || outcome === 'unstructured_slip') && (
+            <div className="sdb-field sdb-field--drift">
+              <label className="sdb-label">{t.sdb_drift_title}:</label>
+              <div className="sdb-drift-btn-group">
+                <button
+                  type="button"
+                  id="btn-modal-drift-none"
+                  className={`sdb-drift-chip ${(!driftState || driftState === 'none') ? 'sdb-drift-chip--active' : ''}`}
+                  onClick={() => setDriftState('none')}
+                >
+                  {t.sdb_no_drift_entered}
+                </button>
+                <button
+                  type="button"
+                  id="btn-modal-drift-started"
+                  className={`sdb-drift-chip ${driftState === 'started' ? 'sdb-drift-chip--active' : ''}`}
+                  onClick={() => setDriftState('started')}
+                >
+                  🌊 {t.sdb_drift_start}
+                </button>
+                <button
+                  type="button"
+                  id="btn-modal-drift-drifting"
+                  className={`sdb-drift-chip ${driftState === 'drifting' ? 'sdb-drift-chip--active' : ''}`}
+                  onClick={() => setDriftState('drifting')}
+                >
+                  〰️ {t.sdb_drift_still}
+                </button>
+                <button
+                  type="button"
+                  id="btn-modal-drift-stopped"
+                  className={`sdb-drift-chip ${driftState === 'stopped' ? 'sdb-drift-chip--active' : ''}`}
+                  onClick={() => setDriftState('stopped')}
+                >
+                  🛑 {t.sdb_drift_stopped}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Food Categories Consumed */}
           <div className="sdb-field">
             <label className="sdb-label">{t.sdb_food_categories_label} (optional):</label>
@@ -1164,7 +1246,7 @@ function DietSlipModal({
 
           {/* Actual items chips */}
           <div className="sdb-field">
-            <label className="sdb-label">Select Items Consumed (optional):</label>
+            <label className="sdb-label">{t.sdb_slip_actual_items_label}:</label>
             <div className="sdb-food-grid">
               {FOOD_OPTION_KEYS.map(key => (
                 <button
@@ -1182,7 +1264,7 @@ function DietSlipModal({
 
           {/* Selectable notes chips */}
           <div className="sdb-field">
-            <label className="sdb-label">Quick Notes / Tags (tap to toggle):</label>
+            <label className="sdb-label">{t.sdb_slip_notes_label}:</label>
             <div className="sdb-food-grid">
               {SLIP_NOTE_KEYS.map(key => {
                 const isSelected = selectedNotes.includes(key);
@@ -1206,7 +1288,7 @@ function DietSlipModal({
           {/* Custom text */}
           <div className="sdb-field">
             <label className="sdb-label sdb-label--optional">
-              Notes / Custom Items
+              {t.sdb_slip_notes_label}
               <span className="sdb-optional">{t.sdb_optional}</span>
             </label>
             <input
@@ -1215,7 +1297,7 @@ function DietSlipModal({
               type="text"
               value={customText}
               onChange={e => setCustomText(e.target.value)}
-              placeholder="e.g. Pizza with coworkers, soda..."
+              placeholder={t.sdb_slip_notes_placeholder}
               maxLength={120}
             />
           </div>
@@ -1228,7 +1310,7 @@ function DietSlipModal({
           <button
             id="btn-sdb-save-slip"
             className="sdb-btn sdb-btn--save sdb-btn--save-slip"
-            onClick={() => onSave(actualItems, customText, outcome, isResumed, actualCategories)}
+            onClick={() => onSave(actualItems, customText, outcome, isResumed, actualCategories, driftState)}
           >
             {t.sdb_v_save_slip}
           </button>
@@ -1249,6 +1331,7 @@ interface BlockCardProps {
   verification?: DietBlockVerification;
   onVerifyOutcome?: (outcome: DetailedBlockOutcome, status: DietVerificationStatus) => void;
   onToggleResumed?: () => void;
+  onUpdateDriftState?: (state: DriftState) => void;
   onVerifyOnTrack?: () => void;
   onOpenSlipModal?: (outcome?: DetailedBlockOutcome) => void;
   onClearStatus?: () => void;
@@ -1269,6 +1352,7 @@ function BlockCard({
   verification,
   onVerifyOutcome,
   onToggleResumed,
+  onUpdateDriftState,
   onVerifyOnTrack,
   onOpenSlipModal,
   onClearStatus,
@@ -1280,7 +1364,7 @@ function BlockCard({
   onQuickAddPhoto,
 }: BlockCardProps) {
   const typeKey = block.type as BlockTypeKey;
-  const icon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
+  const typeIcon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
 
@@ -1358,19 +1442,26 @@ function BlockCard({
     }
   };
 
+  // Food categories calculation (Phase 2)
+  const blockCategories: FoodCategoryKey[] = Array.isArray(block.foodCategories) && block.foodCategories.length > 0
+    ? block.foodCategories
+    : (Array.isArray(block.items) ? mapLegacyItemsToCategories(block.items) : []);
+
   // Determine meal description:
-  // Use custom description/text if present; otherwise fall back to localized meal type name.
-  const rawCustom = block.customText?.trim() ?? '';
-  const translatedCustom = rawCustom
-    ? ((t[rawCustom as keyof typeof t] as string | undefined) ?? rawCustom)
-    : '';
-  const initialMealDescription = translatedCustom.trim() || typeName;
+  // Phase 26I: Prioritize actual food description over generic meal/block type
+  const initialMealDescription = getBlockPrimaryDescription(block, t);
 
   const [desc, setDesc] = useState(initialMealDescription);
   const [activePicker, setActivePicker] = useState<'none' | 'on_track' | 'slip'>('none');
   const [isChanging, setIsChanging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isStructureBlock = block.type === 'micro_fasting' || block.type === 'kitchen_closed';
+  const primaryCategory = blockCategories[0];
+  const cardIcon = isStructureBlock
+    ? typeIcon
+    : (desc.toLowerCase().includes('banana') ? '🍌' : null) || (primaryCategory ? FOOD_CATEGORY_ICONS[primaryCategory] : null) || typeIcon;
 
   const previewItems: PhotoPreviewItem[] = useMemo(
     () =>
@@ -1437,11 +1528,6 @@ function BlockCard({
     }
   };
 
-  // Food categories calculation (Phase 2)
-  const blockCategories: FoodCategoryKey[] = Array.isArray(block.foodCategories) && block.foodCategories.length > 0
-    ? block.foodCategories
-    : (Array.isArray(block.items) ? mapLegacyItemsToCategories(block.items) : []);
-
   // Build secondary food items list without duplicating the primary meal description or categories
   const foodLabels = (block.items || [])
     .filter(key => !(FOOD_CATEGORY_KEYS as readonly string[]).includes(key))
@@ -1473,8 +1559,7 @@ function BlockCard({
     setIsChanging(false);
   };
 
-  const isSlipRecord = verification?.status === 'slip' ||
-    (verification?.detailedOutcome && (SLIP_OUTCOMES as readonly string[]).includes(verification.detailedOutcome));
+  const isEligibleSlip = verification ? isEligibleSlipForDrift(verification) : false;
 
   return (
     <div
@@ -1512,9 +1597,9 @@ function BlockCard({
             ))}
           </select>
           {overnight && <span className="sdb-block-overnight">{' '}({t.sdb_next_day})</span>}
-          {block.mealType && (
+          {((desc && desc.trim().toLowerCase() !== typeName.trim().toLowerCase()) || block.mealType) && (
             <span className="sdb-block-meal-type-badge" id={`sdb-meal-type-badge-${block.id}`}>
-              {(t[`sdb_meal_type_${block.mealType}` as keyof typeof t] as string | undefined) || block.mealType}
+              {block.mealType ? ((t[`sdb_meal_type_${block.mealType}` as keyof typeof t] as string | undefined) || block.mealType) : typeName}
             </span>
           )}
         </div>
@@ -1566,7 +1651,7 @@ function BlockCard({
         <div className="sdb-block-media-group">
           {photos.length === 0 ? (
             <>
-              <span className="sdb-block-icon" aria-hidden="true">{icon}</span>
+              <span className="sdb-block-icon" aria-hidden="true">{cardIcon}</span>
               <button
                 type="button"
                 id={`btn-direct-add-photo-${block.id}`}
@@ -1732,11 +1817,13 @@ function BlockCard({
             }
           }
         }
-        if (specificLabels.length === 0) return null;
+        // Phase 26I: If primary description already includes these specific foods, don't duplicate them on the card
+        const remainingLabels = specificLabels.filter(label => !desc.toLowerCase().includes(label.toLowerCase()));
+        if (remainingLabels.length === 0) return null;
 
         const maxVisible = 4;
-        const visibleLabels = specificLabels.slice(0, maxVisible);
-        const remainingCount = specificLabels.length - maxVisible;
+        const visibleLabels = remainingLabels.slice(0, maxVisible);
+        const remainingCount = remainingLabels.length - maxVisible;
 
         return (
           <div className="sdb-block-specific-foods" id={`sdb-specific-foods-${block.id}`}>
@@ -1791,23 +1878,99 @@ function BlockCard({
                 </div>
               </div>
 
-              {/* Resumed Toggle Button for any Slip record */}
-              {isSlipRecord && (
-                <div className="sdb-resumed-row">
-                  <button
-                    id={`btn-toggle-resumed-${block.id}`}
-                    type="button"
-                    className={`sdb-resumed-toggle-btn ${verification.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
-                    onClick={onToggleResumed}
-                    aria-pressed={!!verification.isResumed}
-                  >
-                    <span className="sdb-resumed-toggle-icon" aria-hidden="true">
-                      {verification.isResumed ? '✓' : '⟲'}
-                    </span>
-                    <span className="sdb-resumed-toggle-text">
-                      {verification.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
-                    </span>
-                  </button>
+              {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
+              {isEligibleSlip && (
+                <div className="sdb-recovery-drift-container">
+                  <div className="sdb-recovery-row">
+                    <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
+                    <button
+                      id={`btn-toggle-resumed-${block.id}`}
+                      type="button"
+                      className={`sdb-resumed-toggle-btn ${verification.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
+                      onClick={onToggleResumed}
+                      aria-pressed={!!verification.isResumed}
+                    >
+                      <span className="sdb-resumed-toggle-icon" aria-hidden="true">
+                        {verification.isResumed ? '✓' : '⟲'}
+                      </span>
+                      <span className="sdb-resumed-toggle-text">
+                        {verification.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="sdb-drift-ctrl-wrap">
+                    <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
+                    <div className="sdb-drift-btn-group">
+                      {(!verification.driftState || verification.driftState === 'none') && (
+                        <button
+                          id={`btn-drift-start-${block.id}`}
+                          type="button"
+                          className="sdb-drift-action-btn sdb-drift-action-btn--start"
+                          onClick={() => onUpdateDriftState?.('started')}
+                        >
+                          <span className="sdb-drift-btn-icon">🌊</span>
+                          <span>{t.sdb_drift_start}</span>
+                        </button>
+                      )}
+
+                      {(verification.driftState === 'started' || verification.driftState === 'drifting') && (
+                        <>
+                          <button
+                            id={`btn-drift-still-${block.id}`}
+                            type="button"
+                            className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${verification.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
+                            onClick={() => onUpdateDriftState?.('drifting')}
+                          >
+                            <span className="sdb-drift-btn-icon">〰️</span>
+                            <span>{t.sdb_drift_still}</span>
+                          </button>
+                          <button
+                            id={`btn-drift-stop-${block.id}`}
+                            type="button"
+                            className="sdb-drift-action-btn sdb-drift-action-btn--stop"
+                            onClick={() => onUpdateDriftState?.('stopped')}
+                          >
+                            <span className="sdb-drift-btn-icon">🛑</span>
+                            <span>{t.sdb_drift_stopped}</span>
+                          </button>
+                        </>
+                      )}
+
+                      {verification.driftState === 'stopped' && (
+                        <div className="sdb-drift-stopped-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
+                            <span className="sdb-drift-badge-icon">✓</span>
+                            <span>{t.sdb_drift_stopped}</span>
+                          </div>
+                          {onNavigate && (
+                            <button
+                              id={`btn-drift-recommit-${block.id}`}
+                              type="button"
+                              className="sdb-drift-recommit-btn"
+                              onClick={() => onNavigate('recommit')}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 10px',
+                                background: 'rgba(74, 222, 128, 0.15)',
+                                border: '1px solid rgba(74, 222, 128, 0.35)',
+                                borderRadius: '14px',
+                                color: '#4ade80',
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <span>⚡</span>
+                              <span>{t.recommit_title || 'Re-Commit'}</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1838,16 +2001,40 @@ function BlockCard({
                 </div>
               )}
 
-              {/* Practice Resume-Ability secondary link */}
+              {/* Practice Resume-Ability & Re-Commit secondary links */}
               {verification.status === 'slip' && onNavigate && (
-                <button
-                  id={`btn-practice-ra-${block.id}`}
-                  type="button"
-                  className="sdb-practice-ra-link"
-                  onClick={() => onNavigate('slip-type')}
-                >
-                  {t.sdb_v_practice_ra} →
-                </button>
+                <div className="sdb-slip-recovery-links" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                  <button
+                    id={`btn-slip-recommit-${block.id}`}
+                    type="button"
+                    className="sdb-slip-recommit-btn"
+                    onClick={() => onNavigate('recommit')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      background: 'rgba(74, 222, 128, 0.15)',
+                      border: '1px solid rgba(74, 222, 128, 0.35)',
+                      borderRadius: '14px',
+                      color: '#4ade80',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>⚡</span>
+                    <span>{t.recommit_title || 'Re-Commit'}</span>
+                  </button>
+                  <button
+                    id={`btn-practice-ra-${block.id}`}
+                    type="button"
+                    className="sdb-practice-ra-link"
+                    onClick={() => onNavigate('slip-type')}
+                  >
+                    {t.sdb_v_practice_ra} →
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -2006,6 +2193,180 @@ function BlockCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Food Log Modal (Phase 26A: Flexible / In-the-Moment Logging) ──────────────
+// Allows recording what actually happened WITHOUT a pre-existing planned block.
+// Uses saveUnplannedFoodLog() so it never mutates the weekly plan.
+
+interface FoodLogModalProps {
+  onSave: (
+    description: string,
+    foodCategories: FoodCategoryKey[],
+    outcome: DetailedBlockOutcome,
+    status: DietVerificationStatus
+  ) => void;
+  onCancel: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+// All outcomes are available for unplanned logs since there is no plan context.
+// Ordering: positive outcomes first, then graded slip outcomes.
+const ALL_LOG_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'on_track',
+  'adjusted_on_track',
+  'planned_unstructured',
+  'twenty_percent_off_track',
+  'near_slip',
+  'structured_slip',
+  'unstructured_slip',
+] as const;
+
+// Map outcome → top-level status so saveUnplannedFoodLog gets the correct status
+function outcomeToStatus(outcome: DetailedBlockOutcome): DietVerificationStatus {
+  if (
+    outcome === 'on_track' ||
+    outcome === 'adjusted_on_track' ||
+    outcome === 'planned_unstructured' ||
+    outcome === 'twenty_percent_off_track'
+  ) {
+    return 'on-track';
+  }
+  return 'slip';
+}
+
+function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
+  const [description, setDescription] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<FoodCategoryKey[]>([]);
+  const [outcome, setOutcome] = useState<DetailedBlockOutcome>('on_track');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
+  const toggleCategory = (key: FoodCategoryKey) => {
+    setSelectedCategories(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onCancel();
+  };
+
+  const handleSave = () => {
+    onSave(description, selectedCategories, outcome, outcomeToStatus(outcome));
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-food-log-modal-title"
+    >
+      <div className="sdb-modal sdb-slip-modal sdb-food-log-modal" ref={modalRef}>
+        <div className="sdb-modal-header">
+          <div className="sdb-slip-modal-header-text">
+            <span className="sdb-slip-modal-badge sdb-food-log-badge">{t.sdb_food_log_modal_badge}</span>
+            <h2 id="sdb-food-log-modal-title" className="sdb-modal-title">
+              {t.sdb_food_log_modal_title}
+            </h2>
+          </div>
+          <button className="sdb-modal-close" onClick={onCancel} aria-label={t.commit_cancel}>
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body">
+          {/* Description */}
+          <div className="sdb-field">
+            <label className="sdb-label" htmlFor="sdb-food-log-desc">
+              {t.sdb_food_log_desc_label}
+            </label>
+            <input
+              id="sdb-food-log-desc"
+              className="sdb-input"
+              type="text"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder={t.sdb_food_log_desc_placeholder}
+              maxLength={160}
+              autoFocus
+            />
+          </div>
+
+          {/* Food Category Chips */}
+          <div className="sdb-field">
+            <label className="sdb-label">{t.sdb_food_categories_label}:</label>
+            <div className="sdb-food-grid">
+              {FOOD_CATEGORY_KEYS.map(key => {
+                const isSelected = selectedCategories.includes(key);
+                return (
+                  <button
+                    key={key}
+                    id={`btn-food-log-cat-${key}`}
+                    type="button"
+                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active sdb-cat-chip--active' : ''}`}
+                    onClick={() => toggleCategory(key)}
+                    aria-pressed={isSelected}
+                  >
+                    <span className="sdb-chip-icon">{FOOD_CATEGORY_ICONS[key]}</span>
+                    <span>{t[`sdb_cat_${key}` as keyof typeof t] as string}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Structural Outcome */}
+          <div className="sdb-field">
+            <label className="sdb-label">{t.sdb_food_log_outcome_label}:</label>
+            <div className="sdb-outcome-modal-grid">
+              {ALL_LOG_OUTCOMES.map(key => {
+                const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
+                const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
+                const isSlipOutcome = outcomeToStatus(key) === 'slip';
+                const isSelected = outcome === key;
+                return (
+                  <button
+                    key={key}
+                    id={`btn-food-log-outcome-${key}`}
+                    type="button"
+                    className={`sdb-outcome-chip ${isSlipOutcome ? 'sdb-outcome-chip--slip' : 'sdb-outcome-chip--ontrack'} ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
+                    onClick={() => setOutcome(key)}
+                    aria-pressed={isSelected}
+                    title={def || label}
+                  >
+                    {isSelected ? '✓ ' : ''}{label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="sdb-modal-footer">
+          <button id="btn-sdb-cancel-food-log" className="sdb-btn sdb-btn--cancel" onClick={onCancel}>
+            {t.commit_cancel}
+          </button>
+          <button
+            id="btn-sdb-save-food-log"
+            className="sdb-btn sdb-btn--save"
+            onClick={handleSave}
+          >
+            {t.sdb_food_log_save_btn}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2729,6 +3090,11 @@ interface StructureAwarenessCardProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
+function getDetailedOutcomeLabel(outcome: DetailedBlockOutcome, t: ReturnType<typeof useTranslation>['t']): string {
+  const key = `sdb_outcome_${outcome}` as keyof typeof t;
+  return (t[key] as string) || outcome;
+}
+
 function StructureAwarenessCard({
   allVerifications,
   activeProfileId,
@@ -2741,154 +3107,249 @@ function StructureAwarenessCard({
     [allVerifications, selectedPeriod, activeProfileId]
   );
 
-  const { structureStats, resumeStats, categoryStats } = summary;
+  const { structureStats, resumeStats, driftStats, categoryStats } = summary;
 
   const activeCategories = useMemo(
     () => categoryStats.items.filter(item => item.count > 0),
     [categoryStats]
   );
 
+  const activeOutcomes = useMemo(
+    () => structureStats.detailedOutcomes.filter(item => item.count > 0),
+    [structureStats.detailedOutcomes]
+  );
+
   return (
-    <div className="sdb-awareness-card" id="sdb-awareness-section">
-      {/* ── Header ── */}
-      <div className="sdb-awareness-header">
-        <div className="sdb-awareness-titles">
-          <div className="sdb-awareness-badge">
-            <span>🧠</span>
-            <span>{t.sdb_awareness_title}</span>
+    <div className="sdb-awareness-container" id="sdb-awareness-container">
+      {/* ══════════════════════════════════════════════════════════════════════════
+          CARD 1: EATING STRUCTURE AWARENESS
+         ══════════════════════════════════════════════════════════════════════════ */}
+      <div className="sdb-awareness-card" id="sdb-eating-structure-card">
+        {/* ── Header ── */}
+        <div className="sdb-awareness-header">
+          <div className="sdb-awareness-titles">
+            <div className="sdb-awareness-badge">
+              <span>🧠</span>
+              <span>{t.sdb_awareness_title}</span>
+            </div>
+            <h3 className="sdb-awareness-question">
+              {selectedPeriod === 'today' ? t.sdb_awareness_how_structured : t.sdb_stat_eating_structure}
+            </h3>
           </div>
-          <h3 className="sdb-awareness-question">
-            {selectedPeriod === 'today' ? t.sdb_awareness_how_structured : t.sdb_stat_eating_structure}
-          </h3>
+
+          {/* ── Period Selector Tabs ── */}
+          <div className="sdb-period-tabs" role="tablist" aria-label={t.sdb_awareness_title}>
+            {(['today', '7d', '30d', 'all'] as const).map(period => (
+              <button
+                key={period}
+                id={`btn-period-${period}`}
+                type="button"
+                role="tab"
+                aria-selected={selectedPeriod === period}
+                className={`sdb-period-tab ${selectedPeriod === period ? 'sdb-period-tab--active' : ''}`}
+                onClick={() => onSelectPeriod(period)}
+              >
+                {period === 'today' && t.sdb_period_today}
+                {period === '7d' && t.sdb_period_7d}
+                {period === '30d' && t.sdb_period_30d}
+                {period === 'all' && t.sdb_period_all}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ── Period Selector Tabs ── */}
-        <div className="sdb-period-tabs" role="tablist" aria-label={t.sdb_awareness_title}>
-          {(['today', '7d', '30d', 'all'] as const).map(period => (
-            <button
-              key={period}
-              id={`btn-period-${period}`}
-              type="button"
-              role="tab"
-              aria-selected={selectedPeriod === period}
-              className={`sdb-period-tab ${selectedPeriod === period ? 'sdb-period-tab--active' : ''}`}
-              onClick={() => onSelectPeriod(period)}
+        {/* ── Structure Core vs Outside Core Awareness ── */}
+        {structureStats.hasData ? (
+          <div className="sdb-awareness-body">
+            {/* Main comparison progress bar (non-judgmental styling) */}
+            <div
+              className="sdb-segmented-bar"
+              id="sdb-segmented-bar"
+              role="progressbar"
+              aria-valuenow={structureStats.structuredCorePercentage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${t.sdb_stat_structured_core} ${structureStats.structuredCorePercentage}%, ${t.sdb_stat_outside_core} ${structureStats.outsideCorePercentage}%`}
             >
-              {period === 'today' && t.sdb_period_today}
-              {period === '7d' && t.sdb_period_7d}
-              {period === '30d' && t.sdb_period_30d}
-              {period === 'all' && t.sdb_period_all}
-            </button>
-          ))}
-        </div>
+              <div
+                className="sdb-segment sdb-segment--structured"
+                style={{ width: `${structureStats.structuredCorePercentage}%` }}
+                title={`${t.sdb_stat_structured_core}: ${structureStats.structuredCorePercentage}%`}
+              />
+              <div
+                className="sdb-segment sdb-segment--outside-core"
+                style={{ width: `${structureStats.outsideCorePercentage}%` }}
+                title={`${t.sdb_stat_outside_core}: ${structureStats.outsideCorePercentage}%`}
+              />
+            </div>
+
+            {/* Counts & Percentages Row: Structured Core vs Outside Core */}
+            <div className="sdb-structure-metrics-row">
+              <div className="sdb-metric-box sdb-metric-box--structured" id="sdb-stat-structured-box">
+                <div className="sdb-metric-top">
+                  <span className="sdb-metric-dot sdb-metric-dot--structured" />
+                  <span className="sdb-metric-name">{t.sdb_stat_structured_core}</span>
+                </div>
+                <div className="sdb-metric-main">
+                  <span className="sdb-metric-pct">{structureStats.structuredCorePercentage}%</span>
+                  <span className="sdb-metric-count">
+                    {structureStats.structuredCoreCount}{' '}
+                    {structureStats.structuredCoreCount === 1 ? t.sdb_stat_record : t.sdb_stat_records}
+                  </span>
+                </div>
+              </div>
+
+              <div className="sdb-metric-box sdb-metric-box--outside-core" id="sdb-stat-outside-core-box">
+                <div className="sdb-metric-top">
+                  <span className="sdb-metric-dot sdb-metric-dot--outside-core" />
+                  <span className="sdb-metric-name">{t.sdb_stat_outside_core}</span>
+                </div>
+                <div className="sdb-metric-main">
+                  <span className="sdb-metric-pct">{structureStats.outsideCorePercentage}%</span>
+                  <span className="sdb-metric-count">
+                    {structureStats.outsideCoreCount}{' '}
+                    {structureStats.outsideCoreCount === 1 ? t.sdb_stat_record : t.sdb_stat_records}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4 High-Level Behavioral Buckets Grid ── */}
+            <div className="sdb-buckets-grid" id="sdb-buckets-grid">
+              <div className="sdb-bucket-card sdb-bucket-card--core" id="sdb-bucket-core">
+                <span className="sdb-bucket-name">{t.sdb_stat_structured_core}</span>
+                <span className="sdb-bucket-val">{structureStats.buckets.structuredCore.count}</span>
+                <span className="sdb-bucket-pct">{structureStats.buckets.structuredCore.percentage}%</span>
+              </div>
+              <div className="sdb-bucket-card sdb-bucket-card--flex" id="sdb-bucket-flex">
+                <span className="sdb-bucket-name">{t.sdb_stat_flex_off_track}</span>
+                <span className="sdb-bucket-val">{structureStats.buckets.flexOffTrack.count}</span>
+                <span className="sdb-bucket-pct">{structureStats.buckets.flexOffTrack.percentage}%</span>
+              </div>
+              <div className="sdb-bucket-card sdb-bucket-card--risk" id="sdb-bucket-risk">
+                <span className="sdb-bucket-name">{t.sdb_stat_risk_near_slip}</span>
+                <span className="sdb-bucket-val">{structureStats.buckets.risk.count}</span>
+                <span className="sdb-bucket-pct">{structureStats.buckets.risk.percentage}%</span>
+              </div>
+              <div className="sdb-bucket-card sdb-bucket-card--slip" id="sdb-bucket-slip">
+                <span className="sdb-bucket-name">{t.sdb_stat_slip_bucket}</span>
+                <span className="sdb-bucket-val">{structureStats.buckets.slip.count}</span>
+                <span className="sdb-bucket-pct">{structureStats.buckets.slip.percentage}%</span>
+              </div>
+            </div>
+
+            {/* ── Detailed Outcome Distribution (only outcomes with > 0 records) ── */}
+            <div className="sdb-detailed-outcomes-wrap" id="sdb-detailed-outcomes-section">
+              <h4 className="sdb-sub-heading">{t.sdb_detailed_outcomes_title}</h4>
+              {activeOutcomes.length > 0 ? (
+                <div className="sdb-detailed-outcomes-list">
+                  {activeOutcomes.map(item => (
+                    <div key={item.outcome} className={`sdb-detailed-outcome-chip sdb-detailed-outcome-chip--${item.outcome}`}>
+                      <span className="sdb-outcome-chip-label">{getDetailedOutcomeLabel(item.outcome, t)}</span>
+                      <span className="sdb-outcome-chip-stats">
+                        <strong>{item.count}</strong> ({item.percentage}%)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="sdb-awareness-empty-text sdb-awareness-empty-text--sub">{t.sdb_no_outcomes_in_period}</p>
+              )}
+            </div>
+
+            {/* ── Compact Resume Recovery Section ── */}
+            <div className="sdb-resume-section" id="sdb-resume-recovery-section">
+              <div className="sdb-resume-header">
+                <span className="sdb-resume-title">⟲ {t.sdb_resumed_label}</span>
+                {resumeStats.hasEligibleSlips ? (
+                  <span className="sdb-resume-rate-badge" id="sdb-resume-rate-badge">
+                    {t.sdb_stat_resume_rate}: {resumeStats.resumeRate}%
+                  </span>
+                ) : (
+                  <span className="sdb-resume-rate-badge sdb-resume-rate-badge--none" id="sdb-resume-rate-badge">
+                    {t.sdb_no_eligible_slips}
+                  </span>
+                )}
+              </div>
+              <div className="sdb-resume-stats-row">
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_stat_eligible_slips}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-eligible-slips-val">{resumeStats.eligibleCount}</strong>
+                </div>
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_stat_resume_count}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-resumed-count-val">{resumeStats.resumeCount}</strong>
+                </div>
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_stat_resume_rate}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-resume-rate-val">
+                    {resumeStats.hasEligibleSlips ? `${resumeStats.resumeRate}%` : '—'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Compact Drift Section (Phase 26D) ── */}
+            <div className="sdb-drift-section" id="sdb-drift-awareness-section">
+              <div className="sdb-resume-header">
+                <span className="sdb-resume-title">🌊 {t.sdb_drift_title}</span>
+                {driftStats.hasEligibleSlips ? (
+                  <span className="sdb-resume-rate-badge sdb-drift-rate-badge" id="sdb-drift-rate-badge">
+                    {t.sdb_drift_rate}: {driftStats.driftRate}%
+                  </span>
+                ) : (
+                  <span className="sdb-resume-rate-badge sdb-resume-rate-badge--none" id="sdb-drift-rate-badge">
+                    {t.sdb_no_eligible_slips}
+                  </span>
+                )}
+              </div>
+              <div className="sdb-resume-stats-row sdb-drift-stats-row">
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_drift_entered}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-drift-entered-val">{driftStats.enteredDriftCount}</strong>
+                </div>
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_drift_currently}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-drift-currently-val">{driftStats.currentlyDriftingCount}</strong>
+                </div>
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_drift_stopped_stat}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-drift-stopped-val">{driftStats.stoppedDriftCount}</strong>
+                </div>
+                <div className="sdb-resume-stat-item">
+                  <span className="sdb-resume-stat-lbl">{t.sdb_drift_rate}:</span>
+                  <strong className="sdb-resume-stat-val" id="sdb-drift-rate-val">
+                    {driftStats.hasEligibleSlips ? `${driftStats.driftRate}%` : '—'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="sdb-awareness-empty" id="sdb-awareness-empty">
+            <span className="sdb-awareness-empty-icon">🌱</span>
+            <p className="sdb-awareness-empty-text">{t.sdb_no_structure_data}</p>
+          </div>
+        )}
       </div>
 
-      {/* ── Structure vs Unstructured Awareness ── */}
-      {structureStats.hasData ? (
-        <div className="sdb-awareness-body">
-          {/* Ratio bar */}
-          <div
-            className="sdb-segmented-bar"
-            id="sdb-segmented-bar"
-            role="progressbar"
-            aria-valuenow={structureStats.structuredPercentage}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`${t.sdb_stat_structured} ${structureStats.structuredPercentage}%, ${t.sdb_stat_unstructured} ${structureStats.unstructuredPercentage}%`}
-          >
-            <div
-              className="sdb-segment sdb-segment--structured"
-              style={{ width: `${structureStats.structuredPercentage}%` }}
-              title={`${t.sdb_stat_structured}: ${structureStats.structuredPercentage}%`}
-            />
-            <div
-              className="sdb-segment sdb-segment--unstructured"
-              style={{ width: `${structureStats.unstructuredPercentage}%` }}
-              title={`${t.sdb_stat_unstructured}: ${structureStats.unstructuredPercentage}%`}
-            />
+      {/* ══════════════════════════════════════════════════════════════════════════
+          CARD 2: FOOD CATEGORY AWARENESS
+         ══════════════════════════════════════════════════════════════════════════ */}
+      <div className="sdb-awareness-card sdb-category-awareness-card" id="sdb-food-category-card">
+        <div className="sdb-awareness-header">
+          <div className="sdb-awareness-titles">
+            <div className="sdb-awareness-badge sdb-awareness-badge--categories">
+              <span>🥗</span>
+              <span>{t.sdb_category_awareness_title}</span>
+            </div>
+            <p className="sdb-category-rate-note">{t.sdb_category_rate_note}</p>
           </div>
-
-          {/* Counts & Percentages Row */}
-          <div className="sdb-structure-metrics-row">
-            <div className="sdb-metric-box sdb-metric-box--structured" id="sdb-stat-structured-box">
-              <div className="sdb-metric-top">
-                <span className="sdb-metric-dot sdb-metric-dot--structured" />
-                <span className="sdb-metric-name">{t.sdb_stat_structured}</span>
-              </div>
-              <div className="sdb-metric-main">
-                <span className="sdb-metric-pct">{structureStats.structuredPercentage}%</span>
-                <span className="sdb-metric-count">
-                  {structureStats.structuredCount} {structureStats.structuredCount === 1 ? t.sdb_stat_record : t.sdb_stat_records}
-                </span>
-              </div>
-            </div>
-
-            <div className="sdb-metric-box sdb-metric-box--unstructured" id="sdb-stat-unstructured-box">
-              <div className="sdb-metric-top">
-                <span className="sdb-metric-dot sdb-metric-dot--unstructured" />
-                <span className="sdb-metric-name">{t.sdb_stat_unstructured}</span>
-              </div>
-              <div className="sdb-metric-main">
-                <span className="sdb-metric-pct">{structureStats.unstructuredPercentage}%</span>
-                <span className="sdb-metric-count">
-                  {structureStats.unstructuredCount} {structureStats.unstructuredCount === 1 ? t.sdb_stat_record : t.sdb_stat_records}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Secondary Awareness Metrics Grid ── */}
-          <div className="sdb-secondary-metrics-grid" id="sdb-secondary-metrics-grid">
-            <div className="sdb-sec-metric-card" id="sdb-metric-near-slips">
-              <span className="sdb-sec-metric-value">{structureStats.nearSlipCount}</span>
-              <span className="sdb-sec-metric-label">{t.sdb_stat_near_slips}</span>
-            </div>
-            <div className="sdb-sec-metric-card" id="sdb-metric-structured-slips">
-              <span className="sdb-sec-metric-value">{structureStats.structuredSlipCount}</span>
-              <span className="sdb-sec-metric-label">{t.sdb_stat_structured_slips}</span>
-            </div>
-            <div className="sdb-sec-metric-card" id="sdb-metric-unstructured-slips">
-              <span className="sdb-sec-metric-value">{structureStats.unstructuredSlipCount}</span>
-              <span className="sdb-sec-metric-label">{t.sdb_stat_unstructured_slips}</span>
-            </div>
-            <div className="sdb-sec-metric-card" id="sdb-metric-resume-rate">
-              <span className="sdb-sec-metric-value">
-                {resumeStats.hasEligibleSlips ? `${resumeStats.resumeRate}%` : '—'}
-              </span>
-              <span className="sdb-sec-metric-label">{t.sdb_stat_resume_rate}</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="sdb-awareness-empty" id="sdb-awareness-empty">
-          <span className="sdb-awareness-empty-icon">🌱</span>
-          <p className="sdb-awareness-empty-text">{t.sdb_no_structure_data}</p>
-        </div>
-      )}
-
-      {/* ── Resume Rate Indicator ── */}
-      {resumeStats.hasEligibleSlips ? (
-        <div className="sdb-resume-pill" id="sdb-resume-summary-pill">
-          <span className="sdb-resume-icon">⟲</span>
-          <span className="sdb-resume-text">
-            {t.sdb_resume_summary_format
-              .replace('{rate}', String(resumeStats.resumeRate))
-              .replace('{resumed}', String(resumeStats.resumeCount))
-              .replace('{eligible}', String(resumeStats.eligibleCount))}
-          </span>
-        </div>
-      ) : structureStats.hasData ? (
-        <div className="sdb-resume-pill sdb-resume-pill--clean" id="sdb-resume-summary-pill">
-          <span className="sdb-resume-icon">✓</span>
-          <span className="sdb-resume-text">{t.sdb_resume_no_slips}</span>
-        </div>
-      ) : null}
-
-      {/* ── Food Category Distribution ── */}
-      <div className="sdb-categories-dist-wrap">
-        <div className="sdb-categories-dist-title">
-          <span>📊</span>
-          <span>{t.sdb_stat_category_distribution}</span>
+          {categoryStats.recordsWithCategories > 0 && (
+            <span className="sdb-category-records-badge">
+              {t.sdb_records_with_categories.replace('{count}', String(categoryStats.recordsWithCategories))}
+            </span>
+          )}
         </div>
 
         {activeCategories.length > 0 ? (
@@ -2905,12 +3366,14 @@ function StructureAwarenessCard({
                   <div className="sdb-cat-dist-bar-track">
                     <div
                       className="sdb-cat-dist-bar-fill"
-                      style={{ width: `${Math.max(4, cat.percentage)}%` }}
+                      style={{ width: `${Math.max(4, Math.min(100, cat.percentage))}%` }}
                     />
                   </div>
                   <div className="sdb-cat-dist-stats">
-                    <span className="sdb-cat-dist-count">{cat.count}</span>
-                    <span className="sdb-cat-dist-pct">({cat.percentage}%)</span>
+                    <span className="sdb-cat-dist-count">
+                      {cat.count} {cat.count === 1 ? t.sdb_stat_record : t.sdb_stat_records}
+                    </span>
+                    <span className="sdb-cat-dist-pct">• {cat.percentage}%</span>
                   </div>
                 </div>
               );
@@ -2959,6 +3422,8 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   const [structurePeriod, setStructurePeriod] = useState<StructureTimePeriod>('today');
   // Modal state for reporting a Slip on a block
   const [slipModalBlock, setSlipModalBlock] = useState<StructuredDietBlock | null>(null);
+  // Modal state for unplanned / in-the-moment food logging (Phase 26A)
+  const [showFoodLogModal, setShowFoodLogModal] = useState(false);
   // Modal state for food photo preview (Phase 6B Multi-Photo)
   const [previewPhotos, setPreviewPhotos] = useState<{ photos: PhotoPreviewItem[]; initialIndex?: number } | null>(null);
 
@@ -3284,8 +3749,15 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
       profileId: activeProfile.id,
       profileName: getGoalDisplayName(activeProfile, t),
     });
+    const activityType: ScoreActivityType =
+      outcome === 'twenty_percent_off_track'
+        ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
+        : status === 'on-track'
+        ? 'DIET_ON_TRACK'
+        : 'SLIP_REPORTED';
+
     recordScoreEvent({
-      activityType: status === 'on-track' ? 'DIET_ON_TRACK' : 'SLIP_REPORTED',
+      activityType,
       dateKey,
       sourceId: `diet_block_${dateKey}_${block.id}`,
       profileId: activeProfile.id,
@@ -3314,7 +3786,8 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     customText: string,
     outcome?: DetailedBlockOutcome,
     isResumed?: boolean,
-    actualCategories?: FoodCategoryKey[]
+    actualCategories?: FoodCategoryKey[],
+    driftState?: DriftState
   ) => {
     if (!slipModalBlock) return;
     const dateKey = getLocalDateKey();
@@ -3323,6 +3796,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
       status: 'slip',
       detailedOutcome: outcome ?? 'structured_slip',
       isResumed,
+      driftState,
       actualItems,
       actualFoodCategories: actualCategories,
       actualCustomText: customText,
@@ -3341,8 +3815,59 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     refreshVerifications();
   };
 
+  const handleUpdateDriftState = (plannedBlockId: string, state: DriftState) => {
+    setBlockDriftState(plannedBlockId, state);
+    playFeedback('neutral');
+    refreshVerifications();
+  };
+
   const handleClearStatus = (blockId: string) => {
     clearBlockVerification(blockId);
+    refreshVerifications();
+  };
+
+  // ── Unplanned / in-the-moment food log handler (Phase 26A) ─────────────────
+  const handleSaveFoodLog = (
+    description: string,
+    foodCategories: FoodCategoryKey[],
+    outcome: DetailedBlockOutcome,
+    status: DietVerificationStatus
+  ) => {
+    const dateKey = getLocalDateKey();
+    const activityType: ScoreActivityType =
+      outcome === 'twenty_percent_off_track'
+        ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
+        : status === 'on-track'
+        ? 'DIET_ON_TRACK'
+        : 'SLIP_REPORTED';
+
+    const savedEntry = saveUnplannedFoodLog({
+      description,
+      foodCategories,
+      detailedOutcome: outcome,
+      status,
+      sourcePlanName: weekly.planName,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
+    });
+
+    // Deterministic sourceId: bound to this entry's unique synthetic block ID
+    // prevents duplicate point farming on repeated submissions
+    const sourceId = `diet_unplanned_${dateKey}_${savedEntry.plannedBlockId}`;
+    recordScoreEvent({
+      activityType,
+      dateKey,
+      sourceId,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
+    });
+
+    if (status === 'on-track') {
+      playFeedback('win');
+    } else {
+      playFeedback('neutral');
+    }
+    setShowFoodLogModal(false);
     refreshVerifications();
   };
 
@@ -3354,10 +3879,17 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     ? getDailyVerificationStats(sortedBlocks.length)
     : null;
 
-  // Orphaned verifications: verified blocks whose plannedBlockId is no longer in sortedBlocks
+  // Unplanned food logs: logged on Today without a pre-existing planned block (Phase 26A)
+  const unplannedVerifications = isToday && todayVerification
+    ? todayVerification.entries.filter(
+        e => e.isUnplanned || e.plannedBlockId.startsWith('unplanned_')
+      )
+    : [];
+
+  // Orphaned verifications: planned blocks that were verified and later deleted from the plan
   const orphanedVerifications = isToday && todayVerification
     ? todayVerification.entries.filter(
-        e => !sortedBlocks.some(b => b.id === e.plannedBlockId)
+        e => !e.isUnplanned && !e.plannedBlockId.startsWith('unplanned_') && !sortedBlocks.some(b => b.id === e.plannedBlockId)
       )
     : [];
 
@@ -3707,6 +4239,14 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                 </div>
                 <div className="sdb-empty-actions">
                   <button
+                    id="btn-sdb-unstructured-log-food"
+                    type="button"
+                    className="sdb-empty-log-food-btn"
+                    onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
+                  >
+                    🍽️ {t.sdb_log_food}
+                  </button>
+                  <button
                     id="btn-sdb-unstructured-tpl"
                     type="button"
                     className="sdb-empty-tpl-btn"
@@ -3723,6 +4263,130 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                     ⚡ {t.sdb_quick_build}
                   </button>
                 </div>
+                {/* ── Unplanned Food Logs on Unstructured Day ── */}
+                {isToday && unplannedVerifications.length > 0 && (
+                  <div className="sdb-unplanned-section" id="sdb-unplanned-food-logs-unstructured">
+                    <div className="sdb-unplanned-header">
+                      <span className="sdb-unplanned-section-badge">🍽️ {t.sdb_food_log_modal_badge}</span>
+                      <span className="sdb-unplanned-section-tag">{t.sdb_food_log_unplanned_tag}</span>
+                    </div>
+                    <div className="sdb-unplanned-list">
+                      {unplannedVerifications.map(log => {
+                        const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
+                        const outcomeKey = log.detailedOutcome;
+                        const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
+                        const isOntrack = log.status === 'on-track';
+                        const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
+
+                        return (
+                          <div
+                            key={log.id}
+                            className={`sdb-unplanned-card sdb-unplanned-card--${log.status}${isTwentyPercent ? ' sdb-unplanned-card--twenty-percent' : ''}`}
+                          >
+                            <div className="sdb-unplanned-card-top">
+                              <div className="sdb-unplanned-card-badges">
+                                <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
+                                {outcomeLabel && (
+                                  <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
+                                    {outcomeLabel}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                className="sdb-verified-link sdb-verified-link--clear"
+                                onClick={() => handleClearStatus(log.plannedBlockId)}
+                                aria-label={t.sdb_v_clear_status}
+                              >
+                                {t.sdb_v_clear_status}
+                              </button>
+                            </div>
+                            {desc && <div className="sdb-unplanned-desc">{desc}</div>}
+                            {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
+                              <div className="sdb-unplanned-categories">
+                                {log.actualFoodCategories.map(cat => (
+                                  <span key={cat} className="sdb-unplanned-category-chip">
+                                    {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
+                            {isEligibleSlipForDrift(log) && (
+                              <div className="sdb-recovery-drift-container sdb-recovery-drift-container--unplanned">
+                                <div className="sdb-recovery-row">
+                                  <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
+                                  <button
+                                    id={`btn-unplanned-resumed-${log.id}`}
+                                    type="button"
+                                    className={`sdb-resumed-toggle-btn ${log.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
+                                    onClick={() => handleToggleResumed(log.plannedBlockId)}
+                                    aria-pressed={!!log.isResumed}
+                                  >
+                                    <span className="sdb-resumed-toggle-icon" aria-hidden="true">
+                                      {log.isResumed ? '✓' : '⟲'}
+                                    </span>
+                                    <span className="sdb-resumed-toggle-text">
+                                      {log.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
+                                    </span>
+                                  </button>
+                                </div>
+
+                                <div className="sdb-drift-ctrl-wrap">
+                                  <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
+                                  <div className="sdb-drift-btn-group">
+                                    {(!log.driftState || log.driftState === 'none') && (
+                                      <button
+                                        id={`btn-unplanned-drift-start-${log.id}`}
+                                        type="button"
+                                        className="sdb-drift-action-btn sdb-drift-action-btn--start"
+                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'started')}
+                                      >
+                                        <span className="sdb-drift-btn-icon">🌊</span>
+                                        <span>{t.sdb_drift_start}</span>
+                                      </button>
+                                    )}
+
+                                    {(log.driftState === 'started' || log.driftState === 'drifting') && (
+                                      <>
+                                        <button
+                                          id={`btn-unplanned-drift-still-${log.id}`}
+                                          type="button"
+                                          className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${log.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
+                                          onClick={() => handleUpdateDriftState(log.plannedBlockId, 'drifting')}
+                                        >
+                                          <span className="sdb-drift-btn-icon">〰️</span>
+                                          <span>{t.sdb_drift_still}</span>
+                                        </button>
+                                        <button
+                                          id={`btn-unplanned-drift-stop-${log.id}`}
+                                          type="button"
+                                          className="sdb-drift-action-btn sdb-drift-action-btn--stop"
+                                          onClick={() => handleUpdateDriftState(log.plannedBlockId, 'stopped')}
+                                        >
+                                          <span className="sdb-drift-btn-icon">🛑</span>
+                                          <span>{t.sdb_drift_stopped}</span>
+                                        </button>
+                                      </>
+                                    )}
+
+                                    {log.driftState === 'stopped' && (
+                                      <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
+                                        <span className="sdb-drift-badge-icon">✓</span>
+                                        <span>{t.sdb_drift_stopped}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* ── Unstructured day with template timeline guidance ── */
@@ -3781,7 +4445,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                     id="btn-sdb-log-food"
                     type="button"
                     className="sdb-log-food-btn"
-                    onClick={() => setEditingBlock('new')}
+                    onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
                   >
                     <span className="sdb-add-btn-icon">🍽️</span>
                     {t.sdb_log_food}
@@ -3837,6 +4501,14 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                   <p className="sdb-empty-sub">{t.sdb_empty_sub}</p>
                   <div className="sdb-empty-actions">
                     <button
+                      id="btn-sdb-empty-log-food"
+                      type="button"
+                      className="sdb-empty-log-food-btn"
+                      onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
+                    >
+                      🍽️ {t.sdb_log_food}
+                    </button>
+                    <button
                       id="btn-sdb-empty-template"
                       type="button"
                       className="sdb-empty-tpl-btn"
@@ -3881,9 +4553,161 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                         onQuickUpdateCategories={(foodCategories) => handleQuickUpdateBlock(block.id, { foodCategories })}
                         onPreviewPhotos={(photos, idx) => setPreviewPhotos({ photos, initialIndex: idx })}
                         onQuickAddPhoto={handleQuickAddPhoto}
+                        onUpdateDriftState={(state) => handleUpdateDriftState(block.id, state)}
                       />
                     );
                   })}
+                </div>
+              )}
+
+              {/* ── Unplanned / In-the-Moment Food Logs Today (Phase 26A) ── */}
+              {isToday && unplannedVerifications.length > 0 && (
+                <div className="sdb-unplanned-section" id="sdb-unplanned-food-logs">
+                  <div className="sdb-unplanned-header">
+                    <span className="sdb-unplanned-section-badge">🍽️ {t.sdb_food_log_modal_badge}</span>
+                    <span className="sdb-unplanned-section-tag">{t.sdb_food_log_unplanned_tag}</span>
+                  </div>
+                  <div className="sdb-unplanned-list">
+                    {unplannedVerifications.map(log => {
+                      const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
+                      const outcomeKey = log.detailedOutcome;
+                      const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
+                      const isOntrack = log.status === 'on-track';
+                      const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
+
+                      return (
+                        <div
+                          key={log.id}
+                          className={`sdb-unplanned-card sdb-unplanned-card--${log.status}${isTwentyPercent ? ' sdb-unplanned-card--twenty-percent' : ''}`}
+                        >
+                          <div className="sdb-unplanned-card-top">
+                            <div className="sdb-unplanned-card-badges">
+                              <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
+                              {outcomeLabel && (
+                                <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
+                                  {outcomeLabel}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              className="sdb-verified-link sdb-verified-link--clear"
+                              onClick={() => handleClearStatus(log.plannedBlockId)}
+                              aria-label={t.sdb_v_clear_status}
+                            >
+                              {t.sdb_v_clear_status}
+                            </button>
+                          </div>
+                          {desc && <div className="sdb-unplanned-desc">{desc}</div>}
+                          {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
+                            <div className="sdb-unplanned-categories">
+                              {log.actualFoodCategories.map(cat => (
+                                <span key={cat} className="sdb-unplanned-category-chip">
+                                  {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
+                          {isEligibleSlipForDrift(log) && (
+                            <div className="sdb-recovery-drift-container sdb-recovery-drift-container--unplanned">
+                              <div className="sdb-recovery-row">
+                                <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
+                                <button
+                                  id={`btn-unplanned-resumed-daily-${log.id}`}
+                                  type="button"
+                                  className={`sdb-resumed-toggle-btn ${log.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
+                                  onClick={() => handleToggleResumed(log.plannedBlockId)}
+                                  aria-pressed={!!log.isResumed}
+                                >
+                                  <span className="sdb-resumed-toggle-icon" aria-hidden="true">
+                                    {log.isResumed ? '✓' : '⟲'}
+                                  </span>
+                                  <span className="sdb-resumed-toggle-text">
+                                    {log.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
+                                  </span>
+                                </button>
+                              </div>
+
+                              <div className="sdb-drift-ctrl-wrap">
+                                <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
+                                <div className="sdb-drift-btn-group">
+                                  {(!log.driftState || log.driftState === 'none') && (
+                                    <button
+                                      id={`btn-unplanned-drift-start-daily-${log.id}`}
+                                      type="button"
+                                      className="sdb-drift-action-btn sdb-drift-action-btn--start"
+                                      onClick={() => handleUpdateDriftState(log.plannedBlockId, 'started')}
+                                    >
+                                      <span className="sdb-drift-btn-icon">🌊</span>
+                                      <span>{t.sdb_drift_start}</span>
+                                    </button>
+                                  )}
+
+                                  {(log.driftState === 'started' || log.driftState === 'drifting') && (
+                                    <>
+                                      <button
+                                        id={`btn-unplanned-drift-still-daily-${log.id}`}
+                                        type="button"
+                                        className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${log.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
+                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'drifting')}
+                                      >
+                                        <span className="sdb-drift-btn-icon">〰️</span>
+                                        <span>{t.sdb_drift_still}</span>
+                                      </button>
+                                      <button
+                                        id={`btn-unplanned-drift-stop-daily-${log.id}`}
+                                        type="button"
+                                        className="sdb-drift-action-btn sdb-drift-action-btn--stop"
+                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'stopped')}
+                                      >
+                                        <span className="sdb-drift-btn-icon">🛑</span>
+                                        <span>{t.sdb_drift_stopped}</span>
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {log.driftState === 'stopped' && (
+                                    <div className="sdb-drift-stopped-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
+                                        <span className="sdb-drift-badge-icon">✓</span>
+                                        <span>{t.sdb_drift_stopped}</span>
+                                      </div>
+                                      {onNavigate && (
+                                        <button
+                                          id={`btn-unplanned-drift-recommit-daily-${log.id}`}
+                                          type="button"
+                                          className="sdb-drift-recommit-btn"
+                                          onClick={() => onNavigate('recommit')}
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            padding: '4px 10px',
+                                            background: 'rgba(74, 222, 128, 0.15)',
+                                            border: '1px solid rgba(74, 222, 128, 0.35)',
+                                            borderRadius: '14px',
+                                            color: '#4ade80',
+                                            fontSize: '0.78rem',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                          }}
+                                        >
+                                          <span>⚡</span>
+                                          <span>{t.recommit_title || 'Re-Commit'}</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -3949,7 +4773,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                   id="btn-sdb-log-food"
                   type="button"
                   className="sdb-log-food-btn"
-                  onClick={() => setEditingBlock('new')}
+                  onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
                 >
                   <span className="sdb-add-btn-icon">🍽️</span>
                   {t.sdb_log_food}
@@ -3966,6 +4790,15 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
               </div>
             </>
           )}
+
+          {/* ── Eating Structure & Food Category Awareness (Phase 26C) ── */}
+          <StructureAwarenessCard
+            allVerifications={allVerifications}
+            activeProfileId={activeProfile.id}
+            selectedPeriod={structurePeriod}
+            onSelectPeriod={setStructurePeriod}
+            t={t}
+          />
         </div>
       )}
     </div>
@@ -4000,8 +4833,20 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
           initialCustomText={
             todayVerification?.entries.find(e => e.plannedBlockId === slipModalBlock.id)?.actualCustomText
           }
+          initialDriftState={
+            todayVerification?.entries.find(e => e.plannedBlockId === slipModalBlock.id)?.driftState
+          }
           onSave={handleSaveSlipVerification}
           onCancel={() => setSlipModalBlock(null)}
+          t={t}
+        />
+      )}
+
+      {/* ── Unplanned Food Log Modal (Phase 26A) ── */}
+      {showFoodLogModal && (
+        <FoodLogModal
+          onSave={handleSaveFoodLog}
+          onCancel={() => setShowFoodLogModal(false)}
           t={t}
         />
       )}

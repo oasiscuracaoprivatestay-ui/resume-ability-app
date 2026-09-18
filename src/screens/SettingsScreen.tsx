@@ -295,9 +295,12 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
               <div className="settings-about-header">
                 <div className="settings-about-titles">
                   <span className="settings-about-name">{t.settings_app_name}</span>
-                  <span className="settings-about-sub">{t.settings_app_framework}</span>
+                  <span className="settings-about-sub">SDA</span>
                 </div>
                 <span className="settings-about-version">{t.settings_app_version}</span>
+              </div>
+              <div className="settings-about-slogan-box">
+                <p className="settings-about-slogan">"{t.sda_slogan}"</p>
               </div>
               <p className="settings-about-summary">{t.settings_about_summary}</p>
             </div>

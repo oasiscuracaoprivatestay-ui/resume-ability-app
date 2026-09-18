@@ -1,4 +1,5 @@
 import type { Translations } from './types';
+import { SDA_CANONICAL_SLOGAN_EN, SDA_TAGLINE_CORE_EN } from '../data/branding';
 
 export const en: Translations = {
   // ── Home ──
@@ -390,8 +391,8 @@ export const en: Translations = {
   sdb_editor_title: 'Time Block',
   sdb_start_time: 'Start Time',
   sdb_end_time: 'End Time',
-  sdb_block_type: 'Type',
-  sdb_food_label: 'Food / Structure',
+  sdb_block_type: 'Meal / Block Type',
+  sdb_food_label: 'Food / Structure Details',
   sdb_custom_label: 'Custom Item / Note',
   sdb_custom_placeholder: 'e.g. 2 boiled eggs, herbal tea…',
   sdb_optional: 'optional',
@@ -710,12 +711,14 @@ export const en: Translations = {
   sdb_outcome_on_track: 'On Track',
   sdb_outcome_adjusted_on_track: 'Adjusted and On Track',
   sdb_outcome_planned_unstructured: 'Planned Unstructured',
+  sdb_outcome_twenty_percent_off_track: '20% OFF TRACK',
   sdb_outcome_near_slip: 'Near-Slip',
   sdb_outcome_structured_slip: 'Structured Slip',
   sdb_outcome_unstructured_slip: 'Unstructured Slip',
   sdb_outcome_def_on_track: 'Followed the commitment as planned.',
   sdb_outcome_def_adjusted_on_track: 'Changed the plan, but stayed within diet principles and non-negotiables.',
   sdb_outcome_def_planned_unstructured: 'Flexibility was intentionally scheduled beforehand. Not considered a slip.',
+  sdb_outcome_def_twenty_percent_off_track: 'Outside your main diet structure — intentional, acceptable, and not a slip. Does not reduce your Resume Rate.',
   sdb_outcome_def_near_slip: 'Came close to breaking a commitment but stopped before fully crossing the boundary.',
   sdb_outcome_def_structured_slip: 'Broke one commitment, but kept some structure and quickly contained it.',
   sdb_outcome_def_unstructured_slip: 'Abandoned planned boundaries during that period.',
@@ -726,6 +729,19 @@ export const en: Translations = {
   sdb_resume_count: 'Resumes',
   sdb_select_outcome: 'Select Outcome',
   sdb_outcome_select_hint: 'Choose the outcome that best matches what happened.',
+  // ── DietSlipModal localized strings ──
+  sdb_slip_modal_badge: 'SLIP VERIFICATION',
+  sdb_slip_actual_items_label: 'Select Items Consumed (optional)',
+  sdb_slip_notes_label: 'Quick Notes / Tags',
+  sdb_slip_notes_placeholder: 'e.g. pizza with coworkers, soda...',
+  // ── FoodLogModal — unplanned / in-the-moment food logging ──
+  sdb_food_log_modal_title: 'Log What You Ate',
+  sdb_food_log_modal_badge: 'FOOD LOG',
+  sdb_food_log_desc_label: 'What did you eat?',
+  sdb_food_log_desc_placeholder: 'e.g. burger and fries, coffee with milk...',
+  sdb_food_log_outcome_label: 'How does it fit your structure?',
+  sdb_food_log_save_btn: 'Save Log',
+  sdb_food_log_unplanned_tag: 'Unplanned',
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: 'Food Categories',
@@ -769,6 +785,31 @@ export const en: Translations = {
   sdb_stat_structured_slips: 'Structured Slips',
   sdb_stat_unstructured_slips: 'Unstructured Slips',
   sdb_stat_total_slips: 'True Slips',
+  // ── Phase 26C Structure Awareness & Food Category Foundation ──
+  sdb_stat_structured_core: 'Structured Core',
+  sdb_stat_outside_core: 'Outside Core',
+  sdb_stat_flex_off_track: 'Flex / Off-Track',
+  sdb_stat_risk_near_slip: 'Near-Slip / Risk',
+  sdb_stat_slip_bucket: 'Slip',
+  sdb_category_awareness_title: 'Food Category Awareness',
+  sdb_category_rate_note: 'Percentages show how often each category appeared in recorded eating events. Multiple categories can appear in one record.',
+  sdb_stat_eligible_slips: 'Eligible Slips',
+  sdb_detailed_outcomes_title: 'Detailed Outcomes',
+  sdb_no_eligible_slips: 'No eligible slips',
+  sdb_records_with_categories: '{count} records with categories',
+  sdb_no_outcomes_in_period: 'No outcome records in this period',
+  // ── Phase 26D Drift Lifecycle & Recovery ──
+  sdb_drift_title: 'Drift',
+  sdb_drift_start: 'Start Drift',
+  sdb_drift_still: 'Still Drifting',
+  sdb_drift_stopped: 'Stopped Drifting',
+  sdb_drift_entered: 'Entered Drift',
+  sdb_drift_currently: 'Currently Drifting',
+  sdb_drift_stopped_stat: 'Stopped Drift',
+  sdb_drift_rate: 'Drift Rate',
+  sdb_recovery_group_title: 'Recovery & Drift',
+  sdb_recovery_section_title: 'Recovery',
+  sdb_no_drift_entered: 'No drift recorded',
 
   // ── Smart Notifications & Reminders (Phase 12) ──
   notif_screen_title: 'REMINDERS',
@@ -845,9 +886,12 @@ export const en: Translations = {
   stats_lifetime_choice_desc: 'By default, your lifetime points, current level, and progression history are preserved so you never lose your hard-earned journey.',
   stats_btn_keep_lifetime: 'KEEP LIFETIME SCORE (RECOMMENDED)',
   stats_btn_reset_lifetime: 'RESET LIFETIME SCORE...',
+  stats_btn_reset_current_only: 'Reset Current Stats Only',
+  stats_btn_reset_with_lifetime: 'Reset Stats + Lifetime Score',
+  stats_lifetime_preserved_note: 'Lifetime Score and Level will be preserved.',
   stats_lifetime_confirm_title: 'RESET LIFETIME SCORE?',
   stats_lifetime_confirm_warning: 'This will permanently reset your Lifetime Score, current Level, progression, and related lifetime progression history. This action cannot be undone.',
-  stats_btn_confirm_lifetime_reset: 'PERMANENTLY RESET LIFETIME SCORE',
+  stats_btn_confirm_lifetime_reset: 'RESET LIFETIME SCORE',
   stats_done_lifetime_kept: 'Your activity statistics have been reset. Your Lifetime Score and Level were safely kept.',
   stats_done_lifetime_reset: 'Your statistics, Lifetime Score, and Level have all been reset.',
 
@@ -1226,17 +1270,18 @@ export const en: Translations = {
   // ── Global Score, Progression, and Level-up ──
   global_score_badge_today: 'Today',
   global_score_badge_lifetime: 'Lifetime',
-  global_score_badge_level: 'Lvl',
+  global_score_badge_level: 'Level',
   global_score_badge_title: 'Score & Level Progression',
   level_label: 'Level',
   level_max_reached: 'Max Level Reached',
   level_progress_to_next: 'Progress to Level {level}',
-  level_xp_remaining: '{xp} XP to next level',
+  level_xp_remaining: '{xp} points to next level',
   level_max_description: 'You have mastered Level 10!',
   dash_progression_title: 'Super Diet-Ability Progression',
-  dash_progression_subtitle: 'Daily score, lifetime XP, consistency streak, and level growth',
+  dash_progression_subtitle: 'Daily score, lifetime score, consistency streak, and level growth',
   dash_today_score_label: "Today's Score",
-  dash_lifetime_xp_label: 'Lifetime XP',
+  dash_lifetime_xp_label: 'Lifetime Score',
+  dash_lifetime_score_label: 'Lifetime Score',
   dash_current_streak_label: 'Active Streak',
   dash_longest_streak_label: 'Longest Streak',
   dash_total_active_days_label: 'Active Days',
@@ -1249,6 +1294,7 @@ export const en: Translations = {
   score_cat_day_start: 'Daily Base Score',
   score_cat_check_in: 'Daily Check-In',
   score_cat_diet_on_track: 'Diet On Track',
+  score_cat_diet_twenty_percent_off_track: '20% Off Track (Flexible)',
   score_cat_slip_reported: 'Honest Slip Report',
   score_cat_recommit: 'Re-Commit',
   score_cat_daily_review: 'Daily Review',
@@ -1325,6 +1371,20 @@ export const en: Translations = {
   sz_points_already_awarded: 'Already reviewed today. Awareness reinforced!',
   sz_review_completed: 'Review Completed',
   sz_back_to_menu: 'Back to Main Menu',
+
+  // ── Phase 26E: Commitment Checkmarks & Unified Hold Ritual ──
+  commit_hold_btn: 'HOLD TO COMMIT',
+  recommit_hold_btn: 'HOLD TO RE-COMMIT',
+  sz_hold_to_confirm_review: 'HOLD TO CONFIRM REVIEW',
+  nn_review_check_all_first: 'Review each Non-Negotiable first',
+  sz_review_confirmed: 'Review confirmed ✓',
+  recommit_why_reminder: 'REMEMBER WHY YOU STARTED',
+  recommit_unlimited_hint: 'You can re-commit anytime you need to reset your focus.',
+  review_nn_section_title: 'NON-NEGOTIABLES REVIEW',
+  review_nn_section_sub: 'Acknowledge each rule before confirming',
+  nn_review_progress_status: '{checked} of {total} reviewed',
+  nn_checked_label: 'Reviewed',
+  nn_unchecked_label: 'Tap to review',
 
   // ── Phase 7B: Structured Diet Daily-First UX, Optional Meal Type & Template Builder ──
   sdb_structure_settings: 'Structure Settings',
@@ -1462,6 +1522,10 @@ export const en: Translations = {
   sdb_food_opt_diet_soft_drink: 'Diet Soft Drink',
   sdb_food_opt_energy_drink: 'Energy Drink',
   sdb_food_opt_smoothie: 'Smoothie',
+
+  // ── Phase 26H Global SDA Branding & Slogan ──
+  sda_slogan: SDA_CANONICAL_SLOGAN_EN,
+  sda_slogan_tagline: SDA_TAGLINE_CORE_EN,
 };
 
 

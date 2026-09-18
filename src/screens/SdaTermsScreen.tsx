@@ -61,6 +61,7 @@ export default function SdaTermsScreen({ onNavigate, onBack }: SdaTermsScreenPro
         <div className="sda-terms-header">
           <span className="section-label">SDA</span>
           <h1 className="sda-terms-title">{t.sda_terms_title}</h1>
+          <p className="sda-terms-slogan">{t.sda_slogan}</p>
           <p className="sda-terms-subtitle">{t.sda_terms_subtitle}</p>
         </div>
 

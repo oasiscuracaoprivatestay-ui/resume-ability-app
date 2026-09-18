@@ -76,6 +76,7 @@ export function mapLegacyItemsToCategories(items: string[]): FoodCategoryKey[] {
       lower === 'protein_rich_food' ||
       lower === 'protein_shake' ||
       lower === 'eggs' ||
+      lower === 'chicken' ||
       lower === 'chicken breast' ||
       lower === 'salmon' ||
       lower === 'white fish' ||

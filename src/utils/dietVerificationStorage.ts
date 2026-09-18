@@ -30,6 +30,7 @@ export type DetailedBlockOutcome =
   | 'on_track'
   | 'adjusted_on_track'
   | 'planned_unstructured'
+  | 'twenty_percent_off_track'
   | 'near_slip'
   | 'structured_slip'
   | 'unstructured_slip';
@@ -38,6 +39,7 @@ export const ALL_DETAILED_OUTCOMES: readonly DetailedBlockOutcome[] = [
   'on_track',
   'adjusted_on_track',
   'planned_unstructured',
+  'twenty_percent_off_track',
   'near_slip',
   'structured_slip',
   'unstructured_slip',
@@ -47,6 +49,7 @@ export const ON_TRACK_OUTCOMES: readonly DetailedBlockOutcome[] = [
   'on_track',
   'adjusted_on_track',
   'planned_unstructured',
+  'twenty_percent_off_track',
 ] as const;
 
 export const SLIP_OUTCOMES: readonly DetailedBlockOutcome[] = [
@@ -69,6 +72,8 @@ export interface PlannedBlockSnapshot {
   foodPhotos?: FoodPhotoMetadata[];
 }
 
+export type DriftState = 'none' | 'started' | 'drifting' | 'stopped';
+
 export interface DietBlockVerification {
   id: string;
   dateKey: string;           // Local "YYYY-MM-DD"
@@ -78,6 +83,11 @@ export interface DietBlockVerification {
   detailedOutcome?: DetailedBlockOutcome; // Optional for backward compatibility with legacy records
   isResumed?: boolean;                    // Measured separately from slip outcome
   resumedAt?: number;                     // Epoch ms when marked resumed
+  // Phase 26D: Drift lifecycle
+  driftState?: DriftState;                // 'none' | 'started' | 'drifting' | 'stopped'
+  driftStartedAt?: number;               // Epoch ms when Start Drift was initiated
+  driftStoppedAt?: number;               // Epoch ms when Stopped Drifting was initiated
+  driftUpdatedAt?: number;               // Epoch ms of last drift state transition
   mealType?: MealTypeKey;                 // Phase 7B: preserved meal type
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C
@@ -88,6 +98,7 @@ export interface DietBlockVerification {
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
+  isUnplanned?: boolean;                  // Phase 26A: true when logged without a pre-existing planned block
   verifiedAt: number;        // Epoch ms
 }
 
@@ -239,6 +250,7 @@ export function saveBlockVerification(params: {
   status: DietVerificationStatus;
   detailedOutcome?: DetailedBlockOutcome;
   isResumed?: boolean;
+  driftState?: DriftState;
   actualItems?: string[];
   actualFoodCategories?: FoodCategoryKey[];
   actualFoodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
@@ -314,6 +326,10 @@ export function saveBlockVerification(params: {
     detailedOutcome: params.detailedOutcome ?? (existingIdx >= 0 ? daily.entries[existingIdx].detailedOutcome : undefined),
     isResumed,
     resumedAt,
+    driftState: params.driftState ?? (existingIdx >= 0 ? daily.entries[existingIdx].driftState : undefined),
+    driftStartedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftStartedAt : undefined,
+    driftStoppedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftStoppedAt : undefined,
+    driftUpdatedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftUpdatedAt : undefined,
     mealType: params.plannedBlock.mealType,
     foodSelections: params.plannedBlock.foodSelections,
     customFoods: params.plannedBlock.customFoods,
@@ -406,6 +422,100 @@ export function setBlockResumed(
 }
 
 /**
+ * Checks if a verification record is an eligible slip for Drift.
+ *
+ * Eligible:
+ *   - structured_slip
+ *   - unstructured_slip
+ *   - legacy actual slip records where detailedOutcome is unavailable
+ *
+ * Ineligible:
+ *   - on_track, adjusted_on_track, twenty_percent_off_track, planned_unstructured, near_slip
+ */
+export function isEligibleSlipForDrift(record: DietBlockVerification): boolean {
+  if (record.detailedOutcome) {
+    return (
+      record.detailedOutcome === 'structured_slip' ||
+      record.detailedOutcome === 'unstructured_slip'
+    );
+  }
+  return record.status === 'slip';
+}
+
+/**
+ * Updates the Drift lifecycle state for a verified block or unplanned food log.
+ *
+ * Rules:
+ *   - Only eligible slips can enter Drift. Non-slips cannot enter Drift.
+ *   - Initial eligible slip has drift state 'none'.
+ *   - Valid transitions:
+ *       none -> started
+ *       started -> drifting | stopped
+ *       drifting -> drifting | stopped
+ *       stopped -> stopped (or no-op)
+ *   - Independent of isResumed (neither overwrites nor couples to resume).
+ *   - Independent of original slip outcome (preserves detailedOutcome).
+ *   - Timestamps: driftStartedAt preserved from first entry into started; driftStoppedAt set upon reaching stopped.
+ */
+export function setBlockDriftState(
+  plannedBlockId: string,
+  nextState: DriftState,
+  dateKey = getLocalDateKey()
+): DietBlockVerification | null {
+  const all = loadAllDietVerifications();
+  const daily = all[dateKey];
+  if (!daily) return null;
+
+  const idx = daily.entries.findIndex(e => e.plannedBlockId === plannedBlockId);
+  if (idx < 0) return null;
+
+  const current = daily.entries[idx];
+  if (!isEligibleSlipForDrift(current)) {
+    return null; // Ineligible records cannot enter Drift
+  }
+
+  const currentState: DriftState = current.driftState || 'none';
+  if (currentState === nextState && nextState !== 'drifting') {
+    return current;
+  }
+
+  // Enforce transition rules
+  if (currentState === 'none' && nextState !== 'started') {
+    return null; // Must start before drifting or stopping
+  }
+  if (currentState === 'stopped' && nextState !== 'stopped') {
+    // Already stopped drifting
+    return current;
+  }
+
+  const now = Date.now();
+  let driftStartedAt = current.driftStartedAt;
+  let driftStoppedAt = current.driftStoppedAt;
+
+  if (nextState === 'started') {
+    driftStartedAt = driftStartedAt || now;
+  } else if (nextState === 'drifting') {
+    driftStartedAt = driftStartedAt || now;
+  } else if (nextState === 'stopped') {
+    driftStartedAt = driftStartedAt || now;
+    driftStoppedAt = now;
+  }
+
+  const updatedEntry: DietBlockVerification = {
+    ...current,
+    driftState: nextState,
+    driftStartedAt,
+    driftStoppedAt,
+    driftUpdatedAt: now,
+  };
+
+  daily.entries[idx] = updatedEntry;
+  all[dateKey] = daily;
+  saveAllDietVerifications(all);
+  return updatedEntry;
+}
+
+/**
  * Remove verification status for a planned block (Clear Status).
  */
 export function clearBlockVerification(
@@ -426,17 +536,123 @@ export function clearBlockVerification(
   saveAllDietVerifications(all);
 }
 
+/**
+ * Params for logging food that happened WITHOUT a pre-existing planned block.
+ * Phase 26A: Flexible / in-the-moment food logging.
+ */
+export interface UnplannedFoodLogParams {
+  /** Free-text description of what was eaten */
+  description: string;
+  /** Food categories consumed */
+  foodCategories?: FoodCategoryKey[];
+  /** Detailed structural outcome — classifies eating event without planning */
+  detailedOutcome: DetailedBlockOutcome;
+  /** Top-level status derived from the outcome */
+  status: DietVerificationStatus;
+  /** Optional rough time range the eating happened */
+  startTime?: string;
+  endTime?: string;
+  /** Profile isolation */
+  profileId?: string;
+  profileName?: string;
+  sourcePlanName?: string;
+  /** Date to log against (defaults to today) */
+  dateKey?: string;
+}
+
+/**
+ * Save a food event that happened WITHOUT a pre-existing planned block.
+ *
+ * Design decisions:
+ * - Creates a synthetic plannedBlockId with prefix `unplanned_` to guarantee
+ *   no collision with real block UUIDs.
+ * - Sets isUnplanned = true so analytics can differentiate spontaneous logs
+ *   from verified planned blocks.
+ * - The plannedSnapshot uses the user's description as customText and
+ *   empty startTime/endTime if not provided (time is irrelevant for these records).
+ * - Scoring is handled by the caller (same as saveBlockVerification).
+ * - 20% OFF TRACK, near_slip, etc. all work identically as for planned blocks.
+ * - Resume Rate denominator rules are identical (structured_slip / unstructured_slip only).
+ * - Backward compatible: old code that iterates entries will see these as
+ *   normal DietBlockVerification records with isUnplanned = true.
+ *
+ * Returns the saved DietBlockVerification record.
+ */
+export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockVerification {
+  const dateKey = params.dateKey ?? getLocalDateKey();
+  const all = loadAllDietVerifications();
+  const daily = all[dateKey] ?? {
+    version: 1 as const,
+    dateKey,
+    dayKey: getLocalTodayKey(),
+    sourcePlanName: params.sourcePlanName,
+    profileId: params.profileId,
+    profileName: params.profileName,
+    entries: [],
+  };
+
+  // Generate a stable synthetic block ID for this unplanned event.
+  // We include a random component so multiple unplanned logs in the same day are distinct.
+  const syntheticBlockId = `unplanned_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+
+  const verificationId =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().slice(0, 10)
+      : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+  // Build a minimal snapshot from what the user described.
+  const plannedSnapshot: PlannedBlockSnapshot = {
+    startTime: params.startTime ?? '',
+    endTime: params.endTime ?? '',
+    type: 'custom', // generic type for unplanned logs
+    items: [],
+    customText: params.description.trim() || undefined,
+    foodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
+  };
+
+  const newEntry: DietBlockVerification = {
+    id: verificationId,
+    dateKey,
+    plannedBlockId: syntheticBlockId,
+    plannedSnapshot,
+    status: params.status,
+    detailedOutcome: params.detailedOutcome,
+    isResumed: false,
+    actualFoodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
+    actualCustomText: params.description.trim() || undefined,
+    isUnplanned: true,
+    verifiedAt: Date.now(),
+  };
+
+  const updatedDaily: DailyDietVerification = {
+    ...daily,
+    sourcePlanName: params.sourcePlanName ?? daily.sourcePlanName,
+    profileId: params.profileId ?? daily.profileId,
+    profileName: params.profileName ?? daily.profileName,
+    entries: [...daily.entries, newEntry],
+  };
+
+  all[dateKey] = updatedDaily;
+  saveAllDietVerifications(all);
+  return newEntry;
+}
+
 // ── Resume & Structure Statistics Foundation ──────────────────────────────────
 
 /**
  * Returns whether a record is an eligible slip record for resume tracking.
- * Eligible:
- *   - 'structured_slip'
- *   - 'unstructured_slip'
- *   - legacy records with status === 'slip' and no detailedOutcome (for backward compatibility)
- * Not eligible:
- *   - 'near_slip' (stopped before fully crossing the boundary; not a completed slip requiring resume)
- *   - 'on_track', 'adjusted_on_track', 'planned_unstructured', or legacy 'on-track'
+ *
+ * RESUME RATE DENOMINATOR DEFINITION:
+ * The denominator consists strictly of true slip events that require behavioral recovery:
+ *   - 'structured_slip' (True slip with containment)
+ *   - 'unstructured_slip' (True slip without containment)
+ *   - legacy records where status === 'slip' and no detailedOutcome is set (backward compatibility)
+ *
+ * EXCLUSIONS FROM DENOMINATOR:
+ *   - 'twenty_percent_off_track' (NOT a slip; intentional flexibility, must never reduce Resume Rate)
+ *   - 'near_slip' (Stopped before crossing boundary; no slip occurred to resume from)
+ *   - 'on_track', 'adjusted_on_track', 'planned_unstructured' (Positive non-slip outcomes)
+ *   - legacy 'on-track' records
  */
 export function isEligibleSlipRecord(record: DietBlockVerification): boolean {
   if (record.detailedOutcome) {
@@ -468,7 +684,7 @@ export function calculateResumeStats(records: DietBlockVerification[]): ResumeSt
 
 /**
  * Structured vs Unstructured categorization helpers for future analytics foundation.
- * Structured eating includes: on_track, adjusted_on_track, near_slip, structured_slip, or legacy on-track.
+ * Structured eating includes: on_track, adjusted_on_track, twenty_percent_off_track, near_slip, structured_slip, or legacy on-track.
  * Unstructured eating includes: planned_unstructured, unstructured_slip.
  */
 export function isStructuredOutcome(
@@ -479,6 +695,8 @@ export function isStructuredOutcome(
     return (
       detailedOutcome === 'on_track' ||
       detailedOutcome === 'adjusted_on_track' ||
+      detailedOutcome === 'twenty_percent_off_track' ||
+      detailedOutcome === 'near_slip' ||
       detailedOutcome === 'structured_slip'
     );
   }

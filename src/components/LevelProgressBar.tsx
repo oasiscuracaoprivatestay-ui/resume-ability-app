@@ -37,7 +37,7 @@ export default function LevelProgressBar({ overview: propOverview, compact = fal
             {isLevel10 ? '👑' : '⭐'} {t.level_label} {currentLevel}
           </span>
           <span className="level-xp-text">
-            {lifetimeXp.toLocaleString()} XP
+            {lifetimeXp.toLocaleString()} pts
           </span>
         </div>
 
@@ -48,7 +48,7 @@ export default function LevelProgressBar({ overview: propOverview, compact = fal
             <span className="level-next-tag">
               {t.level_progress_to_next.replace('{level}', String(nextLevel))}
               {nextLevelThreshold !== null && (
-                <span className="level-next-target-xp"> ({nextLevelThreshold.toLocaleString()} XP)</span>
+                <span className="level-next-target-xp"> ({nextLevelThreshold.toLocaleString()} pts)</span>
               )}
             </span>
           )}

@@ -22,9 +22,9 @@ import {
 import {
   type DietBlockVerification,
   type DailyDietVerification,
-  isStructuredOutcome,
-  isUnstructuredOutcome,
-  isEligibleSlipRecord,
+  type DetailedBlockOutcome,
+  type DietVerificationStatus,
+  ALL_DETAILED_OUTCOMES,
   getLocalDateKey,
 } from './dietVerificationStorage';
 import { DEFAULT_ACTIVE_GOAL_ID } from './dietStorage';
@@ -33,35 +33,85 @@ import { DEFAULT_ACTIVE_GOAL_ID } from './dietStorage';
 
 export type StructureTimePeriod = 'today' | '7d' | '30d' | 'all';
 
+export type HighLevelBucketKey = 'structured_core' | 'flex_off_track' | 'risk' | 'slip';
+
+export interface HighLevelBucketStat {
+  key: HighLevelBucketKey;
+  count: number;
+  percentage: number; // 0 - 100
+}
+
+export interface DetailedOutcomeDistributionItem {
+  outcome: DetailedBlockOutcome;
+  count: number;
+  percentage: number; // 0 - 100
+  bucket: HighLevelBucketKey;
+}
+
 export interface StructureAwarenessStatsResult {
+  // Main comparison: Structured Core vs Outside Core
+  structuredCoreCount: number;
+  outsideCoreCount: number;
+  structuredCorePercentage: number;   // 0 - 100
+  outsideCorePercentage: number;     // 0 - 100
+
+  // 4 Behavioral Buckets
+  buckets: {
+    structuredCore: HighLevelBucketStat;
+    flexOffTrack: HighLevelBucketStat;
+    risk: HighLevelBucketStat;
+    slip: HighLevelBucketStat;
+  };
+
+  // Detailed 7-outcome distribution
+  detailedOutcomes: DetailedOutcomeDistributionItem[];
+
+  // Compatibility aliases
   structuredCount: number;
   unstructuredCount: number;
+  structuredPercentage: number;       // 0 - 100
+  unstructuredPercentage: number;     // 0 - 100
+
   totalClassified: number;
-  structuredPercentage: number;   // 0 - 100
-  unstructuredPercentage: number; // 0 - 100
-  hasData: boolean;               // True when totalClassified > 0; prevents false 0%/100% display
-  unclassifiedCount: number;      // e.g. Legacy slips without detailed outcome
-  nearSlipCount: number;          // Approaches boundary but stopped
-  structuredSlipCount: number;    // True slip that retained structure
-  unstructuredSlipCount: number;  // True slip without structure
-  totalSlips: number;             // Total true slips (structured_slip + unstructured_slip + legacy slip)
+  totalRecords: number;
+  hasData: boolean;                   // True when totalClassified > 0; prevents false 0%/100% display
+  unclassifiedCount: number;          // e.g. Legacy slips without detailed outcome
+  nearSlipCount: number;              // Approaches boundary but stopped
+  twentyPercentOffTrackCount: number; // Intentional 20% flexible eating (non-slip)
+  structuredSlipCount: number;        // True slip that retained structure
+  unstructuredSlipCount: number;      // True slip without structure
+  totalSlips: number;                 // Total true slips (structured_slip + unstructured_slip + legacy slip)
+
+  // Spontaneous vs Planned tracking (Phase 26A/26C)
+  plannedCount: number;
+  spontaneousCount: number;
 }
 
 export interface ResumeAwarenessStatsResult {
   resumeCount: number;
   eligibleCount: number;
-  resumeRate: number;             // 0 - 100 percentage
+  resumeRate: number;                 // 0 - 100 percentage
+  hasEligibleSlips: boolean;
+}
+
+export interface DriftAwarenessStatsResult {
+  eligibleCount: number;
+  enteredDriftCount: number;
+  currentlyDriftingCount: number;
+  stoppedDriftCount: number;
+  driftRate: number;                 // 0 - 100 percentage
   hasEligibleSlips: boolean;
 }
 
 export interface CategoryDistributionItem {
   category: FoodCategoryKey;
   count: number;
-  percentage: number;             // 0 - 100 (percentage of blocks containing this category)
+  percentage: number;                 // 0 - 100 (Category Record Rate: % of food records with categories containing this category)
 }
 
 export interface FoodCategoryStatsResult {
   totalBlocks: number;
+  recordsWithCategories: number;      // Denominator for Category Record Rate
   totalCategoryOccurrences: number;
   items: CategoryDistributionItem[];
   hasData: boolean;
@@ -73,6 +123,7 @@ export interface AwarenessSummaryResult {
   totalVerifiedRecords: number;
   structureStats: StructureAwarenessStatsResult;
   resumeStats: ResumeAwarenessStatsResult;
+  driftStats: DriftAwarenessStatsResult;
   categoryStats: FoodCategoryStatsResult;
 }
 
@@ -80,6 +131,89 @@ export interface StructureAnalyticsOptions {
   activeProfileId?: string;
   legacySlipFallback?: 'unclassified' | 'unstructured' | 'structured';
   referenceDate?: Date;
+}
+
+// ── Centralized Classification Model ──────────────────────────────────────────
+
+export const STRUCTURED_CORE_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'on_track',
+  'adjusted_on_track',
+] as const;
+
+export const FLEX_OFF_TRACK_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'twenty_percent_off_track',
+  'planned_unstructured',
+] as const;
+
+export const RISK_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'near_slip',
+] as const;
+
+export const SLIP_OUTCOMES: readonly DetailedBlockOutcome[] = [
+  'structured_slip',
+  'unstructured_slip',
+] as const;
+
+/**
+ * Centralized classification helper mapping outcomes to high-level behavioral buckets.
+ *
+ * Rules:
+ *   - STRUCTURED CORE: on_track, adjusted_on_track (or legacy on-track)
+ *   - FLEX / OFF-TRACK: twenty_percent_off_track, planned_unstructured
+ *   - RISK: near_slip (approached boundary but stopped; NOT a slip)
+ *   - SLIP: structured_slip, unstructured_slip (or legacy slip)
+ */
+export function classifyRecordOutcome(
+  detailedOutcome?: DetailedBlockOutcome,
+  status?: DietVerificationStatus
+): HighLevelBucketKey | 'unclassified' {
+  if (detailedOutcome) {
+    if ((STRUCTURED_CORE_OUTCOMES as readonly string[]).includes(detailedOutcome)) {
+      return 'structured_core';
+    }
+    if ((FLEX_OFF_TRACK_OUTCOMES as readonly string[]).includes(detailedOutcome)) {
+      return 'flex_off_track';
+    }
+    if ((RISK_OUTCOMES as readonly string[]).includes(detailedOutcome)) {
+      return 'risk';
+    }
+    if ((SLIP_OUTCOMES as readonly string[]).includes(detailedOutcome)) {
+      return 'slip';
+    }
+  }
+  if (status === 'on-track') return 'structured_core';
+  if (status === 'slip') return 'slip';
+  return 'unclassified';
+}
+
+export function isStructuredCoreOutcome(
+  detailedOutcome?: DetailedBlockOutcome,
+  status?: DietVerificationStatus
+): boolean {
+  return classifyRecordOutcome(detailedOutcome, status) === 'structured_core';
+}
+
+export function isOutsideCoreOutcome(
+  detailedOutcome?: DetailedBlockOutcome,
+  status?: DietVerificationStatus
+): boolean {
+  const bucket = classifyRecordOutcome(detailedOutcome, status);
+  return bucket === 'flex_off_track' || bucket === 'risk' || bucket === 'slip';
+}
+
+/**
+ * Determines whether a record is an eligible slip for the Resume Rate denominator.
+ * Denominator includes: structured_slip, unstructured_slip, legacy slip.
+ * Excludes: 20% OFF TRACK, near_slip, on_track, adjusted_on_track, planned_unstructured.
+ */
+export function isEligibleSlipForResume(record: DietBlockVerification): boolean {
+  if (record.detailedOutcome) {
+    return (
+      record.detailedOutcome === 'structured_slip' ||
+      record.detailedOutcome === 'unstructured_slip'
+    );
+  }
+  return record.status === 'slip';
 }
 
 // ── Rounding & Formatting Helper ──────────────────────────────────────────────
@@ -165,61 +299,90 @@ export function filterVerificationsByPeriod(
 // ── Structure Classification Analytics ────────────────────────────────────────
 
 /**
- * Calculates Structured vs Unstructured statistics.
+ * Calculates Structure Awareness statistics according to Phase 26C rules.
  *
- * Source of truth:
- *   Structured:
+ * Primary classification:
+ *   - STRUCTURED CORE:
  *     - 'on_track'
  *     - 'adjusted_on_track'
- *     - 'near_slip'
- *     - 'structured_slip'
  *     - legacy 'on-track' (status === 'on-track' without detailedOutcome)
  *
- *   Unstructured:
- *     - 'planned_unstructured'
- *     - 'unstructured_slip'
+ *   - OUTSIDE CORE:
+ *     - Flex / Off-Track: 'twenty_percent_off_track', 'planned_unstructured'
+ *     - Risk: 'near_slip'
+ *     - Slip: 'structured_slip', 'unstructured_slip', legacy 'slip'
  *
- * Legacy fallback:
- *   - Legacy 'slip' without detailed outcome cannot be definitely assigned to structured
- *     or unstructured slip; by default it is marked 'unclassified' so percentages
- *     use ONLY records that can meaningfully participate in structure classification.
+ * Outside Core is an awareness metric, never labeled as bad or failure.
  */
 export function getStructureStats(
   records: DietBlockVerification[],
   options?: StructureAnalyticsOptions
 ): StructureAwarenessStatsResult {
   const fallback = options?.legacySlipFallback || 'unclassified';
-  let structuredCount = 0;
-  let unstructuredCount = 0;
+  let structuredCoreCount = 0;
+  let flexOffTrackCount = 0;
+  let riskCount = 0;
+  let slipCount = 0;
   let unclassifiedCount = 0;
+
   let nearSlipCount = 0;
+  let twentyPercentOffTrackCount = 0;
   let structuredSlipCount = 0;
   let unstructuredSlipCount = 0;
   let totalSlips = 0;
 
+  let plannedCount = 0;
+  let spontaneousCount = 0;
+
+  const outcomeCounts: Record<DetailedBlockOutcome, number> = {
+    on_track: 0,
+    adjusted_on_track: 0,
+    twenty_percent_off_track: 0,
+    planned_unstructured: 0,
+    near_slip: 0,
+    structured_slip: 0,
+    unstructured_slip: 0,
+  };
+
   for (const r of records) {
+    if (r.isUnplanned || r.plannedBlockId.startsWith('unplanned_')) {
+      spontaneousCount++;
+    } else {
+      plannedCount++;
+    }
+
+    if (r.detailedOutcome && (ALL_DETAILED_OUTCOMES as readonly string[]).includes(r.detailedOutcome)) {
+      outcomeCounts[r.detailedOutcome]++;
+    }
+
     if (r.detailedOutcome === 'near_slip') {
       nearSlipCount++;
+    } else if (r.detailedOutcome === 'twenty_percent_off_track') {
+      twentyPercentOffTrackCount++;
     } else if (r.detailedOutcome === 'structured_slip') {
       structuredSlipCount++;
     } else if (r.detailedOutcome === 'unstructured_slip') {
       unstructuredSlipCount++;
     }
 
-    if (isEligibleSlipRecord(r)) {
+    if (isEligibleSlipForResume(r)) {
       totalSlips++;
     }
 
-    if (isStructuredOutcome(r.detailedOutcome, r.status)) {
-      structuredCount++;
-    } else if (isUnstructuredOutcome(r.detailedOutcome, r.status)) {
-      unstructuredCount++;
+    const bucket = classifyRecordOutcome(r.detailedOutcome, r.status);
+    if (bucket === 'structured_core') {
+      structuredCoreCount++;
+    } else if (bucket === 'flex_off_track') {
+      flexOffTrackCount++;
+    } else if (bucket === 'risk') {
+      riskCount++;
+    } else if (bucket === 'slip') {
+      slipCount++;
     } else if (r.status === 'slip' && !r.detailedOutcome) {
-      // Legacy slip without detailed outcome
       if (fallback === 'unstructured') {
-        unstructuredCount++;
+        flexOffTrackCount++;
       } else if (fallback === 'structured') {
-        structuredCount++;
+        structuredCoreCount++;
       } else {
         unclassifiedCount++;
       }
@@ -228,42 +391,102 @@ export function getStructureStats(
     }
   }
 
-  const totalClassified = structuredCount + unstructuredCount;
+  const outsideCoreCount = flexOffTrackCount + riskCount + slipCount;
+  const totalClassified = structuredCoreCount + outsideCoreCount;
+  const totalRecords = records.length;
   const hasData = totalClassified > 0;
 
-  let structuredPercentage = 0;
-  let unstructuredPercentage = 0;
+  let structuredCorePercentage = 0;
+  let outsideCorePercentage = 0;
 
   if (hasData) {
-    structuredPercentage = formatPercentage((structuredCount / totalClassified) * 100);
-    // Ensure the two sum precisely to 100% when rounded
-    unstructuredPercentage = formatPercentage(100 - structuredPercentage);
+    structuredCorePercentage = formatPercentage((structuredCoreCount / totalClassified) * 100);
+    // Ensure the pair cleanly sums to 100%
+    outsideCorePercentage = formatPercentage(100 - structuredCorePercentage);
   }
 
+  const buckets = {
+    structuredCore: {
+      key: 'structured_core' as const,
+      count: structuredCoreCount,
+      percentage: totalClassified > 0 ? formatPercentage((structuredCoreCount / totalClassified) * 100) : 0,
+    },
+    flexOffTrack: {
+      key: 'flex_off_track' as const,
+      count: flexOffTrackCount,
+      percentage: totalClassified > 0 ? formatPercentage((flexOffTrackCount / totalClassified) * 100) : 0,
+    },
+    risk: {
+      key: 'risk' as const,
+      count: riskCount,
+      percentage: totalClassified > 0 ? formatPercentage((riskCount / totalClassified) * 100) : 0,
+    },
+    slip: {
+      key: 'slip' as const,
+      count: slipCount,
+      percentage: totalClassified > 0 ? formatPercentage((slipCount / totalClassified) * 100) : 0,
+    },
+  };
+
+  const detailedOutcomes: DetailedOutcomeDistributionItem[] = ALL_DETAILED_OUTCOMES.map(outcome => {
+    const count = outcomeCounts[outcome];
+    const percentage = totalRecords > 0 ? formatPercentage((count / totalRecords) * 100) : 0;
+    const bucket = (classifyRecordOutcome(outcome) === 'unclassified'
+      ? 'structured_core'
+      : classifyRecordOutcome(outcome)) as HighLevelBucketKey;
+
+    return {
+      outcome,
+      count,
+      percentage,
+      bucket,
+    };
+  });
+
   return {
-    structuredCount,
-    unstructuredCount,
+    structuredCoreCount,
+    outsideCoreCount,
+    structuredCorePercentage,
+    outsideCorePercentage,
+    buckets,
+    detailedOutcomes,
+    structuredCount: structuredCoreCount,
+    unstructuredCount: outsideCoreCount,
+    structuredPercentage: structuredCorePercentage,
+    unstructuredPercentage: outsideCorePercentage,
     totalClassified,
-    structuredPercentage,
-    unstructuredPercentage,
+    totalRecords,
     hasData,
     unclassifiedCount,
     nearSlipCount,
+    twentyPercentOffTrackCount,
     structuredSlipCount,
     unstructuredSlipCount,
     totalSlips,
+    plannedCount,
+    spontaneousCount,
   };
 }
 
 // ── Resume Analytics ──────────────────────────────────────────────────────────
 
 /**
- * Calculates Resume statistics.
- * Denominator includes all eligible slips: near_slip, structured_slip, unstructured_slip, and legacy slip.
- * Numerator counts records marked isResumed === true.
+ * Calculates Resume statistics according to Phase 26A / 26C rules:
+ *
+ * Denominator includes strictly true slip events requiring recovery:
+ *   - 'structured_slip'
+ *   - 'unstructured_slip'
+ *   - legacy slip records without detailedOutcome
+ *
+ * Excludes:
+ *   - 'twenty_percent_off_track' (NOT a slip; intentional flexibility)
+ *   - 'near_slip' (boundary preserved; no slip occurred to resume from)
+ *   - 'on_track', 'adjusted_on_track', 'planned_unstructured'
+ *
+ * Empty state: when eligibleCount === 0, hasEligibleSlips is false.
  */
 export function getResumeStats(records: DietBlockVerification[]): ResumeAwarenessStatsResult {
-  const eligible = records.filter(isEligibleSlipRecord);
+  const eligible = records.filter(isEligibleSlipForResume);
   const eligibleCount = eligible.length;
   const resumeCount = eligible.filter(r => r.isResumed === true).length;
   const resumeRate = eligibleCount > 0 ? Math.round((resumeCount / eligibleCount) * 100) : 0;
@@ -276,6 +499,82 @@ export function getResumeStats(records: DietBlockVerification[]): ResumeAwarenes
   };
 }
 
+// ── Drift Analytics (Phase 26D) ─────────────────────────────────────────────
+
+/**
+ * Calculates Drift statistics according to Phase 26D rules:
+ *
+ * Denominator includes strictly eligible slips (same as Resume Rate):
+ *   - 'structured_slip'
+ *   - 'unstructured_slip'
+ *   - legacy slip records without detailedOutcome
+ *
+ * Excludes:
+ *   - 'twenty_percent_off_track'
+ *   - 'near_slip'
+ *   - 'on_track', 'adjusted_on_track', 'planned_unstructured'
+ *
+ * Single slip entering drift:
+ *   - Counted as exactly ONE entered drift episode even if user transitions
+ *     none -> started -> drifting -> stopped.
+ *
+ * Currently drifting:
+ *   - 'started' or 'drifting'
+ *
+ * Stopped drift:
+ *   - 'stopped'
+ *
+ * Drift Rate:
+ *   - (enteredDriftCount / eligibleCount) * 100
+ */
+export function getDriftStats(records: DietBlockVerification[]): DriftAwarenessStatsResult {
+  const eligible = records.filter(isEligibleSlipForResume);
+  const eligibleCount = eligible.length;
+
+  if (eligibleCount === 0) {
+    return {
+      eligibleCount: 0,
+      enteredDriftCount: 0,
+      currentlyDriftingCount: 0,
+      stoppedDriftCount: 0,
+      driftRate: 0,
+      hasEligibleSlips: false,
+    };
+  }
+
+  let enteredDriftCount = 0;
+  let currentlyDriftingCount = 0;
+  let stoppedDriftCount = 0;
+
+  for (const r of eligible) {
+    const hasEntered = Boolean(
+      r.driftStartedAt != null ||
+      (r.driftState && r.driftState !== 'none')
+    );
+
+    if (hasEntered) {
+      enteredDriftCount++;
+    }
+
+    if (r.driftState === 'started' || r.driftState === 'drifting') {
+      currentlyDriftingCount++;
+    } else if (r.driftState === 'stopped') {
+      stoppedDriftCount++;
+    }
+  }
+
+  const driftRate = formatPercentage((enteredDriftCount / eligibleCount) * 100);
+
+  return {
+    eligibleCount,
+    enteredDriftCount,
+    currentlyDriftingCount,
+    stoppedDriftCount,
+    driftRate,
+    hasEligibleSlips: true,
+  };
+}
+
 // ── Food Category Extraction Precedence ───────────────────────────────────────
 
 /**
@@ -285,7 +584,8 @@ export function getResumeStats(records: DietBlockVerification[]): ResumeAwarenes
  *   3. mapLegacyItemsToCategories(actualItems)
  *   4. mapLegacyItemsToCategories(plannedSnapshot.items)
  *
- * Guarantees NO double counting of planned and actual categories for the same event.
+ * Guarantees NO double counting of planned and actual categories for the same event,
+ * and deduplicates categories within the same record.
  */
 export function getRecordFoodCategories(record: DietBlockVerification): FoodCategoryKey[] {
   if (Array.isArray(record.actualFoodCategories) && record.actualFoodCategories.length > 0) {
@@ -309,9 +609,14 @@ export function getRecordFoodCategories(record: DietBlockVerification): FoodCate
 // ── Food Category Distribution Analytics ──────────────────────────────────────
 
 /**
- * Calculates food category counts and percentage distribution across verified records.
- * Category percentages represent: category occurrences / total category occurrences * 100.
- * Returned items are sorted descending by count, with stable category key order as tie-breaker.
+ * Calculates food category counts and Category Record Rate distribution across verified records.
+ *
+ * Category Record Rate =
+ *   number of food records containing category /
+ *   number of food records with at least one category * 100
+ *
+ * Categories are MULTI-SELECT: percentages can overlap and do NOT need to sum to 100%.
+ * Categories within a single record are deduplicated.
  */
 export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCategoryStatsResult {
   const counts = {} as Record<FoodCategoryKey, number>;
@@ -320,10 +625,14 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   }
 
   let totalCategoryOccurrences = 0;
+  let recordsWithCategories = 0;
   const totalBlocks = records.length;
 
   for (const record of records) {
     const cats = getRecordFoodCategories(record);
+    if (cats.length > 0) {
+      recordsWithCategories++;
+    }
     for (const cat of cats) {
       if ((FOOD_CATEGORY_KEYS as readonly string[]).includes(cat)) {
         counts[cat] = (counts[cat] || 0) + 1;
@@ -335,8 +644,8 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
   const items: CategoryDistributionItem[] = FOOD_CATEGORY_KEYS.map(key => {
     const count = counts[key] || 0;
     const percentage =
-      totalBlocks > 0
-        ? formatPercentage((count / totalBlocks) * 100)
+      recordsWithCategories > 0
+        ? formatPercentage((count / recordsWithCategories) * 100)
         : 0;
     return {
       category: key,
@@ -353,9 +662,10 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
 
   return {
     totalBlocks,
+    recordsWithCategories,
     totalCategoryOccurrences,
     items,
-    hasData: totalBlocks > 0 && totalCategoryOccurrences > 0,
+    hasData: totalBlocks > 0 && recordsWithCategories > 0,
   };
 }
 
@@ -526,6 +836,7 @@ export function getAwarenessSummary(
 
   const structureStats = getStructureStats(filteredRecords, options);
   const resumeStats = getResumeStats(filteredRecords);
+  const driftStats = getDriftStats(filteredRecords);
   const categoryStats = getFoodCategoryStats(filteredRecords);
 
   return {
@@ -534,6 +845,7 @@ export function getAwarenessSummary(
     totalVerifiedRecords: filteredRecords.length,
     structureStats,
     resumeStats,
+    driftStats,
     categoryStats,
   };
 }

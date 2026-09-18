@@ -49,6 +49,151 @@
   gap: 12px;
 }
 
+/* Why Reason Card */
+.sz-why-card {
+  position: relative;
+  background: var(--surface, #1e293b);
+  border: 1.5px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.sz-why-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sz-why-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #10b981);
+}
+
+.sz-why-manage-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.sz-why-manage-btn:hover {
+  color: var(--accent, #10b981);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.sz-why-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.sz-why-text--empty {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Non-Negotiables Review Section */
+.sz-nn-review-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.15rem;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+}
+
+.sz-nn-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sz-nn-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f1f5f9;
+}
+
+.sz-nn-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.35;
+}
+
+.sz-nn-progress-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.sz-nn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sz-nn-empty {
+  padding: 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md, 12px);
+}
+
+.sz-nn-empty-text {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.88rem;
+  color: var(--text-muted, #94a3b8);
+  font-style: italic;
+}
+
+.btn-sz-add-nn {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: var(--accent, #10b981);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.btn-sz-add-nn:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
 .sz-awareness-header {
   display: flex;
   align-items: flex-start;

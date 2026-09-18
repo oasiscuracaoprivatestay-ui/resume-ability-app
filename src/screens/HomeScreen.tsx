@@ -69,6 +69,12 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
       </header>
 
       <div className="home-content">
+        {/* ── Global SDA Brand & Slogan Hero (Phase 26H) ── */}
+        <div className="home-brand-hero" aria-label={t.sda_slogan}>
+          <span className="home-brand-hero-badge">SDA</span>
+          <p className="home-brand-hero-slogan">{t.sda_slogan_tagline}</p>
+        </div>
+
         <div className="home-question-block">
           <h1 className="home-question">
             {t.home_question}<br />

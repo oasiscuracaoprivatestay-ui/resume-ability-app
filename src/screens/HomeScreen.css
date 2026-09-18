@@ -218,6 +218,44 @@
   gap: 1.25rem;
 }
 
+/* ── Global SDA Brand & Slogan Hero (Phase 26H) ── */
+
+.home-brand-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.home-brand-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.1);
+}
+
+.home-brand-hero-slogan {
+  font-size: clamp(0.78rem, 2.4vw, 0.88rem);
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+  text-wrap: balance;
+}
+
 .home-question-block {
   text-align: center;
 }
