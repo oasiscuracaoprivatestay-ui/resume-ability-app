@@ -307,15 +307,97 @@ export function saveBlockVerification(params: {
     resumedAt = daily.entries[existingIdx].resumedAt;
   }
 
-  const rawAssignedPhotos = params.foodPhotos
-    ?? (params.foodPhoto ? [params.foodPhoto] : undefined)
-    ?? (existingIdx >= 0
-        ? (daily.entries[existingIdx].foodPhotos ?? (daily.entries[existingIdx].foodPhoto ? [daily.entries[existingIdx].foodPhoto!] : undefined))
-        : undefined)
-    ?? plannedSnapshot.foodPhotos;
-
-  const assignedPhotos = rawAssignedPhotos && rawAssignedPhotos.length > 0 ? rawAssignedPhotos : undefined;
+  // Non-destructive photo resolution: distinguish omitted (undefined) from intentionally cleared ([] or null/"")
+  let assignedPhotos: FoodPhotoMetadata[] | undefined;
+  if (params.foodPhotos !== undefined) {
+    // Explicitly provided: non-empty array sets photos; empty array intentionally clears photos
+    assignedPhotos = params.foodPhotos.length > 0 ? [...params.foodPhotos] : undefined;
+  } else if (params.foodPhoto !== undefined) {
+    // Single photo explicitly provided (truthy sets, falsy clears)
+    assignedPhotos = params.foodPhoto ? [params.foodPhoto] : undefined;
+  } else if (existingIdx >= 0) {
+    // Omitted: preserve existing verification's photos
+    assignedPhotos = daily.entries[existingIdx].foodPhotos
+      ?? (daily.entries[existingIdx].foodPhoto ? [daily.entries[existingIdx].foodPhoto!] : undefined);
+  } else {
+    // Omitted on new record: inherit from planned snapshot
+    assignedPhotos = plannedSnapshot.foodPhotos;
+  }
   const assignedPhoto = assignedPhotos && assignedPhotos.length > 0 ? assignedPhotos[0] : undefined;
+
+  // Non-destructive customText: distinguish omitted (undefined) from intentionally cleared ("" or null)
+  let actualCustomText: string | undefined;
+  if (params.actualCustomText !== undefined) {
+    const trimmed = params.actualCustomText?.trim();
+    actualCustomText = trimmed ? trimmed : undefined;
+  } else if (existingIdx >= 0) {
+    actualCustomText = daily.entries[existingIdx].actualCustomText;
+  } else {
+    actualCustomText = params.plannedBlock.customText?.trim() || undefined;
+  }
+
+  // Non-destructive items: distinguish omitted (undefined) from intentionally cleared ([])
+  let actualItems: string[] | undefined;
+  if (params.actualItems !== undefined) {
+    actualItems = params.actualItems.length > 0 ? [...params.actualItems] : undefined;
+  } else if (existingIdx >= 0) {
+    actualItems = daily.entries[existingIdx].actualItems;
+  } else {
+    actualItems = params.plannedBlock.items && params.plannedBlock.items.length > 0
+      ? [...params.plannedBlock.items]
+      : undefined;
+  }
+
+  // Non-destructive categories: distinguish omitted (undefined) from intentionally cleared ([])
+  let actualFoodCategories: FoodCategoryKey[] | undefined;
+  if (params.actualFoodCategories !== undefined) {
+    actualFoodCategories = params.actualFoodCategories.length > 0 ? [...params.actualFoodCategories] : undefined;
+  } else if (existingIdx >= 0) {
+    actualFoodCategories = daily.entries[existingIdx].actualFoodCategories;
+  } else {
+    actualFoodCategories = params.plannedBlock.foodCategories && params.plannedBlock.foodCategories.length > 0
+      ? [...params.plannedBlock.foodCategories]
+      : undefined;
+  }
+
+  // Non-destructive food selections: distinguish omitted (undefined) from intentionally cleared ({})
+  let actualFoodSelections: Partial<Record<FoodCategoryKey, string[]>> | undefined;
+  if (params.actualFoodSelections !== undefined) {
+    actualFoodSelections = params.actualFoodSelections && Object.keys(params.actualFoodSelections).length > 0
+      ? { ...params.actualFoodSelections }
+      : undefined;
+  } else if (existingIdx >= 0) {
+    actualFoodSelections = daily.entries[existingIdx].actualFoodSelections;
+  } else {
+    actualFoodSelections = params.plannedBlock.foodSelections
+      ? { ...params.plannedBlock.foodSelections }
+      : undefined;
+  }
+
+  // Non-destructive custom foods: distinguish omitted (undefined) from intentionally cleared ({})
+  let actualCustomFoods: Partial<Record<FoodCategoryKey, string[]>> | undefined;
+  if (params.actualCustomFoods !== undefined) {
+    actualCustomFoods = params.actualCustomFoods && Object.keys(params.actualCustomFoods).length > 0
+      ? { ...params.actualCustomFoods }
+      : undefined;
+  } else if (existingIdx >= 0) {
+    actualCustomFoods = daily.entries[existingIdx].actualCustomFoods;
+  } else {
+    actualCustomFoods = params.plannedBlock.customFoods
+      ? { ...params.plannedBlock.customFoods }
+      : undefined;
+  }
+
+  // Preserve compatible detailedOutcome if omitted
+  const resolvedDetailedOutcome = params.detailedOutcome !== undefined
+    ? params.detailedOutcome
+    : (existingIdx >= 0 && (
+        (params.status === 'on-track' && ON_TRACK_OUTCOMES.includes(daily.entries[existingIdx].detailedOutcome as any)) ||
+        (params.status === 'slip' && SLIP_OUTCOMES.includes(daily.entries[existingIdx].detailedOutcome as any))
+      )
+        ? daily.entries[existingIdx].detailedOutcome
+        : (params.status === 'on-track' ? 'on_track' : 'structured_slip')
+      );
 
   const newEntry: DietBlockVerification = {
     id: verificationId,
@@ -323,21 +405,21 @@ export function saveBlockVerification(params: {
     plannedBlockId: params.plannedBlock.id,
     plannedSnapshot,
     status: params.status,
-    detailedOutcome: params.detailedOutcome ?? (existingIdx >= 0 ? daily.entries[existingIdx].detailedOutcome : undefined),
+    detailedOutcome: resolvedDetailedOutcome,
     isResumed,
     resumedAt,
     driftState: params.driftState ?? (existingIdx >= 0 ? daily.entries[existingIdx].driftState : undefined),
     driftStartedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftStartedAt : undefined,
     driftStoppedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftStoppedAt : undefined,
     driftUpdatedAt: existingIdx >= 0 ? daily.entries[existingIdx].driftUpdatedAt : undefined,
-    mealType: params.plannedBlock.mealType,
-    foodSelections: params.plannedBlock.foodSelections,
-    customFoods: params.plannedBlock.customFoods,
-    actualItems: params.actualItems ? [...params.actualItems] : undefined,
-    actualFoodCategories: params.actualFoodCategories ? [...params.actualFoodCategories] : undefined,
-    actualFoodSelections: params.actualFoodSelections ? { ...params.actualFoodSelections } : undefined,
-    actualCustomFoods: params.actualCustomFoods ? { ...params.actualCustomFoods } : undefined,
-    actualCustomText: params.actualCustomText?.trim() || undefined,
+    mealType: params.plannedBlock.mealType ?? (existingIdx >= 0 ? daily.entries[existingIdx].mealType : undefined),
+    foodSelections: params.plannedBlock.foodSelections ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodSelections : undefined),
+    customFoods: params.plannedBlock.customFoods ?? (existingIdx >= 0 ? daily.entries[existingIdx].customFoods : undefined),
+    actualItems,
+    actualFoodCategories,
+    actualFoodSelections,
+    actualCustomFoods,
+    actualCustomText,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
     verifiedAt: Date.now(),
@@ -549,7 +631,16 @@ export interface UnplannedFoodLogParams {
   detailedOutcome: DetailedBlockOutcome;
   /** Top-level status derived from the outcome */
   status: DietVerificationStatus;
-  /** Optional rough time range the eating happened */
+  /** Optional meal type */
+  mealType?: MealTypeKey;
+  /** Specific food selections from submenus (e.g. { fruits: ['banana'] }) */
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+  /** Custom foods entered */
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  /** Photo attachments */
+  foodPhoto?: FoodPhotoMetadata;
+  foodPhotos?: FoodPhotoMetadata[];
+  /** Optional rough time range the eating happened (if omitted, automatically set to current time) */
   startTime?: string;
   endTime?: string;
   /** Profile isolation */
@@ -568,8 +659,9 @@ export interface UnplannedFoodLogParams {
  *   no collision with real block UUIDs.
  * - Sets isUnplanned = true so analytics can differentiate spontaneous logs
  *   from verified planned blocks.
- * - The plannedSnapshot uses the user's description as customText and
- *   empty startTime/endTime if not provided (time is irrelevant for these records).
+ * - Automatically generates timestamps (startTime, endTime) from current local time.
+ * - Supports full feature parity: food categories, specific food submenus,
+ *   custom foods, meal types, and multi-photo attachments.
  * - Scoring is handled by the caller (same as saveBlockVerification).
  * - 20% OFF TRACK, near_slip, etc. all work identically as for planned blocks.
  * - Resume Rate denominator rules are identical (structured_slip / unstructured_slip only).
@@ -600,14 +692,30 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
       ? crypto.randomUUID().slice(0, 10)
       : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
-  // Build a minimal snapshot from what the user described.
+  // Automatic timestamp generation from current local time if not provided
+  const now = new Date();
+  const autoTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const startTime = params.startTime || autoTime;
+  const endTime = params.endTime || autoTime;
+
+  const rawPhotos = params.foodPhotos
+    ?? (params.foodPhoto ? [params.foodPhoto] : undefined);
+  const assignedPhotos = rawPhotos && rawPhotos.length > 0 ? rawPhotos : undefined;
+  const assignedPhoto = assignedPhotos && assignedPhotos.length > 0 ? assignedPhotos[0] : undefined;
+
+  // Build snapshot from what the user described.
   const plannedSnapshot: PlannedBlockSnapshot = {
-    startTime: params.startTime ?? '',
-    endTime: params.endTime ?? '',
-    type: 'custom', // generic type for unplanned logs
+    startTime,
+    endTime,
+    type: params.mealType || 'custom',
+    mealType: params.mealType,
     items: [],
     customText: params.description.trim() || undefined,
     foodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
+    foodSelections: params.foodSelections ? JSON.parse(JSON.stringify(params.foodSelections)) : undefined,
+    customFoods: params.customFoods ? JSON.parse(JSON.stringify(params.customFoods)) : undefined,
+    foodPhoto: assignedPhoto,
+    foodPhotos: assignedPhotos,
   };
 
   const newEntry: DietBlockVerification = {
@@ -618,8 +726,15 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     status: params.status,
     detailedOutcome: params.detailedOutcome,
     isResumed: false,
+    mealType: params.mealType,
+    foodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
+    customFoods: params.customFoods ? { ...params.customFoods } : undefined,
     actualFoodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
+    actualFoodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
+    actualCustomFoods: params.customFoods ? { ...params.customFoods } : undefined,
     actualCustomText: params.description.trim() || undefined,
+    foodPhoto: assignedPhoto,
+    foodPhotos: assignedPhotos,
     isUnplanned: true,
     verifiedAt: Date.now(),
   };

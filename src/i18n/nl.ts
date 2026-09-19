@@ -714,6 +714,9 @@ export const nl: Translations = {
   sdb_resume_rate: 'Hervattingspercentage',
   sdb_resume_count: 'Hervattingen',
   sdb_select_outcome: 'Selecteer Resultaat',
+  sdb_outcome_none: 'Niet Gerapporteerd / Niet Geverifieerd',
+  sdb_take_photo: 'Foto Maken',
+  sdb_choose_gallery: 'Kiezen uit Galerij',
   sdb_outcome_select_hint: 'Kies het resultaat dat het beste past bij wat er gebeurde.',
   // ── DietSlipModal localized strings ──
   sdb_slip_modal_badge: 'SLIP VERIFICATIE',
@@ -728,6 +731,7 @@ export const nl: Translations = {
   sdb_food_log_outcome_label: 'Hoe past dit in jouw structuur?',
   sdb_food_log_save_btn: 'Log Opslaan',
   sdb_food_log_unplanned_tag: 'Ongepland',
+  sdb_food_log_auto_time: 'Vastgelegd om',
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: 'Voedselcategorieën',

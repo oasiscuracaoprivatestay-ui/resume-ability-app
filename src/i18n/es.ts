@@ -714,6 +714,9 @@ export const es: Translations = {
   sdb_resume_rate: 'Tasa de Reanudación',
   sdb_resume_count: 'Reanudaciones',
   sdb_select_outcome: 'Seleccionar Resultado',
+  sdb_outcome_none: 'No Reportado / Sin Verificar',
+  sdb_take_photo: 'Tomar Foto',
+  sdb_choose_gallery: 'Elegir de la Galería',
   sdb_outcome_select_hint: 'Elige el resultado que mejor describe lo ocurrido.',
   // ── DietSlipModal localized strings ──
   sdb_slip_modal_badge: 'VERIFICACIÓN DE DESLIZ',
@@ -728,6 +731,7 @@ export const es: Translations = {
   sdb_food_log_outcome_label: '¿Cómo encaja con tu estructura?',
   sdb_food_log_save_btn: 'Guardar Registro',
   sdb_food_log_unplanned_tag: 'No Planificado',
+  sdb_food_log_auto_time: 'Registrado a las',
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: 'Categorías de Alimentos',

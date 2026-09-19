@@ -4535,77 +4535,114 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-.sdb-specific-food-grid {
+.sdb-specific-food-grid,
+.sdb-cat-food-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.75rem;
+  gap: 0.55rem 0.6rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.sdb-food-child-chip {
+.sdb-food-child-chip,
+.sdb-food-option-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.65rem;
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 8px;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  min-height: 34px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 9px;
   color: #cbd5e1;
-  font-size: 0.8rem;
+  font-family: inherit;
+  font-size: 0.82rem;
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
   user-select: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.sdb-food-child-chip:hover {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: rgba(56, 189, 248, 0.4);
+.sdb-food-child-chip:hover,
+.sdb-food-option-btn:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(56, 189, 248, 0.45);
   color: #ffffff;
+  transform: translateY(-1px);
 }
 
-.sdb-food-child-chip--active {
-  background: rgba(14, 165, 233, 0.2);
+.sdb-food-child-chip:active,
+.sdb-food-option-btn:active {
+  transform: translateY(0);
+}
+
+.sdb-food-child-chip--active,
+.sdb-food-option-btn--active {
+  background: rgba(14, 165, 233, 0.22);
   border-color: #0284c7;
   color: #38bdf8;
   font-weight: 600;
-  box-shadow: 0 0 8px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.25);
 }
 
-.sdb-child-chip-check {
-  font-size: 0.75rem;
+.sdb-child-chip-check,
+.sdb-food-option-check {
+  font-size: 0.78rem;
   font-weight: 700;
   color: #38bdf8;
 }
 
-.sdb-custom-food-section {
+.sdb-food-option-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.sdb-custom-food-section,
+.sdb-custom-foods-section {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  padding-top: 0.5rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
 .sdb-custom-foods-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
-.sdb-custom-food-badge {
+.sdb-custom-food-badge,
+.sdb-custom-food-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.55rem;
+  padding: 0.3rem 0.65rem;
   background: rgba(168, 85, 247, 0.15);
   border: 1px solid rgba(168, 85, 247, 0.4);
-  border-radius: 6px;
+  border-radius: 7px;
   color: #d8b4fe;
   font-size: 0.78rem;
   font-weight: 600;
 }
 
-.sdb-custom-food-remove {
+.sdb-custom-food-tag-icon {
+  font-size: 0.8rem;
+}
+
+.sdb-custom-food-tag-text {
+  line-height: 1.2;
+}
+
+.sdb-custom-food-remove,
+.sdb-custom-food-remove-btn {
   background: transparent;
   border: none;
   color: #c084fc;
@@ -4616,24 +4653,25 @@
   transition: color 0.15s ease;
 }
 
-.sdb-custom-food-remove:hover {
+.sdb-custom-food-remove:hover,
+.sdb-custom-food-remove-btn:hover {
   color: #f87171;
 }
 
 .sdb-custom-food-input-row {
   display: flex;
-  gap: 0.45rem;
+  gap: 0.5rem;
   align-items: center;
 }
 
 .sdb-custom-food-input {
   flex: 1;
-  padding: 0.4rem 0.65rem;
+  padding: 0.45rem 0.75rem;
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 8px;
   color: #f8fafc;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-family: inherit;
   transition: border-color 0.15s ease;
 }
@@ -4644,8 +4682,9 @@
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
-.sdb-btn-add-custom {
-  padding: 0.4rem 0.75rem;
+.sdb-btn-add-custom,
+.sdb-btn-add-custom-food {
+  padding: 0.45rem 0.85rem;
   background: rgba(168, 85, 247, 0.2);
   border: 1px solid rgba(168, 85, 247, 0.4);
   border-radius: 8px;
@@ -4657,10 +4696,11 @@
   white-space: nowrap;
 }
 
-.sdb-btn-add-custom:hover {
-  background: rgba(168, 85, 247, 0.3);
-  border-color: #a855f7;
-  color: #ffffff;
+.sdb-btn-add-custom:hover,
+.sdb-btn-add-custom-food:hover {
+  background: rgba(168, 85, 247, 0.32);
+  border-color: #c084fc;
+  color: #f3e8ff;
 }
 
 .sdb-custom-food-error {
@@ -5304,5 +5344,94 @@
   }
 }
 
+/* ── Phase 27: Food Logging & Camera UX ── */
+.sdb-photo-actions-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.4rem;
+}
 
+.sdb-btn-photo-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  border: 1px solid transparent;
+}
 
+.sdb-btn-photo-action--camera {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+}
+
+.sdb-btn-photo-action--camera:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.24);
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+.sdb-btn-photo-action--gallery {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+}
+
+.sdb-btn-photo-action--gallery:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.24);
+  border-color: #c084fc;
+  transform: translateY(-1px);
+}
+
+.sdb-outcome-select-row {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sdb-food-log-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 12px;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.sdb-unplanned-photos {
+  margin: 0.45rem 0;
+}
+
+.sdb-unplanned-specific-foods {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .sdb-specific-food-grid,
+  .sdb-cat-food-grid {
+    gap: 0.45rem 0.5rem;
+  }
+
+  .sdb-food-child-chip,
+  .sdb-food-option-btn {
+    padding: 0.38rem 0.7rem;
+    font-size: 0.78rem;
+    min-height: 32px;
+  }
+}

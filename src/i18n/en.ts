@@ -728,6 +728,9 @@ export const en: Translations = {
   sdb_resume_rate: 'Resume Rate',
   sdb_resume_count: 'Resumes',
   sdb_select_outcome: 'Select Outcome',
+  sdb_outcome_none: 'Not Reported / Unverified',
+  sdb_take_photo: 'Take Photo',
+  sdb_choose_gallery: 'Choose from Gallery',
   sdb_outcome_select_hint: 'Choose the outcome that best matches what happened.',
   // ── DietSlipModal localized strings ──
   sdb_slip_modal_badge: 'SLIP VERIFICATION',
@@ -742,6 +745,7 @@ export const en: Translations = {
   sdb_food_log_outcome_label: 'How does it fit your structure?',
   sdb_food_log_save_btn: 'Save Log',
   sdb_food_log_unplanned_tag: 'Unplanned',
+  sdb_food_log_auto_time: 'Logged at',
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: 'Food Categories',

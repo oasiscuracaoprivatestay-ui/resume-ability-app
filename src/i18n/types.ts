@@ -624,6 +624,9 @@ export interface Translations {
   sdb_resume_rate: string;
   sdb_resume_count: string;
   sdb_select_outcome: string;
+  sdb_outcome_none: string;
+  sdb_take_photo: string;
+  sdb_choose_gallery: string;
   sdb_outcome_select_hint: string;
   // ── DietSlipModal localized strings ──
   sdb_slip_modal_badge: string;
@@ -638,6 +641,7 @@ export interface Translations {
   sdb_food_log_outcome_label: string;
   sdb_food_log_save_btn: string;
   sdb_food_log_unplanned_tag: string;
+  sdb_food_log_auto_time: string;
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: string;

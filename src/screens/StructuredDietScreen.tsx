@@ -28,6 +28,7 @@ import {
   getBlockPhotos,
   sanitiseBlock,
   getBlockPrimaryDescription,
+  MEAL_TYPE_KEYS,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -259,12 +260,14 @@ function PhotoPreviewModal({ photos, initialIndex = 0, onClose, t }: PhotoPrevie
 
 interface BlockEditorProps {
   initial: StructuredDietBlock | null; // null = new block
-  onSave: (block: StructuredDietBlock) => void;
+  initialOutcome?: DetailedBlockOutcome | 'none';
+  isToday?: boolean;
+  onSave: (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none') => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
+function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: BlockEditorProps) {
   const getDefaultTimes = () => {
     const now = new Date();
     const h = now.getHours();
@@ -296,6 +299,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   });
   const [customText, setCustomText] = useState(initial?.customText ?? '');
   const [mealType, setMealType] = useState<MealTypeKey | undefined>(initial?.mealType);
+  const [selectedOutcome, setSelectedOutcome] = useState<DetailedBlockOutcome | 'none'>(initialOutcome || 'none');
 
   // Specific Foods & Submenus state (Phase 7C)
   const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>(() => {
@@ -331,6 +335,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
   const [photoError, setPhotoError] = useState('');
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(null);
   const addFileInputRef = useRef<HTMLInputElement>(null);
+  const cameraFileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError]         = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -586,7 +591,7 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
-    onSave(sanitiseBlock(block));
+    onSave(sanitiseBlock(block), selectedOutcome);
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -613,7 +618,18 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               <span className="sdb-optional">{t.sdb_optional}</span>
             </label>
 
-            {/* Hidden file input for adding a new photo */}
+            {/* Hidden file input for direct camera photo capture (Phase 27) */}
+            <input
+              ref={cameraFileInputRef}
+              id="sdb-photo-file-input-camera"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleAddPhotoFileSelect}
+            />
+
+            {/* Hidden file input for adding a new photo from gallery */}
             <input
               ref={addFileInputRef}
               id="sdb-photo-file-input-add"
@@ -685,22 +701,39 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                 );
               })}
 
-              <button
-                type="button"
-                id="btn-add-food-photo"
-                className="sdb-btn-add-photo-card"
-                onClick={() => addFileInputRef.current?.click()}
-                disabled={isProcessingPhoto}
-              >
-                <span className="sdb-add-photo-card-icon">📷+</span>
-                <span className="sdb-add-photo-card-text">
-                  {isProcessingPhoto
-                    ? '...'
-                    : foodPhotos.length > 0
-                    ? t.sdb_add_another_photo
-                    : t.sdb_take_choose_photo || t.sdb_add_photo}
-                </span>
-              </button>
+              <div className="sdb-photo-actions-row">
+                <button
+                  type="button"
+                  id="btn-take-food-photo"
+                  className="sdb-btn-photo-action sdb-btn-photo-action--camera"
+                  onClick={() => cameraFileInputRef.current?.click()}
+                  disabled={isProcessingPhoto}
+                  title={t.sdb_take_photo}
+                >
+                  <span className="sdb-photo-btn-icon">📷</span>
+                  <span className="sdb-photo-btn-label">{t.sdb_take_photo}</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-gallery-food-photo"
+                  className="sdb-btn-photo-action sdb-btn-photo-action--gallery"
+                  onClick={() => addFileInputRef.current?.click()}
+                  disabled={isProcessingPhoto}
+                  title={t.sdb_choose_gallery}
+                >
+                  <span className="sdb-photo-btn-icon">🖼️</span>
+                  <span className="sdb-photo-btn-label">{t.sdb_choose_gallery}</span>
+                </button>
+                {/* Fallback backward-compatible target */}
+                <button
+                  type="button"
+                  id="btn-add-food-photo"
+                  style={{ display: 'none' }}
+                  onClick={() => addFileInputRef.current?.click()}
+                  disabled={isProcessingPhoto}
+                  aria-hidden="true"
+                />
+              </div>
             </div>
 
             {photoError && <p className="sdb-photo-error-msg" role="alert">{photoError}</p>}
@@ -896,8 +929,12 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
                 <button
                   key={key}
                   type="button"
+                  id={`btn-block-type-${key}`}
                   className={`sdb-type-chip ${type === key ? 'sdb-type-chip--active' : ''}`}
-                  onClick={() => setType(key)}
+                  onClick={() => {
+                    setType(key);
+                    setMealType(key as MealTypeKey);
+                  }}
                 >
                   <span className="sdb-chip-icon">{BLOCK_TYPE_ICONS[key as BlockTypeKey]}</span>
                   <span className="sdb-chip-label">{t[`sdb_type_${key}` as keyof typeof t] as string}</span>
@@ -905,26 +942,30 @@ function BlockEditor({ initial, onSave, onCancel, t }: BlockEditorProps) {
               ))}
             </div>
 
-            {/* Optional Specific Meal Type designation (Phase 7B) */}
-            <div className="sdb-meal-type-subrow">
-              <label className="sdb-sublabel" htmlFor="sdb-meal-type-select">
-                {t.sdb_meal_type_label} <span className="sdb-optional">({t.sdb_optional})</span>:
-              </label>
-              <select
-                id="sdb-meal-type-select"
-                className="sdb-select sdb-select--sm"
-                value={mealType || ''}
-                onChange={e => setMealType((e.target.value || undefined) as MealTypeKey | undefined)}
-                aria-label={t.sdb_meal_type_label}
-              >
-                <option value="">{t.sdb_meal_type_none}</option>
-                <option value="breakfast">{t.sdb_meal_type_breakfast}</option>
-                <option value="lunch">{t.sdb_meal_type_lunch}</option>
-                <option value="dinner">{t.sdb_meal_type_dinner}</option>
-                <option value="snack">{t.sdb_meal_type_snack}</option>
-                <option value="other">{t.sdb_meal_type_other}</option>
-              </select>
-            </div>
+            {/* Canonical Outcome / Status Dropdown (Phase 27 Requirement 3) */}
+            {isToday && (
+              <div className="sdb-outcome-select-row">
+                <label className="sdb-sublabel" htmlFor="sdb-outcome-select">
+                  {t.sdb_select_outcome}:
+                </label>
+                <select
+                  id="sdb-outcome-select"
+                  className="sdb-select sdb-select--sm"
+                  value={selectedOutcome}
+                  onChange={e => setSelectedOutcome(e.target.value as DetailedBlockOutcome | 'none')}
+                  aria-label={t.sdb_select_outcome}
+                >
+                  <option value="none">{t.sdb_outcome_none}</option>
+                  <option value="on_track">{t.sdb_outcome_on_track}</option>
+                  <option value="adjusted_on_track">{t.sdb_outcome_adjusted_on_track}</option>
+                  <option value="near_slip">{t.sdb_outcome_near_slip}</option>
+                  <option value="structured_slip">{t.sdb_outcome_structured_slip}</option>
+                  <option value="unstructured_slip">{t.sdb_outcome_unstructured_slip}</option>
+                  <option value="planned_unstructured">{t.sdb_outcome_planned_unstructured}</option>
+                  <option value="twenty_percent_off_track">{t.sdb_outcome_twenty_percent_off_track}</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* ── Food / structure options ── */}
@@ -1368,8 +1409,16 @@ function BlockCard({
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
 
-  // Photos state (Phase 6B: multi-photo support)
-  const photos = getBlockPhotos(block);
+  // Photos state: prioritize verification photos if present so attached photos remain visible
+  const photos = useMemo(() => {
+    if (verification?.foodPhotos && verification.foodPhotos.length > 0) {
+      return verification.foodPhotos;
+    }
+    if (verification?.foodPhoto) {
+      return [verification.foodPhoto];
+    }
+    return getBlockPhotos(block);
+  }, [verification?.foodPhotos, verification?.foodPhoto, block]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
     for (const p of photos) {
@@ -1382,6 +1431,7 @@ function BlockCard({
   const [cardPhotoError, setCardPhotoError] = useState<string | null>(null);
   const cardPhotoErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardFileInputRef = useRef<HTMLInputElement>(null);
+  const cardCameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -1615,7 +1665,15 @@ function BlockCard({
         </div>
       </div>
 
-      {/* Hidden file input for direct photo capture */}
+      {/* Hidden file inputs for direct camera photo capture and gallery fallback */}
+      <input
+        ref={cardCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleCardPhotoSelect}
+      />
       <input
         ref={cardFileInputRef}
         type="file"
@@ -1656,10 +1714,10 @@ function BlockCard({
                 type="button"
                 id={`btn-direct-add-photo-${block.id}`}
                 className="sdb-block-camera-btn"
-                onClick={() => cardFileInputRef.current?.click()}
+                onClick={() => cardCameraInputRef.current?.click()}
                 disabled={isAddingPhoto}
                 aria-label={`${t.sdb_add_photo}: ${desc}`}
-                title={t.sdb_add_photo}
+                title={t.sdb_take_photo || t.sdb_add_photo}
               >
                 <span className="sdb-camera-icon">📷</span>
               </button>
@@ -1708,10 +1766,10 @@ function BlockCard({
                 type="button"
                 id={`btn-direct-add-photo-plus-${block.id}`}
                 className="sdb-block-camera-btn sdb-block-camera-btn--plus"
-                onClick={() => cardFileInputRef.current?.click()}
+                onClick={() => cardCameraInputRef.current?.click()}
                 disabled={isAddingPhoto}
                 aria-label={`${t.sdb_add_another_photo}: ${desc}`}
-                title={t.sdb_add_another_photo}
+                title={t.sdb_take_photo || t.sdb_add_another_photo}
               >
                 <span className="sdb-camera-icon">📷</span>
                 <span className="sdb-camera-plus-badge">+</span>
@@ -1974,14 +2032,14 @@ function BlockCard({
                 </div>
               )}
 
-              {/* If Slip, show actual consumed details */}
-              {verification.status === 'slip' && (verification.actualItems?.length || verification.actualCustomText) && (
+              {/* Show actual consumed details whenever present and recorded */}
+              {(verification.actualItems?.length || (verification.actualCustomText && verification.actualCustomText.trim().toLowerCase() !== desc.trim().toLowerCase())) && (
                 <div className="sdb-verified-actual-row">
-                  <span className="sdb-actual-label">{t.sdb_v_actual_label}:</span>
+                  <span className="sdb-actual-label">{t.sdb_v_actual_label || 'Actual'}:</span>
                   <span className="sdb-actual-text">
                     {[
                       ...(verification.actualItems?.map(k => (t[`sdb_food_${k}` as keyof typeof t] as string) ?? k) || []),
-                      verification.actualCustomText,
+                      (verification.actualCustomText && verification.actualCustomText.trim().toLowerCase() !== desc.trim().toLowerCase() ? verification.actualCustomText : undefined),
                     ].filter(Boolean).join(', ')}
                   </span>
                 </div>
@@ -2206,7 +2264,11 @@ interface FoodLogModalProps {
     description: string,
     foodCategories: FoodCategoryKey[],
     outcome: DetailedBlockOutcome,
-    status: DietVerificationStatus
+    status: DietVerificationStatus,
+    mealType?: MealTypeKey,
+    foodSelections?: Partial<Record<FoodCategoryKey, string[]>>,
+    customFoods?: Partial<Record<FoodCategoryKey, string[]>>,
+    foodPhotos?: FoodPhotoMetadata[]
   ) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
@@ -2238,9 +2300,29 @@ function outcomeToStatus(outcome: DetailedBlockOutcome): DietVerificationStatus 
 }
 
 function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
+  const autoTime = useMemo(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  }, []);
+
   const [description, setDescription] = useState('');
+  const [mealType, setMealType] = useState<MealTypeKey | undefined>('lunch');
   const [selectedCategories, setSelectedCategories] = useState<FoodCategoryKey[]>([]);
+  const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(null);
+  const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>({});
+  const [customFoods, setCustomFoods] = useState<CustomFoodsMap>({});
+  const [customFoodInputs, setCustomFoodInputs] = useState<Record<string, string>>({});
+  const [customFoodErrors, setCustomFoodErrors] = useState<Record<string, string>>({});
   const [outcome, setOutcome] = useState<DetailedBlockOutcome>('on_track');
+
+  // Photo attachments state (Phase 27)
+  const [foodPhotos, setFoodPhotos] = useState<FoodPhotoMetadata[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<Record<string, string>>({});
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(null);
+  const cameraFileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -2251,10 +2333,135 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
 
+  const handleAddPhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!isValidImageFile(file)) {
+      setPhotoError(t.sdb_err_invalid_image);
+      return;
+    }
+
+    setIsProcessingPhoto(true);
+    setPhotoError('');
+
+    try {
+      const meta = await saveFoodPhoto(file);
+      const dataUrl = getPhotoDataUrlSync(meta.id);
+      setFoodPhotos(prev => [...prev, meta]);
+      if (dataUrl) {
+        setPhotoPreviewUrls(prev => ({ ...prev, [meta.id]: dataUrl }));
+      }
+    } catch (err) {
+      console.error('Error adding photo:', err);
+      setPhotoError(getLocalizedPhotoErrorMessage(err, t));
+    } finally {
+      setIsProcessingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    const photoToRemove = foodPhotos[index];
+    setFoodPhotos(prev => prev.filter((_, i) => i !== index));
+    if (photoToRemove?.id) {
+      setTimeout(() => {
+        const store = loadDietStore();
+        const verifs = loadAllDietVerifications();
+        if (!isPhotoReferenced(photoToRemove.id, store, verifs)) {
+          deleteFoodPhoto(photoToRemove.id).catch(() => {});
+        }
+      }, 50);
+    }
+  };
+
   const toggleCategory = (key: FoodCategoryKey) => {
-    setSelectedCategories(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
+    const isSelected = selectedCategories.includes(key);
+    if (isSelected) {
+      if (activeCategorySubmenu === key) {
+        setSelectedCategories(prev => prev.filter(k => k !== key));
+        setFoodSelections(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setCustomFoods(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setActiveCategorySubmenu(null);
+      } else {
+        setActiveCategorySubmenu(key);
+      }
+    } else {
+      setSelectedCategories(prev => [...prev, key]);
+      setActiveCategorySubmenu(key);
+    }
+  };
+
+  const toggleSpecificFood = (cat: FoodCategoryKey, foodKey: string) => {
+    setFoodSelections(prev => {
+      const curList = prev[cat] || [];
+      const isAdding = !curList.includes(foodKey);
+      const nextList = isAdding
+        ? [...curList, foodKey]
+        : curList.filter(f => f !== foodKey);
+
+      const opt = findFoodOption(cat, foodKey);
+      const foodLabel = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
+      const formattedFood = foodLabel.charAt(0).toUpperCase() + foodLabel.slice(1).replace(/_/g, ' ');
+
+      if (isAdding && !description.trim()) {
+        setDescription(formattedFood);
+      }
+
+      const next = { ...prev };
+      if (nextList.length > 0) {
+        next[cat] = nextList;
+      } else {
+        delete next[cat];
+      }
+      return next;
+    });
+  };
+
+  const handleAddCustomFood = (cat: FoodCategoryKey) => {
+    const raw = (customFoodInputs[cat] || '').trim();
+    if (!raw) return;
+
+    const curCanonical = foodSelections[cat] || [];
+    const curCustom = customFoods[cat] || [];
+
+    const isCanonicalDup = curCanonical.some(k => {
+      const opt = findFoodOption(cat, k);
+      const label = opt ? (t[opt.i18nKey as keyof typeof t] as string | undefined) : k;
+      return k.toLowerCase() === raw.toLowerCase() || label?.toLowerCase() === raw.toLowerCase();
+    });
+    const isCustomDup = curCustom.some(c => c.toLowerCase() === raw.toLowerCase());
+
+    if (isCanonicalDup || isCustomDup) {
+      setCustomFoodErrors(prev => ({ ...prev, [cat]: t.sdb_custom_food_duplicate }));
+      return;
+    }
+
+    if (!description.trim()) {
+      setDescription(raw);
+    }
+
+    setCustomFoods(prev => ({
+      ...prev,
+      [cat]: [...(prev[cat] || []), raw],
+    }));
+    setCustomFoodInputs(prev => ({ ...prev, [cat]: '' }));
+    setCustomFoodErrors(prev => ({ ...prev, [cat]: '' }));
+  };
+
+  const handleRemoveCustomFood = (cat: FoodCategoryKey, foodText: string) => {
+    setCustomFoods(prev => ({
+      ...prev,
+      [cat]: (prev[cat] || []).filter(f => f !== foodText),
+    }));
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -2262,7 +2469,25 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
   };
 
   const handleSave = () => {
-    onSave(description, selectedCategories, outcome, outcomeToStatus(outcome));
+    let finalDesc = description.trim();
+    if (!finalDesc && (Object.keys(foodSelections).length > 0 || Object.keys(customFoods).length > 0)) {
+      const derived = getBlockPrimaryDescription({
+        type: mealType || 'custom',
+        foodSelections,
+        customFoods,
+      }, t);
+      if (derived) finalDesc = derived;
+    }
+    onSave(
+      finalDesc,
+      selectedCategories,
+      outcome,
+      outcomeToStatus(outcome),
+      mealType,
+      foodSelections,
+      customFoods,
+      foodPhotos.length > 0 ? foodPhotos : undefined
+    );
   };
 
   return (
@@ -2287,6 +2512,123 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
         </div>
 
         <div className="sdb-modal-body">
+          {/* Automatic Timestamp Badge (No manual time selection required) */}
+          <div className="sdb-food-log-time-badge" id="sdb-food-log-auto-time">
+            <span className="sdb-time-clock-icon">🕒</span>
+            <span>{t.sdb_food_log_auto_time}: {autoTime}</span>
+          </div>
+
+          {/* Meal Type Selection */}
+          <div className="sdb-field">
+            <label className="sdb-label">{t.sdb_block_type}:</label>
+            <div className="sdb-type-grid">
+              {MEAL_TYPE_KEYS.map(key => (
+                <button
+                  key={key}
+                  type="button"
+                  id={`btn-food-log-type-${key}`}
+                  className={`sdb-type-chip ${mealType === key ? 'sdb-type-chip--active' : ''}`}
+                  onClick={() => setMealType(key)}
+                >
+                  <span className="sdb-chip-icon">
+                    {key === 'breakfast' ? '🍳' : key === 'lunch' ? '🥗' : key === 'dinner' ? '🍲' : key === 'snack' ? '🍎' : '🍽️'}
+                  </span>
+                  <span className="sdb-chip-label">{(t[`sdb_meal_type_${key}` as keyof typeof t] as string | undefined) || key}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Photo Attachment (Phase 27 Requirement 4: Camera & Gallery) */}
+          <div className="sdb-field sdb-photo-field">
+            <label className="sdb-label">📷 {t.sdb_food_photos}:</label>
+            <input
+              ref={cameraFileInputRef}
+              id="sdb-food-log-camera-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleAddPhotoFileSelect}
+            />
+            <input
+              ref={galleryFileInputRef}
+              id="sdb-food-log-gallery-input"
+              type="file"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
+              style={{ display: 'none' }}
+              onChange={handleAddPhotoFileSelect}
+            />
+
+            <div className="sdb-photo-gallery-editor">
+              {foodPhotos.map((photo, idx) => {
+                const url = photoPreviewUrls[photo.id] || getPhotoDataUrlSync(photo.id);
+                return (
+                  <div key={photo.id || idx} className="sdb-photo-item-card">
+                    <button
+                      type="button"
+                      id={`btn-food-log-photo-view-${idx}`}
+                      className="sdb-photo-item-thumb-btn"
+                      onClick={() => setPreviewPhotoIndex(idx)}
+                      title={`${t.sdb_view_photo} (${idx + 1}/${foodPhotos.length})`}
+                      aria-label={`${t.sdb_view_photo} ${idx + 1}`}
+                    >
+                      {url ? (
+                        <img
+                          src={url}
+                          alt={`${t.sdb_food_photo} ${idx + 1}`}
+                          className="sdb-photo-item-img"
+                        />
+                      ) : (
+                        <div className="sdb-photo-item-placeholder">📷</div>
+                      )}
+                      <span className="sdb-photo-item-zoom-icon" aria-hidden="true">🔍</span>
+                    </button>
+                    <div className="sdb-photo-item-actions">
+                      <button
+                        type="button"
+                        id={`btn-food-log-photo-remove-${idx}`}
+                        className="sdb-btn-photo-mini sdb-btn-photo-mini--remove"
+                        onClick={() => handleRemovePhoto(idx)}
+                        disabled={isProcessingPhoto}
+                        title={t.sdb_remove_photo}
+                        aria-label={`${t.sdb_remove_photo} ${idx + 1}`}
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="sdb-photo-actions-row">
+                <button
+                  type="button"
+                  id="btn-food-log-take-photo"
+                  className="sdb-btn-photo-action sdb-btn-photo-action--camera"
+                  onClick={() => cameraFileInputRef.current?.click()}
+                  disabled={isProcessingPhoto}
+                  title={t.sdb_take_photo}
+                >
+                  <span className="sdb-photo-btn-icon">📷</span>
+                  <span className="sdb-photo-btn-label">{t.sdb_take_photo}</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-food-log-gallery-photo"
+                  className="sdb-btn-photo-action sdb-btn-photo-action--gallery"
+                  onClick={() => galleryFileInputRef.current?.click()}
+                  disabled={isProcessingPhoto}
+                  title={t.sdb_choose_gallery}
+                >
+                  <span className="sdb-photo-btn-icon">🖼️</span>
+                  <span className="sdb-photo-btn-label">{t.sdb_choose_gallery}</span>
+                </button>
+              </div>
+            </div>
+            {photoError && <p className="sdb-photo-error-msg" role="alert">{photoError}</p>}
+          </div>
+
           {/* Description */}
           <div className="sdb-field">
             <label className="sdb-label" htmlFor="sdb-food-log-desc">
@@ -2310,21 +2652,125 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
             <div className="sdb-food-grid">
               {FOOD_CATEGORY_KEYS.map(key => {
                 const isSelected = selectedCategories.includes(key);
+                const isSubmenuOpen = isSelected && activeCategorySubmenu === key;
                 return (
                   <button
                     key={key}
                     id={`btn-food-log-cat-${key}`}
                     type="button"
-                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active sdb-cat-chip--active' : ''}`}
+                    className={`sdb-food-chip ${isSelected ? 'sdb-food-chip--active sdb-cat-chip--active' : ''} ${isSubmenuOpen ? 'sdb-cat-chip--open' : ''}`}
                     onClick={() => toggleCategory(key)}
                     aria-pressed={isSelected}
                   >
                     <span className="sdb-chip-icon">{FOOD_CATEGORY_ICONS[key]}</span>
                     <span>{t[`sdb_cat_${key}` as keyof typeof t] as string}</span>
+                    {isSelected && (
+                      <span className="sdb-cat-chip-arrow" aria-hidden="true">
+                        {isSubmenuOpen ? ' ▲' : ' ▼'}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
+
+            {/* Food Submenu Accordion for selected category */}
+            {activeCategorySubmenu && selectedCategories.includes(activeCategorySubmenu) && (
+              <div className="sdb-cat-submenu-container" id={`sdb-food-log-submenu-${activeCategorySubmenu}`}>
+                <div className="sdb-cat-submenu-header">
+                  <span className="sdb-cat-submenu-title">
+                    {FOOD_CATEGORY_ICONS[activeCategorySubmenu]} {t[`sdb_cat_${activeCategorySubmenu}` as keyof typeof t] as string}: {t.sdb_food_submenu_title}
+                  </span>
+                  <button
+                    type="button"
+                    className="sdb-cat-submenu-close"
+                    onClick={() => setActiveCategorySubmenu(null)}
+                    aria-label={t.commit_cancel}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="sdb-cat-food-grid sdb-specific-food-grid">
+                  {getFoodOptionsForCategory(activeCategorySubmenu).map(opt => {
+                    const isPicked = (foodSelections[activeCategorySubmenu] || []).includes(opt.key);
+                    const optLabel = (t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        id={`btn-food-log-opt-${activeCategorySubmenu}-${opt.key}`}
+                        type="button"
+                        className={`sdb-food-child-chip sdb-food-option-btn ${isPicked ? 'sdb-food-child-chip--active sdb-food-option-btn--active' : ''}`}
+                        onClick={() => toggleSpecificFood(activeCategorySubmenu, opt.key)}
+                        aria-pressed={isPicked}
+                      >
+                        {isPicked && <span className="sdb-child-chip-check sdb-food-option-check">✓ </span>}
+                        <span className="sdb-food-option-label">{optLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom food items in this category */}
+                <div className="sdb-custom-foods-section">
+                  {(customFoods[activeCategorySubmenu] || []).length > 0 && (
+                    <div className="sdb-custom-foods-list">
+                      {(customFoods[activeCategorySubmenu] || []).map(cFood => (
+                        <span key={cFood} className="sdb-custom-food-tag">
+                          <span className="sdb-custom-food-tag-icon">✨</span>
+                          <span className="sdb-custom-food-tag-text">{cFood}</span>
+                          <button
+                            type="button"
+                            className="sdb-custom-food-remove-btn"
+                            onClick={() => handleRemoveCustomFood(activeCategorySubmenu, cFood)}
+                            aria-label={`${t.commit_delete}: ${cFood}`}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="sdb-custom-food-input-row">
+                    <input
+                      id={`input-food-log-custom-${activeCategorySubmenu}`}
+                      type="text"
+                      className="sdb-input sdb-custom-food-input"
+                      placeholder={t.sdb_custom_food_placeholder}
+                      value={customFoodInputs[activeCategorySubmenu] || ''}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setCustomFoodInputs(prev => ({ ...prev, [activeCategorySubmenu]: v }));
+                        if (customFoodErrors[activeCategorySubmenu]) {
+                          setCustomFoodErrors(prev => ({ ...prev, [activeCategorySubmenu]: '' }));
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomFood(activeCategorySubmenu);
+                        }
+                      }}
+                      maxLength={60}
+                    />
+                    <button
+                      type="button"
+                      id={`btn-food-log-add-custom-${activeCategorySubmenu}`}
+                      className="sdb-btn sdb-btn-add-custom-food"
+                      onClick={() => handleAddCustomFood(activeCategorySubmenu)}
+                    >
+                      + {t.sdb_add_custom_food_btn}
+                    </button>
+                  </div>
+                  {customFoodErrors[activeCategorySubmenu] && (
+                    <p className="sdb-custom-food-error" role="alert">
+                      {customFoodErrors[activeCategorySubmenu]}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Structural Outcome */}
@@ -2367,6 +2813,20 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
           </button>
         </div>
       </div>
+
+      {/* Photo Preview Lightbox if previewing an attached photo */}
+      {previewPhotoIndex !== null && foodPhotos[previewPhotoIndex] && (
+        <PhotoPreviewModal
+          photos={foodPhotos.map((p, i) => ({
+            id: p.id,
+            dataUrl: photoPreviewUrls[p.id] || getPhotoDataUrlSync(p.id),
+            caption: `${description || t.sdb_food_photo} (${i + 1}/${foodPhotos.length})`,
+          }))}
+          initialIndex={previewPhotoIndex}
+          onClose={() => setPreviewPhotoIndex(null)}
+          t={t}
+        />
+      )}
     </div>
   );
 }
@@ -3628,7 +4088,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   };
 
   // ── Block CRUD for current day ─────────────────────────────────────────────
-  const handleSaveBlock = (block: StructuredDietBlock) => {
+  const handleSaveBlock = (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none') => {
     updateWeekly(w =>
       updateDayPlan(w, selectedDayKey, day => {
         const existing = day.blocks.findIndex(b => b.id === block.id);
@@ -3638,6 +4098,13 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
         return { ...day, blocks: sortBlocks(blocks) };
       })
     );
+    if (isToday && outcome) {
+      if (outcome === 'none') {
+        handleClearStatus(block.id);
+      } else {
+        handleVerifyOutcome(block, outcome, outcomeToStatus(outcome));
+      }
+    }
     setEditingBlock(null);
   };
 
@@ -3826,12 +4293,16 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     refreshVerifications();
   };
 
-  // ── Unplanned / in-the-moment food log handler (Phase 26A) ─────────────────
+  // ── Unplanned / in-the-moment food log handler (Phase 26A / Phase 27) ───────────
   const handleSaveFoodLog = (
     description: string,
     foodCategories: FoodCategoryKey[],
     outcome: DetailedBlockOutcome,
-    status: DietVerificationStatus
+    status: DietVerificationStatus,
+    mealType?: MealTypeKey,
+    foodSelections?: FoodSelectionsMap,
+    customFoods?: CustomFoodsMap,
+    foodPhotos?: FoodPhotoMetadata[]
   ) => {
     const dateKey = getLocalDateKey();
     const activityType: ScoreActivityType =
@@ -3846,6 +4317,11 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
       foodCategories,
       detailedOutcome: outcome,
       status,
+      mealType,
+      foodSelections,
+      customFoods,
+      foodPhotos,
+      foodPhoto: foodPhotos && foodPhotos.length > 0 ? foodPhotos[0] : undefined,
       sourcePlanName: weekly.planName,
       profileId: activeProfile.id,
       profileName: getGoalDisplayName(activeProfile, t),
@@ -4278,6 +4754,34 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                         const isOntrack = log.status === 'on-track';
                         const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
 
+                        const logMealType = log.mealType || log.plannedSnapshot.mealType;
+                        const mealTypeLabel = logMealType ? ((t[`sdb_meal_type_${logMealType}` as keyof typeof t] as string | undefined) || logMealType) : '';
+                        const autoTime = log.plannedSnapshot.startTime;
+
+                        const specificFoodNames: string[] = [];
+                        const selections = log.actualFoodSelections || log.plannedSnapshot.foodSelections;
+                        if (selections) {
+                          for (const [cat, keys] of Object.entries(selections)) {
+                            if (keys && Array.isArray(keys)) {
+                              for (const k of keys) {
+                                const opt = findFoodOption(cat as FoodCategoryKey, k);
+                                const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
+                                specificFoodNames.push(label);
+                              }
+                            }
+                          }
+                        }
+                        const customs = log.actualCustomFoods || log.plannedSnapshot.customFoods;
+                        if (customs) {
+                          for (const cList of Object.values(customs)) {
+                            if (cList && Array.isArray(cList)) {
+                              specificFoodNames.push(...cList);
+                            }
+                          }
+                        }
+
+                        const logPhotos = log.foodPhotos || (log.foodPhoto ? [log.foodPhoto] : log.plannedSnapshot.foodPhotos || (log.plannedSnapshot.foodPhoto ? [log.plannedSnapshot.foodPhoto] : []));
+
                         return (
                           <div
                             key={log.id}
@@ -4286,6 +4790,16 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                             <div className="sdb-unplanned-card-top">
                               <div className="sdb-unplanned-card-badges">
                                 <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
+                                {autoTime && (
+                                  <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
+                                    🕒 {autoTime}
+                                  </span>
+                                )}
+                                {mealTypeLabel && (
+                                  <span className="sdb-block-meal-type-badge">
+                                    {mealTypeLabel}
+                                  </span>
+                                )}
                                 {outcomeLabel && (
                                   <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
                                     {outcomeLabel}
@@ -4309,6 +4823,40 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                                     {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
                                   </span>
                                 ))}
+                              </div>
+                            )}
+                            {specificFoodNames.length > 0 && (
+                              <div className="sdb-unplanned-specific-foods">
+                                <span>• {specificFoodNames.join(', ')}</span>
+                              </div>
+                            )}
+                            {logPhotos.length > 0 && (
+                              <div className="sdb-unplanned-photos sdb-block-photos-cluster">
+                                {logPhotos.map((p, idx) => {
+                                  const url = getPhotoDataUrlSync(p.id);
+                                  return (
+                                    <button
+                                      key={p.id || idx}
+                                      type="button"
+                                      className="sdb-block-photo-thumb-btn"
+                                      onClick={() => setPreviewPhotos({
+                                        photos: logPhotos.map((item, pIdx) => ({
+                                          id: item.id,
+                                          dataUrl: getPhotoDataUrlSync(item.id),
+                                          caption: `${desc} (${t.sdb_food_photo} ${pIdx + 1})`,
+                                        })),
+                                        initialIndex: idx,
+                                      })}
+                                      title={`${t.sdb_view_photo} (${idx + 1}/${logPhotos.length})`}
+                                    >
+                                      {url ? (
+                                        <img src={url} alt={`${desc} photo ${idx + 1}`} className="sdb-block-photo-thumb" />
+                                      ) : (
+                                        <div className="sdb-block-photo-thumb-placeholder">📷</div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -4575,6 +5123,34 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                       const isOntrack = log.status === 'on-track';
                       const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
 
+                      const logMealType = log.mealType || log.plannedSnapshot.mealType;
+                      const mealTypeLabel = logMealType ? ((t[`sdb_meal_type_${logMealType}` as keyof typeof t] as string | undefined) || logMealType) : '';
+                      const autoTime = log.plannedSnapshot.startTime;
+
+                      const specificFoodNames: string[] = [];
+                      const selections = log.actualFoodSelections || log.plannedSnapshot.foodSelections;
+                      if (selections) {
+                        for (const [cat, keys] of Object.entries(selections)) {
+                          if (keys && Array.isArray(keys)) {
+                            for (const k of keys) {
+                              const opt = findFoodOption(cat as FoodCategoryKey, k);
+                              const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
+                              specificFoodNames.push(label);
+                            }
+                          }
+                        }
+                      }
+                      const customs = log.actualCustomFoods || log.plannedSnapshot.customFoods;
+                      if (customs) {
+                        for (const cList of Object.values(customs)) {
+                          if (cList && Array.isArray(cList)) {
+                            specificFoodNames.push(...cList);
+                          }
+                        }
+                      }
+
+                      const logPhotos = log.foodPhotos || (log.foodPhoto ? [log.foodPhoto] : log.plannedSnapshot.foodPhotos || (log.plannedSnapshot.foodPhoto ? [log.plannedSnapshot.foodPhoto] : []));
+
                       return (
                         <div
                           key={log.id}
@@ -4583,6 +5159,16 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                           <div className="sdb-unplanned-card-top">
                             <div className="sdb-unplanned-card-badges">
                               <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
+                              {autoTime && (
+                                <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
+                                  🕒 {autoTime}
+                                </span>
+                              )}
+                              {mealTypeLabel && (
+                                <span className="sdb-block-meal-type-badge">
+                                  {mealTypeLabel}
+                                </span>
+                              )}
                               {outcomeLabel && (
                                 <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
                                   {outcomeLabel}
@@ -4606,6 +5192,40 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                                   {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
                                 </span>
                               ))}
+                            </div>
+                          )}
+                          {specificFoodNames.length > 0 && (
+                            <div className="sdb-unplanned-specific-foods">
+                              <span>• {specificFoodNames.join(', ')}</span>
+                            </div>
+                          )}
+                          {logPhotos.length > 0 && (
+                            <div className="sdb-unplanned-photos sdb-block-photos-cluster">
+                              {logPhotos.map((p, idx) => {
+                                const url = getPhotoDataUrlSync(p.id);
+                                return (
+                                  <button
+                                    key={p.id || idx}
+                                    type="button"
+                                    className="sdb-block-photo-thumb-btn"
+                                    onClick={() => setPreviewPhotos({
+                                      photos: logPhotos.map((item, pIdx) => ({
+                                        id: item.id,
+                                        dataUrl: getPhotoDataUrlSync(item.id),
+                                        caption: `${desc} (${t.sdb_food_photo} ${pIdx + 1})`,
+                                      })),
+                                      initialIndex: idx,
+                                    })}
+                                    title={`${t.sdb_view_photo} (${idx + 1}/${logPhotos.length})`}
+                                  >
+                                    {url ? (
+                                      <img src={url} alt={`${desc} photo ${idx + 1}`} className="sdb-block-photo-thumb" />
+                                    ) : (
+                                      <div className="sdb-block-photo-thumb-placeholder">📷</div>
+                                    )}
+                                  </button>
+                                );
+                              })}
                             </div>
                           )}
 
@@ -4808,6 +5428,12 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
       {editingBlock && (
         <BlockEditor
           initial={editingBlock === 'new' ? null : editingBlock}
+          initialOutcome={
+            isToday && editingBlock !== 'new'
+              ? todayVerification?.entries.find(e => e.plannedBlockId === editingBlock.id)?.detailedOutcome ?? 'none'
+              : undefined
+          }
+          isToday={isToday}
           onSave={handleSaveBlock}
           onCancel={() => setEditingBlock(null)}
           t={t}
