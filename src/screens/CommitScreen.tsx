@@ -71,6 +71,19 @@ export default function CommitScreen({
               label={`→ ${t.commit_hold_btn || 'HOLD TO COMMIT'}`}
               onComplete={handleHoldComplete}
             />
+
+            {/* Cancel / Return to Main Menu Action (Sergio Feedback) */}
+            <div className="commit-cancel-wrap">
+              <button
+                id="btn-commit-cancel"
+                type="button"
+                className="commit-cancel-btn"
+                onClick={() => onNavigate('home')}
+                aria-label={t.commit_btn_cancel || 'Cancel / Return to Main Menu'}
+              >
+                ✕ {t.commit_btn_cancel || 'Cancel / Return to Main Menu'}
+              </button>
+            </div>
           </div>
         </div>
       ) : (

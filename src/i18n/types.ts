@@ -1423,6 +1423,44 @@ export interface Translations {
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: string;
   sda_slogan_tagline: string;
+
+  // ── Phase 28: Food Quantity & Portion Tracking ──
+  sdb_unit_piece: string;
+  sdb_unit_portion: string;
+  sdb_unit_serving: string;
+  sdb_unit_cup: string;
+  sdb_unit_slice: string;
+  sdb_unit_gram: string;
+  sdb_unit_oz: string;
+  sdb_unit_ml: string;
+  sdb_unit_custom: string;
+  sdb_qty_add: string;
+  sdb_qty_amount: string;
+  sdb_qty_unit: string;
+  sdb_qty_clear: string;
+  sdb_quantity_breakdown: string;
+  sdb_quantity_breakdown_desc: string;
+  sdb_no_quantities_logged: string;
+
+  // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
+  recommit_btn_cancel: string;
+  commit_btn_cancel: string;
+  sz_btn_cancel: string;
+
+  // ── Free Schedule Day(s) Template ──
+  sdb_tpl_free_schedule_title: string;
+  sdb_tpl_free_schedule_desc: string;
+  sdb_tl_free_schedule: string;
+  sdb_free_day_badge: string;
+  sdb_free_day_title: string;
+  sdb_free_day_desc: string;
+  sdb_free_day_select_dates: string;
+  sdb_free_day_apply_btn: string;
+  sdb_free_day_switch_back: string;
+  sdb_free_day_log_spontaneous: string;
+  sdb_free_day_applied_feedback: string;
+  sdb_free_day_target_mode_label: string;
+  sdb_free_day_no_blocks_needed: string;
 }
 
 

@@ -15,7 +15,7 @@ import { DAY_KEYS, generateBlockId, sortBlocks } from '../utils/dietStorage';
 import type { Translations } from '../i18n/types';
 
 export type DietTemplateScope = 'daily' | 'weekly';
-export type DietTemplateCategory = 'structured' | 'unstructured';
+export type DietTemplateCategory = 'structured' | 'unstructured' | 'free';
 
 export interface DailyTemplatePoint {
   time: string;           // "06:00", "08:00", ..., "06:00"
@@ -517,6 +517,27 @@ export const DIET_TEMPLATES: DietTemplate[] = [
       { startTime: '18:00', endTime: '18:30', type: 'custom', customText: 'sdb_tl_omad_meal' },
       { startTime: '20:00', endTime: '06:00', type: 'micro_fasting', customText: 'sdb_tl_fast' },
     ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FREE SCHEDULE TEMPLATE (1)
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'free-schedule-days',
+    nameKey: 'sdb_tpl_free_schedule_title',
+    descriptionKey: 'sdb_tpl_free_schedule_desc',
+    category: 'unstructured',
+    scope: 'daily',
+    version: 1,
+    targetMode: 'free',
+    timeline: [
+      { time: '06:00', labelKey: 'sdb_tl_free_schedule' },
+      { time: '12:00', labelKey: 'sdb_tl_free_schedule' },
+      { time: '18:00', labelKey: 'sdb_tl_free_schedule' },
+      { time: '00:00', labelKey: 'sdb_tl_free_schedule', isNextDay: true },
+      { time: '06:00', labelKey: 'sdb_tl_free_schedule', isNextDay: true },
+    ],
+    blocks: [],
   },
 ];
 

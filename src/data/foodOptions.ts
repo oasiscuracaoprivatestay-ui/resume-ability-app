@@ -22,6 +22,80 @@ export interface FoodOptionItem {
 export type FoodSelectionsMap = Partial<Record<FoodCategoryKey, string[]>>;
 export type CustomFoodsMap = Partial<Record<FoodCategoryKey, string[]>>;
 
+export const FOOD_QUANTITY_UNITS = [
+  'piece',
+  'portion',
+  'serving',
+  'cup',
+  'slice',
+  'gram',
+  'oz',
+  'ml',
+  'custom',
+] as const;
+
+export type FoodQuantityUnit = typeof FOOD_QUANTITY_UNITS[number];
+
+export interface FoodItemQuantity {
+  /** Numerical amount entered by user (e.g. 1, 2, 0.5, 3) */
+  amount: number;
+  /** Unit of measurement */
+  unit: FoodQuantityUnit;
+  /** Optional custom unit text if unit === 'custom' */
+  customUnit?: string;
+  /** Reserved for future phases (grams) */
+  grams?: number;
+  /** Reserved for future phases (calories) */
+  calories?: number;
+}
+
+export type FoodQuantitiesMap = Record<string, FoodItemQuantity>;
+
+export function getFoodQuantityKey(category: FoodCategoryKey, foodKey: string, isCustom = false): string {
+  return isCustom
+    ? `${category}:custom:${foodKey.trim().toLowerCase()}`
+    : `${category}:${foodKey.trim().toLowerCase()}`;
+}
+
+export function parseFoodQuantityKey(key: string): { category: FoodCategoryKey; foodKey: string; isCustom: boolean } | null {
+  const parts = key.split(':');
+  if (parts.length === 2) {
+    return { category: parts[0] as FoodCategoryKey, foodKey: parts[1], isCustom: false };
+  }
+  if (parts.length === 3 && parts[1] === 'custom') {
+    return { category: parts[0] as FoodCategoryKey, foodKey: parts[2], isCustom: true };
+  }
+  return null;
+}
+
+export function formatFoodItemQuantity(
+  qty?: FoodItemQuantity | null,
+  t?: any
+): string {
+  if (!qty || typeof qty.amount !== 'number' || isNaN(qty.amount) || qty.amount <= 0) return '';
+  const amtStr = Number.isInteger(qty.amount) ? String(qty.amount) : String(Number(qty.amount.toFixed(2)));
+  if (qty.unit === 'custom') {
+    return qty.customUnit ? `${amtStr} ${qty.customUnit}` : amtStr;
+  }
+  const unitKey = `sdb_unit_${qty.unit}`;
+  let unitLabel: string = qty.unit;
+  if (typeof t === 'function') {
+    unitLabel = t(unitKey) || qty.unit;
+  } else if (t && typeof t === 'object') {
+    unitLabel = t[unitKey] || qty.unit;
+  }
+  return `${amtStr} ${unitLabel}`;
+}
+
+export function getDefaultFoodUnit(category: FoodCategoryKey, foodKey: string): FoodQuantityUnit {
+  const k = foodKey.toLowerCase();
+  if (k.includes('bread') || k.includes('toast') || k.includes('pizza') || k.includes('cake')) return 'slice';
+  if (['eggs', 'egg', 'apple', 'banana', 'orange', 'pear', 'peach', 'kiwi', 'cookie', 'cookies'].includes(k)) return 'piece';
+  if (category === 'beverages' || k.includes('coffee') || k.includes('tea') || k.includes('water') || k.includes('milk') || k.includes('juice')) return 'cup';
+  if (category === 'fruits' || category === 'snacks') return 'piece';
+  return 'portion';
+}
+
 export const CANONICAL_FOOD_OPTIONS: Record<FoodCategoryKey, FoodOptionItem[]> = {
   protein: [
     { key: 'chicken', category: 'protein', i18nKey: 'sdb_food_opt_chicken' },

@@ -389,3 +389,35 @@
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.25);
 }
+
+/* Cancel / Return Action (Sergio Feedback) */
+.nn-commit-cancel-wrap {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.nn-commit-cancel-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary, #94a3b8);
+  padding: 0.55rem 1.2rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+}
+
+.nn-commit-cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  transform: translateY(-1px);
+}

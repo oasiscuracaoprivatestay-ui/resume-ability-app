@@ -20,6 +20,11 @@ import {
   mapLegacyItemsToCategories,
 } from '../data/dietData';
 import {
+  getFoodQuantityKey,
+  type FoodQuantityUnit,
+  type FoodQuantitiesMap,
+} from '../data/foodOptions';
+import {
   type DietBlockVerification,
   type DailyDietVerification,
   type DetailedBlockOutcome,
@@ -109,11 +114,21 @@ export interface CategoryDistributionItem {
   percentage: number;                 // 0 - 100 (Category Record Rate: % of food records with categories containing this category)
 }
 
+export interface ItemizedFoodPortionStat {
+  key: string;           // Canonical key or custom food name
+  category: FoodCategoryKey;
+  isCustom: boolean;
+  totalOccurrences: number; // Number of records this food was logged in
+  quantitiesByUnit: Record<string, { totalAmount: number; unit: FoodQuantityUnit; customUnit?: string }>;
+}
+
 export interface FoodCategoryStatsResult {
   totalBlocks: number;
   recordsWithCategories: number;      // Denominator for Category Record Rate
   totalCategoryOccurrences: number;
   items: CategoryDistributionItem[];
+  itemizedPortions?: Record<FoodCategoryKey, ItemizedFoodPortionStat[]>;
+  totalPortionsLogged?: number;       // Total count of food instances with recorded quantities
   hasData: boolean;
 }
 
@@ -660,11 +675,138 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
     return FOOD_CATEGORY_KEYS.indexOf(a.category) - FOOD_CATEGORY_KEYS.indexOf(b.category);
   });
 
+  // Itemized portion tracking (Phase 28)
+  const accum: Record<FoodCategoryKey, Record<string, ItemizedFoodPortionStat>> = {
+    protein: {},
+    simple_carbs: {},
+    complex_carbs: {},
+    healthy_fats: {},
+    vegetables: {},
+    fruits: {},
+    desserts: {},
+    snacks: {},
+    beverages: {},
+  };
+  let totalPortionsLogged = 0;
+
+  for (const record of records) {
+    const rawQuantities: FoodQuantitiesMap =
+      record.actualFoodQuantities ||
+      record.foodQuantities ||
+      record.plannedSnapshot?.foodQuantities ||
+      {};
+
+    const canonicalSelections =
+      record.actualFoodSelections ||
+      record.foodSelections ||
+      record.plannedSnapshot?.foodSelections ||
+      {};
+
+    const customSelections =
+      record.actualCustomFoods ||
+      record.customFoods ||
+      record.plannedSnapshot?.customFoods ||
+      {};
+
+    // 1. Process canonical food selections
+    for (const [catStr, foods] of Object.entries(canonicalSelections)) {
+      const cat = catStr as FoodCategoryKey;
+      if (!accum[cat] || !Array.isArray(foods)) continue;
+
+      for (const foodKey of foods) {
+        if (!foodKey || typeof foodKey !== 'string') continue;
+        const normalizedKey = foodKey.trim().toLowerCase();
+        if (!accum[cat][normalizedKey]) {
+          accum[cat][normalizedKey] = {
+            key: normalizedKey,
+            category: cat,
+            isCustom: false,
+            totalOccurrences: 0,
+            quantitiesByUnit: {},
+          };
+        }
+        accum[cat][normalizedKey].totalOccurrences++;
+
+        const qtyKey = getFoodQuantityKey(cat, normalizedKey, false);
+        const qty = rawQuantities[qtyKey];
+        if (qty && typeof qty.amount === 'number' && !isNaN(qty.amount) && qty.amount > 0 && typeof qty.unit === 'string') {
+          const unitKey = qty.unit === 'custom' && qty.customUnit ? `custom:${qty.customUnit.toLowerCase()}` : qty.unit;
+          if (!accum[cat][normalizedKey].quantitiesByUnit[unitKey]) {
+            accum[cat][normalizedKey].quantitiesByUnit[unitKey] = {
+              totalAmount: 0,
+              unit: qty.unit,
+              customUnit: qty.customUnit,
+            };
+          }
+          accum[cat][normalizedKey].quantitiesByUnit[unitKey].totalAmount += qty.amount;
+          totalPortionsLogged++;
+        }
+      }
+    }
+
+    // 2. Process custom foods
+    for (const [catStr, customFoods] of Object.entries(customSelections)) {
+      const cat = catStr as FoodCategoryKey;
+      if (!accum[cat] || !Array.isArray(customFoods)) continue;
+
+      for (const customFood of customFoods) {
+        if (!customFood || typeof customFood !== 'string') continue;
+        const normalizedKey = customFood.trim().toLowerCase();
+        const customIdent = `custom:${normalizedKey}`;
+        if (!accum[cat][customIdent]) {
+          accum[cat][customIdent] = {
+            key: customFood.trim(),
+            category: cat,
+            isCustom: true,
+            totalOccurrences: 0,
+            quantitiesByUnit: {},
+          };
+        }
+        accum[cat][customIdent].totalOccurrences++;
+
+        const qtyKey = getFoodQuantityKey(cat, normalizedKey, true);
+        const qty = rawQuantities[qtyKey];
+        if (qty && typeof qty.amount === 'number' && !isNaN(qty.amount) && qty.amount > 0 && typeof qty.unit === 'string') {
+          const unitKey = qty.unit === 'custom' && qty.customUnit ? `custom:${qty.customUnit.toLowerCase()}` : qty.unit;
+          if (!accum[cat][customIdent].quantitiesByUnit[unitKey]) {
+            accum[cat][customIdent].quantitiesByUnit[unitKey] = {
+              totalAmount: 0,
+              unit: qty.unit,
+              customUnit: qty.customUnit,
+            };
+          }
+          accum[cat][customIdent].quantitiesByUnit[unitKey].totalAmount += qty.amount;
+          totalPortionsLogged++;
+        }
+      }
+    }
+  }
+
+  const itemizedPortions: Record<FoodCategoryKey, ItemizedFoodPortionStat[]> = {
+    protein: [],
+    simple_carbs: [],
+    complex_carbs: [],
+    healthy_fats: [],
+    vegetables: [],
+    fruits: [],
+    desserts: [],
+    snacks: [],
+    beverages: [],
+  };
+
+  for (const cat of FOOD_CATEGORY_KEYS) {
+    const itemsList = Object.values(accum[cat]);
+    itemsList.sort((a, b) => b.totalOccurrences - a.totalOccurrences);
+    itemizedPortions[cat] = itemsList;
+  }
+
   return {
     totalBlocks,
     recordsWithCategories,
     totalCategoryOccurrences,
     items,
+    itemizedPortions,
+    totalPortionsLogged,
     hasData: totalBlocks > 0 && recordsWithCategories > 0,
   };
 }

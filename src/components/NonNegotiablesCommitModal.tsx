@@ -164,6 +164,19 @@ export default function NonNegotiablesCommitModal({
                 }
                 onComplete={completeCommit}
               />
+
+              {/* Cancel / Return Action (Sergio Feedback) */}
+              <div className="nn-commit-cancel-wrap">
+                <button
+                  id="btn-nn-cancel"
+                  type="button"
+                  className="nn-commit-cancel-btn"
+                  onClick={onClose}
+                  aria-label={t.commit_btn_cancel || 'Cancel / Return to Main Menu'}
+                >
+                  ✕ {t.commit_btn_cancel || 'Cancel / Return to Main Menu'}
+                </button>
+              </div>
             </div>
           </div>
         ) : (

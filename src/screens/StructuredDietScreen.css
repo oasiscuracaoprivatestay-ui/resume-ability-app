@@ -5435,3 +5435,438 @@
     min-height: 32px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PHASE 28: Food Quantity & Portion Tracking
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Food Chip Badge Pill */
+.sdb-food-chip-qty-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.42rem;
+  border-radius: 9999px;
+  background: rgba(45, 212, 191, 0.22);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  color: #2dd4bf;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
+/* Portions Section in Editor & Modal Submenus */
+.sdb-food-portions-section {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sdb-portions-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.sdb-portion-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
+  flex-wrap: wrap;
+}
+
+.sdb-portion-item-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  flex: 1 1 120px;
+}
+
+.sdb-portion-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.sdb-portion-qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.sdb-qty-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.95rem;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sdb-qty-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sdb-qty-input {
+  width: 44px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0 2px;
+  -moz-appearance: textfield;
+}
+
+.sdb-qty-input::-webkit-outer-spin-button,
+.sdb-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sdb-qty-unit-select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  height: 32px;
+}
+
+.sdb-qty-unit-select:focus {
+  outline: none;
+  border-color: var(--accent, #2dd4bf);
+}
+
+.sdb-qty-custom-unit-input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 0.35rem 0.5rem;
+  width: 80px;
+  height: 32px;
+}
+
+.sdb-qty-custom-unit-input:focus {
+  outline: none;
+  border-color: var(--accent, #2dd4bf);
+}
+
+.sdb-qty-clear-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.sdb-qty-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #f87171;
+}
+
+.sdb-add-qty-pill-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.sdb-add-qty-pill-btn:hover {
+  background: rgba(45, 212, 191, 0.08);
+  border-color: rgba(45, 212, 191, 0.4);
+  color: var(--accent, #2dd4bf);
+}
+
+/* Awareness Portions Breakdown Section */
+.sdb-awareness-portions-breakdown {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sdb-awareness-portions-header {
+  margin-bottom: 0.85rem;
+}
+
+.sdb-awareness-portions-header .sdb-sub-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  margin: 0 0 0.2rem 0;
+}
+
+.sdb-awareness-portions-header .sdb-sub-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+}
+
+.sdb-awareness-portions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.sdb-awareness-cat-portion-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.sdb-cat-portion-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent, #2dd4bf);
+}
+
+.sdb-cat-portion-icon {
+  font-size: 1rem;
+}
+
+.sdb-cat-portion-name {
+  text-transform: capitalize;
+}
+
+.sdb-cat-portion-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sdb-awareness-portion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+}
+
+.sdb-awareness-portion-item:last-child {
+  border-bottom: none;
+}
+
+.sdb-portion-item-name {
+  color: var(--text-secondary, #94a3b8);
+  font-weight: 500;
+}
+
+.sdb-portion-item-qty {
+  color: var(--text-primary, #f8fafc);
+  font-weight: 600;
+}
+
+.sdb-portion-item-qty strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .sdb-portion-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .sdb-portion-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sdb-awareness-portions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Free Schedule Day View (Sergio Feedback)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sdb-free-day-card {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  margin-top: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+.sdb-free-day-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(20, 184, 166, 0.18);
+  border: 1px solid rgba(20, 184, 166, 0.45);
+  color: var(--accent, #2dd4bf);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.sdb-free-day-heading {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary, #f8fafc);
+  margin: 0;
+}
+
+.sdb-free-day-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.5;
+  max-width: 480px;
+  margin: 0;
+}
+
+.sdb-free-day-callouts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+}
+
+.sdb-free-day-callout-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.sdb-free-callout-icon {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.sdb-free-callout-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sdb-free-callout-content strong {
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.86rem;
+}
+
+.sdb-free-callout-content span {
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.sdb-free-day-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 4px;
+}
+
+.sdb-free-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 180px;
+}
+
+.sdb-free-btn--log {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.3) 100%);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  color: #2dd4bf;
+}
+
+.sdb-free-btn--log:hover {
+  background: rgba(45, 212, 191, 0.35);
+  transform: translateY(-1px);
+}
+
+.sdb-free-btn--switch {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary, #94a3b8);
+}
+
+.sdb-free-btn--switch:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary, #f8fafc);
+  transform: translateY(-1px);
+}
+

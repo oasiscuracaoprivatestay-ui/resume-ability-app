@@ -651,3 +651,140 @@
     width: 100%;
   }
 }
+
+/* ── Free Schedule Days Multi-Date Selector ── */
+.tpl-free-days-card {
+  background: rgba(20, 184, 166, 0.06);
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tpl-free-days-help {
+  font-size: 0.84rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.tpl-free-dates-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tpl-free-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.tpl-free-date-chip {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  color: var(--text-primary, #f8fafc);
+  text-align: left;
+}
+
+.tpl-free-date-chip:hover {
+  border-color: rgba(20, 184, 166, 0.4);
+  background: rgba(20, 184, 166, 0.1);
+}
+
+.tpl-free-date-chip--selected {
+  background: rgba(20, 184, 166, 0.2);
+  border-color: var(--accent, #2dd4bf);
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
+}
+
+.tpl-free-date-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tpl-free-date-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.tpl-free-date-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.tpl-free-date-check {
+  color: var(--accent, #2dd4bf);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.tpl-free-recur-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.tpl-free-weekdays-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tpl-free-weekday-chip {
+  flex: 1 1 36px;
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.tpl-free-weekday-chip:hover {
+  border-color: rgba(20, 184, 166, 0.4);
+  color: var(--text-primary, #f8fafc);
+}
+
+.tpl-free-weekday-chip--selected {
+  background: rgba(20, 184, 166, 0.25);
+  border-color: var(--accent, #2dd4bf);
+  color: var(--accent, #2dd4bf);
+}
+
+.tpl-free-summary-badge {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.tpl-free-summary-badge strong {
+  color: var(--accent, #2dd4bf);
+  font-weight: 800;
+}
+

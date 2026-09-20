@@ -1530,6 +1530,44 @@ export const en: Translations = {
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: SDA_CANONICAL_SLOGAN_EN,
   sda_slogan_tagline: SDA_TAGLINE_CORE_EN,
+
+  // ── Phase 28: Food Quantity & Portion Tracking ──
+  sdb_unit_piece: 'piece',
+  sdb_unit_portion: 'portion',
+  sdb_unit_serving: 'serving',
+  sdb_unit_cup: 'cup',
+  sdb_unit_slice: 'slice',
+  sdb_unit_gram: 'gram',
+  sdb_unit_oz: 'oz',
+  sdb_unit_ml: 'ml',
+  sdb_unit_custom: 'custom',
+  sdb_qty_add: 'Add quantity',
+  sdb_qty_amount: 'Amount',
+  sdb_qty_unit: 'Unit',
+  sdb_qty_clear: 'Clear quantity',
+  sdb_quantity_breakdown: 'Food Portions & Quantities',
+  sdb_quantity_breakdown_desc: 'Optional quantities recorded across your meals and snacks',
+  sdb_no_quantities_logged: 'No specific portions logged yet. Quantities are optional!',
+
+  // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
+  recommit_btn_cancel: 'Cancel / Return to Main Menu',
+  commit_btn_cancel: 'Cancel / Return to Main Menu',
+  sz_btn_cancel: 'Cancel / Return to Main Menu',
+
+  // ── Free Schedule Day(s) Template ──
+  sdb_tpl_free_schedule_title: 'Free Schedule Day(s)',
+  sdb_tpl_free_schedule_desc: 'Intentionally select dates without scheduled meals or required food logging. No penalties, no slip classifications, and full protection for your score and streaks.',
+  sdb_tl_free_schedule: 'Free Schedule (No structured meals or logging required)',
+  sdb_free_day_badge: '🌴 Free Schedule Day',
+  sdb_free_day_title: 'Free Schedule Day',
+  sdb_free_day_desc: 'You have intentionally scheduled this day as free from meal timing and tracking. No penalties for unlogged meals.',
+  sdb_free_day_select_dates: 'Select Free Date(s)',
+  sdb_free_day_apply_btn: 'Apply Free Schedule Day',
+  sdb_free_day_switch_back: 'Switch to Structured / Unstructured',
+  sdb_free_day_log_spontaneous: 'Log Food (Optional)',
+  sdb_free_day_applied_feedback: 'Free Schedule Day applied to {count} date(s)',
+  sdb_free_day_target_mode_label: 'Free Schedule',
+  sdb_free_day_no_blocks_needed: 'Zero scheduled meal blocks needed for this day.',
 };
 
 

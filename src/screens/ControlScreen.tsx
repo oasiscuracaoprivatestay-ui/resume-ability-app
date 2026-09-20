@@ -82,7 +82,7 @@ export default function ControlScreen({ onNavigate, onCommitSuccess }: ControlSc
               className="btn btn-secondary control-btn-home"
               onClick={() => onNavigate('home')}
             >
-              {t.control_btn_home}
+              ✕ {t.recommit_btn_cancel || t.control_btn_home}
             </button>
           </div>
         </>

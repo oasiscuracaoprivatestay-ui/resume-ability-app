@@ -16,6 +16,7 @@ import type { DayKey, StructuredDietBlock, MealTypeKey } from './dietStorage';
 import { getLocalTodayKey, getBlockPhotos } from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
+import type { FoodQuantitiesMap } from '../data/foodOptions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ export interface PlannedBlockSnapshot {
   foodCategories?: FoodCategoryKey[];
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  foodQuantities?: FoodQuantitiesMap;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
 }
@@ -91,10 +93,12 @@ export interface DietBlockVerification {
   mealType?: MealTypeKey;                 // Phase 7B: preserved meal type
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C
+  foodQuantities?: FoodQuantitiesMap;     // Phase 28: planned/original food quantities
   actualItems?: string[];
   actualFoodCategories?: FoodCategoryKey[];
   actualFoodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   actualCustomFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  actualFoodQuantities?: FoodQuantitiesMap; // Phase 28: actual consumed food quantities
   actualCustomText?: string;
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
@@ -236,6 +240,9 @@ export function createPlannedBlockSnapshot(plannedBlock: StructuredDietBlock): P
     customFoods: plannedBlock.customFoods
       ? JSON.parse(JSON.stringify(plannedBlock.customFoods))
       : undefined,
+    foodQuantities: plannedBlock.foodQuantities
+      ? JSON.parse(JSON.stringify(plannedBlock.foodQuantities))
+      : undefined,
     foodPhoto: plannedPhotos[0],
     foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
   };
@@ -256,6 +263,8 @@ export function saveBlockVerification(params: {
   actualFoodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   actualCustomFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   actualCustomText?: string;
+  foodQuantities?: FoodQuantitiesMap;
+  actualFoodQuantities?: FoodQuantitiesMap;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
   sourcePlanName?: string;
@@ -388,6 +397,25 @@ export function saveBlockVerification(params: {
       : undefined;
   }
 
+  // Non-destructive food quantities: distinguish omitted (undefined) from intentionally cleared ({})
+  let actualFoodQuantities: FoodQuantitiesMap | undefined;
+  if (params.actualFoodQuantities !== undefined) {
+    actualFoodQuantities = params.actualFoodQuantities && Object.keys(params.actualFoodQuantities).length > 0
+      ? { ...params.actualFoodQuantities }
+      : undefined;
+  } else if (params.foodQuantities !== undefined) {
+    actualFoodQuantities = params.foodQuantities && Object.keys(params.foodQuantities).length > 0
+      ? { ...params.foodQuantities }
+      : undefined;
+  } else if (existingIdx >= 0) {
+    actualFoodQuantities = daily.entries[existingIdx].actualFoodQuantities
+      ?? daily.entries[existingIdx].foodQuantities;
+  } else {
+    actualFoodQuantities = params.plannedBlock.foodQuantities
+      ? { ...params.plannedBlock.foodQuantities }
+      : undefined;
+  }
+
   // Preserve compatible detailedOutcome if omitted
   const resolvedDetailedOutcome = params.detailedOutcome !== undefined
     ? params.detailedOutcome
@@ -415,10 +443,12 @@ export function saveBlockVerification(params: {
     mealType: params.plannedBlock.mealType ?? (existingIdx >= 0 ? daily.entries[existingIdx].mealType : undefined),
     foodSelections: params.plannedBlock.foodSelections ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodSelections : undefined),
     customFoods: params.plannedBlock.customFoods ?? (existingIdx >= 0 ? daily.entries[existingIdx].customFoods : undefined),
+    foodQuantities: params.plannedBlock.foodQuantities ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodQuantities : undefined),
     actualItems,
     actualFoodCategories,
     actualFoodSelections,
     actualCustomFoods,
+    actualFoodQuantities,
     actualCustomText,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
@@ -637,6 +667,8 @@ export interface UnplannedFoodLogParams {
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   /** Custom foods entered */
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  /** Food quantities entered */
+  foodQuantities?: FoodQuantitiesMap;
   /** Photo attachments */
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
@@ -714,6 +746,7 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     foodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
     foodSelections: params.foodSelections ? JSON.parse(JSON.stringify(params.foodSelections)) : undefined,
     customFoods: params.customFoods ? JSON.parse(JSON.stringify(params.customFoods)) : undefined,
+    foodQuantities: params.foodQuantities ? JSON.parse(JSON.stringify(params.foodQuantities)) : undefined,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
   };
@@ -729,9 +762,11 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     mealType: params.mealType,
     foodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     customFoods: params.customFoods ? { ...params.customFoods } : undefined,
+    foodQuantities: params.foodQuantities ? { ...params.foodQuantities } : undefined,
     actualFoodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
     actualFoodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     actualCustomFoods: params.customFoods ? { ...params.customFoods } : undefined,
+    actualFoodQuantities: params.foodQuantities ? { ...params.foodQuantities } : undefined,
     actualCustomText: params.description.trim() || undefined,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,

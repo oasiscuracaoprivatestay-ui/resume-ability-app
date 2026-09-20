@@ -79,6 +79,19 @@ export default function RecommitScreen({
             <p className="recommit-unlimited-hint" id="recommit-unlimited-hint">
               {t.recommit_unlimited_hint || 'You can re-commit anytime you need to reset your focus.'}
             </p>
+
+            {/* Cancel / Return to Main Menu Action (Sergio Feedback) */}
+            <div className="recommit-cancel-wrap">
+              <button
+                id="btn-recommit-cancel"
+                type="button"
+                className="recommit-cancel-btn"
+                onClick={() => onNavigate('home')}
+                aria-label={t.recommit_btn_cancel || 'Cancel / Return to Main Menu'}
+              >
+                ✕ {t.recommit_btn_cancel || 'Cancel / Return to Main Menu'}
+              </button>
+            </div>
           </div>
         </div>
       ) : (

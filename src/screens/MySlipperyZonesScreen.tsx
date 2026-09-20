@@ -336,18 +336,31 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               </button>
             </div>
           ) : (
-            <HoldCommitButton
-              id="btn-sz-hold-review"
-              variant="review"
-              label={`→ ${t.sz_hold_to_confirm_review || 'HOLD TO CONFIRM REVIEW'}`}
-              disabled={!allChecked}
-              disabledReason={
-                !allChecked
-                  ? `${t.nn_review_check_all_first || 'Review each Non-Negotiable first'} (${checkedCount}/${nonNegotiables.length})`
-                  : undefined
-              }
-              onComplete={completeReview}
-            />
+            <div className="sz-hold-wrap">
+              <HoldCommitButton
+                id="btn-sz-hold-review"
+                variant="review"
+                label={`→ ${t.sz_hold_to_confirm_review || 'HOLD TO CONFIRM REVIEW'}`}
+                disabled={!allChecked}
+                disabledReason={
+                  !allChecked
+                    ? `${t.nn_review_check_all_first || 'Review each Non-Negotiable first'} (${checkedCount}/${nonNegotiables.length})`
+                    : undefined
+                }
+                onComplete={completeReview}
+              />
+
+              {/* Cancel / Return to Main Menu Action (Sergio Feedback) */}
+              <button
+                id="btn-sz-cancel"
+                type="button"
+                className="sz-cancel-btn"
+                onClick={() => onNavigate('home')}
+                aria-label={t.sz_btn_cancel || 'Cancel / Return to Main Menu'}
+              >
+                ✕ {t.sz_btn_cancel || 'Cancel / Return to Main Menu'}
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -17,13 +17,13 @@ import {
   FOOD_CATEGORY_KEYS,
   mapLegacyItemsToCategories,
 } from '../data/dietData';
-import { isValidCanonicalFood, findFoodOption } from '../data/foodOptions';
+import { isValidCanonicalFood, findFoodOption, type FoodQuantitiesMap } from '../data/foodOptions';
 import type { FoodPhotoMetadata } from './photoStorage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
-export type DayMode = 'structured' | 'unstructured';
+export type DayMode = 'structured' | 'unstructured' | 'free';
 
 export const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
@@ -42,6 +42,7 @@ export interface StructuredDietBlock {
   foodCategories?: FoodCategoryKey[]; // Phase 2: multi-select categories
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C: canonical specific food keys per category
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C: custom food strings per category
+  foodQuantities?: FoodQuantitiesMap; // Phase 28: optional quantities per food item
   foodPhoto?: FoodPhotoMetadata;      // Phase 6: legacy single photo attachment
   foodPhotos?: FoodPhotoMetadata[];   // Phase 6B: multi-photo support (food + beverages)
 }
@@ -354,6 +355,7 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
       : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []),
     foodSelections: b.foodSelections ? JSON.parse(JSON.stringify(b.foodSelections)) : undefined,
     customFoods: b.customFoods ? JSON.parse(JSON.stringify(b.customFoods)) : undefined,
+    foodQuantities: b.foodQuantities ? JSON.parse(JSON.stringify(b.foodQuantities)) : undefined,
     foodPhoto: b.foodPhoto ? { ...b.foodPhoto } : undefined,
     foodPhotos: b.foodPhotos ? b.foodPhotos.map(p => ({ ...p })) : undefined,
   }));
@@ -474,7 +476,12 @@ function parseWeeklyDietObject(rawObj: Record<string, unknown>): WeeklyStructure
         blocks: [],
       };
     }
-    const mode: DayMode = found.mode === 'unstructured' ? 'unstructured' : 'structured';
+    const mode: DayMode =
+      found.mode === 'unstructured'
+        ? 'unstructured'
+        : found.mode === 'free'
+        ? 'free'
+        : 'structured';
     const blocks = Array.isArray(found.blocks)
       ? (found.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
       : [];
@@ -496,7 +503,7 @@ function parseWeeklyDietObject(rawObj: Record<string, unknown>): WeeklyStructure
         dateOverrides[k] = {
           dayKey: (cast.dayKey as DayKey) ?? dateKeyToDayKey(k),
           dayOfWeek: typeof cast.dayOfWeek === 'number' ? cast.dayOfWeek : 0,
-          mode: cast.mode === 'unstructured' ? 'unstructured' : 'structured',
+          mode: cast.mode === 'unstructured' ? 'unstructured' : cast.mode === 'free' ? 'free' : 'structured',
           blocks: Array.isArray(cast.blocks)
             ? (cast.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
             : [],
@@ -515,7 +522,7 @@ function parseWeeklyDietObject(rawObj: Record<string, unknown>): WeeklyStructure
         historySnapshots[k] = {
           dayKey: (cast.dayKey as DayKey) ?? dateKeyToDayKey(k),
           dayOfWeek: typeof cast.dayOfWeek === 'number' ? cast.dayOfWeek : 0,
-          mode: cast.mode === 'unstructured' ? 'unstructured' : 'structured',
+          mode: cast.mode === 'unstructured' ? 'unstructured' : cast.mode === 'free' ? 'free' : 'structured',
           blocks: Array.isArray(cast.blocks)
             ? (cast.blocks as unknown[]).filter(isValidBlock).map(sanitiseBlock)
             : [],
@@ -849,13 +856,56 @@ export function updateDayPlan(
   return { ...diet, days: nextDays };
 }
 
-/** Set the mode ('structured' | 'unstructured') for a specific day. */
+/** Set the mode ('structured' | 'unstructured' | 'free') for a specific day. */
 export function setDayMode(
   diet: WeeklyStructuredDiet,
   dayKey: DayKey,
   mode: DayMode,
 ): WeeklyStructuredDiet {
   return updateDayPlan(diet, dayKey, d => ({ ...d, mode }));
+}
+
+/** Check if a day plan is in Free Schedule Day mode */
+export function isFreeDay(day?: StructuredDietDay | null): boolean {
+  return day?.mode === 'free';
+}
+
+/**
+ * Sets one or multiple specific calendar dates or weekdays as Free Schedule Days.
+ * Intentionally schedule-free: zero blocks, mode: 'free'.
+ * Preserves historical snapshots and existing verifications.
+ */
+export function setFreeScheduleDates(
+  diet: WeeklyStructuredDiet,
+  dates: string[], // YYYY-MM-DD or DayKey ('mon', 'tue', etc.)
+): WeeklyStructuredDiet {
+  let nextDiet = { ...diet };
+
+  for (const dateOrDay of dates) {
+    if (dateOrDay.length === 3 && DAY_KEYS.includes(dateOrDay as DayKey)) {
+      // Recurring weekday
+      const dayKey = dateOrDay as DayKey;
+      nextDiet = updateDayPlan(nextDiet, dayKey, d => ({
+        ...d,
+        mode: 'free',
+        blocks: [],
+      }));
+    } else if (dateOrDay.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // Specific calendar date override
+      const dateKey = dateOrDay;
+      const dayKey = dateKeyToDayKey(dateKey);
+      const dayIdx = DAY_KEYS.indexOf(dayKey);
+      const freeDayPlan: StructuredDietDay = {
+        dayKey,
+        dayOfWeek: dayIdx >= 0 ? dayIdx : 0,
+        mode: 'free',
+        blocks: [],
+      };
+      nextDiet = setDateOverride(nextDiet, dateKey, freeDayPlan);
+    }
+  }
+
+  return nextDiet;
 }
 
 /**
@@ -1001,6 +1051,33 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     if (hasAny) customFoods = nextCustom;
   }
 
+  // Prune and sanitize food quantities
+  let foodQuantities: FoodQuantitiesMap | undefined;
+  if (b.foodQuantities && typeof b.foodQuantities === 'object') {
+    const nextQuantities: FoodQuantitiesMap = {};
+    let hasAny = false;
+    for (const [key, qty] of Object.entries(b.foodQuantities)) {
+      if (qty && typeof qty === 'object' && typeof qty.amount === 'number' && !isNaN(qty.amount) && qty.amount > 0 && typeof qty.unit === 'string') {
+        const item: any = {
+          amount: Number(qty.amount),
+          unit: qty.unit,
+        };
+        if (typeof qty.customUnit === 'string' && qty.customUnit.trim()) {
+          item.customUnit = qty.customUnit.trim();
+        }
+        if (typeof qty.grams === 'number' && !isNaN(qty.grams)) {
+          item.grams = Number(qty.grams);
+        }
+        if (typeof qty.calories === 'number' && !isNaN(qty.calories)) {
+          item.calories = Number(qty.calories);
+        }
+        nextQuantities[key] = item;
+        hasAny = true;
+      }
+    }
+    if (hasAny) foodQuantities = nextQuantities;
+  }
+
   return {
     id: b.id,
     startTime: b.startTime,
@@ -1012,6 +1089,7 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     foodCategories: categories,
     foodSelections,
     customFoods,
+    foodQuantities,
     foodPhoto,
     foodPhotos,
   };

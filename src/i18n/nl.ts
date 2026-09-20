@@ -1516,6 +1516,44 @@ export const nl: Translations = {
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: 'SDA — De 7 vaardigheden om lichaamsvet te verliezen—en voor altijd weg te houden!',
   sda_slogan_tagline: 'De 7 vaardigheden om lichaamsvet te verliezen—en voor altijd weg te houden!',
+
+  // ── Phase 28: Food Quantity & Portion Tracking ──
+  sdb_unit_piece: 'stuk',
+  sdb_unit_portion: 'portie',
+  sdb_unit_serving: 'portie',
+  sdb_unit_cup: 'kopje',
+  sdb_unit_slice: 'plak/snede',
+  sdb_unit_gram: 'gram',
+  sdb_unit_oz: 'oz',
+  sdb_unit_ml: 'ml',
+  sdb_unit_custom: 'aangepast',
+  sdb_qty_add: 'Hoeveelheid toevoegen',
+  sdb_qty_amount: 'Hoeveelheid',
+  sdb_qty_unit: 'Eenheid',
+  sdb_qty_clear: 'Hoeveelheid wissen',
+  sdb_quantity_breakdown: 'Voedselporties & Hoeveelheden',
+  sdb_quantity_breakdown_desc: 'Optionele hoeveelheden vastgelegd in uw maaltijden en tussendoortjes',
+  sdb_no_quantities_logged: 'Nog geen specifieke porties vastgelegd. Hoeveelheden zijn optioneel!',
+
+  // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
+  recommit_btn_cancel: 'Annuleren / Terug naar Hoofdmenu',
+  commit_btn_cancel: 'Annuleren / Terug naar Hoofdmenu',
+  sz_btn_cancel: 'Annuleren / Terug naar Hoofdmenu',
+
+  // ── Free Schedule Day(s) Template ──
+  sdb_tpl_free_schedule_title: 'Vrije Roosterdag(en)',
+  sdb_tpl_free_schedule_desc: 'Kies bewust data zonder geplande maaltijden of vereiste voedselregistratie. Geen sancties, geen uitglijder-classificaties en volledige bescherming van uw score en reeksen.',
+  sdb_tl_free_schedule: 'Vrij rooster (Geen gestructureerde maaltijden of registratie vereist)',
+  sdb_free_day_badge: '🌴 Vrije Roosterdag',
+  sdb_free_day_title: 'Vrije Roosterdag',
+  sdb_free_day_desc: 'U heeft deze dag bewust ingeroosterd als vrij van maaltijdtijden en tracking. Geen sancties voor niet-geregistreerde maaltijden.',
+  sdb_free_day_select_dates: 'Selecteer Vrije Datum(s)',
+  sdb_free_day_apply_btn: 'Vrije Roosterdag Toepassen',
+  sdb_free_day_switch_back: 'Overschakelen naar Gestructureerd / Ongestructureerd',
+  sdb_free_day_log_spontaneous: 'Voedsel Vastleggen (Optioneel)',
+  sdb_free_day_applied_feedback: 'Vrije roosterdag toegepast op {count} datum(s)',
+  sdb_free_day_target_mode_label: 'Vrij Rooster',
+  sdb_free_day_no_blocks_needed: 'Geen geplande maaltijdblokken nodig voor deze dag.',
 };
 
 

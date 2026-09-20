@@ -1516,6 +1516,44 @@ export const es: Translations = {
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: 'SDA — Las 7 habilidades para perder grasa corporal—¡y no recuperarla jamás!',
   sda_slogan_tagline: 'Las 7 habilidades para perder grasa corporal—¡y no recuperarla jamás!',
+
+  // ── Phase 28: Food Quantity & Portion Tracking ──
+  sdb_unit_piece: 'pieza',
+  sdb_unit_portion: 'porción',
+  sdb_unit_serving: 'ración',
+  sdb_unit_cup: 'taza',
+  sdb_unit_slice: 'rebanada',
+  sdb_unit_gram: 'gramo',
+  sdb_unit_oz: 'oz',
+  sdb_unit_ml: 'ml',
+  sdb_unit_custom: 'personalizado',
+  sdb_qty_add: 'Agregar cantidad',
+  sdb_qty_amount: 'Cantidad',
+  sdb_qty_unit: 'Unidad',
+  sdb_qty_clear: 'Quitar cantidad',
+  sdb_quantity_breakdown: 'Porciones y Cantidades de Alimentos',
+  sdb_quantity_breakdown_desc: 'Cantidades opcionales registradas en sus comidas y refrigerios',
+  sdb_no_quantities_logged: 'Aún no se han registrado porciones específicas. ¡Las cantidades son opcionales!',
+
+  // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
+  recommit_btn_cancel: 'Cancelar / Volver al Menú Principal',
+  commit_btn_cancel: 'Cancelar / Volver al Menú Principal',
+  sz_btn_cancel: 'Cancelar / Volver al Menú Principal',
+
+  // ── Free Schedule Day(s) Template ──
+  sdb_tpl_free_schedule_title: 'Día(s) de Horario Libre',
+  sdb_tpl_free_schedule_desc: 'Seleccione intencionalmente fechas sin comidas programadas ni registro requerido. Sin penalizaciones, sin clasificaciones de desliz y con protección total para su puntaje y rachas.',
+  sdb_tl_free_schedule: 'Horario libre (No se requieren comidas estructuradas ni registro)',
+  sdb_free_day_badge: '🌴 Día de Horario Libre',
+  sdb_free_day_title: 'Día de Horario Libre',
+  sdb_free_day_desc: 'Ha programado intencionalmente este día libre de horarios de comida y seguimiento. Sin penalizaciones por comidas no registradas.',
+  sdb_free_day_select_dates: 'Seleccionar Fecha(s) Libre(s)',
+  sdb_free_day_apply_btn: 'Aplicar Día de Horario Libre',
+  sdb_free_day_switch_back: 'Cambiar a Estructurado / No estructurado',
+  sdb_free_day_log_spontaneous: 'Registrar Comida (Opcional)',
+  sdb_free_day_applied_feedback: 'Día de horario libre aplicado a {count} fecha(s)',
+  sdb_free_day_target_mode_label: 'Horario Libre',
+  sdb_free_day_no_blocks_needed: 'Cero bloques de comida programados requeridos para este día.',
 };
 
 

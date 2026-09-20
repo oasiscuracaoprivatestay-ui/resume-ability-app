@@ -29,6 +29,9 @@ import {
   sanitiseBlock,
   getBlockPrimaryDescription,
   MEAL_TYPE_KEYS,
+  isFreeDay,
+  setFreeScheduleDates,
+  clearDateOverride,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -78,8 +81,15 @@ import type { BlockTypeKey, FoodCategoryKey } from '../data/dietData';
 import {
   getFoodOptionsForCategory,
   findFoodOption,
+  getFoodQuantityKey,
+  formatFoodItemQuantity,
+  getDefaultFoodUnit,
+  FOOD_QUANTITY_UNITS,
   type FoodSelectionsMap,
   type CustomFoodsMap,
+  type FoodQuantitiesMap,
+  type FoodQuantityUnit,
+  type FoodItemQuantity,
 } from '../data/foodOptions';
 import QuickBuildModal from '../components/QuickBuildModal';
 import TemplateModal from '../components/TemplateModal';
@@ -310,6 +320,10 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
     if (initial?.customFoods) return JSON.parse(JSON.stringify(initial.customFoods));
     return {};
   });
+  const [foodQuantities, setFoodQuantities] = useState<FoodQuantitiesMap>(() => {
+    if (initial?.foodQuantities) return JSON.parse(JSON.stringify(initial.foodQuantities));
+    return {};
+  });
   const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(() => {
     if (initial?.foodCategories && initial.foodCategories.length > 0) {
       return initial.foodCategories[0];
@@ -501,6 +515,16 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
         setCustomText(formattedFood);
       }
 
+      if (!isAdding) {
+        const qtyKey = getFoodQuantityKey(cat, foodKey, false);
+        setFoodQuantities(q => {
+          if (!q[qtyKey]) return q;
+          const next = { ...q };
+          delete next[qtyKey];
+          return next;
+        });
+      }
+
       return { ...prev, [cat]: nextList };
     });
   };
@@ -541,6 +565,48 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
       ...prev,
       [cat]: (prev[cat] || []).filter(f => f !== foodText),
     }));
+    const qtyKey = getFoodQuantityKey(cat, foodText, true);
+    setFoodQuantities(q => {
+      if (!q[qtyKey]) return q;
+      const next = { ...q };
+      delete next[qtyKey];
+      return next;
+    });
+  };
+
+  const handleUpdateQuantity = (
+    key: string,
+    amount: number,
+    unit: FoodQuantityUnit,
+    customUnit?: string
+  ) => {
+    setFoodQuantities(prev => {
+      if (isNaN(amount) || amount <= 0) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      const item: FoodItemQuantity = {
+        amount,
+        unit,
+      };
+      if (customUnit !== undefined && customUnit.trim()) {
+        item.customUnit = customUnit.trim();
+      }
+      return {
+        ...prev,
+        [key]: item,
+      };
+    });
+  };
+
+  const handleRemoveQuantity = (key: string) => {
+    setFoodQuantities(prev => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
   const toggleItem = (key: string) => {
@@ -588,6 +654,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
       foodCategories,
       foodSelections,
       customFoods,
+      foodQuantities: Object.keys(foodQuantities).length > 0 ? foodQuantities : undefined,
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
@@ -843,6 +910,10 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                   {getFoodOptionsForCategory(activeCategorySubmenu).map(opt => {
                     const isFoodSelected = (foodSelections[activeCategorySubmenu] || []).includes(opt.key);
                     const foodLabel = (t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key;
+                    const qtyKey = getFoodQuantityKey(activeCategorySubmenu, opt.key);
+                    const itemQty = foodQuantities[qtyKey];
+                    const qtyBadge = isFoodSelected ? formatFoodItemQuantity(itemQty, t) : '';
+
                     return (
                       <button
                         key={opt.key}
@@ -854,6 +925,9 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                       >
                         {isFoodSelected && <span className="sdb-child-chip-check">✓ </span>}
                         <span>{foodLabel}</span>
+                        {isFoodSelected && qtyBadge && (
+                          <span className="sdb-food-chip-qty-pill">· {qtyBadge}</span>
+                        )}
                       </button>
                     );
                   })}
@@ -863,20 +937,27 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                 <div className="sdb-custom-food-section">
                   {(customFoods[activeCategorySubmenu] || []).length > 0 && (
                     <div className="sdb-custom-foods-list">
-                      {(customFoods[activeCategorySubmenu] || []).map(customItem => (
-                        <span key={customItem} className="sdb-custom-food-badge">
-                          <span>{customItem}</span>
-                          <button
-                            type="button"
-                            id={`btn-remove-custom-${customItem}`}
-                            className="sdb-custom-food-remove"
-                            onClick={() => handleRemoveCustomFood(activeCategorySubmenu, customItem)}
-                            aria-label={`${t.sdb_remove_custom_food} ${customItem}`}
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
+                      {(customFoods[activeCategorySubmenu] || []).map(customItem => {
+                        const qtyKey = getFoodQuantityKey(activeCategorySubmenu, customItem, true);
+                        const itemQty = foodQuantities[qtyKey];
+                        const qtyBadge = formatFoodItemQuantity(itemQty, t);
+
+                        return (
+                          <span key={customItem} className="sdb-custom-food-badge">
+                            <span>{customItem}</span>
+                            {qtyBadge && <span className="sdb-food-chip-qty-pill">· {qtyBadge}</span>}
+                            <button
+                              type="button"
+                              id={`btn-remove-custom-${customItem}`}
+                              className="sdb-custom-food-remove"
+                              onClick={() => handleRemoveCustomFood(activeCategorySubmenu, customItem)}
+                              aria-label={`${t.sdb_remove_custom_food} ${customItem}`}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -917,6 +998,140 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                     </p>
                   )}
                 </div>
+
+                {/* ── Phase 28: Optional Portion / Quantity Controls for Selected Foods ── */}
+                {(() => {
+                  const selectedCanonical = (foodSelections[activeCategorySubmenu] || []).map(k => {
+                    const opt = findFoodOption(activeCategorySubmenu, k);
+                    const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
+                    return { key: k, displayName: label, isCustom: false };
+                  });
+                  const selectedCustom = (customFoods[activeCategorySubmenu] || []).map(c => ({
+                    key: c,
+                    displayName: c,
+                    isCustom: true,
+                  }));
+                  const allSelectedItems = [...selectedCanonical, ...selectedCustom];
+                  if (allSelectedItems.length === 0) return null;
+
+                  return (
+                    <div className="sdb-food-portions-section" id={`sdb-portions-section-${activeCategorySubmenu}`}>
+                      <div className="sdb-portions-header">
+                        <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
+                        <span className="sdb-optional">({t.sdb_optional})</span>
+                      </div>
+                      <div className="sdb-portions-list">
+                        {allSelectedItems.map(item => {
+                          const qtyKey = getFoodQuantityKey(activeCategorySubmenu, item.key, item.isCustom);
+                          const curQty = foodQuantities[qtyKey];
+                          const isQuantified = !!(curQty && curQty.amount > 0);
+                          const defaultUnit = getDefaultFoodUnit(activeCategorySubmenu, item.key);
+
+                          return (
+                            <div key={item.key} className="sdb-portion-item-row" id={`sdb-portion-row-${item.key}`}>
+                              <span className="sdb-portion-item-name">{item.displayName}</span>
+                              {isQuantified ? (
+                                <div className="sdb-portion-controls">
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-btn sdb-qty-btn--minus"
+                                    id={`btn-qty-minus-${item.key}`}
+                                    onClick={() => {
+                                      const next = Math.max(0, Number((curQty.amount - 1).toFixed(1)));
+                                      if (next <= 0) {
+                                        handleRemoveQuantity(qtyKey);
+                                      } else {
+                                        handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
+                                      }
+                                    }}
+                                    aria-label={`Decrease ${item.displayName}`}
+                                  >
+                                    –
+                                  </button>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0.1"
+                                    id={`input-qty-amount-${item.key}`}
+                                    className="sdb-qty-input"
+                                    value={curQty.amount}
+                                    onChange={e => {
+                                      const val = parseFloat(e.target.value);
+                                      if (isNaN(val) || val <= 0) {
+                                        handleRemoveQuantity(qtyKey);
+                                      } else {
+                                        handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-btn sdb-qty-btn--plus"
+                                    id={`btn-qty-plus-${item.key}`}
+                                    onClick={() => {
+                                      handleUpdateQuantity(qtyKey, Number((curQty.amount + 1).toFixed(1)), curQty.unit, curQty.customUnit);
+                                    }}
+                                    aria-label={`Increase ${item.displayName}`}
+                                  >
+                                    +
+                                  </button>
+                                  <select
+                                    id={`select-qty-unit-${item.key}`}
+                                    className="sdb-qty-unit-select"
+                                    value={curQty.unit}
+                                    onChange={e => {
+                                      handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
+                                    }}
+                                  >
+                                    {FOOD_QUANTITY_UNITS.map(u => (
+                                      <option key={u} value={u}>
+                                        {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {curQty.unit === 'custom' && (
+                                    <input
+                                      type="text"
+                                      className="sdb-qty-custom-unit-input"
+                                      id={`input-qty-custom-unit-${item.key}`}
+                                      placeholder="unit..."
+                                      value={curQty.customUnit || ''}
+                                      onChange={e => {
+                                        handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                      }}
+                                      maxLength={20}
+                                    />
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-clear-btn"
+                                    id={`btn-qty-clear-${item.key}`}
+                                    title={t.sdb_qty_clear}
+                                    onClick={() => handleRemoveQuantity(qtyKey)}
+                                    aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="sdb-add-qty-pill-btn"
+                                  id={`btn-add-portion-${item.key}`}
+                                  onClick={() => {
+                                    handleUpdateQuantity(qtyKey, 1, defaultUnit);
+                                  }}
+                                >
+                                  + {t.sdb_qty_add}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -1852,31 +2067,45 @@ function BlockCard({
         </div>
       )}
 
-      {/* ── Phase 7C: Specific Food Selections Summary Line ── */}
+      {/* ── Phase 7C & Phase 28: Specific Food Selections & Portions Summary Line ── */}
       {(() => {
         const specificLabels: string[] = [];
+        const quantities = verification?.actualFoodQuantities || verification?.foodQuantities || block.foodQuantities;
+
         if (block.foodSelections) {
           for (const [cat, foods] of Object.entries(block.foodSelections)) {
             if (Array.isArray(foods)) {
               for (const foodKey of foods) {
                 const opt = findFoodOption(cat as FoodCategoryKey, foodKey);
                 const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
-                if (label && !specificLabels.includes(label)) specificLabels.push(label);
+                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, foodKey);
+                const qty = quantities?.[qtyKey];
+                const qtyStr = formatFoodItemQuantity(qty, t);
+                const displayItem = qtyStr ? `${qtyStr} ${label}` : label;
+                if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
               }
             }
           }
         }
         if (block.customFoods) {
-          for (const [, customList] of Object.entries(block.customFoods)) {
+          for (const [cat, customList] of Object.entries(block.customFoods)) {
             if (Array.isArray(customList)) {
               for (const cFood of customList) {
-                if (cFood && !specificLabels.includes(cFood)) specificLabels.push(cFood);
+                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+                const qty = quantities?.[qtyKey];
+                const qtyStr = formatFoodItemQuantity(qty, t);
+                const displayItem = qtyStr ? `${qtyStr} ${cFood}` : cFood;
+                if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
               }
             }
           }
         }
-        // Phase 26I: If primary description already includes these specific foods, don't duplicate them on the card
-        const remainingLabels = specificLabels.filter(label => !desc.toLowerCase().includes(label.toLowerCase()));
+        // Phase 26I: If primary description already matches this food and no quantity is set, avoid redundant duplication
+        const remainingLabels = specificLabels.filter(label => {
+          const lowerDesc = desc.toLowerCase();
+          const lowerLabel = label.toLowerCase();
+          return !lowerDesc.includes(lowerLabel) || label.includes(' ');
+        });
         if (remainingLabels.length === 0) return null;
 
         const maxVisible = 4;
@@ -2268,7 +2497,8 @@ interface FoodLogModalProps {
     mealType?: MealTypeKey,
     foodSelections?: Partial<Record<FoodCategoryKey, string[]>>,
     customFoods?: Partial<Record<FoodCategoryKey, string[]>>,
-    foodPhotos?: FoodPhotoMetadata[]
+    foodPhotos?: FoodPhotoMetadata[],
+    foodQuantities?: FoodQuantitiesMap
   ) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
@@ -2311,6 +2541,7 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
   const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(null);
   const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>({});
   const [customFoods, setCustomFoods] = useState<CustomFoodsMap>({});
+  const [foodQuantities, setFoodQuantities] = useState<FoodQuantitiesMap>({});
   const [customFoodInputs, setCustomFoodInputs] = useState<Record<string, string>>({});
   const [customFoodErrors, setCustomFoodErrors] = useState<Record<string, string>>({});
   const [outcome, setOutcome] = useState<DetailedBlockOutcome>('on_track');
@@ -2416,6 +2647,16 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
         setDescription(formattedFood);
       }
 
+      if (!isAdding) {
+        const qtyKey = getFoodQuantityKey(cat, foodKey, false);
+        setFoodQuantities(q => {
+          if (!q[qtyKey]) return q;
+          const next = { ...q };
+          delete next[qtyKey];
+          return next;
+        });
+      }
+
       const next = { ...prev };
       if (nextList.length > 0) {
         next[cat] = nextList;
@@ -2462,6 +2703,48 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
       ...prev,
       [cat]: (prev[cat] || []).filter(f => f !== foodText),
     }));
+    const qtyKey = getFoodQuantityKey(cat, foodText, true);
+    setFoodQuantities(q => {
+      if (!q[qtyKey]) return q;
+      const next = { ...q };
+      delete next[qtyKey];
+      return next;
+    });
+  };
+
+  const handleUpdateQuantity = (
+    key: string,
+    amount: number,
+    unit: FoodQuantityUnit,
+    customUnit?: string
+  ) => {
+    setFoodQuantities(prev => {
+      if (isNaN(amount) || amount <= 0) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      const item: FoodItemQuantity = {
+        amount,
+        unit,
+      };
+      if (customUnit !== undefined && customUnit.trim()) {
+        item.customUnit = customUnit.trim();
+      }
+      return {
+        ...prev,
+        [key]: item,
+      };
+    });
+  };
+
+  const handleRemoveQuantity = (key: string) => {
+    setFoodQuantities(prev => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -2486,7 +2769,8 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
       mealType,
       foodSelections,
       customFoods,
-      foodPhotos.length > 0 ? foodPhotos : undefined
+      foodPhotos.length > 0 ? foodPhotos : undefined,
+      Object.keys(foodQuantities).length > 0 ? foodQuantities : undefined
     );
   };
 
@@ -2695,6 +2979,10 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                   {getFoodOptionsForCategory(activeCategorySubmenu).map(opt => {
                     const isPicked = (foodSelections[activeCategorySubmenu] || []).includes(opt.key);
                     const optLabel = (t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key;
+                    const qtyKey = getFoodQuantityKey(activeCategorySubmenu, opt.key);
+                    const itemQty = foodQuantities[qtyKey];
+                    const qtyBadge = isPicked ? formatFoodItemQuantity(itemQty, t) : '';
+
                     return (
                       <button
                         key={opt.key}
@@ -2706,6 +2994,9 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                       >
                         {isPicked && <span className="sdb-child-chip-check sdb-food-option-check">✓ </span>}
                         <span className="sdb-food-option-label">{optLabel}</span>
+                        {isPicked && qtyBadge && (
+                          <span className="sdb-food-chip-qty-pill">· {qtyBadge}</span>
+                        )}
                       </button>
                     );
                   })}
@@ -2715,20 +3006,27 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                 <div className="sdb-custom-foods-section">
                   {(customFoods[activeCategorySubmenu] || []).length > 0 && (
                     <div className="sdb-custom-foods-list">
-                      {(customFoods[activeCategorySubmenu] || []).map(cFood => (
-                        <span key={cFood} className="sdb-custom-food-tag">
-                          <span className="sdb-custom-food-tag-icon">✨</span>
-                          <span className="sdb-custom-food-tag-text">{cFood}</span>
-                          <button
-                            type="button"
-                            className="sdb-custom-food-remove-btn"
-                            onClick={() => handleRemoveCustomFood(activeCategorySubmenu, cFood)}
-                            aria-label={`${t.commit_delete}: ${cFood}`}
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
+                      {(customFoods[activeCategorySubmenu] || []).map(cFood => {
+                        const qtyKey = getFoodQuantityKey(activeCategorySubmenu, cFood, true);
+                        const itemQty = foodQuantities[qtyKey];
+                        const qtyBadge = formatFoodItemQuantity(itemQty, t);
+
+                        return (
+                          <span key={cFood} className="sdb-custom-food-tag">
+                            <span className="sdb-custom-food-tag-icon">✨</span>
+                            <span className="sdb-custom-food-tag-text">{cFood}</span>
+                            {qtyBadge && <span className="sdb-food-chip-qty-pill">· {qtyBadge}</span>}
+                            <button
+                              type="button"
+                              className="sdb-custom-food-remove-btn"
+                              onClick={() => handleRemoveCustomFood(activeCategorySubmenu, cFood)}
+                              aria-label={`${t.commit_delete}: ${cFood}`}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -2769,6 +3067,140 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                     </p>
                   )}
                 </div>
+
+                {/* ── Phase 28: Optional Portion / Quantity Controls for Food Log ── */}
+                {(() => {
+                  const selectedCanonical = (foodSelections[activeCategorySubmenu] || []).map(k => {
+                    const opt = findFoodOption(activeCategorySubmenu, k);
+                    const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
+                    return { key: k, displayName: label, isCustom: false };
+                  });
+                  const selectedCustom = (customFoods[activeCategorySubmenu] || []).map(c => ({
+                    key: c,
+                    displayName: c,
+                    isCustom: true,
+                  }));
+                  const allSelectedItems = [...selectedCanonical, ...selectedCustom];
+                  if (allSelectedItems.length === 0) return null;
+
+                  return (
+                    <div className="sdb-food-portions-section" id={`sdb-food-log-portions-${activeCategorySubmenu}`}>
+                      <div className="sdb-portions-header">
+                        <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
+                        <span className="sdb-optional">({t.sdb_optional})</span>
+                      </div>
+                      <div className="sdb-portions-list">
+                        {allSelectedItems.map(item => {
+                          const qtyKey = getFoodQuantityKey(activeCategorySubmenu, item.key, item.isCustom);
+                          const curQty = foodQuantities[qtyKey];
+                          const isQuantified = !!(curQty && curQty.amount > 0);
+                          const defaultUnit = getDefaultFoodUnit(activeCategorySubmenu, item.key);
+
+                          return (
+                            <div key={item.key} className="sdb-portion-item-row" id={`sdb-food-log-portion-${item.key}`}>
+                              <span className="sdb-portion-item-name">{item.displayName}</span>
+                              {isQuantified ? (
+                                <div className="sdb-portion-controls">
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-btn sdb-qty-btn--minus"
+                                    id={`btn-food-log-qty-minus-${item.key}`}
+                                    onClick={() => {
+                                      const next = Math.max(0, Number((curQty.amount - 1).toFixed(1)));
+                                      if (next <= 0) {
+                                        handleRemoveQuantity(qtyKey);
+                                      } else {
+                                        handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
+                                      }
+                                    }}
+                                    aria-label={`Decrease ${item.displayName}`}
+                                  >
+                                    –
+                                  </button>
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0.1"
+                                    id={`input-food-log-qty-${item.key}`}
+                                    className="sdb-qty-input"
+                                    value={curQty.amount}
+                                    onChange={e => {
+                                      const val = parseFloat(e.target.value);
+                                      if (isNaN(val) || val <= 0) {
+                                        handleRemoveQuantity(qtyKey);
+                                      } else {
+                                        handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-btn sdb-qty-btn--plus"
+                                    id={`btn-food-log-qty-plus-${item.key}`}
+                                    onClick={() => {
+                                      handleUpdateQuantity(qtyKey, Number((curQty.amount + 1).toFixed(1)), curQty.unit, curQty.customUnit);
+                                    }}
+                                    aria-label={`Increase ${item.displayName}`}
+                                  >
+                                    +
+                                  </button>
+                                  <select
+                                    id={`select-food-log-qty-unit-${item.key}`}
+                                    className="sdb-qty-unit-select"
+                                    value={curQty.unit}
+                                    onChange={e => {
+                                      handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
+                                    }}
+                                  >
+                                    {FOOD_QUANTITY_UNITS.map(u => (
+                                      <option key={u} value={u}>
+                                        {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {curQty.unit === 'custom' && (
+                                    <input
+                                      type="text"
+                                      className="sdb-qty-custom-unit-input"
+                                      id={`input-food-log-custom-unit-${item.key}`}
+                                      placeholder="unit..."
+                                      value={curQty.customUnit || ''}
+                                      onChange={e => {
+                                        handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                      }}
+                                      maxLength={20}
+                                    />
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="sdb-qty-clear-btn"
+                                    id={`btn-food-log-qty-clear-${item.key}`}
+                                    title={t.sdb_qty_clear}
+                                    onClick={() => handleRemoveQuantity(qtyKey)}
+                                    aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="sdb-add-qty-pill-btn"
+                                  id={`btn-food-log-add-portion-${item.key}`}
+                                  onClick={() => {
+                                    handleUpdateQuantity(qtyKey, 1, defaultUnit);
+                                  }}
+                                >
+                                  + {t.sdb_qty_add}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -3844,6 +4276,62 @@ function StructureAwarenessCard({
             <p>{t.sdb_no_category_data}</p>
           </div>
         )}
+
+        {/* ── Food Portions & Quantities Breakdown (Phase 28) ── */}
+        {(categoryStats.totalPortionsLogged || 0) > 0 && (
+          <div className="sdb-awareness-portions-breakdown" id="sdb-awareness-portions-breakdown">
+            <div className="sdb-awareness-portions-header">
+              <h4 className="sdb-sub-heading">⚖️ {t.sdb_quantity_breakdown}</h4>
+              <p className="sdb-sub-desc">{t.sdb_quantity_breakdown_desc}</p>
+            </div>
+            <div className="sdb-awareness-portions-grid">
+              {(Object.keys(categoryStats.itemizedPortions || {}) as FoodCategoryKey[]).map(catKey => {
+                const portions = (categoryStats.itemizedPortions?.[catKey] || []).filter(
+                  item => Object.keys(item.quantitiesByUnit || {}).length > 0
+                );
+                if (portions.length === 0) return null;
+                const catIcon = FOOD_CATEGORY_ICONS[catKey] || '🍽️';
+                const catName = (t[`sdb_cat_${catKey}` as keyof typeof t] as string | undefined) || catKey;
+                return (
+                  <div key={catKey} className="sdb-awareness-cat-portion-card">
+                    <div className="sdb-cat-portion-card-header">
+                      <span className="sdb-cat-portion-icon">{catIcon}</span>
+                      <span className="sdb-cat-portion-name">{catName}</span>
+                    </div>
+                    <div className="sdb-cat-portion-items">
+                      {portions.flatMap(foodStat => {
+                        const unitEntries = Object.values(foodStat.quantitiesByUnit || {});
+                        const foodLabel = foodStat.isCustom
+                          ? foodStat.key
+                          : (() => {
+                              const opt = findFoodOption(catKey, foodStat.key);
+                              return opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || foodStat.key) : foodStat.key;
+                            })();
+
+                        return unitEntries.map((u, uIdx) => {
+                          const unitLabel = u.unit === 'custom' && u.customUnit
+                            ? u.customUnit
+                            : (t[`sdb_unit_${u.unit}` as keyof typeof t] as string | undefined) || u.unit;
+                          const pluralUnit = (u.totalAmount > 1 && !['gram', 'oz', 'ml'].includes(u.unit))
+                            ? `${unitLabel}s`
+                            : unitLabel;
+                          return (
+                            <div key={`${foodStat.key}-${u.unit}-${uIdx}`} className="sdb-awareness-portion-item">
+                              <span className="sdb-portion-item-name">{foodLabel}</span>
+                              <span className="sdb-portion-item-qty">
+                                <strong>{u.totalAmount}</strong> {pluralUnit}
+                              </span>
+                            </div>
+                          );
+                        });
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3889,7 +4377,10 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
 
   const todayKey = getLocalTodayKey();
   const isToday = selectedDayKey === todayKey;
-  const currentDay = getDayPlan(weekly, selectedDayKey);
+  const todayDateKey = getLocalDateKey();
+  const currentDay = isToday && weekly.dateOverrides?.[todayDateKey]
+    ? weekly.dateOverrides[todayDateKey]
+    : getDayPlan(weekly, selectedDayKey);
   const isReviewCompletedToday = hasCompletedDailyReview(getLocalDateKey(), activeProfile.id);
 
   // Preload photos for current day blocks for instant UI rendering (Phase 6B)
@@ -4023,7 +4514,14 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   };
 
   const handleSetMode = (mode: DayMode) => {
-    updateWeekly(w => setDayMode(w, selectedDayKey, mode));
+    updateWeekly(w => {
+      let nextW = setDayMode(w, selectedDayKey, mode);
+      const curDateKey = getLocalDateKey();
+      if (isToday && nextW.dateOverrides?.[curDateKey]) {
+        nextW = clearDateOverride(nextW, curDateKey);
+      }
+      return nextW;
+    });
   };
 
   const commitName = () => {
@@ -4067,7 +4565,26 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
   };
 
   // ── Template actions (Task 6 & Phase 7B: Daily Scope & Builder) ───────────
-  const handleApplyTemplate = (template: DietTemplate, configuredBlocks?: StructuredDietBlock[]) => {
+  const handleApplyTemplate = (
+    template: DietTemplate,
+    configuredBlocks?: StructuredDietBlock[],
+    selectedDates?: string[]
+  ) => {
+    if (template.id === 'free-schedule-days' || template.targetMode === 'free') {
+      const datesToApply = selectedDates && selectedDates.length > 0
+        ? selectedDates
+        : [selectedDayKey];
+      updateWeekly(w => setFreeScheduleDates(w, datesToApply));
+      setShowTemplateModal(false);
+      const feedbackMsg = (t.sdb_free_day_applied_feedback || 'Free Schedule Day applied to {count} date(s)')
+        .replace('{count}', String(datesToApply.length));
+      setCopyFeedback(feedbackMsg);
+      setTimeout(() => {
+        setCopyFeedback(null);
+      }, 3200);
+      return;
+    }
+
     const mode = template.targetMode;
     const blocks = configuredBlocks && configuredBlocks.length > 0
       ? configuredBlocks
@@ -4302,7 +4819,8 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
     mealType?: MealTypeKey,
     foodSelections?: FoodSelectionsMap,
     customFoods?: CustomFoodsMap,
-    foodPhotos?: FoodPhotoMetadata[]
+    foodPhotos?: FoodPhotoMetadata[],
+    foodQuantities?: FoodQuantitiesMap
   ) => {
     const dateKey = getLocalDateKey();
     const activityType: ScoreActivityType =
@@ -4320,6 +4838,7 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
       mealType,
       foodSelections,
       customFoods,
+      foodQuantities,
       foodPhotos,
       foodPhoto: foodPhotos && foodPhotos.length > 0 ? foodPhotos[0] : undefined,
       sourcePlanName: weekly.planName,
@@ -4368,6 +4887,229 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
         e => !e.isUnplanned && !e.plannedBlockId.startsWith('unplanned_') && !sortedBlocks.some(b => b.id === e.plannedBlockId)
       )
     : [];
+
+  // ── Render helper for spontaneous unplanned food log cards (shared across Free, Unstructured, Structured modes) ──
+  const renderUnplannedCard = (log: DietBlockVerification) => {
+    const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
+    const outcomeKey = log.detailedOutcome;
+    const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
+    const isOntrack = log.status === 'on-track';
+    const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
+
+    const logMealType = log.mealType || log.plannedSnapshot.mealType;
+    const mealTypeLabel = logMealType ? ((t[`sdb_meal_type_${logMealType}` as keyof typeof t] as string | undefined) || logMealType) : '';
+    const autoTime = log.plannedSnapshot.startTime;
+
+    const specificFoodNames: string[] = [];
+    const selections = log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections;
+    const quantities = log.actualFoodQuantities || log.foodQuantities || log.plannedSnapshot.foodQuantities;
+
+    if (selections) {
+      for (const [cat, keys] of Object.entries(selections)) {
+        if (keys && Array.isArray(keys)) {
+          for (const k of keys) {
+            const opt = findFoodOption(cat as FoodCategoryKey, k);
+            const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
+            const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, k);
+            const qty = quantities?.[qtyKey];
+            const qtyStr = formatFoodItemQuantity(qty, t);
+            specificFoodNames.push(qtyStr ? `${qtyStr} ${label}` : label);
+          }
+        }
+      }
+    }
+    const customs = log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods;
+    if (customs) {
+      for (const [cat, cList] of Object.entries(customs)) {
+        if (cList && Array.isArray(cList)) {
+          for (const cFood of cList) {
+            const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+            const qty = quantities?.[qtyKey];
+            const qtyStr = formatFoodItemQuantity(qty, t);
+            specificFoodNames.push(qtyStr ? `${qtyStr} ${cFood}` : cFood);
+          }
+        }
+      }
+    }
+
+    const logPhotos = log.foodPhotos || (log.foodPhoto ? [log.foodPhoto] : log.plannedSnapshot.foodPhotos || (log.plannedSnapshot.foodPhoto ? [log.plannedSnapshot.foodPhoto] : []));
+
+    return (
+      <div
+        key={log.id}
+        className={`sdb-unplanned-card sdb-unplanned-card--${log.status}${isTwentyPercent ? ' sdb-unplanned-card--twenty-percent' : ''}`}
+      >
+        <div className="sdb-unplanned-card-top">
+          <div className="sdb-unplanned-card-badges">
+            <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
+            {autoTime && (
+              <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
+                🕒 {autoTime}
+              </span>
+            )}
+            {mealTypeLabel && (
+              <span className="sdb-block-meal-type-badge">
+                {mealTypeLabel}
+              </span>
+            )}
+            {outcomeLabel && (
+              <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
+                {outcomeLabel}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="sdb-verified-link sdb-verified-link--clear"
+            onClick={() => handleClearStatus(log.plannedBlockId)}
+            aria-label={t.sdb_v_clear_status}
+          >
+            {t.sdb_v_clear_status}
+          </button>
+        </div>
+        {desc && <div className="sdb-unplanned-desc">{desc}</div>}
+        {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
+          <div className="sdb-unplanned-categories">
+            {log.actualFoodCategories.map(cat => (
+              <span key={cat} className="sdb-unplanned-category-chip">
+                {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
+              </span>
+            ))}
+          </div>
+        )}
+        {specificFoodNames.length > 0 && (
+          <div className="sdb-unplanned-specific-foods">
+            <span>• {specificFoodNames.join(', ')}</span>
+          </div>
+        )}
+        {logPhotos.length > 0 && (
+          <div className="sdb-unplanned-photos sdb-block-photos-cluster">
+            {logPhotos.map((p, idx) => {
+              const url = getPhotoDataUrlSync(p.id);
+              return (
+                <button
+                  key={p.id || idx}
+                  type="button"
+                  className="sdb-block-photo-thumb-btn"
+                  onClick={() => setPreviewPhotos({
+                    photos: logPhotos.map((item, pIdx) => ({
+                      id: item.id,
+                      dataUrl: getPhotoDataUrlSync(item.id),
+                      caption: `${desc} (${t.sdb_food_photo} ${pIdx + 1})`,
+                    })),
+                    initialIndex: idx,
+                  })}
+                  title={`${t.sdb_view_photo} (${idx + 1}/${logPhotos.length})`}
+                >
+                  {url ? (
+                    <img src={url} alt={`${desc} photo ${idx + 1}`} className="sdb-block-photo-thumb" />
+                  ) : (
+                    <div className="sdb-block-photo-thumb-placeholder">📷</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
+        {isEligibleSlipForDrift(log) && (
+          <div className="sdb-recovery-drift-container sdb-recovery-drift-container--unplanned">
+            <div className="sdb-recovery-row">
+              <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
+              <button
+                id={`btn-unplanned-resumed-daily-${log.id}`}
+                type="button"
+                className={`sdb-resumed-toggle-btn ${log.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
+                onClick={() => handleToggleResumed(log.plannedBlockId)}
+                aria-pressed={!!log.isResumed}
+              >
+                <span className="sdb-resumed-toggle-icon" aria-hidden="true">
+                  {log.isResumed ? '✓' : '⟲'}
+                </span>
+                <span className="sdb-resumed-toggle-text">
+                  {log.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
+                </span>
+              </button>
+            </div>
+
+            <div className="sdb-drift-ctrl-wrap">
+              <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
+              <div className="sdb-drift-btn-group">
+                {(!log.driftState || log.driftState === 'none') && (
+                  <button
+                    id={`btn-unplanned-drift-start-daily-${log.id}`}
+                    type="button"
+                    className="sdb-drift-action-btn sdb-drift-action-btn--start"
+                    onClick={() => handleUpdateDriftState(log.plannedBlockId, 'started')}
+                  >
+                    <span className="sdb-drift-btn-icon">🌊</span>
+                    <span>{t.sdb_drift_start}</span>
+                  </button>
+                )}
+
+                {(log.driftState === 'started' || log.driftState === 'drifting') && (
+                  <>
+                    <button
+                      id={`btn-unplanned-drift-still-daily-${log.id}`}
+                      type="button"
+                      className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${log.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
+                      onClick={() => handleUpdateDriftState(log.plannedBlockId, 'drifting')}
+                    >
+                      <span className="sdb-drift-btn-icon">〰️</span>
+                      <span>{t.sdb_drift_still}</span>
+                    </button>
+                    <button
+                      id={`btn-unplanned-drift-stop-daily-${log.id}`}
+                      type="button"
+                      className="sdb-drift-action-btn sdb-drift-action-btn--stop"
+                      onClick={() => handleUpdateDriftState(log.plannedBlockId, 'stopped')}
+                    >
+                      <span className="sdb-drift-btn-icon">🛑</span>
+                      <span>{t.sdb_drift_stopped}</span>
+                    </button>
+                  </>
+                )}
+
+                {log.driftState === 'stopped' && (
+                  <div className="sdb-drift-stopped-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
+                      <span className="sdb-drift-badge-icon">✓</span>
+                      <span>{t.sdb_drift_stopped}</span>
+                    </div>
+                    {onNavigate && (
+                      <button
+                        id={`btn-unplanned-drift-recommit-daily-${log.id}`}
+                        type="button"
+                        className="sdb-drift-recommit-btn"
+                        onClick={() => onNavigate('recommit')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 10px',
+                          background: 'rgba(74, 222, 128, 0.15)',
+                          border: '1px solid rgba(74, 222, 128, 0.35)',
+                          borderRadius: '14px',
+                          color: '#4ade80',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span>⚡</span>
+                        <span>{t.recommit_title || 'Re-Commit'}</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="screen sdb-screen">
@@ -4677,6 +5419,16 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                 >
                   {t.sdb_mode_unstructured}
                 </button>
+                <button
+                  id="sdb-mode-btn-free"
+                  type="button"
+                  role="radio"
+                  aria-checked={currentDay.mode === 'free'}
+                  className={`sdb-mode-pill ${currentDay.mode === 'free' ? 'sdb-mode-pill--active' : ''}`}
+                  onClick={() => handleSetMode('free')}
+                >
+                  🌴 {t.sdb_free_day_target_mode_label || 'Free'}
+                </button>
               </div>
             </div>
           </div>
@@ -4698,7 +5450,73 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
           />
 
           {/* ── Content depending on Day Mode ── */}
-          {currentDay.mode === 'unstructured' ? (
+          {isFreeDay(currentDay) ? (
+            /* ── Free Schedule Day State ── */
+            <div className="sdb-free-day-card" id="sdb-free-schedule-day-card">
+              <div className="sdb-free-day-badge-pill">
+                <span>🌴</span>
+                <span>{t.sdb_free_day_badge || '🌴 Free Schedule Day'}</span>
+              </div>
+              <h3 className="sdb-free-day-heading">{t.sdb_free_day_title || 'Free Schedule Day'}</h3>
+              <p className="sdb-free-day-description">{t.sdb_free_day_desc}</p>
+
+              <div className="sdb-free-day-callouts">
+                <div className="sdb-free-day-callout-item">
+                  <span className="sdb-free-callout-icon">🛡️</span>
+                  <div className="sdb-free-callout-content">
+                    <strong>Zero Penalties</strong>
+                    <span>No unlogged meal deductions or missing verification marks.</span>
+                  </div>
+                </div>
+                <div className="sdb-free-day-callout-item">
+                  <span className="sdb-free-callout-icon">⚡</span>
+                  <div className="sdb-free-callout-content">
+                    <strong>Streaks & Score Protected</strong>
+                    <span>Lifetime Score and previous XP remain 100% safe.</span>
+                  </div>
+                </div>
+                <div className="sdb-free-day-callout-item">
+                  <span className="sdb-free-callout-icon">⚖️</span>
+                  <div className="sdb-free-callout-content">
+                    <strong>Distinguishable from Slips</strong>
+                    <span>Intentionally scheduled break — never classified as a slip or deviation.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sdb-free-day-actions">
+                <button
+                  id="btn-sdb-free-log-food"
+                  type="button"
+                  className="sdb-free-btn sdb-free-btn--log"
+                  onClick={() => setShowFoodLogModal(true)}
+                >
+                  🍽️ {t.sdb_free_day_log_spontaneous || 'Log Food (Optional)'}
+                </button>
+                <button
+                  id="btn-sdb-free-switch-mode"
+                  type="button"
+                  className="sdb-free-btn sdb-free-btn--switch"
+                  onClick={() => handleSetMode('structured')}
+                >
+                  ⚙️ {t.sdb_free_day_switch_back || 'Switch to Structured / Unstructured'}
+                </button>
+              </div>
+
+              {/* ── Optional Spontaneous Food Logs on Free Day ── */}
+              {isToday && unplannedVerifications.length > 0 && (
+                <div className="sdb-unplanned-section" id="sdb-unplanned-food-logs-free">
+                  <div className="sdb-unplanned-header">
+                    <span className="sdb-unplanned-section-badge">🍽️ {t.sdb_food_log_modal_badge}</span>
+                    <span className="sdb-unplanned-section-tag">{t.sdb_food_log_unplanned_tag}</span>
+                  </div>
+                  <div className="sdb-unplanned-list">
+                    {unplannedVerifications.map(renderUnplannedCard)}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : currentDay.mode === 'unstructured' ? (
             currentDay.blocks.length === 0 ? (
               /* ── Unstructured day state (No blocks) ── */
               <div className="sdb-unstructured-card">
@@ -4759,23 +5577,33 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                         const autoTime = log.plannedSnapshot.startTime;
 
                         const specificFoodNames: string[] = [];
-                        const selections = log.actualFoodSelections || log.plannedSnapshot.foodSelections;
+                        const selections = log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections;
+                        const quantities = log.actualFoodQuantities || log.foodQuantities || log.plannedSnapshot.foodQuantities;
+
                         if (selections) {
                           for (const [cat, keys] of Object.entries(selections)) {
                             if (keys && Array.isArray(keys)) {
                               for (const k of keys) {
                                 const opt = findFoodOption(cat as FoodCategoryKey, k);
                                 const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
-                                specificFoodNames.push(label);
+                                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, k);
+                                const qty = quantities?.[qtyKey];
+                                const qtyStr = formatFoodItemQuantity(qty, t);
+                                specificFoodNames.push(qtyStr ? `${qtyStr} ${label}` : label);
                               }
                             }
                           }
                         }
-                        const customs = log.actualCustomFoods || log.plannedSnapshot.customFoods;
+                        const customs = log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods;
                         if (customs) {
-                          for (const cList of Object.values(customs)) {
+                          for (const [cat, cList] of Object.entries(customs)) {
                             if (cList && Array.isArray(cList)) {
-                              specificFoodNames.push(...cList);
+                              for (const cFood of cList) {
+                                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+                                const qty = quantities?.[qtyKey];
+                                const qtyStr = formatFoodItemQuantity(qty, t);
+                                specificFoodNames.push(qtyStr ? `${qtyStr} ${cFood}` : cFood);
+                              }
                             }
                           }
                         }
@@ -5128,23 +5956,33 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                       const autoTime = log.plannedSnapshot.startTime;
 
                       const specificFoodNames: string[] = [];
-                      const selections = log.actualFoodSelections || log.plannedSnapshot.foodSelections;
+                      const selections = log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections;
+                      const quantities = log.actualFoodQuantities || log.foodQuantities || log.plannedSnapshot.foodQuantities;
+
                       if (selections) {
                         for (const [cat, keys] of Object.entries(selections)) {
                           if (keys && Array.isArray(keys)) {
                             for (const k of keys) {
                               const opt = findFoodOption(cat as FoodCategoryKey, k);
                               const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
-                              specificFoodNames.push(label);
+                              const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, k);
+                              const qty = quantities?.[qtyKey];
+                              const qtyStr = formatFoodItemQuantity(qty, t);
+                              specificFoodNames.push(qtyStr ? `${qtyStr} ${label}` : label);
                             }
                           }
                         }
                       }
-                      const customs = log.actualCustomFoods || log.plannedSnapshot.customFoods;
+                      const customs = log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods;
                       if (customs) {
-                        for (const cList of Object.values(customs)) {
+                        for (const [cat, cList] of Object.entries(customs)) {
                           if (cList && Array.isArray(cList)) {
-                            specificFoodNames.push(...cList);
+                            for (const cFood of cList) {
+                              const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+                              const qty = quantities?.[qtyKey];
+                              const qtyStr = formatFoodItemQuantity(qty, t);
+                              specificFoodNames.push(qtyStr ? `${qtyStr} ${cFood}` : cFood);
+                            }
                           }
                         }
                       }

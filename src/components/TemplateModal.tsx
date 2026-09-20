@@ -15,7 +15,7 @@ import './TemplateModal.css';
 export interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (template: DietTemplate, configuredBlocks?: StructuredDietBlock[]) => void;
+  onApply: (template: DietTemplate, configuredBlocks?: StructuredDietBlock[], targetDates?: string[]) => void;
   selectedDayKey?: DayKey;
   selectedDayName?: string;
   hasExistingDayBlocks?: boolean;
@@ -46,6 +46,42 @@ export default function TemplateModal({
   const [blockCount, setBlockCount] = useState<number>(4);
   const [intervalMinutes, setIntervalMinutes] = useState<number>(180); // 3 hours default
 
+  // Free Schedule Days State
+  const [selectedFreeDates, setSelectedFreeDates] = useState<string[]>([]);
+  const [selectedFreeWeekdays, setSelectedFreeWeekdays] = useState<DayKey[]>([]);
+
+  // Generate upcoming calendar dates for multi-date selection
+  const upcomingDateOptions = useMemo(() => {
+    const opts: { dateKey: string; label: string; sub: string; dayKey: DayKey }[] = [];
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+      const dayIdx = d.getDay();
+      const dayKey: DayKey = dayIdx === 0 ? 'sun' : DAY_KEYS[dayIdx - 1];
+      const dayName = (t[`sdb_day_${dayKey}` as keyof typeof t] as string | undefined) || dayKey;
+      const label = i === 0 ? (t.sdb_period_today || 'Today') : (i === 1 ? 'Tomorrow' : dayName);
+      const sub = `${month}/${day}`;
+      opts.push({ dateKey, label, sub, dayKey });
+    }
+    return opts;
+  }, [t]);
+
+  const toggleFreeDate = (dateKey: string) => {
+    setSelectedFreeDates(prev =>
+      prev.includes(dateKey) ? prev.filter(d => d !== dateKey) : [...prev, dateKey]
+    );
+  };
+
+  const toggleFreeWeekday = (dayKey: DayKey) => {
+    setSelectedFreeWeekdays(prev =>
+      prev.includes(dayKey) ? prev.filter(d => d !== dayKey) : [...prev, dayKey]
+    );
+  };
+
   const resolvedDayName =
     (t[`sdb_day_${currentDayKey}` as keyof typeof t] as string | undefined) ||
     selectedDayName ||
@@ -61,6 +97,8 @@ export default function TemplateModal({
       setStartTime('08:00');
       setBlockCount(4);
       setIntervalMinutes(180);
+      setSelectedFreeDates([]);
+      setSelectedFreeWeekdays([]);
     }
   }, [isOpen, selectedDayKey]);
 
@@ -71,6 +109,10 @@ export default function TemplateModal({
     setBlockCount(count);
     setStartTime('08:00');
     setIntervalMinutes(180);
+    if (tpl.id === 'free-schedule-days' || tpl.targetMode === 'free') {
+      setSelectedFreeDates([upcomingDateOptions[0].dateKey]);
+      setSelectedFreeWeekdays([]);
+    }
     setView('preview');
   };
 
@@ -331,108 +373,195 @@ export default function TemplateModal({
               })}
             </div>
 
-            {/* ── Template Time-Block Builder (Phase 7B) ── */}
-            <div className="tpl-builder-card" id="tpl-builder-card">
-              <div className="tpl-builder-header">
-                <span className="tpl-builder-icon">⚙️</span>
-                <h3 className="tpl-builder-title">{t.sdb_tpl_builder_title}</h3>
-              </div>
-
-              <div className="tpl-builder-grid">
-                {/* 1. Starting Time */}
-                <div className="tpl-builder-field">
-                  <label htmlFor="tpl-select-start-time" className="tpl-builder-label">
-                    {t.sdb_tpl_start_time}
-                  </label>
-                  <select
-                    id="tpl-select-start-time"
-                    className="tpl-builder-select"
-                    value={startTime}
-                    onChange={e => setStartTime(e.target.value)}
-                  >
-                    {TIME_SLOTS.map(slot => (
-                      <option key={slot.value} value={slot.value}>
-                        {slot.value} ({slot.label})
-                      </option>
-                    ))}
-                  </select>
+            {/* ── Free Schedule Multi-Date Selection View or Time-Block Builder ── */}
+            {selectedTemplate.id === 'free-schedule-days' ? (
+              <div className="tpl-free-days-card" id="tpl-free-days-card">
+                <div className="tpl-builder-header">
+                  <span className="tpl-builder-icon">🌴</span>
+                  <h3 className="tpl-builder-title">{t.sdb_free_day_select_dates}</h3>
                 </div>
 
-                {/* 2. Number of Blocks */}
-                <div className="tpl-builder-field">
-                  <label htmlFor="tpl-select-block-count" className="tpl-builder-label">
-                    {t.sdb_tpl_num_blocks}
-                  </label>
-                  <select
-                    id="tpl-select-block-count"
-                    className="tpl-builder-select"
-                    value={blockCount}
-                    onChange={e => setBlockCount(Number(e.target.value))}
-                  >
-                    {BLOCK_COUNT_OPTIONS.map(num => (
-                      <option key={num} value={num}>
-                        {num}
-                      </option>
-                    ))}
-                  </select>
+                <p className="tpl-free-days-help">
+                  {t.sdb_tpl_free_schedule_desc}
+                </p>
+
+                <div className="tpl-free-dates-section-title">
+                  📅 Upcoming Dates:
+                </div>
+                <div className="tpl-free-dates-grid">
+                  {upcomingDateOptions.map(opt => {
+                    const isSelected = selectedFreeDates.includes(opt.dateKey);
+                    return (
+                      <button
+                        key={opt.dateKey}
+                        id={`btn-free-date-${opt.dateKey}`}
+                        type="button"
+                        className={`tpl-free-date-chip ${isSelected ? 'tpl-free-date-chip--selected' : ''}`}
+                        onClick={() => toggleFreeDate(opt.dateKey)}
+                        aria-pressed={isSelected}
+                      >
+                        <div className="tpl-free-date-info">
+                          <span className="tpl-free-date-label">{opt.label}</span>
+                          <span className="tpl-free-date-sub">{opt.sub}</span>
+                        </div>
+                        {isSelected && <span className="tpl-free-date-check">✓</span>}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* 3. Interval */}
-                <div className="tpl-builder-field">
-                  <label htmlFor="tpl-select-interval" className="tpl-builder-label">
-                    {t.sdb_tpl_interval}
-                  </label>
-                  <select
-                    id="tpl-select-interval"
-                    className="tpl-builder-select"
-                    value={intervalMinutes}
-                    onChange={e => setIntervalMinutes(Number(e.target.value))}
-                  >
-                    {SCHEDULE_INTERVAL_OPTIONS.map(opt => {
-                      const hoursLabel = opt.hours === 1
-                        ? t.sdb_qb_hour_unit_singular || '1 hour'
-                        : opt.hours === 0.5
-                        ? '30 min'
-                        : opt.hours === 0.75
-                        ? '45 min'
-                        : (t.sdb_qb_hours_unit || '{hours} hours').replace('{hours}', String(opt.hours));
+                <div className="tpl-free-recur-section">
+                  <div className="tpl-free-dates-section-title">
+                    🔄 Or Apply as Recurring Weekday(s):
+                  </div>
+                  <div className="tpl-free-weekdays-row">
+                    {DAY_KEYS.map(dk => {
+                      const isSelected = selectedFreeWeekdays.includes(dk);
+                      const dayName = (t[`sdb_day_${dk}` as keyof typeof t] as string | undefined) || dk;
                       return (
-                        <option key={opt.minutes} value={opt.minutes}>
-                          {hoursLabel}
-                        </option>
+                        <button
+                          key={dk}
+                          id={`btn-free-weekday-${dk}`}
+                          type="button"
+                          className={`tpl-free-weekday-chip ${isSelected ? 'tpl-free-weekday-chip--selected' : ''}`}
+                          onClick={() => toggleFreeWeekday(dk)}
+                          aria-pressed={isSelected}
+                        >
+                          {dayName.slice(0, 3)}
+                        </button>
                       );
                     })}
-                  </select>
+                  </div>
+                </div>
+
+                <div className="tpl-free-summary-badge">
+                  <span>
+                    Selected: <strong>{selectedFreeDates.length + selectedFreeWeekdays.length}</strong>{' '}
+                    {selectedFreeDates.length + selectedFreeWeekdays.length === 1 ? 'day' : 'days'}
+                  </span>
                 </div>
               </div>
+            ) : (
+              /* ── Template Time-Block Builder (Phase 7B) ── */
+              <div className="tpl-builder-card" id="tpl-builder-card">
+                <div className="tpl-builder-header">
+                  <span className="tpl-builder-icon">⚙️</span>
+                  <h3 className="tpl-builder-title">{t.sdb_tpl_builder_title}</h3>
+                </div>
 
-              {/* Generated Schedule Preview */}
-              <div className="tpl-builder-preview-box">
-                <div className="tpl-builder-preview-label">{t.sdb_tpl_preview_times}:</div>
-                {isOverflow ? (
-                  <p className="tpl-builder-overflow-msg">⚠️ {t.sdb_tpl_overflow_warning}</p>
-                ) : (
-                  <div className="tpl-builder-times-row">
-                    {generatedResult.blocks.map((block, idx) => (
-                      <span key={idx} className="tpl-builder-time-chip" id={`tpl-time-chip-${idx}`}>
-                        {block.startTime}
-                      </span>
-                    ))}
+                <div className="tpl-builder-grid">
+                  {/* 1. Starting Time */}
+                  <div className="tpl-builder-field">
+                    <label htmlFor="tpl-select-start-time" className="tpl-builder-label">
+                      {t.sdb_tpl_start_time}
+                    </label>
+                    <select
+                      id="tpl-select-start-time"
+                      className="tpl-builder-select"
+                      value={startTime}
+                      onChange={e => setStartTime(e.target.value)}
+                    >
+                      {TIME_SLOTS.map(slot => (
+                        <option key={slot.value} value={slot.value}>
+                          {slot.value} ({slot.label})
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+
+                  {/* 2. Number of Blocks */}
+                  <div className="tpl-builder-field">
+                    <label htmlFor="tpl-select-block-count" className="tpl-builder-label">
+                      {t.sdb_tpl_num_blocks}
+                    </label>
+                    <select
+                      id="tpl-select-block-count"
+                      className="tpl-builder-select"
+                      value={blockCount}
+                      onChange={e => setBlockCount(Number(e.target.value))}
+                    >
+                      {BLOCK_COUNT_OPTIONS.map(num => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 3. Interval */}
+                  <div className="tpl-builder-field">
+                    <label htmlFor="tpl-select-interval" className="tpl-builder-label">
+                      {t.sdb_tpl_interval}
+                    </label>
+                    <select
+                      id="tpl-select-interval"
+                      className="tpl-builder-select"
+                      value={intervalMinutes}
+                      onChange={e => setIntervalMinutes(Number(e.target.value))}
+                    >
+                      {SCHEDULE_INTERVAL_OPTIONS.map(opt => {
+                        const hoursLabel = opt.hours === 1
+                          ? t.sdb_qb_hour_unit_singular || '1 hour'
+                          : opt.hours === 0.5
+                          ? '30 min'
+                          : opt.hours === 0.75
+                          ? '45 min'
+                          : (t.sdb_qb_hours_unit || '{hours} hours').replace('{hours}', String(opt.hours));
+                        return (
+                          <option key={opt.minutes} value={opt.minutes}>
+                            {hoursLabel}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Generated Schedule Preview */}
+                <div className="tpl-builder-preview-box">
+                  <div className="tpl-builder-preview-label">{t.sdb_tpl_preview_times}:</div>
+                  {isOverflow ? (
+                    <p className="tpl-builder-overflow-msg">⚠️ {t.sdb_tpl_overflow_warning}</p>
+                  ) : (
+                    <div className="tpl-builder-times-row">
+                      {generatedResult.blocks.map((block, idx) => (
+                        <span key={idx} className="tpl-builder-time-chip" id={`tpl-time-chip-${idx}`}>
+                          {block.startTime}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="tpl-modal-actions">
-              <button
-                id="btn-tpl-apply-trigger"
-                type="button"
-                className="tpl-btn tpl-btn--primary"
-                onClick={handleApplyClick}
-                disabled={isOverflow}
-              >
-                ✓ {t.sdb_tpl_apply_to_day.replace('{day}', resolvedDayName).toUpperCase()}
-              </button>
+              {selectedTemplate.id === 'free-schedule-days' ? (
+                <button
+                  id="btn-tpl-apply-free-days"
+                  type="button"
+                  className="tpl-btn tpl-btn--primary"
+                  onClick={() => {
+                    const combined = [...selectedFreeDates, ...selectedFreeWeekdays];
+                    if (combined.length === 0) return;
+                    onApply(selectedTemplate, [], combined);
+                    onClose();
+                  }}
+                  disabled={selectedFreeDates.length + selectedFreeWeekdays.length === 0}
+                >
+                  ✓ {t.sdb_free_day_apply_btn.toUpperCase()} ({selectedFreeDates.length + selectedFreeWeekdays.length})
+                </button>
+              ) : (
+                <button
+                  id="btn-tpl-apply-trigger"
+                  type="button"
+                  className="tpl-btn tpl-btn--primary"
+                  onClick={handleApplyClick}
+                  disabled={isOverflow}
+                >
+                  ✓ {t.sdb_tpl_apply_to_day.replace('{day}', resolvedDayName).toUpperCase()}
+                </button>
+              )}
               <button
                 id="btn-tpl-back-to-list"
                 type="button"
