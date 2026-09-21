@@ -738,7 +738,8 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
               customUnit: qty.customUnit,
             };
           }
-          accum[cat][normalizedKey].quantitiesByUnit[unitKey].totalAmount += qty.amount;
+          accum[cat][normalizedKey].quantitiesByUnit[unitKey].totalAmount =
+            Math.round((accum[cat][normalizedKey].quantitiesByUnit[unitKey].totalAmount + qty.amount) * 100) / 100;
           totalPortionsLogged++;
         }
       }
@@ -775,7 +776,8 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
               customUnit: qty.customUnit,
             };
           }
-          accum[cat][customIdent].quantitiesByUnit[unitKey].totalAmount += qty.amount;
+          accum[cat][customIdent].quantitiesByUnit[unitKey].totalAmount =
+            Math.round((accum[cat][customIdent].quantitiesByUnit[unitKey].totalAmount + qty.amount) * 100) / 100;
           totalPortionsLogged++;
         }
       }

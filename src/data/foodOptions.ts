@@ -68,12 +68,40 @@ export function parseFoodQuantityKey(key: string): { category: FoodCategoryKey; 
   return null;
 }
 
+export function formatQuantityValue(amount: number): string {
+  if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) return '0';
+  const rounded = Math.round(amount * 100) / 100;
+  const intPart = Math.floor(rounded);
+  const fracPart = Math.round((rounded - intPart) * 100) / 100;
+
+  let fracStr = '';
+  if (Math.abs(fracPart - 0.5) < 0.01) {
+    fracStr = '½';
+  } else if (Math.abs(fracPart - 0.25) < 0.01) {
+    fracStr = '¼';
+  } else if (Math.abs(fracPart - 0.75) < 0.01) {
+    fracStr = '¾';
+  } else if (Math.abs(fracPart - 0.33) < 0.02) {
+    fracStr = '⅓';
+  } else if (Math.abs(fracPart - 0.67) < 0.02) {
+    fracStr = '⅔';
+  }
+
+  if (fracStr) {
+    return intPart > 0 ? `${intPart} ${fracStr}` : fracStr;
+  }
+  if (Number.isInteger(rounded)) {
+    return String(rounded);
+  }
+  return String(rounded);
+}
+
 export function formatFoodItemQuantity(
   qty?: FoodItemQuantity | null,
   t?: any
 ): string {
   if (!qty || typeof qty.amount !== 'number' || isNaN(qty.amount) || qty.amount <= 0) return '';
-  const amtStr = Number.isInteger(qty.amount) ? String(qty.amount) : String(Number(qty.amount.toFixed(2)));
+  const amtStr = formatQuantityValue(qty.amount);
   if (qty.unit === 'custom') {
     return qty.customUnit ? `${amtStr} ${qty.customUnit}` : amtStr;
   }
@@ -84,7 +112,9 @@ export function formatFoodItemQuantity(
   } else if (t && typeof t === 'object') {
     unitLabel = t[unitKey] || qty.unit;
   }
-  return `${amtStr} ${unitLabel}`;
+  const needsPlural = qty.amount > 1 && !['gram', 'oz', 'ml'].includes(qty.unit);
+  const displayUnit = needsPlural ? `${unitLabel}s` : unitLabel;
+  return `${amtStr} ${displayUnit}`;
 }
 
 export function getDefaultFoodUnit(category: FoodCategoryKey, foodKey: string): FoodQuantityUnit {

@@ -52,6 +52,7 @@ import {
   getDailyVerificationStats,
   setBlockDriftState,
   isEligibleSlipForDrift,
+  updateVerificationQuantities,
   type DriftState,
   ON_TRACK_OUTCOMES,
   SLIP_OUTCOMES,
@@ -83,6 +84,7 @@ import {
   findFoodOption,
   getFoodQuantityKey,
   formatFoodItemQuantity,
+  formatQuantityValue,
   getDefaultFoodUnit,
   FOOD_QUANTITY_UNITS,
   type FoodSelectionsMap,
@@ -274,11 +276,12 @@ interface BlockEditorProps {
   initialOutcome?: DetailedBlockOutcome | 'none';
   isToday?: boolean;
   onSave: (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none') => void;
+  onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: BlockEditorProps) {
+function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuantities, onCancel, t }: BlockEditorProps) {
   const getDefaultTimes = () => {
     const now = new Date();
     const h = now.getHours();
@@ -325,6 +328,25 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
     if (initial?.foodQuantities) return JSON.parse(JSON.stringify(initial.foodQuantities));
     return {};
   });
+  const [autosaveState, setAutosaveState] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [qtyInputBuffers, setQtyInputBuffers] = useState<Record<string, string>>({});
+  const autosaveTimerRef = useRef<any>(null);
+
+  const triggerAutosave = (nextMap: FoodQuantitiesMap) => {
+    if (!onAutosaveQuantities) return;
+    try {
+      onAutosaveQuantities(nextMap);
+      setAutosaveState('saved');
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = setTimeout(() => {
+        setAutosaveState('idle');
+      }, 2500);
+    } catch (err) {
+      console.error('Autosave failed:', err);
+      setAutosaveState('error');
+    }
+  };
+
   const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(() => {
     if (initial?.foodCategories && initial.foodCategories.length > 0) {
       return initial.foodCategories[0];
@@ -582,22 +604,25 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
     customUnit?: string
   ) => {
     setFoodQuantities(prev => {
+      let next: FoodQuantitiesMap;
       if (isNaN(amount) || amount <= 0) {
-        const next = { ...prev };
+        next = { ...prev };
         delete next[key];
-        return next;
+      } else {
+        const item: FoodItemQuantity = {
+          amount: Math.round(amount * 100) / 100,
+          unit,
+        };
+        if (customUnit !== undefined && customUnit.trim()) {
+          item.customUnit = customUnit.trim();
+        }
+        next = {
+          ...prev,
+          [key]: item,
+        };
       }
-      const item: FoodItemQuantity = {
-        amount,
-        unit,
-      };
-      if (customUnit !== undefined && customUnit.trim()) {
-        item.customUnit = customUnit.trim();
-      }
-      return {
-        ...prev,
-        [key]: item,
-      };
+      triggerAutosave(next);
+      return next;
     });
   };
 
@@ -606,6 +631,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
       if (!prev[key]) return prev;
       const next = { ...prev };
       delete next[key];
+      triggerAutosave(next);
       return next;
     });
   };
@@ -1018,8 +1044,20 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                   return (
                     <div className="sdb-food-portions-section" id={`sdb-portions-section-${activeCategorySubmenu}`}>
                       <div className="sdb-portions-header">
-                        <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
-                        <span className="sdb-optional">({t.sdb_optional})</span>
+                        <div className="sdb-portions-header-titles">
+                          <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
+                          <span className="sdb-optional">({t.sdb_optional})</span>
+                        </div>
+                        {autosaveState === 'saved' && (
+                          <span className="sdb-autosave-indicator sdb-autosave-indicator--saved" id="sdb-autosave-indicator-saved">
+                            ✓ {((t as any).global_saved as string) || 'Saved'}
+                          </span>
+                        )}
+                        {autosaveState === 'error' && (
+                          <span className="sdb-autosave-indicator sdb-autosave-indicator--error" id="sdb-autosave-indicator-error">
+                            ⚠ Error saving
+                          </span>
+                        )}
                       </div>
                       <div className="sdb-portions-list">
                         {allSelectedItems.map(item => {
@@ -1033,86 +1071,148 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onCancel, t }: 
                               <span className="sdb-portion-item-name">{item.displayName}</span>
                               {isQuantified ? (
                                 <div className="sdb-portion-controls">
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-btn sdb-qty-btn--minus"
-                                    id={`btn-qty-minus-${item.key}`}
-                                    onClick={() => {
-                                      const next = Math.max(0, Number((curQty.amount - 1).toFixed(1)));
-                                      if (next <= 0) {
-                                        handleRemoveQuantity(qtyKey);
-                                      } else {
-                                        handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
-                                      }
-                                    }}
-                                    aria-label={`Decrease ${item.displayName}`}
-                                  >
-                                    –
-                                  </button>
-                                  <input
-                                    type="number"
-                                    step="any"
-                                    min="0.1"
-                                    id={`input-qty-amount-${item.key}`}
-                                    className="sdb-qty-input"
-                                    value={curQty.amount}
-                                    onChange={e => {
-                                      const val = parseFloat(e.target.value);
-                                      if (isNaN(val) || val <= 0) {
-                                        handleRemoveQuantity(qtyKey);
-                                      } else {
-                                        handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
-                                      }
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-btn sdb-qty-btn--plus"
-                                    id={`btn-qty-plus-${item.key}`}
-                                    onClick={() => {
-                                      handleUpdateQuantity(qtyKey, Number((curQty.amount + 1).toFixed(1)), curQty.unit, curQty.customUnit);
-                                    }}
-                                    aria-label={`Increase ${item.displayName}`}
-                                  >
-                                    +
-                                  </button>
-                                  <select
-                                    id={`select-qty-unit-${item.key}`}
-                                    className="sdb-qty-unit-select"
-                                    value={curQty.unit}
-                                    onChange={e => {
-                                      handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
-                                    }}
-                                  >
-                                    {FOOD_QUANTITY_UNITS.map(u => (
-                                      <option key={u} value={u}>
-                                        {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
-                                      </option>
+                                  {/* Fractional quick selection buttons */}
+                                  <div className="sdb-fraction-chips-row">
+                                    {[
+                                      { label: '½', val: 0.5 },
+                                      { label: '¾', val: 0.75 },
+                                      { label: '1', val: 1 },
+                                      { label: '1½', val: 1.5 },
+                                      { label: '2', val: 2 },
+                                    ].map(f => (
+                                      <button
+                                        key={f.label}
+                                        type="button"
+                                        id={`btn-fraction-${String(f.val).replace('.', '_')}-${item.key}`}
+                                        className={`sdb-fraction-chip ${Math.abs(curQty.amount - f.val) < 0.01 ? 'sdb-fraction-chip--active' : ''}`}
+                                        onClick={() => {
+                                          setQtyInputBuffers(b => {
+                                            const n = { ...b };
+                                            delete n[qtyKey];
+                                            return n;
+                                          });
+                                          handleUpdateQuantity(qtyKey, f.val, curQty.unit, curQty.customUnit);
+                                        }}
+                                      >
+                                        {f.label}
+                                      </button>
                                     ))}
-                                  </select>
-                                  {curQty.unit === 'custom' && (
-                                    <input
-                                      type="text"
-                                      className="sdb-qty-custom-unit-input"
-                                      id={`input-qty-custom-unit-${item.key}`}
-                                      placeholder="unit..."
-                                      value={curQty.customUnit || ''}
-                                      onChange={e => {
-                                        handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                  </div>
+
+                                  <div className="sdb-portion-stepper-row">
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-btn sdb-qty-btn--minus"
+                                      id={`btn-qty-minus-${item.key}`}
+                                      onClick={() => {
+                                        let step = 1;
+                                        if (curQty.amount <= 1) step = 0.25;
+                                        else if (curQty.amount % 1 !== 0) step = 0.5;
+                                        const next = Math.max(0, Math.round((curQty.amount - step) * 100) / 100);
+                                        setQtyInputBuffers(b => {
+                                          const n = { ...b };
+                                          delete n[qtyKey];
+                                          return n;
+                                        });
+                                        if (next <= 0) {
+                                          handleRemoveQuantity(qtyKey);
+                                        } else {
+                                          handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
+                                        }
                                       }}
-                                      maxLength={20}
+                                      aria-label={`Decrease ${item.displayName}`}
+                                    >
+                                      –
+                                    </button>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0.1"
+                                      id={`input-qty-amount-${item.key}`}
+                                      className="sdb-qty-input"
+                                      value={qtyInputBuffers[qtyKey] !== undefined ? qtyInputBuffers[qtyKey] : curQty.amount}
+                                      onChange={e => {
+                                        const raw = e.target.value;
+                                        setQtyInputBuffers(prev => ({ ...prev, [qtyKey]: raw }));
+                                        const val = parseFloat(raw);
+                                        if (!isNaN(val) && val > 0) {
+                                          handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                        }
+                                      }}
+                                      onBlur={() => {
+                                        const raw = qtyInputBuffers[qtyKey];
+                                        if (raw !== undefined) {
+                                          setQtyInputBuffers(prev => {
+                                            const next = { ...prev };
+                                            delete next[qtyKey];
+                                            return next;
+                                          });
+                                          const val = parseFloat(raw);
+                                          if (isNaN(val) || val <= 0) {
+                                            handleRemoveQuantity(qtyKey);
+                                          } else {
+                                            handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                          }
+                                        }
+                                      }}
                                     />
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-clear-btn"
-                                    id={`btn-qty-clear-${item.key}`}
-                                    title={t.sdb_qty_clear}
-                                    onClick={() => handleRemoveQuantity(qtyKey)}
-                                    aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
-                                  >
-                                    ✕
-                                  </button>
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-btn sdb-qty-btn--plus"
+                                      id={`btn-qty-plus-${item.key}`}
+                                      onClick={() => {
+                                        let step = 1;
+                                        if (curQty.amount < 1) step = 0.25;
+                                        else if (curQty.amount % 1 !== 0) step = 0.5;
+                                        setQtyInputBuffers(b => {
+                                          const n = { ...b };
+                                          delete n[qtyKey];
+                                          return n;
+                                        });
+                                        handleUpdateQuantity(qtyKey, Math.round((curQty.amount + step) * 100) / 100, curQty.unit, curQty.customUnit);
+                                      }}
+                                      aria-label={`Increase ${item.displayName}`}
+                                    >
+                                      +
+                                    </button>
+                                    <select
+                                      id={`select-qty-unit-${item.key}`}
+                                      className="sdb-qty-unit-select"
+                                      value={curQty.unit}
+                                      onChange={e => {
+                                        handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
+                                      }}
+                                    >
+                                      {FOOD_QUANTITY_UNITS.map(u => (
+                                        <option key={u} value={u}>
+                                          {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {curQty.unit === 'custom' && (
+                                      <input
+                                        type="text"
+                                        className="sdb-qty-custom-unit-input"
+                                        id={`input-qty-custom-unit-${item.key}`}
+                                        placeholder="unit..."
+                                        value={curQty.customUnit || ''}
+                                        onChange={e => {
+                                          handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                        }}
+                                        maxLength={20}
+                                      />
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-clear-btn"
+                                      id={`btn-qty-clear-${item.key}`}
+                                      title={t.sdb_qty_clear}
+                                      onClick={() => handleRemoveQuantity(qtyKey)}
+                                      aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
                                 </div>
                               ) : (
                                 <button
@@ -2490,6 +2590,7 @@ function BlockCard({
 // Uses saveUnplannedFoodLog() so it never mutates the weekly plan.
 
 interface FoodLogModalProps {
+  initial?: DietBlockVerification | null;
   onSave: (
     description: string,
     foodCategories: FoodCategoryKey[],
@@ -2501,6 +2602,7 @@ interface FoodLogModalProps {
     foodPhotos?: FoodPhotoMetadata[],
     foodQuantities?: FoodQuantitiesMap
   ) => void;
+  onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
@@ -2530,22 +2632,61 @@ function outcomeToStatus(outcome: DetailedBlockOutcome): DietVerificationStatus 
   return 'slip';
 }
 
-function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
+function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: FoodLogModalProps) {
   const autoTime = useMemo(() => {
+    if (initial?.plannedSnapshot?.startTime) return initial.plannedSnapshot.startTime;
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  }, []);
+  }, [initial]);
 
-  const [description, setDescription] = useState('');
-  const [mealType, setMealType] = useState<MealTypeKey | undefined>('lunch');
-  const [selectedCategories, setSelectedCategories] = useState<FoodCategoryKey[]>([]);
-  const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(null);
-  const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>({});
-  const [customFoods, setCustomFoods] = useState<CustomFoodsMap>({});
-  const [foodQuantities, setFoodQuantities] = useState<FoodQuantitiesMap>({});
+  const [description, setDescription] = useState(
+    () => initial?.actualCustomText || initial?.plannedSnapshot?.customText || ''
+  );
+  const [mealType, setMealType] = useState<MealTypeKey | undefined>(
+    () => initial?.mealType || initial?.plannedSnapshot?.mealType || 'lunch'
+  );
+  const [selectedCategories, setSelectedCategories] = useState<FoodCategoryKey[]>(
+    () => initial?.actualFoodCategories || initial?.plannedSnapshot?.foodCategories || []
+  );
+  const [activeCategorySubmenu, setActiveCategorySubmenu] = useState<FoodCategoryKey | null>(() => {
+    const cats = initial?.actualFoodCategories || initial?.plannedSnapshot?.foodCategories;
+    return cats && cats.length > 0 ? cats[0] : null;
+  });
+  const [foodSelections, setFoodSelections] = useState<FoodSelectionsMap>(() => {
+    const sel = initial?.actualFoodSelections || initial?.foodSelections || initial?.plannedSnapshot?.foodSelections;
+    return sel ? JSON.parse(JSON.stringify(sel)) : {};
+  });
+  const [customFoods, setCustomFoods] = useState<CustomFoodsMap>(() => {
+    const cus = initial?.actualCustomFoods || initial?.customFoods || initial?.plannedSnapshot?.customFoods;
+    return cus ? JSON.parse(JSON.stringify(cus)) : {};
+  });
+  const [foodQuantities, setFoodQuantities] = useState<FoodQuantitiesMap>(() => {
+    const q = initial?.actualFoodQuantities || initial?.foodQuantities || initial?.plannedSnapshot?.foodQuantities;
+    return q ? JSON.parse(JSON.stringify(q)) : {};
+  });
   const [customFoodInputs, setCustomFoodInputs] = useState<Record<string, string>>({});
   const [customFoodErrors, setCustomFoodErrors] = useState<Record<string, string>>({});
-  const [outcome, setOutcome] = useState<DetailedBlockOutcome>('on_track');
+  const [outcome, setOutcome] = useState<DetailedBlockOutcome>(
+    () => initial?.detailedOutcome || 'on_track'
+  );
+  const [autosaveState, setAutosaveState] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [qtyInputBuffers, setQtyInputBuffers] = useState<Record<string, string>>({});
+  const autosaveTimerRef = useRef<any>(null);
+
+  const triggerAutosave = (nextMap: FoodQuantitiesMap) => {
+    if (!onAutosaveQuantities) return;
+    try {
+      onAutosaveQuantities(nextMap);
+      setAutosaveState('saved');
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = setTimeout(() => {
+        setAutosaveState('idle');
+      }, 2500);
+    } catch (err) {
+      console.error('Autosave failed:', err);
+      setAutosaveState('error');
+    }
+  };
 
   // Photo attachments state (Phase 27)
   const [foodPhotos, setFoodPhotos] = useState<FoodPhotoMetadata[]>([]);
@@ -2720,22 +2861,25 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
     customUnit?: string
   ) => {
     setFoodQuantities(prev => {
+      let next: FoodQuantitiesMap;
       if (isNaN(amount) || amount <= 0) {
-        const next = { ...prev };
+        next = { ...prev };
         delete next[key];
-        return next;
+      } else {
+        const item: FoodItemQuantity = {
+          amount: Math.round(amount * 100) / 100,
+          unit,
+        };
+        if (customUnit !== undefined && customUnit.trim()) {
+          item.customUnit = customUnit.trim();
+        }
+        next = {
+          ...prev,
+          [key]: item,
+        };
       }
-      const item: FoodItemQuantity = {
-        amount,
-        unit,
-      };
-      if (customUnit !== undefined && customUnit.trim()) {
-        item.customUnit = customUnit.trim();
-      }
-      return {
-        ...prev,
-        [key]: item,
-      };
+      triggerAutosave(next);
+      return next;
     });
   };
 
@@ -2744,6 +2888,7 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
       if (!prev[key]) return prev;
       const next = { ...prev };
       delete next[key];
+      triggerAutosave(next);
       return next;
     });
   };
@@ -3087,8 +3232,20 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                   return (
                     <div className="sdb-food-portions-section" id={`sdb-food-log-portions-${activeCategorySubmenu}`}>
                       <div className="sdb-portions-header">
-                        <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
-                        <span className="sdb-optional">({t.sdb_optional})</span>
+                        <div className="sdb-portions-header-titles">
+                          <span className="sdb-portions-title">⚖️ {t.sdb_quantity_breakdown}</span>
+                          <span className="sdb-optional">({t.sdb_optional})</span>
+                        </div>
+                        {autosaveState === 'saved' && (
+                          <span className="sdb-autosave-indicator sdb-autosave-indicator--saved" id="sdb-food-log-autosave-saved">
+                            ✓ {((t as any).global_saved as string) || 'Saved'}
+                          </span>
+                        )}
+                        {autosaveState === 'error' && (
+                          <span className="sdb-autosave-indicator sdb-autosave-indicator--error" id="sdb-food-log-autosave-error">
+                            ⚠ Error saving
+                          </span>
+                        )}
                       </div>
                       <div className="sdb-portions-list">
                         {allSelectedItems.map(item => {
@@ -3102,86 +3259,148 @@ function FoodLogModal({ onSave, onCancel, t }: FoodLogModalProps) {
                               <span className="sdb-portion-item-name">{item.displayName}</span>
                               {isQuantified ? (
                                 <div className="sdb-portion-controls">
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-btn sdb-qty-btn--minus"
-                                    id={`btn-food-log-qty-minus-${item.key}`}
-                                    onClick={() => {
-                                      const next = Math.max(0, Number((curQty.amount - 1).toFixed(1)));
-                                      if (next <= 0) {
-                                        handleRemoveQuantity(qtyKey);
-                                      } else {
-                                        handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
-                                      }
-                                    }}
-                                    aria-label={`Decrease ${item.displayName}`}
-                                  >
-                                    –
-                                  </button>
-                                  <input
-                                    type="number"
-                                    step="any"
-                                    min="0.1"
-                                    id={`input-food-log-qty-${item.key}`}
-                                    className="sdb-qty-input"
-                                    value={curQty.amount}
-                                    onChange={e => {
-                                      const val = parseFloat(e.target.value);
-                                      if (isNaN(val) || val <= 0) {
-                                        handleRemoveQuantity(qtyKey);
-                                      } else {
-                                        handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
-                                      }
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-btn sdb-qty-btn--plus"
-                                    id={`btn-food-log-qty-plus-${item.key}`}
-                                    onClick={() => {
-                                      handleUpdateQuantity(qtyKey, Number((curQty.amount + 1).toFixed(1)), curQty.unit, curQty.customUnit);
-                                    }}
-                                    aria-label={`Increase ${item.displayName}`}
-                                  >
-                                    +
-                                  </button>
-                                  <select
-                                    id={`select-food-log-qty-unit-${item.key}`}
-                                    className="sdb-qty-unit-select"
-                                    value={curQty.unit}
-                                    onChange={e => {
-                                      handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
-                                    }}
-                                  >
-                                    {FOOD_QUANTITY_UNITS.map(u => (
-                                      <option key={u} value={u}>
-                                        {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
-                                      </option>
+                                  {/* Fractional quick selection buttons */}
+                                  <div className="sdb-fraction-chips-row">
+                                    {[
+                                      { label: '½', val: 0.5 },
+                                      { label: '¾', val: 0.75 },
+                                      { label: '1', val: 1 },
+                                      { label: '1½', val: 1.5 },
+                                      { label: '2', val: 2 },
+                                    ].map(f => (
+                                      <button
+                                        key={f.label}
+                                        type="button"
+                                        id={`btn-food-log-fraction-${String(f.val).replace('.', '_')}-${item.key}`}
+                                        className={`sdb-fraction-chip ${Math.abs(curQty.amount - f.val) < 0.01 ? 'sdb-fraction-chip--active' : ''}`}
+                                        onClick={() => {
+                                          setQtyInputBuffers(b => {
+                                            const n = { ...b };
+                                            delete n[qtyKey];
+                                            return n;
+                                          });
+                                          handleUpdateQuantity(qtyKey, f.val, curQty.unit, curQty.customUnit);
+                                        }}
+                                      >
+                                        {f.label}
+                                      </button>
                                     ))}
-                                  </select>
-                                  {curQty.unit === 'custom' && (
-                                    <input
-                                      type="text"
-                                      className="sdb-qty-custom-unit-input"
-                                      id={`input-food-log-custom-unit-${item.key}`}
-                                      placeholder="unit..."
-                                      value={curQty.customUnit || ''}
-                                      onChange={e => {
-                                        handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                  </div>
+
+                                  <div className="sdb-portion-stepper-row">
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-btn sdb-qty-btn--minus"
+                                      id={`btn-food-log-qty-minus-${item.key}`}
+                                      onClick={() => {
+                                        let step = 1;
+                                        if (curQty.amount <= 1) step = 0.25;
+                                        else if (curQty.amount % 1 !== 0) step = 0.5;
+                                        const next = Math.max(0, Math.round((curQty.amount - step) * 100) / 100);
+                                        setQtyInputBuffers(b => {
+                                          const n = { ...b };
+                                          delete n[qtyKey];
+                                          return n;
+                                        });
+                                        if (next <= 0) {
+                                          handleRemoveQuantity(qtyKey);
+                                        } else {
+                                          handleUpdateQuantity(qtyKey, next, curQty.unit, curQty.customUnit);
+                                        }
                                       }}
-                                      maxLength={20}
+                                      aria-label={`Decrease ${item.displayName}`}
+                                    >
+                                      –
+                                    </button>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0.1"
+                                      id={`input-food-log-qty-${item.key}`}
+                                      className="sdb-qty-input"
+                                      value={qtyInputBuffers[qtyKey] !== undefined ? qtyInputBuffers[qtyKey] : curQty.amount}
+                                      onChange={e => {
+                                        const raw = e.target.value;
+                                        setQtyInputBuffers(prev => ({ ...prev, [qtyKey]: raw }));
+                                        const val = parseFloat(raw);
+                                        if (!isNaN(val) && val > 0) {
+                                          handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                        }
+                                      }}
+                                      onBlur={() => {
+                                        const raw = qtyInputBuffers[qtyKey];
+                                        if (raw !== undefined) {
+                                          setQtyInputBuffers(prev => {
+                                            const next = { ...prev };
+                                            delete next[qtyKey];
+                                            return next;
+                                          });
+                                          const val = parseFloat(raw);
+                                          if (isNaN(val) || val <= 0) {
+                                            handleRemoveQuantity(qtyKey);
+                                          } else {
+                                            handleUpdateQuantity(qtyKey, val, curQty.unit, curQty.customUnit);
+                                          }
+                                        }
+                                      }}
                                     />
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="sdb-qty-clear-btn"
-                                    id={`btn-food-log-qty-clear-${item.key}`}
-                                    title={t.sdb_qty_clear}
-                                    onClick={() => handleRemoveQuantity(qtyKey)}
-                                    aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
-                                  >
-                                    ✕
-                                  </button>
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-btn sdb-qty-btn--plus"
+                                      id={`btn-food-log-qty-plus-${item.key}`}
+                                      onClick={() => {
+                                        let step = 1;
+                                        if (curQty.amount < 1) step = 0.25;
+                                        else if (curQty.amount % 1 !== 0) step = 0.5;
+                                        setQtyInputBuffers(b => {
+                                          const n = { ...b };
+                                          delete n[qtyKey];
+                                          return n;
+                                        });
+                                        handleUpdateQuantity(qtyKey, Math.round((curQty.amount + step) * 100) / 100, curQty.unit, curQty.customUnit);
+                                      }}
+                                      aria-label={`Increase ${item.displayName}`}
+                                    >
+                                      +
+                                    </button>
+                                    <select
+                                      id={`select-food-log-qty-unit-${item.key}`}
+                                      className="sdb-qty-unit-select"
+                                      value={curQty.unit}
+                                      onChange={e => {
+                                        handleUpdateQuantity(qtyKey, curQty.amount, e.target.value as FoodQuantityUnit, curQty.customUnit);
+                                      }}
+                                    >
+                                      {FOOD_QUANTITY_UNITS.map(u => (
+                                        <option key={u} value={u}>
+                                          {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {curQty.unit === 'custom' && (
+                                      <input
+                                        type="text"
+                                        className="sdb-qty-custom-unit-input"
+                                        id={`input-food-log-custom-unit-${item.key}`}
+                                        placeholder="unit..."
+                                        value={curQty.customUnit || ''}
+                                        onChange={e => {
+                                          handleUpdateQuantity(qtyKey, curQty.amount, 'custom', e.target.value);
+                                        }}
+                                        maxLength={20}
+                                      />
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="sdb-qty-clear-btn"
+                                      id={`btn-food-log-qty-clear-${item.key}`}
+                                      title={t.sdb_qty_clear}
+                                      onClick={() => handleRemoveQuantity(qtyKey)}
+                                      aria-label={`${t.sdb_qty_clear} ${item.displayName}`}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
                                 </div>
                               ) : (
                                 <button
@@ -4316,11 +4535,12 @@ function StructureAwarenessCard({
                           const pluralUnit = (u.totalAmount > 1 && !['gram', 'oz', 'ml'].includes(u.unit))
                             ? `${unitLabel}s`
                             : unitLabel;
+                          const formattedAmount = formatQuantityValue(u.totalAmount);
                           return (
                             <div key={`${foodStat.key}-${u.unit}-${uIdx}`} className="sdb-awareness-portion-item">
                               <span className="sdb-portion-item-name">{foodLabel}</span>
                               <span className="sdb-portion-item-qty">
-                                <strong>{u.totalAmount}</strong> {pluralUnit}
+                                <strong>{formattedAmount}</strong> {pluralUnit}
                               </span>
                             </div>
                           );
@@ -4373,6 +4593,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   const [slipModalBlock, setSlipModalBlock] = useState<StructuredDietBlock | null>(null);
   // Modal state for unplanned / in-the-moment food logging (Phase 26A)
   const [showFoodLogModal, setShowFoodLogModal] = useState(false);
+  const [editingUnplannedLog, setEditingUnplannedLog] = useState<DietBlockVerification | null>(null);
   // Modal state for food photo preview (Phase 6B Multi-Photo)
   const [previewPhotos, setPreviewPhotos] = useState<{ photos: PhotoPreviewItem[]; initialIndex?: number } | null>(null);
 
@@ -4616,10 +4837,25 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
         return { ...day, blocks: sortBlocks(blocks) };
       })
     );
-    if (isToday && outcome) {
-      if (outcome === 'none') {
-        handleClearStatus(block.id);
-      } else {
+    if (isToday) {
+      const existingEntry = todayVerification?.entries.find(e => e.plannedBlockId === block.id);
+      if (existingEntry) {
+        if (outcome === 'none') {
+          handleClearStatus(block.id);
+        } else {
+          saveBlockVerification({
+            plannedBlock: block,
+            status: outcome ? outcomeToStatus(outcome) : existingEntry.status,
+            detailedOutcome: outcome || existingEntry.detailedOutcome,
+            actualFoodQuantities: block.foodQuantities,
+            foodQuantities: block.foodQuantities,
+            sourcePlanName: weekly.planName,
+            profileId: activeProfile.id,
+            profileName: getGoalDisplayName(activeProfile, t),
+          });
+          refreshVerifications();
+        }
+      } else if (outcome && outcome !== 'none') {
         handleVerifyOutcome(block, outcome, outcomeToStatus(outcome));
       }
     }
@@ -4730,6 +4966,8 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       plannedBlock: block,
       status,
       detailedOutcome: outcome,
+      actualFoodQuantities: block.foodQuantities,
+      foodQuantities: block.foodQuantities,
       sourcePlanName: weekly.planName,
       profileId: activeProfile.id,
       profileName: getGoalDisplayName(activeProfile, t),
@@ -4959,14 +5197,27 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="sdb-verified-link sdb-verified-link--clear"
-            onClick={() => handleClearStatus(log.plannedBlockId)}
-            aria-label={t.sdb_v_clear_status}
-          >
-            {t.sdb_v_clear_status}
-          </button>
+          <div className="sdb-unplanned-card-actions">
+            <button
+              type="button"
+              id={`btn-edit-unplanned-${log.plannedBlockId}`}
+              className="sdb-verified-link sdb-verified-link--change sdb-unplanned-edit-btn"
+              onClick={() => setEditingUnplannedLog(log)}
+              aria-label={t.commit_edit || 'Edit'}
+            >
+              ✎ {t.commit_edit || 'Edit'}
+            </button>
+            <span className="sdb-verified-ctrl-dot">·</span>
+            <button
+              type="button"
+              id={`btn-clear-unplanned-${log.plannedBlockId}`}
+              className="sdb-verified-link sdb-verified-link--clear"
+              onClick={() => handleClearStatus(log.plannedBlockId)}
+              aria-label={t.sdb_v_clear_status}
+            >
+              {t.sdb_v_clear_status}
+            </button>
+          </div>
         </div>
         {desc && <div className="sdb-unplanned-desc">{desc}</div>}
         {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
@@ -5455,14 +5706,45 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
             </div>
           )}
 
-          {/* ── Eating Structure Awareness & Food Category Analytics (Phase 3) ── */}
-          <StructureAwarenessCard
-            allVerifications={allVerifications}
-            activeProfileId={activeProfile.id}
-            selectedPeriod={structurePeriod}
-            onSelectPeriod={setStructurePeriod}
-            t={t}
-          />
+          {/* ── Four Food Action Buttons (Phase 29 Hotfix) ── */}
+          <div className="sdb-add-actions-row">
+            <button
+              id="btn-sdb-quick-build"
+              type="button"
+              className="sdb-quick-build-btn"
+              onClick={handleOpenQuickBuild}
+            >
+              <span className="sdb-add-btn-icon">⚡</span>
+              {t.sdb_quick_build}
+            </button>
+            <button
+              id="btn-sdb-choose-template"
+              type="button"
+              className="sdb-template-btn"
+              onClick={() => setShowTemplateModal(true)}
+            >
+              <span className="sdb-add-btn-icon">📑</span>
+              {t.sdb_choose_template}
+            </button>
+            <button
+              id="btn-sdb-log-food"
+              type="button"
+              className="sdb-log-food-btn"
+              onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
+            >
+              <span className="sdb-add-btn-icon">🍽️</span>
+              {t.sdb_log_food}
+            </button>
+            <button
+              id="btn-sdb-add-block"
+              type="button"
+              className="sdb-add-btn"
+              onClick={() => setEditingBlock('new')}
+            >
+              <span className="sdb-add-btn-icon">+</span>
+              {t.sdb_add_block}
+            </button>
+          </div>
 
           {/* ── Content depending on Day Mode ── */}
           {isFreeDay(currentDay) ? (
@@ -5813,44 +6095,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                   ))}
                 </div>
 
-                <div className="sdb-actions">
-                  <button
-                    id="btn-sdb-quick-build"
-                    type="button"
-                    className="sdb-quick-build-btn"
-                    onClick={handleOpenQuickBuild}
-                  >
-                    <span className="sdb-add-btn-icon">⚡</span>
-                    {t.sdb_quick_build}
-                  </button>
-                  <button
-                    id="btn-sdb-choose-template"
-                    type="button"
-                    className="sdb-template-btn"
-                    onClick={() => setShowTemplateModal(true)}
-                  >
-                    <span className="sdb-add-btn-icon">📑</span>
-                    {t.sdb_choose_template}
-                  </button>
-                  <button
-                    id="btn-sdb-log-food"
-                    type="button"
-                    className="sdb-log-food-btn"
-                    onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
-                  >
-                    <span className="sdb-add-btn-icon">🍽️</span>
-                    {t.sdb_log_food}
-                  </button>
-                  <button
-                    id="btn-sdb-add-block"
-                    type="button"
-                    className="sdb-add-btn"
-                    onClick={() => setEditingBlock('new')}
-                  >
-                    <span className="sdb-add-btn-icon">+</span>
-                    {t.sdb_add_block}
-                  </button>
-                </div>
+
               </div>
             )
           ) : (
@@ -6222,45 +6467,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 </div>
               )}
 
-              {/* ── Planning actions row: Quick Build · Choose Template · Add Block ── */}
-              <div className="sdb-add-actions-row">
-                <button
-                  id="btn-sdb-quick-build"
-                  type="button"
-                  className="sdb-quick-build-btn"
-                  onClick={handleOpenQuickBuild}
-                >
-                  <span className="sdb-add-btn-icon">⚡</span>
-                  {t.sdb_quick_build}
-                </button>
-                <button
-                  id="btn-sdb-choose-template"
-                  type="button"
-                  className="sdb-template-btn"
-                  onClick={() => setShowTemplateModal(true)}
-                >
-                  <span className="sdb-add-btn-icon">📑</span>
-                  {t.sdb_choose_template}
-                </button>
-                <button
-                  id="btn-sdb-log-food"
-                  type="button"
-                  className="sdb-log-food-btn"
-                  onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
-                >
-                  <span className="sdb-add-btn-icon">🍽️</span>
-                  {t.sdb_log_food}
-                </button>
-                <button
-                  id="btn-sdb-add-block"
-                  type="button"
-                  className="sdb-add-btn"
-                  onClick={() => setEditingBlock('new')}
-                >
-                  <span className="sdb-add-btn-icon">+</span>
-                  {t.sdb_add_block}
-                </button>
-              </div>
+
             </>
           )}
 
@@ -6288,6 +6495,17 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           }
           isToday={isToday}
           onSave={handleSaveBlock}
+          onAutosaveQuantities={
+            editingBlock !== 'new'
+              ? (nextQuantities: FoodQuantitiesMap) => {
+                  handleQuickUpdateBlock(editingBlock.id, { foodQuantities: nextQuantities });
+                  if (isToday) {
+                    updateVerificationQuantities(editingBlock.id, nextQuantities);
+                    refreshVerifications();
+                  }
+                }
+              : undefined
+          }
           onCancel={() => setEditingBlock(null)}
           t={t}
         />
@@ -6321,11 +6539,31 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
         />
       )}
 
-      {/* ── Unplanned Food Log Modal (Phase 26A) ── */}
-      {showFoodLogModal && (
+      {/* ── Unplanned Food Log Modal (Phase 26A / Phase 29) ── */}
+      {(showFoodLogModal || editingUnplannedLog) && (
         <FoodLogModal
-          onSave={handleSaveFoodLog}
-          onCancel={() => setShowFoodLogModal(false)}
+          initial={editingUnplannedLog}
+          onSave={(desc, cats, outcome, status, mealType, selections, customs, photos, quantities) => {
+            if (editingUnplannedLog) {
+              updateVerificationQuantities(editingUnplannedLog.plannedBlockId, quantities || {});
+              refreshVerifications();
+              setEditingUnplannedLog(null);
+            } else {
+              handleSaveFoodLog(desc, cats, outcome, status, mealType, selections, customs, photos, quantities);
+            }
+          }}
+          onAutosaveQuantities={
+            editingUnplannedLog
+              ? (nextQuantities: FoodQuantitiesMap) => {
+                  updateVerificationQuantities(editingUnplannedLog.plannedBlockId, nextQuantities);
+                  refreshVerifications();
+                }
+              : undefined
+          }
+          onCancel={() => {
+            setShowFoodLogModal(false);
+            setEditingUnplannedLog(null);
+          }}
           t={t}
         />
       )}

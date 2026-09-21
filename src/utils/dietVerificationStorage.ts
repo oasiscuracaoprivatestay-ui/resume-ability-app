@@ -295,8 +295,20 @@ export function saveBlockVerification(params: {
         : `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`);
 
   // Preserve existing snapshot if updating, or capture fresh snapshot on first save
+  // When updating an existing verification, refresh snapshot's food quantities/selections if plannedBlock updated them
   const plannedSnapshot: PlannedBlockSnapshot = existingIdx >= 0
-    ? daily.entries[existingIdx].plannedSnapshot
+    ? {
+        ...daily.entries[existingIdx].plannedSnapshot,
+        foodQuantities: params.plannedBlock.foodQuantities
+          ? JSON.parse(JSON.stringify(params.plannedBlock.foodQuantities))
+          : daily.entries[existingIdx].plannedSnapshot.foodQuantities,
+        foodSelections: params.plannedBlock.foodSelections
+          ? JSON.parse(JSON.stringify(params.plannedBlock.foodSelections))
+          : daily.entries[existingIdx].plannedSnapshot.foodSelections,
+        customFoods: params.plannedBlock.customFoods
+          ? JSON.parse(JSON.stringify(params.plannedBlock.customFoods))
+          : daily.entries[existingIdx].plannedSnapshot.customFoods,
+      }
     : createPlannedBlockSnapshot(params.plannedBlock);
 
   // Determine Resumed status: if changing to on-track, reset resumed; otherwise respect explicit param or keep existing
@@ -407,13 +419,15 @@ export function saveBlockVerification(params: {
     actualFoodQuantities = params.foodQuantities && Object.keys(params.foodQuantities).length > 0
       ? { ...params.foodQuantities }
       : undefined;
+  } else if (params.plannedBlock.foodQuantities !== undefined) {
+    actualFoodQuantities = params.plannedBlock.foodQuantities && Object.keys(params.plannedBlock.foodQuantities).length > 0
+      ? { ...params.plannedBlock.foodQuantities }
+      : undefined;
   } else if (existingIdx >= 0) {
     actualFoodQuantities = daily.entries[existingIdx].actualFoodQuantities
       ?? daily.entries[existingIdx].foodQuantities;
   } else {
-    actualFoodQuantities = params.plannedBlock.foodQuantities
-      ? { ...params.plannedBlock.foodQuantities }
-      : undefined;
+    actualFoodQuantities = undefined;
   }
 
   // Preserve compatible detailedOutcome if omitted
@@ -529,6 +543,66 @@ export function setBlockResumed(
 
   daily.entries[idx] = updatedEntry;
   all[dateKey] = daily;
+  saveAllDietVerifications(all);
+  return updatedEntry;
+}
+
+/**
+ * Update food quantities for an existing verification entry (planned or unplanned) in place.
+ * Autosaves to storage and returns the updated entry, or null if not found.
+ * Does NOT alter status, outcome, timestamps, photos, or generate score events.
+ */
+export function updateVerificationQuantities(
+  blockIdOrPlannedBlockId: string,
+  quantities: FoodQuantitiesMap,
+  dateKey: string = getLocalDateKey()
+): DietBlockVerification | null {
+  const all = loadAllDietVerifications();
+  let targetDateKey = dateKey;
+  let daily = all[targetDateKey];
+
+  let idx = daily?.entries.findIndex(
+    e => e.plannedBlockId === blockIdOrPlannedBlockId || e.id === blockIdOrPlannedBlockId
+  ) ?? -1;
+
+  if (idx === -1) {
+    // Search all dates if not found in given dateKey
+    for (const [dk, d] of Object.entries(all)) {
+      const foundIdx = d.entries.findIndex(
+        e => e.plannedBlockId === blockIdOrPlannedBlockId || e.id === blockIdOrPlannedBlockId
+      );
+      if (foundIdx !== -1) {
+        targetDateKey = dk;
+        daily = d;
+        idx = foundIdx;
+        break;
+      }
+    }
+  }
+
+  if (!daily || idx === -1) return null;
+
+  const existing = daily.entries[idx];
+  const cleanedQuantities = Object.keys(quantities).length > 0 ? { ...quantities } : undefined;
+
+  const updatedEntry: DietBlockVerification = {
+    ...existing,
+    actualFoodQuantities: cleanedQuantities,
+    foodQuantities: cleanedQuantities,
+    plannedSnapshot: existing.plannedSnapshot
+      ? {
+          ...existing.plannedSnapshot,
+          foodQuantities: cleanedQuantities ? JSON.parse(JSON.stringify(cleanedQuantities)) : undefined,
+        }
+      : existing.plannedSnapshot,
+  };
+
+  const nextEntries = daily.entries.map((e, i) => (i === idx ? updatedEntry : e));
+  all[targetDateKey] = {
+    ...daily,
+    entries: nextEntries,
+  };
+
   saveAllDietVerifications(all);
   return updatedEntry;
 }

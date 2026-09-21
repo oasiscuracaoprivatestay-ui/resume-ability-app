@@ -2045,7 +2045,7 @@
   display: flex;
   align-items: stretch;
   gap: 10px;
-  margin-top: 1.25rem;
+  margin: 0.75rem 0 1rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -2432,7 +2432,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     width: 100%;
-    margin-top: 1.25rem;
+    margin: 0.75rem 0 1rem;
     box-sizing: border-box;
   }
 
@@ -5055,6 +5055,53 @@
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.sdb-unplanned-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdb-unplanned-edit-btn {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sdb-unplanned-edit-btn:hover {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: var(--accent, #2dd4bf);
+  color: #2dd4bf;
+  transform: translateY(-1px);
+}
+
+.sdb-unplanned-clear-btn {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.sdb-unplanned-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #f87171;
+}
+
 .sdb-unplanned-desc {
   font-size: 1.08rem;
   font-weight: 700;
@@ -5498,9 +5545,73 @@
 
 .sdb-portion-controls {
   display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+
+.sdb-fraction-chips-row {
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 4px;
   flex-wrap: wrap;
+}
+
+.sdb-fraction-chip {
+  padding: 2px 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary, #94a3b8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.sdb-fraction-chip:hover {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(45, 212, 191, 0.35);
+  color: #fff;
+}
+
+.sdb-fraction-chip--active {
+  background: rgba(45, 212, 191, 0.2);
+  border-color: var(--accent, #2dd4bf);
+  color: var(--accent, #2dd4bf);
+  font-weight: 800;
+  box-shadow: 0 0 8px rgba(45, 212, 191, 0.2);
+}
+
+.sdb-portion-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sdb-autosave-indicator {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.sdb-autosave-indicator--saved {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.sdb-autosave-indicator--error {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .sdb-portion-qty-stepper {
