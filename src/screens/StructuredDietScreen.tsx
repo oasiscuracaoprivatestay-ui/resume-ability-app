@@ -53,6 +53,7 @@ import {
   setBlockDriftState,
   isEligibleSlipForDrift,
   updateVerificationQuantities,
+  updateUnplannedFoodLog,
   type DriftState,
   ON_TRACK_OUTCOMES,
   SLIP_OUTCOMES,
@@ -83,6 +84,10 @@ import {
   getFoodOptionsForCategory,
   findFoodOption,
   getFoodQuantityKey,
+  parseFoodQuantityKey,
+  isCanonicalFoodKeyOrLabel,
+  getDerivedFoodItems,
+  getDerivedFoodDescription,
   formatFoodItemQuantity,
   formatQuantityValue,
   getDefaultFoodUnit,
@@ -312,6 +317,26 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
     return [];
   });
   const [customText, setCustomText] = useState(initial?.customText ?? '');
+  const [isCustomTextUserEdited, setIsCustomTextUserEdited] = useState(() => {
+    if (!initial?.customText || !initial.customText.trim()) return false;
+    const initialText = initial.customText.trim();
+    const defaultTypeName = (t[`sdb_type_${initial.type}` as keyof typeof t] as string | undefined) || initial.type;
+    if (initialText.toLowerCase() === defaultTypeName.toLowerCase() || initialText.toLowerCase() === (initial.type || '').toLowerCase()) {
+      return false;
+    }
+    const derived = getDerivedFoodDescription(initial.foodSelections, initial.customFoods, t);
+    if (initialText.toLowerCase() === derived.toLowerCase()) {
+      return false;
+    }
+    const items = getDerivedFoodItems(initial.foodSelections, initial.customFoods, t);
+    if (items.some(item => item.toLowerCase() === initialText.toLowerCase())) {
+      return false;
+    }
+    if (isCanonicalFoodKeyOrLabel(initialText, t)) {
+      return false;
+    }
+    return true;
+  });
   const [mealType, setMealType] = useState<MealTypeKey | undefined>(initial?.mealType);
   const [selectedOutcome, setSelectedOutcome] = useState<DetailedBlockOutcome | 'none'>(initialOutcome || 'none');
 
@@ -495,16 +520,33 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
       if (activeCategorySubmenu === key) {
         // Deselect category, close submenu, clear specific & custom foods for this category
         setFoodCategories(prev => prev.filter(c => c !== key));
-        setFoodSelections(prev => {
+        const nextSelections: FoodSelectionsMap = { ...foodSelections };
+        delete nextSelections[key];
+        setFoodSelections(nextSelections);
+
+        const nextCustoms: CustomFoodsMap = { ...customFoods };
+        delete nextCustoms[key];
+        setCustomFoods(nextCustoms);
+
+        // Also clean up quantities for this entire category
+        setFoodQuantities(prev => {
           const next = { ...prev };
-          delete next[key];
-          return next;
+          let changed = false;
+          for (const k of Object.keys(next)) {
+            const parsed = parseFoodQuantityKey(k);
+            if (parsed && parsed.category === key) {
+              delete next[k];
+              changed = true;
+            }
+          }
+          if (changed) triggerAutosave(next);
+          return changed ? next : prev;
         });
-        setCustomFoods(prev => {
-          const next = { ...prev };
-          delete next[key];
-          return next;
-        });
+
+        if (!isCustomTextUserEdited) {
+          setCustomText(getDerivedFoodDescription(nextSelections, nextCustoms, t));
+        }
+
         setActiveCategorySubmenu(null);
       } else {
         // Category is selected, switch active submenu to it
@@ -518,38 +560,35 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
   };
 
   const toggleSpecificFood = (cat: FoodCategoryKey, foodKey: string) => {
-    setFoodSelections(prev => {
-      const curList = prev[cat] || [];
-      const isAdding = !curList.includes(foodKey);
-      const nextList = isAdding
-        ? [...curList, foodKey]
-        : curList.filter(f => f !== foodKey);
+    const curList = foodSelections[cat] || [];
+    const isAdding = !curList.includes(foodKey);
+    const nextList = isAdding
+      ? [...curList, foodKey]
+      : curList.filter(f => f !== foodKey);
 
-      // Sergio's Phase 26I: When user selects a food item, prioritize actual food as main description
-      const opt = findFoodOption(cat, foodKey);
-      const foodLabel = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
-      const formattedFood = foodLabel.charAt(0).toUpperCase() + foodLabel.slice(1).replace(/_/g, ' ');
+    const nextSelections: FoodSelectionsMap = {
+      ...foodSelections,
+      [cat]: nextList,
+    };
+    if (nextList.length === 0) {
+      delete nextSelections[cat];
+    }
+    setFoodSelections(nextSelections);
 
-      const defaultTypeName = (t[`sdb_type_${type}` as keyof typeof t] as string | undefined) || type;
-      const curCustom = customText.trim();
-      const isGenericDesc = !curCustom || curCustom.toLowerCase() === defaultTypeName.toLowerCase() || curCustom.toLowerCase() === type.toLowerCase();
+    if (!isAdding) {
+      const qtyKey = getFoodQuantityKey(cat, foodKey, false);
+      setFoodQuantities(q => {
+        if (!q[qtyKey]) return q;
+        const next = { ...q };
+        delete next[qtyKey];
+        triggerAutosave(next);
+        return next;
+      });
+    }
 
-      if (isAdding && isGenericDesc) {
-        setCustomText(formattedFood);
-      }
-
-      if (!isAdding) {
-        const qtyKey = getFoodQuantityKey(cat, foodKey, false);
-        setFoodQuantities(q => {
-          if (!q[qtyKey]) return q;
-          const next = { ...q };
-          delete next[qtyKey];
-          return next;
-        });
-      }
-
-      return { ...prev, [cat]: nextList };
-    });
+    if (!isCustomTextUserEdited) {
+      setCustomText(getDerivedFoodDescription(nextSelections, customFoods, t));
+    }
   };
 
   const handleAddCustomFood = (cat: FoodCategoryKey) => {
@@ -571,30 +610,42 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
       return;
     }
 
-    if (!customText.trim() || customText.trim().toLowerCase() === type.toLowerCase()) {
-      setCustomText(raw);
-    }
-
-    setCustomFoods(prev => ({
-      ...prev,
-      [cat]: [...(prev[cat] || []), raw],
-    }));
+    const nextCustoms: CustomFoodsMap = {
+      ...customFoods,
+      [cat]: [...(customFoods[cat] || []), raw],
+    };
+    setCustomFoods(nextCustoms);
     setCustomFoodInputs(prev => ({ ...prev, [cat]: '' }));
     setCustomFoodErrors(prev => ({ ...prev, [cat]: '' }));
+
+    if (!isCustomTextUserEdited) {
+      setCustomText(getDerivedFoodDescription(foodSelections, nextCustoms, t));
+    }
   };
 
   const handleRemoveCustomFood = (cat: FoodCategoryKey, foodText: string) => {
-    setCustomFoods(prev => ({
-      ...prev,
-      [cat]: (prev[cat] || []).filter(f => f !== foodText),
-    }));
+    const nextList = (customFoods[cat] || []).filter(f => f !== foodText);
+    const nextCustoms: CustomFoodsMap = {
+      ...customFoods,
+      [cat]: nextList,
+    };
+    if (nextList.length === 0) {
+      delete nextCustoms[cat];
+    }
+    setCustomFoods(nextCustoms);
+
     const qtyKey = getFoodQuantityKey(cat, foodText, true);
     setFoodQuantities(q => {
       if (!q[qtyKey]) return q;
       const next = { ...q };
       delete next[qtyKey];
+      triggerAutosave(next);
       return next;
     });
+
+    if (!isCustomTextUserEdited) {
+      setCustomText(getDerivedFoodDescription(foodSelections, nextCustoms, t));
+    }
   };
 
   const handleUpdateQuantity = (
@@ -659,12 +710,8 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
     if (!validate()) return;
 
     let finalCustom = customText.trim();
-    if (!finalCustom && (Object.keys(foodSelections).length > 0 || Object.keys(customFoods).length > 0)) {
-      const derived = getBlockPrimaryDescription({
-        type,
-        foodSelections,
-        customFoods,
-      }, t);
+    if (!isCustomTextUserEdited || !finalCustom) {
+      const derived = getDerivedFoodDescription(foodSelections, customFoods, t);
       if (derived && derived.toLowerCase() !== type.toLowerCase()) {
         finalCustom = derived;
       }
@@ -878,7 +925,15 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
               className="sdb-input"
               type="text"
               value={customText}
-              onChange={e => setCustomText(e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                setCustomText(val);
+                if (!val.trim()) {
+                  setIsCustomTextUserEdited(false);
+                } else {
+                  setIsCustomTextUserEdited(true);
+                }
+              }}
               placeholder={t.sdb_custom_placeholder}
               maxLength={120}
               aria-label={t.sdb_custom_label}
@@ -2642,6 +2697,18 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
   const [description, setDescription] = useState(
     () => initial?.actualCustomText || initial?.plannedSnapshot?.customText || ''
   );
+  const [isDescriptionUserEdited, setIsDescriptionUserEdited] = useState(() => {
+    const initialText = (initial?.actualCustomText || initial?.plannedSnapshot?.customText || '').trim();
+    if (!initialText) return false;
+    const initialSelections = initial?.actualFoodSelections || initial?.foodSelections || initial?.plannedSnapshot?.foodSelections;
+    const initialCustoms = initial?.actualCustomFoods || initial?.customFoods || initial?.plannedSnapshot?.customFoods;
+    const derived = getDerivedFoodDescription(initialSelections, initialCustoms, t);
+    if (initialText.toLowerCase() === derived.toLowerCase()) return false;
+    const items = getDerivedFoodItems(initialSelections, initialCustoms, t);
+    if (items.some(item => item.toLowerCase() === initialText.toLowerCase())) return false;
+    if (isCanonicalFoodKeyOrLabel(initialText, t)) return false;
+    return true;
+  });
   const [mealType, setMealType] = useState<MealTypeKey | undefined>(
     () => initial?.mealType || initial?.plannedSnapshot?.mealType || 'lunch'
   );
@@ -2753,16 +2820,32 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
     if (isSelected) {
       if (activeCategorySubmenu === key) {
         setSelectedCategories(prev => prev.filter(k => k !== key));
-        setFoodSelections(prev => {
+        const nextSelections: FoodSelectionsMap = { ...foodSelections };
+        delete nextSelections[key];
+        setFoodSelections(nextSelections);
+
+        const nextCustoms: CustomFoodsMap = { ...customFoods };
+        delete nextCustoms[key];
+        setCustomFoods(nextCustoms);
+
+        setFoodQuantities(prev => {
           const next = { ...prev };
-          delete next[key];
-          return next;
+          let changed = false;
+          for (const k of Object.keys(next)) {
+            const parsed = parseFoodQuantityKey(k);
+            if (parsed && parsed.category === key) {
+              delete next[k];
+              changed = true;
+            }
+          }
+          if (changed) triggerAutosave(next);
+          return changed ? next : prev;
         });
-        setCustomFoods(prev => {
-          const next = { ...prev };
-          delete next[key];
-          return next;
-        });
+
+        if (!isDescriptionUserEdited) {
+          setDescription(getDerivedFoodDescription(nextSelections, nextCustoms, t));
+        }
+
         setActiveCategorySubmenu(null);
       } else {
         setActiveCategorySubmenu(key);
@@ -2781,13 +2864,14 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
         ? [...curList, foodKey]
         : curList.filter(f => f !== foodKey);
 
-      const opt = findFoodOption(cat, foodKey);
-      const foodLabel = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
-      const formattedFood = foodLabel.charAt(0).toUpperCase() + foodLabel.slice(1).replace(/_/g, ' ');
-
-      if (isAdding && !description.trim()) {
-        setDescription(formattedFood);
+      const nextSelections: FoodSelectionsMap = {
+        ...foodSelections,
+        [cat]: nextList,
+      };
+      if (nextList.length === 0) {
+        delete nextSelections[cat];
       }
+      setFoodSelections(nextSelections);
 
       if (!isAdding) {
         const qtyKey = getFoodQuantityKey(cat, foodKey, false);
@@ -2795,17 +2879,16 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
           if (!q[qtyKey]) return q;
           const next = { ...q };
           delete next[qtyKey];
+          triggerAutosave(next);
           return next;
         });
       }
 
-      const next = { ...prev };
-      if (nextList.length > 0) {
-        next[cat] = nextList;
-      } else {
-        delete next[cat];
+      if (!isDescriptionUserEdited) {
+        setDescription(getDerivedFoodDescription(nextSelections, customFoods, t));
       }
-      return next;
+
+      return nextSelections;
     });
   };
 
@@ -2828,30 +2911,42 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
       return;
     }
 
-    if (!description.trim()) {
-      setDescription(raw);
-    }
-
-    setCustomFoods(prev => ({
-      ...prev,
-      [cat]: [...(prev[cat] || []), raw],
-    }));
+    const nextCustoms: CustomFoodsMap = {
+      ...customFoods,
+      [cat]: [...(customFoods[cat] || []), raw],
+    };
+    setCustomFoods(nextCustoms);
     setCustomFoodInputs(prev => ({ ...prev, [cat]: '' }));
     setCustomFoodErrors(prev => ({ ...prev, [cat]: '' }));
+
+    if (!isDescriptionUserEdited) {
+      setDescription(getDerivedFoodDescription(foodSelections, nextCustoms, t));
+    }
   };
 
   const handleRemoveCustomFood = (cat: FoodCategoryKey, foodText: string) => {
-    setCustomFoods(prev => ({
-      ...prev,
-      [cat]: (prev[cat] || []).filter(f => f !== foodText),
-    }));
+    const nextList = (customFoods[cat] || []).filter(f => f !== foodText);
+    const nextCustoms: CustomFoodsMap = {
+      ...customFoods,
+      [cat]: nextList,
+    };
+    if (nextList.length === 0) {
+      delete nextCustoms[cat];
+    }
+    setCustomFoods(nextCustoms);
+
     const qtyKey = getFoodQuantityKey(cat, foodText, true);
     setFoodQuantities(q => {
       if (!q[qtyKey]) return q;
       const next = { ...q };
       delete next[qtyKey];
+      triggerAutosave(next);
       return next;
     });
+
+    if (!isDescriptionUserEdited) {
+      setDescription(getDerivedFoodDescription(foodSelections, nextCustoms, t));
+    }
   };
 
   const handleUpdateQuantity = (
@@ -2899,12 +2994,8 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
 
   const handleSave = () => {
     let finalDesc = description.trim();
-    if (!finalDesc && (Object.keys(foodSelections).length > 0 || Object.keys(customFoods).length > 0)) {
-      const derived = getBlockPrimaryDescription({
-        type: mealType || 'custom',
-        foodSelections,
-        customFoods,
-      }, t);
+    if (!isDescriptionUserEdited || !finalDesc) {
+      const derived = getDerivedFoodDescription(foodSelections, customFoods, t);
       if (derived) finalDesc = derived;
     }
     onSave(
@@ -3069,7 +3160,15 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
               className="sdb-input"
               type="text"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                setDescription(val);
+                if (!val.trim()) {
+                  setIsDescriptionUserEdited(false);
+                } else {
+                  setIsDescriptionUserEdited(true);
+                }
+              }}
               placeholder={t.sdb_food_log_desc_placeholder}
               maxLength={160}
               autoFocus
@@ -5129,7 +5228,13 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
 
   // ── Render helper for spontaneous unplanned food log cards (shared across Free, Unstructured, Structured modes) ──
   const renderUnplannedCard = (log: DietBlockVerification) => {
-    const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
+    const derivedUnplannedDesc = getBlockPrimaryDescription({
+      type: log.mealType || log.plannedSnapshot.mealType || 'custom',
+      customText: log.actualCustomText || log.plannedSnapshot.customText,
+      foodSelections: log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections,
+      customFoods: log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods,
+    }, t);
+    const desc = derivedUnplannedDesc || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
     const outcomeKey = log.detailedOutcome;
     const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
     const isOntrack = log.status === 'on-track';
@@ -6545,7 +6650,17 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           initial={editingUnplannedLog}
           onSave={(desc, cats, outcome, status, mealType, selections, customs, photos, quantities) => {
             if (editingUnplannedLog) {
-              updateVerificationQuantities(editingUnplannedLog.plannedBlockId, quantities || {});
+              updateUnplannedFoodLog(editingUnplannedLog.plannedBlockId, {
+                description: desc,
+                foodCategories: cats,
+                outcome,
+                status,
+                mealType,
+                foodSelections: selections,
+                customFoods: customs,
+                foodPhotos: photos,
+                foodQuantities: quantities,
+              });
               refreshVerifications();
               setEditingUnplannedLog(null);
             } else {

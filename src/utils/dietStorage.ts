@@ -17,7 +17,12 @@ import {
   FOOD_CATEGORY_KEYS,
   mapLegacyItemsToCategories,
 } from '../data/dietData';
-import { isValidCanonicalFood, findFoodOption, type FoodQuantitiesMap } from '../data/foodOptions';
+import {
+  isValidCanonicalFood,
+  isCanonicalFoodKeyOrLabel,
+  getDerivedFoodItems,
+  type FoodQuantitiesMap,
+} from '../data/foodOptions';
 import type { FoodPhotoMetadata } from './photoStorage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -105,12 +110,27 @@ export function getBlockPrimaryDescription(
 
   const typeName = getTypeName(blockType);
 
+  // Check active selected or custom foods
+  const activeItems = getDerivedFoodItems(block.foodSelections, block.customFoods, t);
+  const hasActiveFoods = activeItems.length > 0;
+
   // 1. Check if customText has genuine actual-food text
-  // (Ignore if customText is just an old stored copy of the block type name itself)
+  // (Ignore if customText is just an old stored copy of the block type name itself,
+  // or a stale auto-populated canonical food name that was deselected from foodSelections)
   if (rawCustom) {
     const rawLower = rawCustom.toLowerCase();
     const isJustType = rawLower === blockType || (typeName && rawLower === typeName.toLowerCase());
-    if (!isJustType) {
+
+    let isStaleDeselectedFood = false;
+    if (hasActiveFoods) {
+      const isCanonical = isCanonicalFoodKeyOrLabel(rawCustom, t);
+      const isCurrentlyActive = activeItems.some(item => item.toLowerCase() === rawLower);
+      if (isCanonical && !isCurrentlyActive) {
+        isStaleDeselectedFood = true;
+      }
+    }
+
+    if (!isJustType && !isStaleDeselectedFood) {
       if (t && t[rawCustom]) {
         return t[rawCustom];
       }
@@ -119,45 +139,8 @@ export function getBlockPrimaryDescription(
   }
 
   // 2. Extract specific selected foods from foodSelections and customFoods
-  const specificFoods: string[] = [];
-
-  if (block.foodSelections) {
-    for (const [cat, foodKeys] of Object.entries(block.foodSelections)) {
-      if (Array.isArray(foodKeys)) {
-        for (const fKey of foodKeys) {
-          if (!fKey) continue;
-          const opt = findFoodOption(cat as FoodCategoryKey, fKey);
-          let label = '';
-          if (opt && t && t[opt.i18nKey]) {
-            label = t[opt.i18nKey];
-          } else if (opt) {
-            label = opt.key.charAt(0).toUpperCase() + opt.key.slice(1).replace(/_/g, ' ');
-          } else {
-            label = fKey.charAt(0).toUpperCase() + fKey.slice(1).replace(/_/g, ' ');
-          }
-          if (label && !specificFoods.includes(label)) {
-            specificFoods.push(label);
-          }
-        }
-      }
-    }
-  }
-
-  if (block.customFoods) {
-    for (const [, customList] of Object.entries(block.customFoods)) {
-      if (Array.isArray(customList)) {
-        for (const cFood of customList) {
-          const trimmed = (cFood || '').trim();
-          if (trimmed && !specificFoods.includes(trimmed)) {
-            specificFoods.push(trimmed);
-          }
-        }
-      }
-    }
-  }
-
-  if (specificFoods.length > 0) {
-    return specificFoods.join(', ');
+  if (activeItems.length > 0) {
+    return activeItems.join(', ');
   }
 
   // 3. Legacy items fallback (if items contains specific food items, not category keys)

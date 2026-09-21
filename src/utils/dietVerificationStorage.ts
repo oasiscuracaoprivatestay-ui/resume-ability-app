@@ -608,6 +608,90 @@ export function updateVerificationQuantities(
 }
 
 /**
+ * Update an existing spontaneous unplanned food log in-place.
+ * Updates description, categories, outcomes, selections, custom foods, photos, and quantities.
+ * Does NOT generate new score events or duplicate entries.
+ */
+export function updateUnplannedFoodLog(
+  plannedBlockId: string,
+  updates: {
+    description: string;
+    foodCategories: FoodCategoryKey[];
+    outcome: DetailedBlockOutcome;
+    status: DietVerificationStatus;
+    mealType?: MealTypeKey;
+    foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+    customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+    foodPhotos?: FoodPhotoMetadata[];
+    foodQuantities?: FoodQuantitiesMap;
+  },
+  dateKey: string = getLocalDateKey()
+): DietBlockVerification | null {
+  const all = loadAllDietVerifications();
+  let targetDateKey = dateKey;
+  let daily = all[targetDateKey];
+
+  let idx = daily?.entries.findIndex(
+    e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId
+  ) ?? -1;
+
+  if (idx === -1) {
+    for (const [dk, d] of Object.entries(all)) {
+      const foundIdx = d.entries.findIndex(
+        e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId
+      );
+      if (foundIdx !== -1) {
+        targetDateKey = dk;
+        daily = d;
+        idx = foundIdx;
+        break;
+      }
+    }
+  }
+
+  if (!daily || idx === -1) return null;
+
+  const existing = daily.entries[idx];
+  const cleanedQuantities = updates.foodQuantities && Object.keys(updates.foodQuantities).length > 0
+    ? { ...updates.foodQuantities }
+    : undefined;
+
+  const updatedEntry: DietBlockVerification = {
+    ...existing,
+    status: updates.status,
+    detailedOutcome: updates.outcome,
+    mealType: updates.mealType,
+    actualFoodCategories: updates.foodCategories,
+    actualFoodSelections: updates.foodSelections,
+    actualCustomFoods: updates.customFoods,
+    actualCustomText: updates.description,
+    actualFoodQuantities: cleanedQuantities,
+    foodQuantities: cleanedQuantities,
+    foodPhotos: updates.foodPhotos,
+    foodPhoto: updates.foodPhotos && updates.foodPhotos.length > 0 ? updates.foodPhotos[0] : undefined,
+    plannedSnapshot: {
+      ...existing.plannedSnapshot,
+      customText: updates.description,
+      mealType: updates.mealType,
+      foodCategories: updates.foodCategories,
+      foodSelections: updates.foodSelections,
+      customFoods: updates.customFoods,
+      foodQuantities: cleanedQuantities ? JSON.parse(JSON.stringify(cleanedQuantities)) : undefined,
+      foodPhotos: updates.foodPhotos,
+    },
+  };
+
+  const nextEntries = daily.entries.map((e, i) => (i === idx ? updatedEntry : e));
+  all[targetDateKey] = {
+    ...daily,
+    entries: nextEntries,
+  };
+
+  saveAllDietVerifications(all);
+  return updatedEntry;
+}
+
+/**
  * Checks if a verification record is an eligible slip for Drift.
  *
  * Eligible:

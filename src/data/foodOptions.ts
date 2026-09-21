@@ -270,3 +270,83 @@ export function findFoodOption(cat: FoodCategoryKey, key: string): FoodOptionIte
 export function isValidCanonicalFood(cat: FoodCategoryKey, key: string): boolean {
   return CANONICAL_FOOD_OPTIONS[cat]?.some(opt => opt.key === key) ?? false;
 }
+
+/**
+ * Checks if a given text string matches any canonical food option key or label (case-insensitive)
+ * across all 9 canonical food categories.
+ */
+export function isCanonicalFoodKeyOrLabel(text: string, t?: Record<string, any>): boolean {
+  if (!text || !text.trim()) return false;
+  const clean = text.trim().toLowerCase();
+  for (const cat of Object.keys(CANONICAL_FOOD_OPTIONS) as FoodCategoryKey[]) {
+    const list = CANONICAL_FOOD_OPTIONS[cat] || [];
+    for (const opt of list) {
+      if (opt.key.toLowerCase() === clean) return true;
+      const formatted = opt.key.replace(/_/g, ' ').toLowerCase();
+      if (formatted === clean) return true;
+      if (t && t[opt.i18nKey] && typeof t[opt.i18nKey] === 'string' && t[opt.i18nKey].toLowerCase() === clean) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Extracts an ordered list of human-readable food item names from food selections and custom foods.
+ */
+export function getDerivedFoodItems(
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>> | null,
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>> | null,
+  t?: Record<string, any>
+): string[] {
+  const items: string[] = [];
+  if (foodSelections) {
+    for (const [cat, keys] of Object.entries(foodSelections)) {
+      if (Array.isArray(keys)) {
+        for (const k of keys) {
+          if (!k) continue;
+          const opt = findFoodOption(cat as FoodCategoryKey, k);
+          let label = '';
+          if (opt && t && t[opt.i18nKey] && typeof t[opt.i18nKey] === 'string') {
+            label = t[opt.i18nKey];
+          } else if (opt) {
+            label = opt.key.charAt(0).toUpperCase() + opt.key.slice(1).replace(/_/g, ' ');
+          } else {
+            label = k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
+          }
+          if (label && !items.includes(label)) {
+            items.push(label);
+          }
+        }
+      }
+    }
+  }
+  if (customFoods) {
+    for (const [, list] of Object.entries(customFoods)) {
+      if (Array.isArray(list)) {
+        for (const c of list) {
+          const trimmed = (c || '').trim();
+          if (trimmed && !items.includes(trimmed)) {
+            items.push(trimmed);
+          }
+        }
+      }
+    }
+  }
+  return items;
+}
+
+/**
+ * Derives a comma-separated description string from the current food selections and custom foods.
+ * e.g. "Papaya", "Papaya, Acai Bowl", or "Acai Bowl".
+ */
+export function getDerivedFoodDescription(
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>> | null,
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>> | null,
+  t?: Record<string, any>
+): string {
+  const items = getDerivedFoodItems(foodSelections, customFoods, t);
+  return items.join(', ');
+}
+
