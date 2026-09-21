@@ -1461,6 +1461,23 @@ export interface Translations {
   sdb_free_day_applied_feedback: string;
   sdb_free_day_target_mode_label: string;
   sdb_free_day_no_blocks_needed: string;
+
+  // ── Phase 29: Timer Placement, Exit Navigation & Daily Rewards ──
+  btn_cancel_to_main: string;
+  btn_return_to_main: string;
+  sdb_timer_btn: string;
+  home_timer_label: string;
+  milestone_celebration_title: string;
+  milestone_25_title: string;
+  milestone_25_desc: string;
+  milestone_50_title: string;
+  milestone_50_desc: string;
+  milestone_100_title: string;
+  milestone_100_desc: string;
+  milestone_150_title: string;
+  milestone_150_desc: string;
+  milestone_points_label: string;
+  milestone_continue_btn: string;
 }
 
 

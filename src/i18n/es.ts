@@ -1554,6 +1554,23 @@ export const es: Translations = {
   sdb_free_day_applied_feedback: 'Día de horario libre aplicado a {count} fecha(s)',
   sdb_free_day_target_mode_label: 'Horario Libre',
   sdb_free_day_no_blocks_needed: 'Cero bloques de comida programados requeridos para este día.',
+
+  // ── Phase 29: Timer Placement, Exit Navigation & Daily Rewards ──
+  btn_cancel_to_main: 'Cancelar / Volver al Menú Principal',
+  btn_return_to_main: 'Volver al Menú Principal',
+  sdb_timer_btn: '⏱ Temporizador 15m',
+  home_timer_label: 'Temporizador de Impulso / Bloqueo de Tiempo',
+  milestone_celebration_title: '¡Hito Diario Alcanzado!',
+  milestone_25_title: 'Impulso Inicial del Día',
+  milestone_25_desc: '¡Has ganado 25 puntos hoy! Gran comienzo para construir tu estructura.',
+  milestone_50_title: 'Enfoque de Medio Centenar',
+  milestone_50_desc: '¡50 puntos alcanzados hoy! Impulso constante y consciencia en acción.',
+  milestone_100_title: 'Centurión Diario',
+  milestone_100_desc: '¡100 puntos logrados hoy! Alto compromiso con tu estructura.',
+  milestone_150_title: 'Maestría Diaria',
+  milestone_150_desc: '¡150 puntos alcanzados hoy! Disciplina y resiliencia sobresalientes.',
+  milestone_points_label: 'Puntos Diarios',
+  milestone_continue_btn: 'Continuar',
 };
 
 

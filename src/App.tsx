@@ -39,9 +39,15 @@ import FloatingProgramButton from './components/FloatingProgramButton';
 import type { TargetSlipInfo } from './utils/slipInsights';
 import { saveRecommitEvent } from './utils/recommitStorage';
 import { saveInControlEvent, saveCommitEvent } from './utils/inControlStorage';
-import { recordScoreEvent, ensureDayStartScore, SCORE_UPDATED_EVENT } from './utils/scoringEngine';
+import { recordScoreEvent, ensureDayStartScore, SCORE_UPDATED_EVENT, getTodayScore } from './utils/scoringEngine';
+import { getLocalDateKey } from './utils/dietStorage';
 import { getCurrentLevel } from './utils/progressionEngine';
 import LevelUpModal, { getCelebratedLevel, setCelebratedLevel } from './components/LevelUpModal';
+import DailyMilestoneModal from './components/DailyMilestoneModal';
+import {
+  type DailyMilestoneTier,
+  getNextUncelebratedMilestone,
+} from './utils/dailyMilestonesStorage';
 import { playFeedback } from './utils/feedback';
 import {
   evaluateNextReminder,
@@ -87,6 +93,8 @@ export default function App() {
   const { t } = useTranslation();
   const [activeReminder, setActiveReminder] = useState<ReminderCandidate | null>(null);
   const [levelUpToShow, setLevelUpToShow] = useState<number | null>(null);
+  // Phase 29C: Daily milestone reward celebration
+  const [dailyMilestoneToShow, setDailyMilestoneToShow] = useState<DailyMilestoneTier | null>(null);
 
   // Initialize day start score and initialize acknowledged level on first run
   useEffect(() => {
@@ -110,6 +118,23 @@ export default function App() {
     window.addEventListener(SCORE_UPDATED_EVENT, handleScoreUpdate);
     return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleScoreUpdate);
   }, []);
+
+  // Listen for score events to detect crossing daily milestone thresholds (Phase 29C)
+  useEffect(() => {
+    const handleMilestoneCheck = () => {
+      // Avoid overlapping modals: wait until Level Up celebration is dismissed
+      if (levelUpToShow !== null) return;
+      const todayScore = getTodayScore();
+      const todayKey = getLocalDateKey();
+      const nextMilestone = getNextUncelebratedMilestone(todayScore, todayKey);
+      if (nextMilestone !== null) {
+        setDailyMilestoneToShow(nextMilestone);
+      }
+    };
+    handleMilestoneCheck();
+    window.addEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
+    return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
+  }, [levelUpToShow]);
 
   // Sync current screen with history state for back/forward navigation actual previous screen
   const screenRef = useRef<Screen>('home');
@@ -733,7 +758,7 @@ export default function App() {
       break;
 
     case 'structured-diet':
-      content = <StructuredDietScreen onNavigate={navigate} onBack={goBack} />;
+      content = <StructuredDietScreen onNavigate={navigate} onBack={goBack} onStartTimer={handleStartTimer} />;
       break;
 
     case 'daily-review':
@@ -791,6 +816,12 @@ export default function App() {
         <LevelUpModal
           level={levelUpToShow}
           onClose={() => setLevelUpToShow(null)}
+        />
+      )}
+      {dailyMilestoneToShow !== null && (
+        <DailyMilestoneModal
+          tier={dailyMilestoneToShow}
+          onClose={() => setDailyMilestoneToShow(null)}
         />
       )}
       <div className="floating-buttons-stack">

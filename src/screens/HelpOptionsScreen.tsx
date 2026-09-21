@@ -92,6 +92,19 @@ export default function HelpOptionsScreen({ onNavigate }: HelpOptionsScreenProps
             <span className="help-card-badge">{t.help_ai_badge}</span>
           </button>
         </div>
+
+        {/* Cancel / Return to Main Menu Action (Phase 29B) */}
+        <div className="recommit-cancel-wrap">
+          <button
+            id="btn-help-cancel"
+            type="button"
+            className="recommit-cancel-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main}
+          >
+            ✕ {t.btn_return_to_main}
+          </button>
+        </div>
       </div>
     </div>
   );

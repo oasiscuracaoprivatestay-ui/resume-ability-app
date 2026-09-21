@@ -1554,6 +1554,23 @@ export const nl: Translations = {
   sdb_free_day_applied_feedback: 'Vrije roosterdag toegepast op {count} datum(s)',
   sdb_free_day_target_mode_label: 'Vrij Rooster',
   sdb_free_day_no_blocks_needed: 'Geen geplande maaltijdblokken nodig voor deze dag.',
+
+  // ── Phase 29: Timer Placement, Exit Navigation & Daily Rewards ──
+  btn_cancel_to_main: 'Annuleren / Terug naar Hoofdmenu',
+  btn_return_to_main: 'Terug naar Hoofdmenu',
+  sdb_timer_btn: '⏱ 15m Drangtimer',
+  home_timer_label: 'Drangtimer / Luchttijdvergrendeling',
+  milestone_celebration_title: 'Dagelijkse Mijlpaal Bereikt!',
+  milestone_25_title: 'Dagstart Momentum',
+  milestone_25_desc: 'Je hebt vandaag 25 punten behaald! Geweldige start voor je structuur.',
+  milestone_50_title: 'Halve Eeuw Focus',
+  milestone_50_desc: 'Vandaag 50 punten bereikt! Gestage focus en bewustzijn in actie.',
+  milestone_100_title: 'Dagelijkse Centurion',
+  milestone_100_desc: 'Vandaag 100 punten behaald! Hoge toewijding aan je structuur.',
+  milestone_150_title: 'Dagelijks Meesterschap',
+  milestone_150_desc: 'Vandaag 150 punten bereikt! Buitengewone discipline en veerkracht.',
+  milestone_points_label: 'Dagelijkse Punten',
+  milestone_continue_btn: 'Doorgaan',
 };
 
 

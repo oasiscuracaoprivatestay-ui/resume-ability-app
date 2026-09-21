@@ -113,6 +113,7 @@ import './StructuredDietScreen.css';
 interface StructuredDietScreenProps {
   onNavigate: (screen: Screen) => void;
   onBack?: () => void;
+  onStartTimer?: () => void;
 }
 
 // ── Food Photo Preview Modal (Phase 6B Multi-Photo) ───────────────────────────
@@ -4339,7 +4340,7 @@ function StructureAwarenessCard({
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function StructuredDietScreen({ onNavigate, onBack }: StructuredDietScreenProps) {
+export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer }: StructuredDietScreenProps) {
   const { t } = useTranslation();
   const [dietStore, setDietStore] = useState<StructureDietStore>(() => loadDietStore());
   const activeProfile = getActiveProfile(dietStore);
@@ -5316,6 +5317,20 @@ export default function StructuredDietScreen({ onNavigate, onBack }: StructuredD
                     <span>{t.sdb_structure_settings}</span>
                   </button>
                 </div>
+              </div>
+
+              {/* ── Quick Timer Launch Banner (Phase 29A) ── */}
+              <div className="sdb-timer-banner">
+                <button
+                  id="btn-sdb-timer"
+                  type="button"
+                  className="sdb-timer-btn"
+                  onClick={onStartTimer ?? (() => onNavigate('mode'))}
+                  aria-label={t.sdb_timer_btn}
+                >
+                  <span className="sdb-timer-icon" aria-hidden="true">⏱</span>
+                  <span className="sdb-timer-text">{t.sdb_timer_btn}</span>
+                </button>
               </div>
 
           {/* ── Day Selector Dropdown (Phase 22) ── */}

@@ -5870,3 +5870,51 @@
   transform: translateY(-1px);
 }
 
+/* ── Phase 29A: Quick Timer & Airtime Lock Entry ── */
+.sdb-timer-banner {
+  margin: 0.35rem 0 0.85rem;
+  width: 100%;
+}
+
+.sdb-timer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.12));
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  border-radius: var(--radius-xl, 14px);
+  color: #fff;
+  font-family: var(--font, inherit);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.14);
+  transition: all 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdb-timer-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+  border-color: #38bdf8;
+  box-shadow: 0 6px 22px rgba(56, 189, 248, 0.26);
+  transform: translateY(-1px);
+}
+
+.sdb-timer-btn:active {
+  transform: translateY(0);
+}
+
+.sdb-timer-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.sdb-timer-text {
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+

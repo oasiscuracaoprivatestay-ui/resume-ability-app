@@ -1568,6 +1568,23 @@ export const en: Translations = {
   sdb_free_day_applied_feedback: 'Free Schedule Day applied to {count} date(s)',
   sdb_free_day_target_mode_label: 'Free Schedule',
   sdb_free_day_no_blocks_needed: 'Zero scheduled meal blocks needed for this day.',
+
+  // ── Phase 29: Timer Placement, Exit Navigation & Daily Rewards ──
+  btn_cancel_to_main: 'Cancel / Return to Main Menu',
+  btn_return_to_main: 'Return to Main Menu',
+  sdb_timer_btn: '⏱ 15m Urge Timer',
+  home_timer_label: 'Urge Timer / Airtime Lock',
+  milestone_celebration_title: 'Daily Milestone Reached!',
+  milestone_25_title: 'Day Starter Momentum',
+  milestone_25_desc: "You've earned 25 points today! Great start building your structure.",
+  milestone_50_title: 'Half-Century Focus',
+  milestone_50_desc: '50 points reached today! Steady momentum and awareness in action.',
+  milestone_100_title: 'Daily Centurion',
+  milestone_100_desc: '100 points achieved today! High commitment to your structure.',
+  milestone_150_title: 'Daily Mastery',
+  milestone_150_desc: '150 points reached today! Outstanding discipline and resilience.',
+  milestone_points_label: 'Daily Points',
+  milestone_continue_btn: 'Continue',
 };
 
 

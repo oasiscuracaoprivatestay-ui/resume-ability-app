@@ -1,0 +1,256 @@
+/* ── Daily Milestone Modal Styles (Phase 29C) ── */
+
+.milestone-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1150;
+  padding: 1.5rem;
+  animation: milestoneFadeIn 0.28s ease-out;
+}
+
+@keyframes milestoneFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.milestone-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  border-radius: var(--radius-lg, 20px);
+  padding: 2.25rem 1.6rem 1.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.9rem;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: milestonePop 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes milestonePop {
+  from { transform: scale(0.86) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ── Tier Visual Variations ── */
+
+/* 25 Points — Bronze Spark */
+.milestone-modal-card--tier-25 {
+  background: radial-gradient(circle at 50% 15%, #2a1b12 0%, #15110e 100%);
+  border: 1.5px solid rgba(217, 119, 6, 0.5);
+  box-shadow: 0 0 45px rgba(217, 119, 6, 0.25), 0 25px 30px -5px rgba(0, 0, 0, 0.7);
+}
+
+.milestone-icon-ring--tier-25 {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.3) 0%, rgba(217, 119, 6, 0.05) 70%);
+  border: 2px solid rgba(217, 119, 6, 0.7);
+  box-shadow: 0 0 25px rgba(217, 119, 6, 0.4);
+}
+
+.milestone-modal-card--tier-25 .milestone-particle {
+  background: #f59e0b;
+}
+
+/* 50 Points — Silver Glow */
+.milestone-modal-card--tier-50 {
+  background: radial-gradient(circle at 50% 15%, #182330 0%, #0d1520 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 45px rgba(56, 189, 248, 0.25), 0 25px 30px -5px rgba(0, 0, 0, 0.7);
+}
+
+.milestone-icon-ring--tier-50 {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(56, 189, 248, 0.05) 70%);
+  border: 2px solid rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+}
+
+.milestone-modal-card--tier-50 .milestone-particle {
+  background: #38bdf8;
+}
+
+/* 100 Points — Gold Aura */
+.milestone-modal-card--tier-100 {
+  background: radial-gradient(circle at 50% 15%, #2d230d 0%, #171206 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.65);
+  box-shadow: 0 0 55px rgba(245, 158, 11, 0.32), 0 25px 30px -5px rgba(0, 0, 0, 0.7);
+}
+
+.milestone-icon-ring--tier-100 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0.08) 70%);
+  border: 2px solid rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.55);
+}
+
+.milestone-modal-card--tier-100 .milestone-particle {
+  background: #fbbf24;
+}
+
+/* 150 Points — Diamond Shimmer */
+.milestone-modal-card--tier-150 {
+  background: radial-gradient(circle at 50% 15%, #2a1638 0%, #150a1e 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.65);
+  box-shadow: 0 0 60px rgba(168, 85, 247, 0.35), 0 25px 30px -5px rgba(0, 0, 0, 0.7);
+}
+
+.milestone-icon-ring--tier-150 {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0.08) 70%);
+  border: 2px solid rgba(168, 85, 247, 0.85);
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.55);
+}
+
+.milestone-modal-card--tier-150 .milestone-particle {
+  background: #c084fc;
+}
+
+/* ── Icon Ring & Main Icon ── */
+.milestone-icon-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: milestonePulse 2.2s infinite ease-in-out;
+}
+
+@keyframes milestonePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.milestone-main-icon {
+  font-size: 2.35rem;
+  line-height: 1;
+}
+
+/* ── Typography & Badges ── */
+.milestone-celebration-kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent, #34d399);
+}
+
+.milestone-heading {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.milestone-pts-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.35rem 1.15rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.milestone-pts-num {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.milestone-pts-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.milestone-description {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #cbd5e1);
+  margin: 0;
+  max-width: 300px;
+}
+
+/* ── Action Button ── */
+.milestone-continue-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+  font-family: inherit;
+  margin-top: 0.4rem;
+  min-height: 44px;
+}
+
+.milestone-continue-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.milestone-continue-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Particles ── */
+.milestone-particles-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.milestone-particle {
+  position: absolute;
+  top: -15px;
+  width: 5px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0.85;
+  animation: milestoneFall 2.4s infinite linear;
+  animation-delay: var(--delay);
+}
+
+@keyframes milestoneFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(380px) rotate(600deg);
+    opacity: 0;
+  }
+}
+
+/* ── Reduced Motion Preference ── */
+@media (prefers-reduced-motion: reduce) {
+  .milestone-modal-backdrop,
+  .milestone-modal-card,
+  .milestone-icon-ring,
+  .milestone-particle,
+  .milestone-continue-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .milestone-particles-wrap {
+    display: none;
+  }
+}

@@ -125,6 +125,15 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span>{t.home_in_control}</span>
           </button>
           <button
+            id="btn-home-timer"
+            className="home-btn-timer"
+            onClick={onStartTimer}
+            aria-label={t.home_timer_label || t.global_start_timer}
+          >
+            <span className="home-btn-icon">⏱</span>
+            <span>{t.home_timer_label || t.global_start_timer}</span>
+          </button>
+          <button
             id="btn-structured-diet"
             className="home-btn-diet"
             onClick={() => onNavigate('structured-diet')}
@@ -193,15 +202,6 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             >
               <span>🔓</span>
               <span>{t.prog_btn_label}</span>
-            </button>
-            <button
-              id="btn-home-timer"
-              className="home-secondary-btn home-secondary-btn--timer"
-              onClick={onStartTimer}
-              aria-label={t.global_start_timer}
-            >
-              <span>⏱</span>
-              <span>{t.global_start_timer}</span>
             </button>
           </div>
 

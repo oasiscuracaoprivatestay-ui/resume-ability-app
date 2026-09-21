@@ -480,6 +480,19 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               <span>{t.stats_reset_btn}</span>
             </button>
           </section>
+
+          {/* Cancel / Return to Main Menu Action (Phase 29B) */}
+          <div className="recommit-cancel-wrap">
+            <button
+              id="btn-commitment-cancel"
+              type="button"
+              className="recommit-cancel-btn"
+              onClick={() => onNavigate('home')}
+              aria-label={t.btn_return_to_main}
+            >
+              ✕ {t.btn_return_to_main}
+            </button>
+          </div>
         </div>
       </div>
 

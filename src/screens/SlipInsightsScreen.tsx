@@ -157,6 +157,19 @@ export default function SlipInsightsScreen({
             <span className="insights-btn-arrow">→</span>
           </button>
         </div>
+
+        {/* Cancel / Return to Main Menu Action (Phase 29B) */}
+        <div className="recommit-cancel-wrap">
+          <button
+            id="btn-insights-cancel"
+            type="button"
+            className="recommit-cancel-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main}
+          >
+            ✕ {t.btn_return_to_main}
+          </button>
+        </div>
       </div>
     </div>
   );
