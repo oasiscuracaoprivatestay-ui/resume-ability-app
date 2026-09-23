@@ -280,7 +280,7 @@
   grid-area: 1 / 1 / 2 / 2;
   visibility: hidden;
   font-family: inherit;
-  font-size: 1.12rem;
+  font-size: 1.16rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.4;
@@ -293,10 +293,10 @@
 }
 
 .sdb-block-meal-desc {
-  font-size: 1.12rem;
+  font-size: 1.16rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: #f8fafc;
+  color: #ffffff;
   line-height: 1.4;
   word-break: break-word;
 }
@@ -307,9 +307,9 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
-  color: #f8fafc;
+  color: #ffffff;
   font-family: inherit;
-  font-size: 1.12rem;
+  font-size: 1.16rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.4;
@@ -368,50 +368,62 @@
   transform: scale(0.95);
 }
 
-/* Phase 23 — Customize Action Row (Orange, Below Description) */
+/* Phase 23 & Phase 30 — Prominent EDIT Action Button (Orange, High Contrast, Touch-Friendly) */
 .sdb-block-customize-row {
   display: flex;
   align-items: center;
-  margin-top: 0.2rem;
-  margin-bottom: 0.1rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
+.sdb-edit-prominent-btn,
 .sdb-customize-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.28rem 0.65rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #f97316;
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  border-radius: var(--radius-sm);
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1.05rem;
+  min-height: 40px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.28) 0%, rgba(234, 88, 12, 0.2) 100%);
+  border: 1.5px solid rgba(249, 115, 22, 0.65);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
   line-height: 1.2;
   width: fit-content;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
+.sdb-edit-prominent-btn:hover,
 .sdb-customize-btn:hover {
-  background: rgba(249, 115, 22, 0.2);
-  border-color: #f97316;
-  color: #fb923c;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.42) 0%, rgba(234, 88, 12, 0.32) 100%);
+  border-color: #fb923c;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
 }
 
+.sdb-edit-prominent-btn:active,
 .sdb-customize-btn:active {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.97);
 }
 
+.sdb-edit-prominent-btn:focus-visible,
 .sdb-customize-btn:focus-visible {
   outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
 .sdb-customize-icon {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   line-height: 1;
 }
 
@@ -5103,9 +5115,9 @@
 }
 
 .sdb-unplanned-desc {
-  font-size: 1.08rem;
+  font-size: 1.16rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: #ffffff;
   line-height: 1.45;
   word-break: break-word;
 }
@@ -6026,6 +6038,252 @@
 .sdb-timer-text {
   font-size: 0.92rem;
   letter-spacing: 0.01em;
+}
+
+/* ── Phase 30: Food Log Editing & Flexible Eating Records ── */
+
+.sdb-planning-status-field {
+  margin-bottom: 1.1rem;
+}
+
+.sdb-planning-status-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.sdb-planning-status-btn {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.sdb-planning-status-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.sdb-planning-status-btn--active {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.sdb-field-help-text {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
+.sdb-food-log-datetime-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 480px) {
+  .sdb-food-log-datetime-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.sdb-date-input,
+.sdb-time-input {
+  width: 100%;
+  color-scheme: dark;
+}
+
+.sdb-entry-quantity-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem;
+  margin-bottom: 1.1rem;
+}
+
+.sdb-entry-quantity-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.sdb-qty-numeric-wrap {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sdb-entry-qty-amount-input {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.sdb-entry-qty-unit-select {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 0.45rem 0.65rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+}
+
+.sdb-custom-qty-input {
+  width: 100%;
+}
+
+.sdb-outcome-section {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1rem;
+}
+
+.sdb-outcome-branch-toggle {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.sdb-outcome-branch-btn {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.sdb-outcome-branch-btn--ontrack {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+}
+
+.sdb-outcome-branch-btn--ontrack.sdb-outcome-branch-btn--active {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+}
+
+.sdb-outcome-branch-btn--slip {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+}
+
+.sdb-outcome-branch-btn--slip.sdb-outcome-branch-btn--active {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+}
+
+.sdb-branch-prompt-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sdb-resume-toggle-box {
+  margin-top: 0.85rem;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+.sdb-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.sdb-checkbox-label input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: #38bdf8;
+  margin-top: 0.15rem;
+  cursor: pointer;
+}
+
+.sdb-resume-label-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+}
+
+.sdb-resume-subtext {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+.sdb-verified-link--edit {
+  color: #38bdf8;
+}
+
+.sdb-verified-link--edit:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+/* Phase 30: Compact yet prominent EDIT button for inline banners and card headers */
+.sdb-edit-prominent-btn--sm {
+  padding: 0.28rem 0.75rem;
+  min-height: 32px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.sdb-unplanned-edit-btn {
+  margin: 0;
+}
+
+.sdb-unplanned-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sdb-orphaned-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 

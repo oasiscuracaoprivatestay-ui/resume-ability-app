@@ -340,3 +340,75 @@ export function resetScoreStore(): void {
     // ignore
   }
 }
+
+export interface ReconcileScoreParams {
+  oldSourceId: string;
+  newSourceId: string;
+  newDateKey: string;
+  newActivityType: ScoreActivityType;
+  profileId?: string;
+  profileName?: string;
+}
+
+/**
+ * Reconcile a diet block or food log scoring event when edited.
+ * If outcome or date changes:
+ * - Updates existing score event in-place without duplicating events.
+ * - Recalculates points based on the new activity type and daily caps.
+ * - Never deducts points or introduces negative scores for slips.
+ */
+export function reconcileDietScoreEvent(params: ReconcileScoreParams): AwardResult {
+  const store = loadScoreStore();
+  const existingIdx = store.events.findIndex(e => e.sourceId === params.oldSourceId);
+  const rule = ACTIVITY_RULES[params.newActivityType];
+  const points = rule ? rule.points : 0;
+
+  if (existingIdx !== -1) {
+    const existing = store.events[existingIdx];
+    if (
+      existing.dateKey === params.newDateKey &&
+      existing.activityType === params.newActivityType &&
+      existing.sourceId === params.newSourceId
+    ) {
+      return { status: 'duplicate', pointsAwarded: 0, event: existing };
+    }
+
+    const targetDayCount = store.events.filter(
+      (e, i) => i !== existingIdx && e.dateKey === params.newDateKey && e.activityType === params.newActivityType
+    ).length;
+
+    const maxPerDay = rule ? rule.maxPerDay : 10;
+    const finalPoints = targetDayCount >= maxPerDay ? 0 : points;
+
+    const updatedEvent: ScoreEvent = {
+      ...existing,
+      activityType: params.newActivityType,
+      points: finalPoints,
+      dateKey: params.newDateKey,
+      sourceId: params.newSourceId,
+      profileId: params.profileId || existing.profileId,
+      profileName: params.profileName || existing.profileName,
+    };
+
+    store.events[existingIdx] = updatedEvent;
+    saveScoreStore(store);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(SCORE_UPDATED_EVENT, { detail: updatedEvent }));
+    }
+
+    return {
+      status: 'awarded',
+      pointsAwarded: finalPoints,
+      event: updatedEvent,
+    };
+  } else {
+    return recordScoreEvent({
+      activityType: params.newActivityType,
+      dateKey: params.newDateKey,
+      sourceId: params.newSourceId,
+      profileId: params.profileId,
+      profileName: params.profileName,
+    });
+  }
+}

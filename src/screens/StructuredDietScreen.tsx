@@ -1753,6 +1753,7 @@ interface BlockCardProps {
   onQuickUpdateCategories?: (foodCategories: FoodCategoryKey[]) => void;
   onPreviewPhotos?: (photos: PhotoPreviewItem[], initialIndex?: number) => void;
   onQuickAddPhoto?: (blockId: string, photo: FoodPhotoMetadata) => void;
+  onEditVerification?: (verification: DietBlockVerification) => void;
 }
 
 function BlockCard({
@@ -1774,6 +1775,7 @@ function BlockCard({
   onQuickUpdateCategories,
   onPreviewPhotos,
   onQuickAddPhoto,
+  onEditVerification,
 }: BlockCardProps) {
   const typeKey = block.type as BlockTypeKey;
   const typeIcon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
@@ -2189,12 +2191,18 @@ function BlockCard({
         <button
           id={`btn-customize-block-${block.id}`}
           type="button"
-          className="sdb-customize-btn"
-          onClick={onEdit}
-          aria-label={`${t.sdb_btn_customize}: ${desc}`}
+          className="sdb-customize-btn sdb-edit-prominent-btn"
+          onClick={() => {
+            if (verification && onEditVerification) {
+              onEditVerification(verification);
+            } else {
+              onEdit();
+            }
+          }}
+          aria-label={`${t.sdb_btn_customize || 'EDIT'}: ${desc}`}
         >
-          <span className="sdb-customize-icon" aria-hidden="true">✎</span>
-          <span>{t.sdb_btn_customize}</span>
+          <span className="sdb-customize-icon" aria-hidden="true">✏️</span>
+          <span>{t.sdb_btn_customize || 'EDIT'}</span>
         </button>
       </div>
 
@@ -2294,6 +2302,16 @@ function BlockCard({
                   {verifiedBadgeLabel}
                 </span>
                 <div className="sdb-verified-controls">
+                  <button
+                    id={`btn-edit-verification-${block.id}`}
+                    type="button"
+                    className="sdb-edit-prominent-btn sdb-edit-prominent-btn--sm"
+                    onClick={() => onEditVerification?.(verification)}
+                    aria-label={t.sdb_btn_customize || 'EDIT'}
+                  >
+                    ✏️ {t.sdb_btn_customize || 'EDIT'}
+                  </button>
+                  <span className="sdb-verified-ctrl-dot">·</span>
                   <button
                     id={`btn-change-status-${block.id}`}
                     type="button"
@@ -2655,24 +2673,19 @@ interface FoodLogModalProps {
     foodSelections?: Partial<Record<FoodCategoryKey, string[]>>,
     customFoods?: Partial<Record<FoodCategoryKey, string[]>>,
     foodPhotos?: FoodPhotoMetadata[],
-    foodQuantities?: FoodQuantitiesMap
+    foodQuantities?: FoodQuantitiesMap,
+    isUnplanned?: boolean,
+    targetDateKey?: string,
+    startTime?: string,
+    endTime?: string,
+    isResumed?: boolean,
+    entryQuantity?: FoodItemQuantity,
+    customQuantity?: string
   ) => void;
   onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
-
-// All outcomes are available for unplanned logs since there is no plan context.
-// Ordering: positive outcomes first, then graded slip outcomes.
-const ALL_LOG_OUTCOMES: readonly DetailedBlockOutcome[] = [
-  'on_track',
-  'adjusted_on_track',
-  'planned_unstructured',
-  'twenty_percent_off_track',
-  'near_slip',
-  'structured_slip',
-  'unstructured_slip',
-] as const;
 
 // Map outcome → top-level status so saveUnplannedFoodLog gets the correct status
 function outcomeToStatus(outcome: DetailedBlockOutcome): DietVerificationStatus {
@@ -2689,10 +2702,25 @@ function outcomeToStatus(outcome: DetailedBlockOutcome): DietVerificationStatus 
 
 function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: FoodLogModalProps) {
   const autoTime = useMemo(() => {
+    if (initial?.startTime) return initial.startTime;
     if (initial?.plannedSnapshot?.startTime) return initial.plannedSnapshot.startTime;
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   }, [initial]);
+
+  // Phase 30: Date, Time & Planned/Unplanned state
+  const [dateKey, setDateKey] = useState<string>(
+    () => initial?.dateKey || getLocalDateKey()
+  );
+  const [startTime, setStartTime] = useState<string>(
+    () => initial?.startTime || initial?.plannedSnapshot?.startTime || autoTime
+  );
+  const [endTime, setEndTime] = useState<string>(
+    () => initial?.endTime || initial?.plannedSnapshot?.endTime || ''
+  );
+  const [isUnplanned, setIsUnplanned] = useState<boolean>(
+    () => initial?.isUnplanned !== undefined ? initial.isUnplanned : true
+  );
 
   const [description, setDescription] = useState(
     () => initial?.actualCustomText || initial?.plannedSnapshot?.customText || ''
@@ -2731,11 +2759,33 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
     const q = initial?.actualFoodQuantities || initial?.foodQuantities || initial?.plannedSnapshot?.foodQuantities;
     return q ? JSON.parse(JSON.stringify(q)) : {};
   });
+
+  // Direct / overall entry quantity and free-text custom quantity (Phase 30)
+  const [entryQtyAmount, setEntryQtyAmount] = useState<string>(() => {
+    const eq = initial?.entryQuantity || initial?.plannedSnapshot?.entryQuantity;
+    return eq && eq.amount ? String(eq.amount) : '';
+  });
+  const [entryQtyUnit, setEntryQtyUnit] = useState<FoodQuantityUnit>(() => {
+    const eq = initial?.entryQuantity || initial?.plannedSnapshot?.entryQuantity;
+    return eq?.unit || 'portion';
+  });
+  const [customQtyText, setCustomQtyText] = useState<string>(() => {
+    return initial?.customQuantity || initial?.plannedSnapshot?.customQuantity || '';
+  });
+
   const [customFoodInputs, setCustomFoodInputs] = useState<Record<string, string>>({});
   const [customFoodErrors, setCustomFoodErrors] = useState<Record<string, string>>({});
   const [outcome, setOutcome] = useState<DetailedBlockOutcome>(
     () => initial?.detailedOutcome || 'on_track'
   );
+  const [outcomeBranch, setOutcomeBranch] = useState<'on-track' | 'slip'>(() => {
+    if (initial?.detailedOutcome) {
+      return outcomeToStatus(initial.detailedOutcome);
+    }
+    return initial?.status || 'on-track';
+  });
+  const [isResumed, setIsResumed] = useState<boolean>(() => initial?.isResumed || false);
+
   const [autosaveState, setAutosaveState] = useState<'idle' | 'saved' | 'error'>('idle');
   const [qtyInputBuffers, setQtyInputBuffers] = useState<Record<string, string>>({});
   const autosaveTimerRef = useRef<any>(null);
@@ -2765,13 +2815,39 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const isDirty = useMemo(() => {
+    const origDesc = (initial?.actualCustomText || initial?.plannedSnapshot?.customText || '').trim();
+    if (description.trim() !== origDesc) return true;
+    const origDate = initial?.dateKey || getLocalDateKey();
+    if (dateKey !== origDate) return true;
+    const origPlanned = initial?.isUnplanned !== undefined ? initial.isUnplanned : true;
+    if (isUnplanned !== origPlanned) return true;
+    const origOutcome = initial?.detailedOutcome || 'on_track';
+    if (outcome !== origOutcome) return true;
+    const origResumed = initial?.isResumed || false;
+    if (isResumed !== origResumed) return true;
+    const origEqAmount = initial?.entryQuantity?.amount ? String(initial.entryQuantity.amount) : '';
+    if (entryQtyAmount !== origEqAmount) return true;
+    const origCustomQty = initial?.customQuantity || initial?.plannedSnapshot?.customQuantity || '';
+    if (customQtyText.trim() !== origCustomQty.trim()) return true;
+    return false;
+  }, [initial, description, dateKey, isUnplanned, outcome, isResumed, entryQtyAmount, customQtyText]);
+
+  const handleCancelSafe = () => {
+    if (isDirty) {
+      const confirmDiscard = window.confirm(t.sdb_unsaved_changes_confirm || 'You have unsaved changes. Discard them?');
+      if (!confirmDiscard) return;
+    }
+    onCancel();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') handleCancelSafe();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
+  }, [handleCancelSafe]);
 
   const handleAddPhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2989,7 +3065,7 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onCancel();
+    if (e.target === e.currentTarget) handleCancelSafe();
   };
 
   const handleSave = () => {
@@ -2998,6 +3074,17 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
       const derived = getDerivedFoodDescription(foodSelections, customFoods, t);
       if (derived) finalDesc = derived;
     }
+
+    let parsedEntryQty: FoodItemQuantity | undefined = undefined;
+    const parsedAmt = parseFloat(entryQtyAmount);
+    if (!isNaN(parsedAmt) && parsedAmt > 0) {
+      parsedEntryQty = {
+        amount: parsedAmt,
+        unit: entryQtyUnit,
+        customUnit: entryQtyUnit === 'custom' ? customQtyText.trim() : undefined,
+      };
+    }
+
     onSave(
       finalDesc,
       selectedCategories,
@@ -3007,7 +3094,14 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
       foodSelections,
       customFoods,
       foodPhotos.length > 0 ? foodPhotos : undefined,
-      Object.keys(foodQuantities).length > 0 ? foodQuantities : undefined
+      Object.keys(foodQuantities).length > 0 ? foodQuantities : undefined,
+      isUnplanned,
+      dateKey,
+      startTime || autoTime,
+      endTime || undefined,
+      isResumed,
+      parsedEntryQty,
+      customQtyText.trim() || undefined
     );
   };
 
@@ -3024,19 +3118,71 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
           <div className="sdb-slip-modal-header-text">
             <span className="sdb-slip-modal-badge sdb-food-log-badge">{t.sdb_food_log_modal_badge}</span>
             <h2 id="sdb-food-log-modal-title" className="sdb-modal-title">
-              {t.sdb_food_log_modal_title}
+              {initial ? (t.sdb_food_log_edit_modal_title || 'Edit Food Entry') : t.sdb_food_log_modal_title}
             </h2>
           </div>
-          <button className="sdb-modal-close" onClick={onCancel} aria-label={t.commit_cancel}>
+          <button className="sdb-modal-close" onClick={handleCancelSafe} aria-label={t.commit_cancel}>
             ✕
           </button>
         </div>
 
         <div className="sdb-modal-body">
-          {/* Automatic Timestamp Badge (No manual time selection required) */}
-          <div className="sdb-food-log-time-badge" id="sdb-food-log-auto-time">
-            <span className="sdb-time-clock-icon">🕒</span>
-            <span>{t.sdb_food_log_auto_time}: {autoTime}</span>
+          {/* Planning Status: Planned vs Unplanned (Phase 30) */}
+          <div className="sdb-field sdb-planning-status-field">
+            <label className="sdb-label">{t.sdb_food_log_planning_mode_label}:</label>
+            <div className="sdb-planning-status-selector">
+              <button
+                type="button"
+                id="btn-food-log-status-planned"
+                className={`sdb-planning-status-btn ${!isUnplanned ? 'sdb-planning-status-btn--active' : ''}`}
+                onClick={() => setIsUnplanned(false)}
+              >
+                📅 {t.sdb_food_log_status_planned}
+              </button>
+              <button
+                type="button"
+                id="btn-food-log-status-unplanned"
+                className={`sdb-planning-status-btn ${isUnplanned ? 'sdb-planning-status-btn--active' : ''}`}
+                onClick={() => setIsUnplanned(true)}
+              >
+                ⚡ {t.sdb_food_log_status_unplanned}
+              </button>
+            </div>
+            <span className="sdb-field-help-text">{t.sdb_food_log_planning_mode_desc}</span>
+          </div>
+
+          {/* Date & Time Row (Phase 30) */}
+          <div className="sdb-food-log-datetime-row">
+            <div className="sdb-field sdb-field--date">
+              <label className="sdb-label" htmlFor="input-food-log-date">{t.sdb_food_log_date_label}:</label>
+              <input
+                id="input-food-log-date"
+                type="date"
+                className="sdb-input sdb-date-input"
+                value={dateKey}
+                onChange={e => setDateKey(e.target.value)}
+              />
+            </div>
+            <div className="sdb-field sdb-field--time">
+              <label className="sdb-label" htmlFor="input-food-log-start-time">{t.sdb_food_log_start_time_label}:</label>
+              <input
+                id="input-food-log-start-time"
+                type="time"
+                className="sdb-input sdb-time-input"
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+              />
+            </div>
+            <div className="sdb-field sdb-field--time">
+              <label className="sdb-label" htmlFor="input-food-log-end-time">{t.sdb_food_log_end_time_label} <span className="sdb-optional">({t.sdb_food_log_time_optional})</span>:</label>
+              <input
+                id="input-food-log-end-time"
+                type="time"
+                className="sdb-input sdb-time-input"
+                value={endTime}
+                onChange={e => setEndTime(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Meal Type Selection */}
@@ -3173,6 +3319,52 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
               maxLength={160}
               autoFocus
             />
+          </div>
+
+          {/* Direct / Overall Entry Quantity (Phase 30) */}
+          <div className="sdb-field sdb-entry-quantity-section">
+            <label className="sdb-label">{t.sdb_food_log_entry_quantity_label}: <span className="sdb-optional">({t.sdb_optional})</span></label>
+            <div className="sdb-entry-quantity-controls">
+              <div className="sdb-qty-numeric-wrap">
+                <input
+                  id="input-food-log-entry-qty-amount"
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="e.g. 150, 2, 1"
+                  className="sdb-input sdb-entry-qty-amount-input"
+                  value={entryQtyAmount}
+                  onChange={e => setEntryQtyAmount(e.target.value)}
+                />
+                <select
+                  id="select-food-log-entry-qty-unit"
+                  className="sdb-select sdb-entry-qty-unit-select"
+                  value={entryQtyUnit}
+                  onChange={e => setEntryQtyUnit(e.target.value as FoodQuantityUnit)}
+                >
+                  <option value="portion">{t.sdb_unit_portion || 'portion'}</option>
+                  <option value="serving">{t.sdb_unit_serving || 'serving'}</option>
+                  <option value="piece">{t.sdb_unit_piece || 'piece'}</option>
+                  <option value="gram">g (grams)</option>
+                  <option value="ml">ml (milliliters)</option>
+                  <option value="cup">{t.sdb_unit_cup || 'cup'}</option>
+                  <option value="slice">{t.sdb_unit_slice || 'slice'}</option>
+                  <option value="oz">oz (ounces)</option>
+                  <option value="custom">{t.sdb_unit_custom || 'custom'}</option>
+                </select>
+              </div>
+              <div className="sdb-qty-custom-text-wrap">
+                <input
+                  id="input-food-log-custom-qty"
+                  type="text"
+                  className="sdb-input sdb-custom-qty-input"
+                  placeholder={t.sdb_food_log_custom_quantity_placeholder}
+                  value={customQtyText}
+                  onChange={e => setCustomQtyText(e.target.value)}
+                  aria-label={t.sdb_food_log_custom_quantity_label}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Food Category Chips */}
@@ -3524,35 +3716,88 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
             )}
           </div>
 
-          {/* Structural Outcome */}
-          <div className="sdb-field">
+          {/* Structural Outcome: Two-Level Branch (Phase 30) */}
+          <div className="sdb-field sdb-outcome-section">
             <label className="sdb-label">{t.sdb_food_log_outcome_label}:</label>
-            <div className="sdb-outcome-modal-grid">
-              {ALL_LOG_OUTCOMES.map(key => {
-                const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
-                const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
-                const isSlipOutcome = outcomeToStatus(key) === 'slip';
-                const isSelected = outcome === key;
-                return (
-                  <button
-                    key={key}
-                    id={`btn-food-log-outcome-${key}`}
-                    type="button"
-                    className={`sdb-outcome-chip ${isSlipOutcome ? 'sdb-outcome-chip--slip' : 'sdb-outcome-chip--ontrack'} ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
-                    onClick={() => setOutcome(key)}
-                    aria-pressed={isSelected}
-                    title={def || label}
-                  >
-                    {isSelected ? '✓ ' : ''}{label}
-                  </button>
-                );
-              })}
+
+            {/* Level 1: Branch Selector */}
+            <div className="sdb-outcome-branch-toggle">
+              <button
+                type="button"
+                id="btn-food-log-branch-ontrack"
+                className={`sdb-outcome-branch-btn sdb-outcome-branch-btn--ontrack ${outcomeBranch === 'on-track' ? 'sdb-outcome-branch-btn--active' : ''}`}
+                onClick={() => {
+                  setOutcomeBranch('on-track');
+                  if (!ON_TRACK_OUTCOMES.includes(outcome as any)) {
+                    setOutcome('on_track');
+                  }
+                }}
+              >
+                ✓ {t.sdb_food_log_branch_on_track}
+              </button>
+              <button
+                type="button"
+                id="btn-food-log-branch-slip"
+                className={`sdb-outcome-branch-btn sdb-outcome-branch-btn--slip ${outcomeBranch === 'slip' ? 'sdb-outcome-branch-btn--active' : ''}`}
+                onClick={() => {
+                  setOutcomeBranch('slip');
+                  if (!SLIP_OUTCOMES.includes(outcome as any)) {
+                    setOutcome('structured_slip');
+                  }
+                }}
+              >
+                ⚠️ {t.sdb_food_log_branch_slip}
+              </button>
             </div>
+
+            {/* Level 2: Detailed outcome options for active branch */}
+            <div className="sdb-outcome-branch-options">
+              <span className="sdb-branch-prompt-label">{t.sdb_food_log_branch_prompt}</span>
+              <div className="sdb-outcome-modal-grid">
+                {(outcomeBranch === 'on-track' ? ON_TRACK_OUTCOMES : SLIP_OUTCOMES).map(key => {
+                  const label = (t[`sdb_outcome_${key}` as keyof typeof t] as string) || key;
+                  const def = (t[`sdb_outcome_def_${key}` as keyof typeof t] as string) || '';
+                  const isSlipOutcome = outcomeToStatus(key) === 'slip';
+                  const isSelected = outcome === key;
+                  return (
+                    <button
+                      key={key}
+                      id={`btn-food-log-outcome-${key}`}
+                      type="button"
+                      className={`sdb-outcome-chip ${isSlipOutcome ? 'sdb-outcome-chip--slip' : 'sdb-outcome-chip--ontrack'} ${isSelected ? 'sdb-outcome-chip--selected' : ''}`}
+                      onClick={() => setOutcome(key)}
+                      aria-pressed={isSelected}
+                      title={def || label}
+                    >
+                      {isSelected ? '✓ ' : ''}{label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Resume status control for confirmed slips */}
+            {outcomeBranch === 'slip' && (outcome === 'structured_slip' || outcome === 'unstructured_slip') && (
+              <div className="sdb-resume-toggle-box" id="sdb-food-log-resume-box">
+                <label className="sdb-checkbox-label">
+                  <input
+                    id="checkbox-food-log-resumed"
+                    type="checkbox"
+                    checked={isResumed}
+                    onChange={e => setIsResumed(e.target.checked)}
+                  />
+                  <span className="sdb-resume-label-text">
+                    🔄 <strong>{t.sdb_food_log_resume_label}</strong>
+                    <span className="sdb-resume-subtext">{t.sdb_food_log_resume_desc}</span>
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="sdb-modal-footer">
-          <button id="btn-sdb-cancel-food-log" className="sdb-btn sdb-btn--cancel" onClick={onCancel}>
+          <button id="btn-sdb-cancel-food-log" className="sdb-btn sdb-btn--cancel" onClick={handleCancelSafe}>
             {t.commit_cancel}
           </button>
           <button
@@ -5148,7 +5393,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     refreshVerifications();
   };
 
-  // ── Unplanned / in-the-moment food log handler (Phase 26A / Phase 27) ───────────
+  // ── Unplanned / in-the-moment food log handler (Phase 26A / Phase 27 / Phase 30) ───────────
   const handleSaveFoodLog = (
     description: string,
     foodCategories: FoodCategoryKey[],
@@ -5158,9 +5403,16 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     foodSelections?: FoodSelectionsMap,
     customFoods?: CustomFoodsMap,
     foodPhotos?: FoodPhotoMetadata[],
-    foodQuantities?: FoodQuantitiesMap
+    foodQuantities?: FoodQuantitiesMap,
+    isUnplanned?: boolean,
+    targetDateKey?: string,
+    startTime?: string,
+    endTime?: string,
+    isResumed?: boolean,
+    entryQuantity?: FoodItemQuantity,
+    customQuantity?: string
   ) => {
-    const dateKey = getLocalDateKey();
+    const dateKey = targetDateKey || getLocalDateKey();
     const activityType: ScoreActivityType =
       outcome === 'twenty_percent_off_track'
         ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
@@ -5182,11 +5434,18 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       sourcePlanName: weekly.planName,
       profileId: activeProfile.id,
       profileName: getGoalDisplayName(activeProfile, t),
+      dateKey,
+      isUnplanned: isUnplanned !== false,
+      startTime,
+      endTime,
+      isResumed: status === 'slip' ? !!isResumed : undefined,
+      entryQuantity,
+      customQuantity,
     });
 
     // Deterministic sourceId: bound to this entry's unique synthetic block ID
     // prevents duplicate point farming on repeated submissions
-    const sourceId = `diet_unplanned_${dateKey}_${savedEntry.plannedBlockId}`;
+    const sourceId = `${isUnplanned === false ? 'diet_block' : 'diet_unplanned'}_${dateKey}_${savedEntry.plannedBlockId}`;
     recordScoreEvent({
       activityType,
       dateKey,
@@ -5306,11 +5565,11 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
             <button
               type="button"
               id={`btn-edit-unplanned-${log.plannedBlockId}`}
-              className="sdb-verified-link sdb-verified-link--change sdb-unplanned-edit-btn"
+              className="sdb-edit-prominent-btn sdb-unplanned-edit-btn"
               onClick={() => setEditingUnplannedLog(log)}
-              aria-label={t.commit_edit || 'Edit'}
+              aria-label={t.sdb_btn_customize || 'EDIT'}
             >
-              ✎ {t.commit_edit || 'Edit'}
+              ✏️ {t.sdb_btn_customize || 'EDIT'}
             </button>
             <span className="sdb-verified-ctrl-dot">·</span>
             <button
@@ -6287,6 +6546,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                         onToggleResumed={() => handleToggleResumed(block.id)}
                         onVerifyOnTrack={() => handleVerifyOnTrack(block)}
                         onOpenSlipModal={() => setSlipModalBlock(block)}
+                        onEditVerification={v => setEditingUnplannedLog(v)}
                         onClearStatus={() => handleClearStatus(block.id)}
                         onNavigate={onNavigate}
                         onQuickUpdateTime={(startTime, endTime) => handleQuickUpdateBlock(block.id, { startTime, endTime })}
@@ -6378,14 +6638,25 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                                 </span>
                               )}
                             </div>
-                            <button
-                              type="button"
-                              className="sdb-verified-link sdb-verified-link--clear"
-                              onClick={() => handleClearStatus(log.plannedBlockId)}
-                              aria-label={t.sdb_v_clear_status}
-                            >
-                              {t.sdb_v_clear_status}
-                            </button>
+                            <div className="sdb-unplanned-card-actions">
+                              <button
+                                id={`btn-edit-unplanned-${log.id}`}
+                                type="button"
+                                className="sdb-edit-prominent-btn sdb-unplanned-edit-btn"
+                                onClick={() => setEditingUnplannedLog(log)}
+                                aria-label={t.sdb_btn_customize || 'EDIT'}
+                              >
+                                ✏️ {t.sdb_btn_customize || 'EDIT'}
+                              </button>
+                              <button
+                                type="button"
+                                className="sdb-verified-link sdb-verified-link--clear"
+                                onClick={() => handleClearStatus(log.plannedBlockId)}
+                                aria-label={t.sdb_v_clear_status}
+                              >
+                                {t.sdb_v_clear_status}
+                              </button>
+                            </div>
                           </div>
                           {desc && <div className="sdb-unplanned-desc">{desc}</div>}
                           {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
@@ -6558,13 +6829,25 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                               {orphan.status === 'on-track' ? `✓ ${t.sdb_v_on_track}` : `⚠ ${t.sdb_v_slip_reported}`}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            className="sdb-verified-link sdb-verified-link--clear"
-                            onClick={() => handleClearStatus(orphan.plannedBlockId)}
-                          >
-                            {t.sdb_v_clear_status}
-                          </button>
+                          <div className="sdb-orphaned-actions">
+                            <button
+                              id={`btn-edit-orphan-${orphan.id}`}
+                              type="button"
+                              className="sdb-edit-prominent-btn sdb-edit-prominent-btn--sm"
+                              onClick={() => setEditingUnplannedLog(orphan)}
+                              aria-label={t.sdb_btn_customize || 'EDIT'}
+                            >
+                              ✏️ {t.sdb_btn_customize || 'EDIT'}
+                            </button>
+                            <button
+                              type="button"
+                              className="sdb-verified-link sdb-verified-link--clear"
+                              onClick={() => handleClearStatus(orphan.plannedBlockId)}
+                              aria-label={t.sdb_v_clear_status}
+                            >
+                              {t.sdb_v_clear_status}
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -6648,7 +6931,24 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       {(showFoodLogModal || editingUnplannedLog) && (
         <FoodLogModal
           initial={editingUnplannedLog}
-          onSave={(desc, cats, outcome, status, mealType, selections, customs, photos, quantities) => {
+          onSave={(
+            desc,
+            cats,
+            outcome,
+            status,
+            mealType,
+            selections,
+            customs,
+            photos,
+            quantities,
+            isUnplanned,
+            targetDateKey,
+            startTime,
+            endTime,
+            isResumed,
+            entryQuantity,
+            customQuantity
+          ) => {
             if (editingUnplannedLog) {
               updateUnplannedFoodLog(editingUnplannedLog.plannedBlockId, {
                 description: desc,
@@ -6660,11 +6960,35 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 customFoods: customs,
                 foodPhotos: photos,
                 foodQuantities: quantities,
+                isUnplanned,
+                targetDateKey,
+                startTime,
+                endTime,
+                isResumed,
+                entryQuantity,
+                customQuantity,
               });
               refreshVerifications();
               setEditingUnplannedLog(null);
             } else {
-              handleSaveFoodLog(desc, cats, outcome, status, mealType, selections, customs, photos, quantities);
+              handleSaveFoodLog(
+                desc,
+                cats,
+                outcome,
+                status,
+                mealType,
+                selections,
+                customs,
+                photos,
+                quantities,
+                isUnplanned,
+                targetDateKey,
+                startTime,
+                endTime,
+                isResumed,
+                entryQuantity,
+                customQuantity
+              );
             }
           }}
           onAutosaveQuantities={

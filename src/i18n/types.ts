@@ -642,6 +642,28 @@ export interface Translations {
   sdb_food_log_save_btn: string;
   sdb_food_log_unplanned_tag: string;
   sdb_food_log_auto_time: string;
+  // ── Phase 30 Food Log Editing & Flexible Eating Records ──
+  sdb_food_log_edit_modal_title: string;
+  sdb_food_log_status_planned: string;
+  sdb_food_log_status_unplanned: string;
+  sdb_food_log_planning_mode_label: string;
+  sdb_food_log_planning_mode_desc: string;
+  sdb_food_log_date_label: string;
+  sdb_food_log_start_time_label: string;
+  sdb_food_log_end_time_label: string;
+  sdb_food_log_time_optional: string;
+  sdb_food_log_entry_quantity_label: string;
+  sdb_food_log_entry_quantity_amount: string;
+  sdb_food_log_entry_quantity_unit: string;
+  sdb_food_log_custom_quantity_placeholder: string;
+  sdb_food_log_custom_quantity_label: string;
+  sdb_food_log_branch_on_track: string;
+  sdb_food_log_branch_slip: string;
+  sdb_food_log_branch_prompt: string;
+  sdb_food_log_resume_label: string;
+  sdb_food_log_resume_desc: string;
+  sdb_edit_food_log_entry: string;
+  sdb_unsaved_changes_confirm: string;
 
   // ── Phase 2 Food Categories ──
   sdb_food_categories_label: string;

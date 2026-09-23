@@ -16,7 +16,8 @@ import type { DayKey, StructuredDietBlock, MealTypeKey } from './dietStorage';
 import { getLocalTodayKey, getBlockPhotos } from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
-import type { FoodQuantitiesMap } from '../data/foodOptions';
+import type { FoodQuantitiesMap, FoodItemQuantity } from '../data/foodOptions';
+import { reconcileDietScoreEvent } from './scoringEngine';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,8 @@ export interface PlannedBlockSnapshot {
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   foodQuantities?: FoodQuantitiesMap;
+  entryQuantity?: FoodItemQuantity;
+  customQuantity?: string;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
 }
@@ -100,6 +103,10 @@ export interface DietBlockVerification {
   actualCustomFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   actualFoodQuantities?: FoodQuantitiesMap; // Phase 28: actual consumed food quantities
   actualCustomText?: string;
+  entryQuantity?: FoodItemQuantity;       // Phase 30: direct/overall entry quantity
+  customQuantity?: string;                // Phase 30: optional free-text quantity fallback
+  startTime?: string;                     // Phase 30: start time override/spec
+  endTime?: string;                       // Phase 30: end time override/spec
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
   isUnplanned?: boolean;                  // Phase 26A: true when logged without a pre-existing planned block
@@ -607,29 +614,76 @@ export function updateVerificationQuantities(
   return updatedEntry;
 }
 
+export interface UpdateFoodLogUpdates {
+  description: string;
+  foodCategories: FoodCategoryKey[];
+  outcome: DetailedBlockOutcome;
+  status: DietVerificationStatus;
+  mealType?: MealTypeKey;
+  foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
+  customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
+  foodPhotos?: FoodPhotoMetadata[];
+  foodQuantities?: FoodQuantitiesMap;
+  // Phase 30 additions
+  isUnplanned?: boolean;
+  targetDateKey?: string;
+  startTime?: string;
+  endTime?: string;
+  isResumed?: boolean;
+  entryQuantity?: FoodItemQuantity;
+  customQuantity?: string;
+}
+
 /**
- * Update an existing spontaneous unplanned food log in-place.
- * Updates description, categories, outcomes, selections, custom foods, photos, and quantities.
- * Does NOT generate new score events or duplicate entries.
+ * Move a verification record from one date to another without leaving duplicates.
+ */
+export function moveVerificationRecord(
+  plannedBlockId: string,
+  fromDateKey: string,
+  toDateKey: string
+): DietBlockVerification | null {
+  if (fromDateKey === toDateKey) {
+    const all = loadAllDietVerifications();
+    return all[fromDateKey]?.entries.find(e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId) ?? null;
+  }
+  const all = loadAllDietVerifications();
+  const sourceDay = all[fromDateKey];
+  if (!sourceDay) return null;
+  const idx = sourceDay.entries.findIndex(e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId);
+  if (idx === -1) return null;
+
+  const [record] = sourceDay.entries.splice(idx, 1);
+  record.dateKey = toDateKey;
+
+  if (!all[toDateKey]) {
+    all[toDateKey] = {
+      version: 1,
+      dateKey: toDateKey,
+      dayKey: getLocalTodayKey(),
+      sourcePlanName: sourceDay.sourcePlanName,
+      profileId: sourceDay.profileId,
+      profileName: sourceDay.profileName,
+      entries: [],
+    };
+  }
+  all[toDateKey].entries.push(record);
+  saveAllDietVerifications(all);
+  return record;
+}
+
+/**
+ * Update an existing food log (or verified block) in-place.
+ * Updates description, categories, outcomes, selections, custom foods, photos, quantities,
+ * date moving (without duplicate records), and reconciles score events.
  */
 export function updateUnplannedFoodLog(
   plannedBlockId: string,
-  updates: {
-    description: string;
-    foodCategories: FoodCategoryKey[];
-    outcome: DetailedBlockOutcome;
-    status: DietVerificationStatus;
-    mealType?: MealTypeKey;
-    foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
-    customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
-    foodPhotos?: FoodPhotoMetadata[];
-    foodQuantities?: FoodQuantitiesMap;
-  },
+  updates: UpdateFoodLogUpdates,
   dateKey: string = getLocalDateKey()
 ): DietBlockVerification | null {
   const all = loadAllDietVerifications();
-  let targetDateKey = dateKey;
-  let daily = all[targetDateKey];
+  let sourceDateKey = dateKey;
+  let daily = all[sourceDateKey];
 
   let idx = daily?.entries.findIndex(
     e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId
@@ -641,7 +695,7 @@ export function updateUnplannedFoodLog(
         e => e.plannedBlockId === plannedBlockId || e.id === plannedBlockId
       );
       if (foundIdx !== -1) {
-        targetDateKey = dk;
+        sourceDateKey = dk;
         daily = d;
         idx = foundIdx;
         break;
@@ -656,38 +710,108 @@ export function updateUnplannedFoodLog(
     ? { ...updates.foodQuantities }
     : undefined;
 
+  const isNowUnplanned = updates.isUnplanned !== undefined ? updates.isUnplanned : existing.isUnplanned;
+  const nextIsResumed = updates.isResumed !== undefined ? updates.isResumed : existing.isResumed;
+  const nextStartTime = updates.startTime || existing.startTime || existing.plannedSnapshot.startTime;
+  const nextEndTime = updates.endTime || existing.endTime || existing.plannedSnapshot.endTime;
+
+  const destinationDateKey = updates.targetDateKey && updates.targetDateKey.trim() !== ''
+    ? updates.targetDateKey
+    : sourceDateKey;
+
   const updatedEntry: DietBlockVerification = {
     ...existing,
-    status: updates.status,
-    detailedOutcome: updates.outcome,
-    mealType: updates.mealType,
-    actualFoodCategories: updates.foodCategories,
-    actualFoodSelections: updates.foodSelections,
-    actualCustomFoods: updates.customFoods,
-    actualCustomText: updates.description,
-    actualFoodQuantities: cleanedQuantities,
-    foodQuantities: cleanedQuantities,
-    foodPhotos: updates.foodPhotos,
-    foodPhoto: updates.foodPhotos && updates.foodPhotos.length > 0 ? updates.foodPhotos[0] : undefined,
+    dateKey: destinationDateKey,
+    status: updates.status !== undefined ? updates.status : existing.status,
+    detailedOutcome: updates.outcome !== undefined ? updates.outcome : existing.detailedOutcome,
+    mealType: updates.mealType !== undefined ? updates.mealType : existing.mealType,
+    isUnplanned: isNowUnplanned,
+    isResumed: nextIsResumed,
+    resumedAt: nextIsResumed ? (existing.resumedAt || Date.now()) : undefined,
+    startTime: nextStartTime,
+    endTime: nextEndTime,
+    entryQuantity: updates.entryQuantity !== undefined ? updates.entryQuantity : existing.entryQuantity,
+    customQuantity: updates.customQuantity !== undefined ? updates.customQuantity : existing.customQuantity,
+    actualFoodCategories: updates.foodCategories !== undefined ? updates.foodCategories : existing.actualFoodCategories,
+    actualFoodSelections: updates.foodSelections !== undefined ? updates.foodSelections : existing.actualFoodSelections,
+    actualCustomFoods: updates.customFoods !== undefined ? updates.customFoods : existing.actualCustomFoods,
+    actualCustomText: updates.description !== undefined ? updates.description : existing.actualCustomText,
+    actualFoodQuantities: cleanedQuantities !== undefined ? cleanedQuantities : existing.actualFoodQuantities,
+    foodQuantities: cleanedQuantities !== undefined ? cleanedQuantities : existing.foodQuantities,
+    foodPhotos: updates.foodPhotos !== undefined ? updates.foodPhotos : existing.foodPhotos,
+    foodPhoto: updates.foodPhotos !== undefined
+      ? (updates.foodPhotos.length > 0 ? updates.foodPhotos[0] : undefined)
+      : existing.foodPhoto,
     plannedSnapshot: {
       ...existing.plannedSnapshot,
-      customText: updates.description,
-      mealType: updates.mealType,
-      foodCategories: updates.foodCategories,
-      foodSelections: updates.foodSelections,
-      customFoods: updates.customFoods,
-      foodQuantities: cleanedQuantities ? JSON.parse(JSON.stringify(cleanedQuantities)) : undefined,
-      foodPhotos: updates.foodPhotos,
+      startTime: nextStartTime,
+      endTime: nextEndTime,
+      customText: updates.description !== undefined ? updates.description : existing.plannedSnapshot.customText,
+      mealType: updates.mealType !== undefined ? updates.mealType : existing.plannedSnapshot.mealType,
+      foodCategories: updates.foodCategories !== undefined ? updates.foodCategories : existing.plannedSnapshot.foodCategories,
+      foodSelections: updates.foodSelections !== undefined ? updates.foodSelections : existing.plannedSnapshot.foodSelections,
+      customFoods: updates.customFoods !== undefined ? updates.customFoods : existing.plannedSnapshot.customFoods,
+      foodQuantities: cleanedQuantities !== undefined
+        ? (cleanedQuantities ? JSON.parse(JSON.stringify(cleanedQuantities)) : undefined)
+        : existing.plannedSnapshot.foodQuantities,
+      entryQuantity: updates.entryQuantity !== undefined ? updates.entryQuantity : existing.plannedSnapshot.entryQuantity,
+      customQuantity: updates.customQuantity !== undefined ? updates.customQuantity : existing.plannedSnapshot.customQuantity,
+      foodPhotos: updates.foodPhotos !== undefined ? updates.foodPhotos : existing.plannedSnapshot.foodPhotos,
     },
   };
 
-  const nextEntries = daily.entries.map((e, i) => (i === idx ? updatedEntry : e));
-  all[targetDateKey] = {
-    ...daily,
-    entries: nextEntries,
-  };
+  if (destinationDateKey !== sourceDateKey) {
+    // Remove from source date bucket
+    daily.entries.splice(idx, 1);
+    all[sourceDateKey] = { ...daily };
+
+    // Insert into destination date bucket
+    if (!all[destinationDateKey]) {
+      all[destinationDateKey] = {
+        version: 1,
+        dateKey: destinationDateKey,
+        dayKey: getLocalTodayKey(),
+        sourcePlanName: daily.sourcePlanName,
+        profileId: daily.profileId,
+        profileName: daily.profileName,
+        entries: [],
+      };
+    }
+    all[destinationDateKey].entries.push(updatedEntry);
+  } else {
+    // Same date in-place update
+    daily.entries[idx] = updatedEntry;
+    all[sourceDateKey] = { ...daily };
+  }
 
   saveAllDietVerifications(all);
+
+  // Reconcile scoring
+  try {
+    const oldSourceId = existing.isUnplanned
+      ? `diet_unplanned_${sourceDateKey}_${existing.plannedBlockId}`
+      : `diet_block_${sourceDateKey}_${existing.plannedBlockId}`;
+    const newSourceId = isNowUnplanned
+      ? `diet_unplanned_${destinationDateKey}_${existing.plannedBlockId}`
+      : `diet_block_${destinationDateKey}_${existing.plannedBlockId}`;
+    const newActivityType = updates.outcome === 'twenty_percent_off_track'
+      ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
+      : updates.status === 'on-track'
+      ? 'DIET_ON_TRACK'
+      : 'SLIP_REPORTED';
+
+    reconcileDietScoreEvent({
+      oldSourceId,
+      newSourceId,
+      newDateKey: destinationDateKey,
+      newActivityType,
+      profileId: daily.profileId,
+      profileName: daily.profileName,
+    });
+  } catch (err) {
+    console.error('Error reconciling diet score on update:', err);
+  }
+
   return updatedEntry;
 }
 
@@ -827,12 +951,20 @@ export interface UnplannedFoodLogParams {
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   /** Food quantities entered */
   foodQuantities?: FoodQuantitiesMap;
+  /** Overall / entry quantity */
+  entryQuantity?: FoodItemQuantity;
+  /** Free-text custom quantity */
+  customQuantity?: string;
   /** Photo attachments */
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
   /** Optional rough time range the eating happened (if omitted, automatically set to current time) */
   startTime?: string;
   endTime?: string;
+  /** Planned vs Unplanned flag (defaults to true if unspecified) */
+  isUnplanned?: boolean;
+  /** Optional Resume flag for slips */
+  isResumed?: boolean;
   /** Profile isolation */
   profileId?: string;
   profileName?: string;
@@ -842,21 +974,19 @@ export interface UnplannedFoodLogParams {
 }
 
 /**
- * Save a food event that happened WITHOUT a pre-existing planned block.
+ * Save a food event that happened directly from the food log.
+ * Supports planning in advance, logging in the moment, or logging post-hoc.
  *
  * Design decisions:
  * - Creates a synthetic plannedBlockId with prefix `unplanned_` to guarantee
  *   no collision with real block UUIDs.
- * - Sets isUnplanned = true so analytics can differentiate spontaneous logs
- *   from verified planned blocks.
- * - Automatically generates timestamps (startTime, endTime) from current local time.
+ * - Sets isUnplanned based on parameter (default true).
+ * - Automatically generates timestamps (startTime, endTime) from current local time if not provided.
  * - Supports full feature parity: food categories, specific food submenus,
- *   custom foods, meal types, and multi-photo attachments.
+ *   custom foods, meal types, direct/custom quantity, and multi-photo attachments.
  * - Scoring is handled by the caller (same as saveBlockVerification).
  * - 20% OFF TRACK, near_slip, etc. all work identically as for planned blocks.
  * - Resume Rate denominator rules are identical (structured_slip / unstructured_slip only).
- * - Backward compatible: old code that iterates entries will see these as
- *   normal DietBlockVerification records with isUnplanned = true.
  *
  * Returns the saved DietBlockVerification record.
  */
@@ -873,8 +1003,7 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     entries: [],
   };
 
-  // Generate a stable synthetic block ID for this unplanned event.
-  // We include a random component so multiple unplanned logs in the same day are distinct.
+  // Generate a stable synthetic block ID for this event.
   const syntheticBlockId = `unplanned_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
   const verificationId =
@@ -893,6 +1022,9 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
   const assignedPhotos = rawPhotos && rawPhotos.length > 0 ? rawPhotos : undefined;
   const assignedPhoto = assignedPhotos && assignedPhotos.length > 0 ? assignedPhotos[0] : undefined;
 
+  const isUnplanned = params.isUnplanned !== undefined ? params.isUnplanned : true;
+  const isResumed = params.isResumed === true;
+
   // Build snapshot from what the user described.
   const plannedSnapshot: PlannedBlockSnapshot = {
     startTime,
@@ -905,6 +1037,8 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     foodSelections: params.foodSelections ? JSON.parse(JSON.stringify(params.foodSelections)) : undefined,
     customFoods: params.customFoods ? JSON.parse(JSON.stringify(params.customFoods)) : undefined,
     foodQuantities: params.foodQuantities ? JSON.parse(JSON.stringify(params.foodQuantities)) : undefined,
+    entryQuantity: params.entryQuantity,
+    customQuantity: params.customQuantity,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
   };
@@ -916,11 +1050,16 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     plannedSnapshot,
     status: params.status,
     detailedOutcome: params.detailedOutcome,
-    isResumed: false,
+    isResumed,
+    resumedAt: isResumed ? Date.now() : undefined,
     mealType: params.mealType,
     foodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     customFoods: params.customFoods ? { ...params.customFoods } : undefined,
     foodQuantities: params.foodQuantities ? { ...params.foodQuantities } : undefined,
+    entryQuantity: params.entryQuantity,
+    customQuantity: params.customQuantity,
+    startTime,
+    endTime,
     actualFoodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
     actualFoodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     actualCustomFoods: params.customFoods ? { ...params.customFoods } : undefined,
@@ -928,7 +1067,7 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     actualCustomText: params.description.trim() || undefined,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
-    isUnplanned: true,
+    isUnplanned,
     verifiedAt: Date.now(),
   };
 
