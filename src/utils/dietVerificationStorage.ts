@@ -13,10 +13,10 @@
  */
 
 import type { DayKey, StructuredDietBlock, MealTypeKey } from './dietStorage';
-import { getLocalTodayKey, getBlockPhotos } from './dietStorage';
+import { getLocalTodayKey, getBlockPhotos, calculateEndTimeFromStart } from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
-import type { FoodQuantitiesMap, FoodItemQuantity } from '../data/foodOptions';
+import type { FoodQuantitiesMap, FoodItemQuantity, SoupPortionKey } from '../data/foodOptions';
 import { reconcileDietScoreEvent } from './scoringEngine';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -60,6 +60,8 @@ export const SLIP_OUTCOMES: readonly DetailedBlockOutcome[] = [
   'unstructured_slip',
 ] as const;
 
+export type DietRecordType = 'food' | 'neutral';
+
 export interface PlannedBlockSnapshot {
   startTime: string;
   endTime: string;
@@ -71,8 +73,11 @@ export interface PlannedBlockSnapshot {
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   foodQuantities?: FoodQuantitiesMap;
+  soupPortion?: SoupPortionKey;
   entryQuantity?: FoodItemQuantity;
   customQuantity?: string;
+  quantity?: string;
+  recordType?: DietRecordType;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
 }
@@ -105,8 +110,12 @@ export interface DietBlockVerification {
   actualCustomText?: string;
   entryQuantity?: FoodItemQuantity;       // Phase 30: direct/overall entry quantity
   customQuantity?: string;                // Phase 30: optional free-text quantity fallback
+  quantity?: string;                      // Phase 31C: flexible optional quantity (e.g. for neutral log)
+  soupPortion?: SoupPortionKey;           // Phase 31A: optional quick soup portion size
+  actualSoupPortion?: SoupPortionKey;     // Phase 31A: actual soup portion consumed
   startTime?: string;                     // Phase 30: start time override/spec
   endTime?: string;                       // Phase 30: end time override/spec
+  recordType?: DietRecordType;            // Phase 31C: 'food' | 'neutral' (default 'food')
   foodPhoto?: FoodPhotoMetadata;          // Phase 6: optional photo attached to this eating event
   foodPhotos?: FoodPhotoMetadata[];       // Phase 6B: multi-photo support
   isUnplanned?: boolean;                  // Phase 26A: true when logged without a pre-existing planned block
@@ -250,6 +259,7 @@ export function createPlannedBlockSnapshot(plannedBlock: StructuredDietBlock): P
     foodQuantities: plannedBlock.foodQuantities
       ? JSON.parse(JSON.stringify(plannedBlock.foodQuantities))
       : undefined,
+    soupPortion: plannedBlock.soupPortion,
     foodPhoto: plannedPhotos[0],
     foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
   };
@@ -315,6 +325,7 @@ export function saveBlockVerification(params: {
         customFoods: params.plannedBlock.customFoods
           ? JSON.parse(JSON.stringify(params.plannedBlock.customFoods))
           : daily.entries[existingIdx].plannedSnapshot.customFoods,
+        soupPortion: params.plannedBlock.soupPortion ?? daily.entries[existingIdx].plannedSnapshot.soupPortion,
       }
     : createPlannedBlockSnapshot(params.plannedBlock);
 
@@ -465,6 +476,8 @@ export function saveBlockVerification(params: {
     foodSelections: params.plannedBlock.foodSelections ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodSelections : undefined),
     customFoods: params.plannedBlock.customFoods ?? (existingIdx >= 0 ? daily.entries[existingIdx].customFoods : undefined),
     foodQuantities: params.plannedBlock.foodQuantities ?? (existingIdx >= 0 ? daily.entries[existingIdx].foodQuantities : undefined),
+    soupPortion: params.plannedBlock.soupPortion ?? (existingIdx >= 0 ? daily.entries[existingIdx].soupPortion : undefined),
+    actualSoupPortion: params.plannedBlock.soupPortion ?? (existingIdx >= 0 ? daily.entries[existingIdx].actualSoupPortion : undefined),
     actualItems,
     actualFoodCategories,
     actualFoodSelections,
@@ -615,15 +628,17 @@ export function updateVerificationQuantities(
 }
 
 export interface UpdateFoodLogUpdates {
-  description: string;
-  foodCategories: FoodCategoryKey[];
-  outcome: DetailedBlockOutcome;
-  status: DietVerificationStatus;
+  description?: string;
+  customText?: string;
+  foodCategories?: FoodCategoryKey[];
+  outcome?: DetailedBlockOutcome;
+  status?: DietVerificationStatus;
   mealType?: MealTypeKey;
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>;
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   foodPhotos?: FoodPhotoMetadata[];
   foodQuantities?: FoodQuantitiesMap;
+  soupPortion?: SoupPortionKey;
   // Phase 30 additions
   isUnplanned?: boolean;
   targetDateKey?: string;
@@ -632,6 +647,9 @@ export interface UpdateFoodLogUpdates {
   isResumed?: boolean;
   entryQuantity?: FoodItemQuantity;
   customQuantity?: string;
+  quantity?: string;
+  // Phase 31C addition
+  recordType?: DietRecordType;
 }
 
 /**
@@ -714,14 +732,30 @@ export function updateUnplannedFoodLog(
   const nextIsResumed = updates.isResumed !== undefined ? updates.isResumed : existing.isResumed;
   const nextStartTime = updates.startTime || existing.startTime || existing.plannedSnapshot.startTime;
   const nextEndTime = updates.endTime || existing.endTime || existing.plannedSnapshot.endTime;
+  const nextRecordType: DietRecordType = updates.recordType !== undefined
+    ? updates.recordType
+    : (existing.recordType || 'food');
 
   const destinationDateKey = updates.targetDateKey && updates.targetDateKey.trim() !== ''
     ? updates.targetDateKey
     : sourceDateKey;
 
+  const nextDescription = updates.description !== undefined
+    ? updates.description
+    : updates.customText !== undefined
+    ? updates.customText
+    : existing.actualCustomText;
+
+  const nextQuantity = updates.quantity !== undefined
+    ? updates.quantity
+    : updates.customQuantity !== undefined
+    ? updates.customQuantity
+    : (existing.quantity || existing.customQuantity);
+
   const updatedEntry: DietBlockVerification = {
     ...existing,
     dateKey: destinationDateKey,
+    recordType: nextRecordType,
     status: updates.status !== undefined ? updates.status : existing.status,
     detailedOutcome: updates.outcome !== undefined ? updates.outcome : existing.detailedOutcome,
     mealType: updates.mealType !== undefined ? updates.mealType : existing.mealType,
@@ -731,11 +765,14 @@ export function updateUnplannedFoodLog(
     startTime: nextStartTime,
     endTime: nextEndTime,
     entryQuantity: updates.entryQuantity !== undefined ? updates.entryQuantity : existing.entryQuantity,
-    customQuantity: updates.customQuantity !== undefined ? updates.customQuantity : existing.customQuantity,
+    customQuantity: nextQuantity,
+    quantity: nextQuantity,
+    soupPortion: updates.soupPortion !== undefined ? updates.soupPortion : existing.soupPortion,
+    actualSoupPortion: updates.soupPortion !== undefined ? updates.soupPortion : existing.actualSoupPortion,
     actualFoodCategories: updates.foodCategories !== undefined ? updates.foodCategories : existing.actualFoodCategories,
     actualFoodSelections: updates.foodSelections !== undefined ? updates.foodSelections : existing.actualFoodSelections,
     actualCustomFoods: updates.customFoods !== undefined ? updates.customFoods : existing.actualCustomFoods,
-    actualCustomText: updates.description !== undefined ? updates.description : existing.actualCustomText,
+    actualCustomText: nextDescription,
     actualFoodQuantities: cleanedQuantities !== undefined ? cleanedQuantities : existing.actualFoodQuantities,
     foodQuantities: cleanedQuantities !== undefined ? cleanedQuantities : existing.foodQuantities,
     foodPhotos: updates.foodPhotos !== undefined ? updates.foodPhotos : existing.foodPhotos,
@@ -746,7 +783,7 @@ export function updateUnplannedFoodLog(
       ...existing.plannedSnapshot,
       startTime: nextStartTime,
       endTime: nextEndTime,
-      customText: updates.description !== undefined ? updates.description : existing.plannedSnapshot.customText,
+      customText: nextDescription,
       mealType: updates.mealType !== undefined ? updates.mealType : existing.plannedSnapshot.mealType,
       foodCategories: updates.foodCategories !== undefined ? updates.foodCategories : existing.plannedSnapshot.foodCategories,
       foodSelections: updates.foodSelections !== undefined ? updates.foodSelections : existing.plannedSnapshot.foodSelections,
@@ -754,8 +791,11 @@ export function updateUnplannedFoodLog(
       foodQuantities: cleanedQuantities !== undefined
         ? (cleanedQuantities ? JSON.parse(JSON.stringify(cleanedQuantities)) : undefined)
         : existing.plannedSnapshot.foodQuantities,
+      soupPortion: updates.soupPortion !== undefined ? updates.soupPortion : existing.plannedSnapshot.soupPortion,
       entryQuantity: updates.entryQuantity !== undefined ? updates.entryQuantity : existing.plannedSnapshot.entryQuantity,
-      customQuantity: updates.customQuantity !== undefined ? updates.customQuantity : existing.plannedSnapshot.customQuantity,
+      customQuantity: nextQuantity,
+      quantity: nextQuantity,
+      recordType: nextRecordType,
       foodPhotos: updates.foodPhotos !== undefined ? updates.foodPhotos : existing.plannedSnapshot.foodPhotos,
     },
   };
@@ -786,30 +826,32 @@ export function updateUnplannedFoodLog(
 
   saveAllDietVerifications(all);
 
-  // Reconcile scoring
-  try {
-    const oldSourceId = existing.isUnplanned
-      ? `diet_unplanned_${sourceDateKey}_${existing.plannedBlockId}`
-      : `diet_block_${sourceDateKey}_${existing.plannedBlockId}`;
-    const newSourceId = isNowUnplanned
-      ? `diet_unplanned_${destinationDateKey}_${existing.plannedBlockId}`
-      : `diet_block_${destinationDateKey}_${existing.plannedBlockId}`;
-    const newActivityType = updates.outcome === 'twenty_percent_off_track'
-      ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
-      : updates.status === 'on-track'
-      ? 'DIET_ON_TRACK'
-      : 'SLIP_REPORTED';
+  // Reconcile scoring (only for food records, never for neutral logs)
+  if (nextRecordType !== 'neutral' && existing.recordType !== 'neutral') {
+    try {
+      const oldSourceId = existing.isUnplanned
+        ? `diet_unplanned_${sourceDateKey}_${existing.plannedBlockId}`
+        : `diet_block_${sourceDateKey}_${existing.plannedBlockId}`;
+      const newSourceId = isNowUnplanned
+        ? `diet_unplanned_${destinationDateKey}_${existing.plannedBlockId}`
+        : `diet_block_${destinationDateKey}_${existing.plannedBlockId}`;
+      const newActivityType = updates.outcome === 'twenty_percent_off_track'
+        ? 'DIET_TWENTY_PERCENT_OFF_TRACK'
+        : updates.status === 'on-track'
+        ? 'DIET_ON_TRACK'
+        : 'SLIP_REPORTED';
 
-    reconcileDietScoreEvent({
-      oldSourceId,
-      newSourceId,
-      newDateKey: destinationDateKey,
-      newActivityType,
-      profileId: daily.profileId,
-      profileName: daily.profileName,
-    });
-  } catch (err) {
-    console.error('Error reconciling diet score on update:', err);
+      reconcileDietScoreEvent({
+        oldSourceId,
+        newSourceId,
+        newDateKey: destinationDateKey,
+        newActivityType,
+        profileId: daily.profileId,
+        profileName: daily.profileName,
+      });
+    } catch (err) {
+      console.error('Error reconciling diet score on update:', err);
+    }
   }
 
   return updatedEntry;
@@ -935,14 +977,15 @@ export function clearBlockVerification(
  * Phase 26A: Flexible / in-the-moment food logging.
  */
 export interface UnplannedFoodLogParams {
-  /** Free-text description of what was eaten */
-  description: string;
+  /** Free-text description of what was eaten / recorded */
+  description?: string;
+  customText?: string;
   /** Food categories consumed */
   foodCategories?: FoodCategoryKey[];
-  /** Detailed structural outcome — classifies eating event without planning */
-  detailedOutcome: DetailedBlockOutcome;
-  /** Top-level status derived from the outcome */
-  status: DietVerificationStatus;
+  /** Detailed structural outcome — classifies eating event without planning (optional for neutral logs) */
+  detailedOutcome?: DetailedBlockOutcome;
+  /** Top-level status derived from the outcome (defaults to 'on-track' for neutral logs) */
+  status?: DietVerificationStatus;
   /** Optional meal type */
   mealType?: MealTypeKey;
   /** Specific food selections from submenus (e.g. { fruits: ['banana'] }) */
@@ -951,13 +994,18 @@ export interface UnplannedFoodLogParams {
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;
   /** Food quantities entered */
   foodQuantities?: FoodQuantitiesMap;
+  /** Phase 31A: Optional quick soup portion */
+  soupPortion?: SoupPortionKey;
   /** Overall / entry quantity */
   entryQuantity?: FoodItemQuantity;
   /** Free-text custom quantity */
   customQuantity?: string;
+  quantity?: string;
   /** Photo attachments */
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
+  /** Phase 31C: Record type ('food' | 'neutral', defaults to 'food') */
+  recordType?: DietRecordType;
   /** Optional rough time range the eating happened (if omitted, automatically set to current time) */
   startTime?: string;
   endTime?: string;
@@ -971,6 +1019,7 @@ export interface UnplannedFoodLogParams {
   sourcePlanName?: string;
   /** Date to log against (defaults to today) */
   dateKey?: string;
+  date?: string;
 }
 
 /**
@@ -991,7 +1040,7 @@ export interface UnplannedFoodLogParams {
  * Returns the saved DietBlockVerification record.
  */
 export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockVerification {
-  const dateKey = params.dateKey ?? getLocalDateKey();
+  const dateKey = params.dateKey ?? params.date ?? getLocalDateKey();
   const all = loadAllDietVerifications();
   const daily = all[dateKey] ?? {
     version: 1 as const,
@@ -1015,7 +1064,11 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
   const now = new Date();
   const autoTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const startTime = params.startTime || autoTime;
-  const endTime = params.endTime || autoTime;
+  const endTime = params.endTime || calculateEndTimeFromStart(startTime, 30);
+  const recordType: DietRecordType = params.recordType || 'food';
+  const descText = (params.description || params.customText || '').trim();
+  const rawQuantity = params.quantity || params.customQuantity;
+  const entryStatus: DietVerificationStatus = params.status || 'on-track';
 
   const rawPhotos = params.foodPhotos
     ?? (params.foodPhoto ? [params.foodPhoto] : undefined);
@@ -1032,13 +1085,16 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     type: params.mealType || 'custom',
     mealType: params.mealType,
     items: [],
-    customText: params.description.trim() || undefined,
+    customText: descText || undefined,
     foodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
     foodSelections: params.foodSelections ? JSON.parse(JSON.stringify(params.foodSelections)) : undefined,
     customFoods: params.customFoods ? JSON.parse(JSON.stringify(params.customFoods)) : undefined,
     foodQuantities: params.foodQuantities ? JSON.parse(JSON.stringify(params.foodQuantities)) : undefined,
+    soupPortion: params.soupPortion,
     entryQuantity: params.entryQuantity,
-    customQuantity: params.customQuantity,
+    customQuantity: rawQuantity,
+    quantity: rawQuantity,
+    recordType,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
   };
@@ -1048,7 +1104,8 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     dateKey,
     plannedBlockId: syntheticBlockId,
     plannedSnapshot,
-    status: params.status,
+    recordType,
+    status: entryStatus,
     detailedOutcome: params.detailedOutcome,
     isResumed,
     resumedAt: isResumed ? Date.now() : undefined,
@@ -1056,15 +1113,18 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
     foodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     customFoods: params.customFoods ? { ...params.customFoods } : undefined,
     foodQuantities: params.foodQuantities ? { ...params.foodQuantities } : undefined,
+    soupPortion: params.soupPortion,
+    actualSoupPortion: params.soupPortion,
     entryQuantity: params.entryQuantity,
-    customQuantity: params.customQuantity,
+    customQuantity: rawQuantity,
+    quantity: rawQuantity,
     startTime,
     endTime,
     actualFoodCategories: params.foodCategories ? [...params.foodCategories] : undefined,
     actualFoodSelections: params.foodSelections ? { ...params.foodSelections } : undefined,
     actualCustomFoods: params.customFoods ? { ...params.customFoods } : undefined,
     actualFoodQuantities: params.foodQuantities ? { ...params.foodQuantities } : undefined,
-    actualCustomText: params.description.trim() || undefined,
+    actualCustomText: descText || undefined,
     foodPhoto: assignedPhoto,
     foodPhotos: assignedPhotos,
     isUnplanned,
@@ -1102,6 +1162,7 @@ export function saveUnplannedFoodLog(params: UnplannedFoodLogParams): DietBlockV
  *   - legacy 'on-track' records
  */
 export function isEligibleSlipRecord(record: DietBlockVerification): boolean {
+  if (record.recordType === 'neutral') return false;
   if (record.detailedOutcome) {
     return (
       record.detailedOutcome === 'structured_slip' ||
@@ -1136,8 +1197,10 @@ export function calculateResumeStats(records: DietBlockVerification[]): ResumeSt
  */
 export function isStructuredOutcome(
   detailedOutcome?: DetailedBlockOutcome,
-  status?: DietVerificationStatus
+  status?: DietVerificationStatus,
+  recordType?: DietRecordType
 ): boolean {
+  if (recordType === 'neutral') return false;
   if (detailedOutcome) {
     return (
       detailedOutcome === 'on_track' ||
@@ -1153,8 +1216,10 @@ export function isStructuredOutcome(
 
 export function isUnstructuredOutcome(
   detailedOutcome?: DetailedBlockOutcome,
-  _status?: DietVerificationStatus
+  _status?: DietVerificationStatus,
+  recordType?: DietRecordType
 ): boolean {
+  if (recordType === 'neutral') return false;
   if (detailedOutcome) {
     return (
       detailedOutcome === 'planned_unstructured' ||
@@ -1169,13 +1234,14 @@ export function isUnstructuredOutcome(
  * Calculates structured vs unstructured awareness statistics from verification records.
  */
 export function calculateStructureStats(records: DietBlockVerification[]): StructureAwarenessStats {
+  const foodRecords = records.filter(r => r.recordType !== 'neutral');
   let structuredCount = 0;
   let unstructuredCount = 0;
 
-  for (const r of records) {
-    if (isStructuredOutcome(r.detailedOutcome, r.status)) {
+  for (const r of foodRecords) {
+    if (isStructuredOutcome(r.detailedOutcome, r.status, r.recordType)) {
       structuredCount++;
-    } else if (isUnstructuredOutcome(r.detailedOutcome, r.status)) {
+    } else if (isUnstructuredOutcome(r.detailedOutcome, r.status, r.recordType)) {
       unstructuredCount++;
     }
   }
@@ -1213,9 +1279,10 @@ export function getDailyVerificationStats(
     };
   }
 
-  // Deduplicate by plannedBlockId
+  // Deduplicate by plannedBlockId, excluding neutral records
   const uniqueMap = new Map<string, DietBlockVerification>();
   for (const entry of daily.entries) {
+    if (entry.recordType === 'neutral') continue;
     uniqueMap.set(entry.plannedBlockId, entry);
   }
 

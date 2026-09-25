@@ -780,6 +780,7 @@ export const en: Translations = {
   sdb_cat_desserts: 'Desserts',
   sdb_cat_snacks: 'Snacks',
   sdb_cat_beverages: 'Beverages',
+  sdb_cat_soups: 'Soups',
 
   // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
   sdb_awareness_title: 'Eating Structure Awareness',
@@ -1548,6 +1549,13 @@ export const en: Translations = {
   sdb_food_opt_diet_soft_drink: 'Diet Soft Drink',
   sdb_food_opt_energy_drink: 'Energy Drink',
   sdb_food_opt_smoothie: 'Smoothie',
+  sdb_food_opt_vegetable_soup: 'Vegetable Soup',
+  sdb_food_opt_chicken_soup: 'Chicken Soup',
+  sdb_food_opt_tomato_soup: 'Tomato Soup',
+  sdb_food_opt_lentil_soup: 'Lentil Soup',
+  sdb_food_opt_noodle_soup: 'Noodle Soup',
+  sdb_food_opt_broth: 'Broth / Bouillon',
+  sdb_food_opt_other_soup: 'Other Soup',
 
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: SDA_CANONICAL_SLOGAN_EN,
@@ -1570,6 +1578,26 @@ export const en: Translations = {
   sdb_quantity_breakdown: 'Food Portions & Quantities',
   sdb_quantity_breakdown_desc: 'Optional quantities recorded across your meals and snacks',
   sdb_no_quantities_logged: 'No specific portions logged yet. Quantities are optional!',
+
+  // ── Phase 31A: Soup Portions ──
+  sdb_soup_portion_label: 'Soup Portion',
+  sdb_soup_portion_small: 'Small',
+  sdb_soup_portion_medium: 'Medium',
+  sdb_soup_portion_large: 'Large',
+  sdb_soup_portion_xlarge: 'X-Large',
+
+  // ── Phase 31C: Neutral Log ──
+  sdb_neutral_log: 'Neutral Log',
+  sdb_neutral_badge: 'NEUTRAL',
+  sdb_add_neutral_log: 'Add Neutral Log',
+  sdb_edit_neutral_log: 'Edit Neutral Log',
+  sdb_neutral_log_desc_label: 'Description / Note',
+  sdb_neutral_log_desc_placeholder: 'e.g., Vitamin D, Morning supplements, Electrolytes, Personal note...',
+  sdb_neutral_log_desc_required: 'Please enter a description or note for the Neutral Log.',
+  sdb_neutral_log_hint: 'Neutral records are for vitamins, supplements, or personal notes. They are not evaluated as food and do not affect your diet score or structure statistics.',
+  sdb_neutral_quantity_label: 'Quantity / Amount',
+  sdb_neutral_quantity_optional: 'optional',
+  sdb_btn_save_neutral_log: 'Save Neutral Log',
 
   // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
   recommit_btn_cancel: 'Cancel / Return to Main Menu',

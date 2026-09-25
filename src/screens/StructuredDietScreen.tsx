@@ -23,7 +23,7 @@ import {
   isOvernightBlock,
   sortBlocks,
   DAY_KEYS,
-  calculateShiftedEndTime,
+  calculateEndTimeFromStart,
   snapshotHistoryDate,
   getBlockPhotos,
   sanitiseBlock,
@@ -92,6 +92,9 @@ import {
   formatQuantityValue,
   getDefaultFoodUnit,
   FOOD_QUANTITY_UNITS,
+  SOUP_PORTION_KEYS,
+  type SoupPortionKey,
+  formatSoupPortion,
   type FoodSelectionsMap,
   type CustomFoodsMap,
   type FoodQuantitiesMap,
@@ -297,8 +300,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
     else if (rawM >= 15) m = '15';
     else m = '00';
     const start = `${String(h).padStart(2, '0')}:${m}`;
-    const nextH = (h + 1) % 24;
-    const end = `${String(nextH).padStart(2, '0')}:${m}`;
+    const end = calculateEndTimeFromStart(start, 30);
     return { start, end };
   };
 
@@ -353,6 +355,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
     if (initial?.foodQuantities) return JSON.parse(JSON.stringify(initial.foodQuantities));
     return {};
   });
+  const [soupPortion, setSoupPortion] = useState<SoupPortionKey | undefined>(() => initial?.soupPortion);
   const [autosaveState, setAutosaveState] = useState<'idle' | 'saved' | 'error'>('idle');
   const [qtyInputBuffers, setQtyInputBuffers] = useState<Record<string, string>>({});
   const autosaveTimerRef = useRef<any>(null);
@@ -729,6 +732,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
       foodSelections,
       customFoods,
       foodQuantities: Object.keys(foodQuantities).length > 0 ? foodQuantities : undefined,
+      soupPortion: foodCategories.includes('soups') ? soupPortion : undefined,
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
@@ -887,7 +891,13 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
               id="sdb-start-time"
               className="sdb-select"
               value={startTime}
-              onChange={e => setStartTime(e.target.value)}
+              onChange={e => {
+                const newStart = e.target.value;
+                setStartTime(newStart);
+                if (newStart) {
+                  setEndTime(calculateEndTimeFromStart(newStart, 30));
+                }
+              }}
               aria-label={t.sdb_start_time}
             >
               {TIME_SLOTS.map(s => (
@@ -967,6 +977,35 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
                 );
               })}
             </div>
+
+            {/* ── Phase 31A: Quick Soup Portion Choices (When Soups category is selected) ── */}
+            {foodCategories.includes('soups') && (
+              <div className="sdb-soup-portion-section" id="sdb-soup-portion-section-edit">
+                <div className="sdb-soup-portion-header">
+                  <span className="sdb-soup-portion-title">🥣 {t.sdb_soup_portion_label}</span>
+                  <span className="sdb-optional">({t.sdb_optional})</span>
+                </div>
+                <div className="sdb-soup-portion-grid">
+                  {SOUP_PORTION_KEYS.map(portionKey => {
+                    const isSelected = soupPortion === portionKey;
+                    const portionLabel = t[`sdb_soup_portion_${portionKey}` as keyof typeof t] as string;
+                    return (
+                      <button
+                        key={portionKey}
+                        id={`btn-edit-soup-portion-${portionKey}`}
+                        type="button"
+                        className={`sdb-soup-portion-chip ${isSelected ? 'sdb-soup-portion-chip--active' : ''}`}
+                        onClick={() => setSoupPortion(prev => prev === portionKey ? undefined : portionKey)}
+                        aria-pressed={isSelected}
+                      >
+                        {isSelected && <span className="sdb-portion-check">✓ </span>}
+                        <span>{portionLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ── Phase 7C: Category Specific Food Submenu Accordion ── */}
             {activeCategorySubmenu && foodCategories.includes(activeCategorySubmenu) && (
@@ -1935,7 +1974,7 @@ function BlockCard({
   };
 
   const handleStartTimeChange = (newStart: string) => {
-    const newEnd = calculateShiftedEndTime(newStart, block.startTime, block.endTime);
+    const newEnd = calculateEndTimeFromStart(newStart, 30);
     onQuickUpdateTime?.(newStart, newEnd);
   };
 
@@ -2230,6 +2269,19 @@ function BlockCard({
           })}
         </div>
       )}
+
+      {/* ── Phase 31A: Soup Portion Badge ── */}
+      {(() => {
+        const portion = verification?.actualSoupPortion || verification?.soupPortion || block.soupPortion;
+        if (!portion) return null;
+        return (
+          <div className="sdb-block-soup-portion" id={`sdb-block-soup-portion-${block.id}`}>
+            <span className="sdb-soup-portion-badge">
+              🥣 {formatSoupPortion(portion, t)}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* ── Phase 7C & Phase 28: Specific Food Selections & Portions Summary Line ── */}
       {(() => {
@@ -2680,7 +2732,8 @@ interface FoodLogModalProps {
     endTime?: string,
     isResumed?: boolean,
     entryQuantity?: FoodItemQuantity,
-    customQuantity?: string
+    customQuantity?: string,
+    soupPortion?: SoupPortionKey
   ) => void;
   onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
@@ -2712,11 +2765,12 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
   const [dateKey, setDateKey] = useState<string>(
     () => initial?.dateKey || getLocalDateKey()
   );
+  const defaultEndTime = useMemo(() => calculateEndTimeFromStart(autoTime, 30), [autoTime]);
   const [startTime, setStartTime] = useState<string>(
     () => initial?.startTime || initial?.plannedSnapshot?.startTime || autoTime
   );
   const [endTime, setEndTime] = useState<string>(
-    () => initial?.endTime || initial?.plannedSnapshot?.endTime || ''
+    () => initial?.endTime || initial?.plannedSnapshot?.endTime || defaultEndTime
   );
   const [isUnplanned, setIsUnplanned] = useState<boolean>(
     () => initial?.isUnplanned !== undefined ? initial.isUnplanned : true
@@ -2758,6 +2812,9 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
   const [foodQuantities, setFoodQuantities] = useState<FoodQuantitiesMap>(() => {
     const q = initial?.actualFoodQuantities || initial?.foodQuantities || initial?.plannedSnapshot?.foodQuantities;
     return q ? JSON.parse(JSON.stringify(q)) : {};
+  });
+  const [soupPortion, setSoupPortion] = useState<SoupPortionKey | undefined>(() => {
+    return initial?.actualSoupPortion || initial?.soupPortion || initial?.plannedSnapshot?.soupPortion;
   });
 
   // Direct / overall entry quantity and free-text custom quantity (Phase 30)
@@ -2830,8 +2887,14 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
     if (entryQtyAmount !== origEqAmount) return true;
     const origCustomQty = initial?.customQuantity || initial?.plannedSnapshot?.customQuantity || '';
     if (customQtyText.trim() !== origCustomQty.trim()) return true;
+    const origSoupPortion = initial?.actualSoupPortion || initial?.soupPortion || initial?.plannedSnapshot?.soupPortion;
+    if (soupPortion !== origSoupPortion) return true;
+    const origStart = initial?.startTime || initial?.plannedSnapshot?.startTime || autoTime;
+    if (startTime !== origStart) return true;
+    const origEnd = initial?.endTime || initial?.plannedSnapshot?.endTime || defaultEndTime;
+    if (endTime !== origEnd) return true;
     return false;
-  }, [initial, description, dateKey, isUnplanned, outcome, isResumed, entryQtyAmount, customQtyText]);
+  }, [initial, description, dateKey, isUnplanned, outcome, isResumed, entryQtyAmount, customQtyText, soupPortion]);
 
   const handleCancelSafe = () => {
     if (isDirty) {
@@ -3101,7 +3164,8 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
       endTime || undefined,
       isResumed,
       parsedEntryQty,
-      customQtyText.trim() || undefined
+      customQtyText.trim() || undefined,
+      selectedCategories.includes('soups') ? soupPortion : undefined
     );
   };
 
@@ -3170,7 +3234,13 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
                 type="time"
                 className="sdb-input sdb-time-input"
                 value={startTime}
-                onChange={e => setStartTime(e.target.value)}
+                onChange={e => {
+                  const newStart = e.target.value;
+                  setStartTime(newStart);
+                  if (newStart) {
+                    setEndTime(calculateEndTimeFromStart(newStart, 30));
+                  }
+                }}
               />
             </div>
             <div className="sdb-field sdb-field--time">
@@ -3394,6 +3464,35 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
                 );
               })}
             </div>
+
+            {/* ── Phase 31A: Quick Soup Portion Choices (When Soups category is selected) ── */}
+            {selectedCategories.includes('soups') && (
+              <div className="sdb-soup-portion-section" id="sdb-food-log-soup-portion-section">
+                <div className="sdb-soup-portion-header">
+                  <span className="sdb-soup-portion-title">🥣 {t.sdb_soup_portion_label}</span>
+                  <span className="sdb-optional">({t.sdb_optional})</span>
+                </div>
+                <div className="sdb-soup-portion-grid">
+                  {SOUP_PORTION_KEYS.map(portionKey => {
+                    const isSelected = soupPortion === portionKey;
+                    const portionLabel = t[`sdb_soup_portion_${portionKey}` as keyof typeof t] as string;
+                    return (
+                      <button
+                        key={portionKey}
+                        id={`btn-food-log-soup-portion-${portionKey}`}
+                        type="button"
+                        className={`sdb-soup-portion-chip ${isSelected ? 'sdb-soup-portion-chip--active' : ''}`}
+                        onClick={() => setSoupPortion(prev => prev === portionKey ? undefined : portionKey)}
+                        aria-pressed={isSelected}
+                      >
+                        {isSelected && <span className="sdb-portion-check">✓ </span>}
+                        <span>{portionLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Food Submenu Accordion for selected category */}
             {activeCategorySubmenu && selectedCategories.includes(activeCategorySubmenu) && (
@@ -3823,6 +3922,286 @@ function FoodLogModal({ initial, onSave, onAutosaveQuantities, onCancel, t }: Fo
           t={t}
         />
       )}
+    </div>
+  );
+}
+
+// ── Phase 31C: Neutral Log Modal ──────────────────────────────────────────
+
+interface NeutralLogModalProps {
+  initial?: DietBlockVerification | null;
+  onSave: (
+    description: string,
+    targetDateKey: string,
+    startTime: string,
+    endTime?: string,
+    entryQuantity?: FoodItemQuantity,
+    customQuantity?: string
+  ) => void;
+  onCancel: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function NeutralLogModal({ initial, onSave, onCancel, t }: NeutralLogModalProps) {
+  const autoTime = useMemo(() => {
+    if (initial?.startTime) return initial.startTime;
+    if (initial?.plannedSnapshot?.startTime) return initial.plannedSnapshot.startTime;
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  }, [initial]);
+
+  const defaultEndTime = useMemo(() => calculateEndTimeFromStart(autoTime, 30), [autoTime]);
+
+  const [dateKey, setDateKey] = useState<string>(
+    () => initial?.dateKey || getLocalDateKey()
+  );
+  const [startTime, setStartTime] = useState<string>(
+    () => initial?.startTime || initial?.plannedSnapshot?.startTime || autoTime
+  );
+  const [endTime, setEndTime] = useState<string>(
+    () => initial?.endTime || initial?.plannedSnapshot?.endTime || defaultEndTime
+  );
+  const [description, setDescription] = useState<string>(
+    () => initial?.actualCustomText || initial?.plannedSnapshot?.customText || ''
+  );
+
+  // Optional direct quantity
+  const [entryQtyAmount, setEntryQtyAmount] = useState<string>(() => {
+    return initial?.entryQuantity?.amount ? String(initial.entryQuantity.amount) : '';
+  });
+  const [entryQtyUnit, setEntryQtyUnit] = useState<FoodQuantityUnit>(() => {
+    return initial?.entryQuantity?.unit || 'piece';
+  });
+  const [customUnitText, setCustomUnitText] = useState<string>(() => {
+    return initial?.entryQuantity?.customUnit || '';
+  });
+  const [customQtyText, setCustomQtyText] = useState<string>(() => {
+    return initial?.customQuantity || initial?.plannedSnapshot?.customQuantity || '';
+  });
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const isDirty = useMemo(() => {
+    const origDesc = (initial?.actualCustomText || initial?.plannedSnapshot?.customText || '').trim();
+    if (description.trim() !== origDesc) return true;
+    const origDate = initial?.dateKey || getLocalDateKey();
+    if (dateKey !== origDate) return true;
+    const origEqAmount = initial?.entryQuantity?.amount ? String(initial.entryQuantity.amount) : '';
+    if (entryQtyAmount !== origEqAmount) return true;
+    const origCustomQty = initial?.customQuantity || initial?.plannedSnapshot?.customQuantity || '';
+    if (customQtyText.trim() !== origCustomQty.trim()) return true;
+    const origStart = initial?.startTime || initial?.plannedSnapshot?.startTime || autoTime;
+    if (startTime !== origStart) return true;
+    const origEnd = initial?.endTime || initial?.plannedSnapshot?.endTime || defaultEndTime;
+    if (endTime !== origEnd) return true;
+    return false;
+  }, [initial, description, dateKey, entryQtyAmount, customQtyText, startTime, endTime, autoTime, defaultEndTime]);
+
+  const handleCancelSafe = useCallback(() => {
+    if (isDirty) {
+      const confirmDiscard = window.confirm(t.sdb_unsaved_changes_confirm || 'You have unsaved changes. Discard them?');
+      if (!confirmDiscard) return;
+    }
+    onCancel();
+  }, [isDirty, onCancel, t]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCancelSafe();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleCancelSafe]);
+
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      handleCancelSafe();
+    }
+  };
+
+  const handleSave = () => {
+    const finalDesc = description.trim();
+    if (!finalDesc) {
+      alert(t.sdb_neutral_log_desc_required || 'Please enter a description or note for the Neutral Log.');
+      return;
+    }
+
+    let parsedEntryQty: FoodItemQuantity | undefined = undefined;
+    const parsedAmt = parseFloat(entryQtyAmount);
+    if (!isNaN(parsedAmt) && parsedAmt > 0) {
+      parsedEntryQty = {
+        amount: parsedAmt,
+        unit: entryQtyUnit,
+        customUnit: entryQtyUnit === 'custom' ? customUnitText.trim() : undefined,
+      };
+    }
+
+    onSave(
+      finalDesc,
+      dateKey,
+      startTime || autoTime,
+      endTime || undefined,
+      parsedEntryQty,
+      customQtyText.trim() || undefined
+    );
+  };
+
+  return (
+    <div
+      className="sdb-overlay"
+      onClick={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sdb-neutral-modal-title"
+    >
+      <div className="sdb-modal sdb-slip-modal sdb-neutral-modal" ref={modalRef}>
+        <div className="sdb-modal-header">
+          <div className="sdb-slip-modal-header-text">
+            <span className="sdb-slip-modal-badge sdb-neutral-modal-badge">⚖️ {t.sdb_neutral_badge || 'NEUTRAL'}</span>
+            <h2 id="sdb-neutral-modal-title" className="sdb-modal-title">
+              {initial ? (t.sdb_edit_neutral_log || 'Edit Neutral Log') : (t.sdb_add_neutral_log || 'Add Neutral Log')}
+            </h2>
+          </div>
+          <button className="sdb-modal-close" onClick={handleCancelSafe} aria-label={t.commit_cancel}>
+            ✕
+          </button>
+        </div>
+
+        <div className="sdb-modal-body">
+          <div className="sdb-neutral-hint-box">
+            <span className="sdb-neutral-hint-icon">ℹ️</span>
+            <p className="sdb-neutral-hint-text">
+              {t.sdb_neutral_log_hint}
+            </p>
+          </div>
+
+          {/* Description / Note */}
+          <div className="sdb-field">
+            <label className="sdb-label" htmlFor="input-neutral-log-desc">
+              {t.sdb_neutral_log_desc_label || 'Description / Note'}:
+            </label>
+            <input
+              id="input-neutral-log-desc"
+              type="text"
+              className="sdb-input"
+              placeholder={t.sdb_neutral_log_desc_placeholder}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              autoFocus
+            />
+          </div>
+
+          {/* Date & Time Row */}
+          <div className="sdb-field-row">
+            <div className="sdb-field sdb-field--date">
+              <label className="sdb-label" htmlFor="input-neutral-log-date">{t.sdb_food_log_date_label}:</label>
+              <input
+                id="input-neutral-log-date"
+                type="date"
+                className="sdb-input"
+                value={dateKey}
+                onChange={e => setDateKey(e.target.value)}
+              />
+            </div>
+            <div className="sdb-field sdb-field--time">
+              <label className="sdb-label" htmlFor="input-neutral-log-start-time">{t.sdb_food_log_start_time_label}:</label>
+              <input
+                id="input-neutral-log-start-time"
+                type="time"
+                className="sdb-input sdb-time-input"
+                value={startTime}
+                onChange={e => {
+                  const newStart = e.target.value;
+                  setStartTime(newStart);
+                  if (newStart) {
+                    setEndTime(calculateEndTimeFromStart(newStart, 30));
+                  }
+                }}
+              />
+            </div>
+            <div className="sdb-field sdb-field--time">
+              <label className="sdb-label" htmlFor="input-neutral-log-end-time">{t.sdb_food_log_end_time_label} <span className="sdb-optional">({t.sdb_food_log_time_optional})</span>:</label>
+              <input
+                id="input-neutral-log-end-time"
+                type="time"
+                className="sdb-input sdb-time-input"
+                value={endTime}
+                onChange={e => setEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Optional Direct / Free-text Quantity */}
+          <div className="sdb-field sdb-direct-qty-section">
+            <div className="sdb-direct-qty-header">
+              <label className="sdb-label" htmlFor="input-neutral-log-quantity-amount">
+                📏 {t.sdb_neutral_quantity_label}:
+              </label>
+              <span className="sdb-optional">({t.sdb_neutral_quantity_optional})</span>
+            </div>
+            <div className="sdb-direct-qty-inputs">
+              <input
+                id="input-neutral-log-quantity-amount"
+                type="number"
+                step="any"
+                min="0"
+                className="sdb-input sdb-direct-qty-amount"
+                placeholder="Amount (e.g. 2, 5, 500)"
+                value={entryQtyAmount}
+                onChange={e => setEntryQtyAmount(e.target.value)}
+              />
+              <select
+                id="select-neutral-log-quantity-unit"
+                className="sdb-select sdb-direct-qty-unit"
+                value={entryQtyUnit}
+                onChange={e => setEntryQtyUnit(e.target.value as FoodQuantityUnit)}
+                aria-label={t.sdb_neutral_quantity_label}
+              >
+                {FOOD_QUANTITY_UNITS.map(u => (
+                  <option key={u} value={u}>
+                    {(t[`sdb_unit_${u}` as keyof typeof t] as string | undefined) || u}
+                  </option>
+                ))}
+              </select>
+              {entryQtyUnit === 'custom' && (
+                <input
+                  id="input-neutral-log-custom-unit"
+                  type="text"
+                  className="sdb-input sdb-direct-qty-custom-unit"
+                  placeholder="Unit (e.g. capsules, pills)"
+                  value={customUnitText}
+                  onChange={e => setCustomUnitText(e.target.value)}
+                />
+              )}
+            </div>
+            <div className="sdb-custom-qty-fallback">
+              <span className="sdb-fallback-hint">{t.sdb_neutral_quantity_label} ({t.sdb_neutral_quantity_optional}):</span>
+              <input
+                id="input-neutral-log-custom-quantity"
+                type="text"
+                className="sdb-input sdb-custom-qty-input"
+                placeholder="e.g., 2 capsules, 5 g, 1 tablet"
+                value={customQtyText}
+                onChange={e => setCustomQtyText(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="sdb-modal-footer">
+          <button type="button" className="sdb-btn sdb-btn--secondary" onClick={handleCancelSafe}>
+            {t.commit_cancel}
+          </button>
+          <button
+            type="button"
+            id="btn-neutral-log-save"
+            className="sdb-btn sdb-btn--primary sdb-btn--neutral-save"
+            onClick={handleSave}
+          >
+            ⚖️ {t.sdb_btn_save_neutral_log || 'Save Neutral Log'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4938,6 +5317,9 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   // Modal state for unplanned / in-the-moment food logging (Phase 26A)
   const [showFoodLogModal, setShowFoodLogModal] = useState(false);
   const [editingUnplannedLog, setEditingUnplannedLog] = useState<DietBlockVerification | null>(null);
+  // Modal state for Neutral Log (Phase 31C)
+  const [showNeutralLogModal, setShowNeutralLogModal] = useState(false);
+  const [editingNeutralLog, setEditingNeutralLog] = useState<DietBlockVerification | null>(null);
   // Modal state for food photo preview (Phase 6B Multi-Photo)
   const [previewPhotos, setPreviewPhotos] = useState<{ photos: PhotoPreviewItem[]; initialIndex?: number } | null>(null);
 
@@ -5410,7 +5792,8 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     endTime?: string,
     isResumed?: boolean,
     entryQuantity?: FoodItemQuantity,
-    customQuantity?: string
+    customQuantity?: string,
+    soupPortion?: SoupPortionKey
   ) => {
     const dateKey = targetDateKey || getLocalDateKey();
     const activityType: ScoreActivityType =
@@ -5429,6 +5812,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       foodSelections,
       customFoods,
       foodQuantities,
+      soupPortion,
       foodPhotos,
       foodPhoto: foodPhotos && foodPhotos.length > 0 ? foodPhotos[0] : undefined,
       sourcePlanName: weekly.planName,
@@ -5463,6 +5847,58 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     refreshVerifications();
   };
 
+  const handleSaveNeutralLog = (
+    description: string,
+    targetDateKey?: string,
+    startTime?: string,
+    endTime?: string,
+    entryQuantity?: FoodItemQuantity,
+    customQuantity?: string
+  ) => {
+    const dateKey = targetDateKey || getLocalDateKey();
+    saveUnplannedFoodLog({
+      description,
+      dateKey,
+      recordType: 'neutral',
+      status: 'on-track', // internal non-destructive placeholder
+      startTime,
+      endTime,
+      entryQuantity,
+      customQuantity,
+      isUnplanned: true,
+      sourcePlanName: weekly.planName,
+      profileId: activeProfile.id,
+      profileName: getGoalDisplayName(activeProfile, t),
+    });
+    // CRITICAL: ZERO score events recorded for Neutral Log
+    playFeedback('neutral');
+    setShowNeutralLogModal(false);
+    refreshVerifications();
+  };
+
+  const handleUpdateNeutralLog = (
+    plannedBlockId: string,
+    description: string,
+    targetDateKey?: string,
+    startTime?: string,
+    endTime?: string,
+    entryQuantity?: FoodItemQuantity,
+    customQuantity?: string
+  ) => {
+    updateUnplannedFoodLog(plannedBlockId, {
+      description,
+      targetDateKey,
+      startTime,
+      endTime,
+      entryQuantity,
+      customQuantity,
+      recordType: 'neutral',
+    });
+    // CRITICAL: ZERO score events recorded for Neutral Log
+    setEditingNeutralLog(null);
+    refreshVerifications();
+  };
+
   const sortedBlocks = sortBlocks(currentDay.blocks);
   const currentDayFullName = t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string;
 
@@ -5471,10 +5907,10 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     ? getDailyVerificationStats(sortedBlocks.length)
     : null;
 
-  // Unplanned food logs: logged on Today without a pre-existing planned block (Phase 26A)
+  // Unplanned food & neutral logs: logged on Today without a pre-existing planned block
   const unplannedVerifications = isToday && todayVerification
     ? todayVerification.entries.filter(
-        e => e.isUnplanned || e.plannedBlockId.startsWith('unplanned_')
+        e => e.isUnplanned || e.plannedBlockId.startsWith('unplanned_') || e.recordType === 'neutral'
       )
     : [];
 
@@ -5487,6 +5923,60 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
 
   // ── Render helper for spontaneous unplanned food log cards (shared across Free, Unstructured, Structured modes) ──
   const renderUnplannedCard = (log: DietBlockVerification) => {
+    const isNeutral = log.recordType === 'neutral';
+    if (isNeutral) {
+      const neutralDesc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || t.sdb_neutral_log;
+      const neutralTime = log.startTime || log.plannedSnapshot.startTime;
+      const neutralEndTime = log.endTime || log.plannedSnapshot.endTime;
+      const qtyStr = formatFoodItemQuantity(log.entryQuantity, t) || log.customQuantity;
+
+      return (
+        <div
+          key={log.id}
+          className="sdb-unplanned-card sdb-neutral-card"
+          id={`sdb-neutral-log-card-${log.plannedBlockId}`}
+        >
+          <div className="sdb-unplanned-card-top">
+            <div className="sdb-unplanned-card-badges">
+              <span className="sdb-unplanned-pill sdb-neutral-badge">⚖️ {t.sdb_neutral_badge || 'NEUTRAL'}</span>
+              {neutralTime && (
+                <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
+                  🕒 {neutralTime}{neutralEndTime ? ` – ${neutralEndTime}` : ''}
+                </span>
+              )}
+            </div>
+            <div className="sdb-unplanned-card-actions">
+              <button
+                type="button"
+                id={`btn-edit-unplanned-${log.plannedBlockId}`}
+                className="sdb-edit-prominent-btn sdb-unplanned-edit-btn sdb-neutral-edit-btn"
+                onClick={() => setEditingNeutralLog(log)}
+                aria-label={t.sdb_btn_customize || 'EDIT'}
+              >
+                ✏️ {t.sdb_btn_customize || 'EDIT'}
+              </button>
+              <span className="sdb-verified-ctrl-dot">·</span>
+              <button
+                type="button"
+                id={`btn-clear-unplanned-${log.plannedBlockId}`}
+                className="sdb-verified-link sdb-verified-link--clear"
+                onClick={() => handleClearStatus(log.plannedBlockId)}
+                aria-label={t.sdb_v_clear_status}
+              >
+                {t.sdb_v_clear_status}
+              </button>
+            </div>
+          </div>
+          <div className="sdb-unplanned-desc sdb-neutral-desc">{neutralDesc}</div>
+          {qtyStr && (
+            <div className="sdb-neutral-quantity">
+              <span className="sdb-neutral-qty-badge">📏 {qtyStr}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     const derivedUnplannedDesc = getBlockPrimaryDescription({
       type: log.mealType || log.plannedSnapshot.mealType || 'custom',
       customText: log.actualCustomText || log.plannedSnapshot.customText,
@@ -5593,6 +6083,18 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
             ))}
           </div>
         )}
+        {/* ── Phase 31A: Soup Portion Badge ── */}
+        {(() => {
+          const portion = log.actualSoupPortion || log.soupPortion || log.plannedSnapshot?.soupPortion;
+          if (!portion) return null;
+          return (
+            <div className="sdb-unplanned-soup-portion" id={`sdb-unplanned-soup-portion-${log.id}`}>
+              <span className="sdb-soup-portion-badge">
+                🥣 {formatSoupPortion(portion, t)}
+              </span>
+            </div>
+          );
+        })()}
         {specificFoodNames.length > 0 && (
           <div className="sdb-unplanned-specific-foods">
             <span>• {specificFoodNames.join(', ')}</span>
@@ -6100,6 +6602,15 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
               {t.sdb_log_food}
             </button>
             <button
+              id="btn-sdb-neutral-log"
+              type="button"
+              className="sdb-neutral-log-btn"
+              onClick={() => setShowNeutralLogModal(true)}
+            >
+              <span className="sdb-add-btn-icon">⚖️</span>
+              {t.sdb_neutral_log || 'Neutral Log'}
+            </button>
+            <button
               id="btn-sdb-add-block"
               type="button"
               className="sdb-add-btn"
@@ -6155,6 +6666,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                   🍽️ {t.sdb_free_day_log_spontaneous || 'Log Food (Optional)'}
                 </button>
                 <button
+                  id="btn-sdb-free-neutral-log"
+                  type="button"
+                  className="sdb-free-btn sdb-free-btn--neutral"
+                  onClick={() => setShowNeutralLogModal(true)}
+                >
+                  ⚖️ {t.sdb_add_neutral_log || 'Add Neutral Log'}
+                </button>
+                <button
                   id="btn-sdb-free-switch-mode"
                   type="button"
                   className="sdb-free-btn sdb-free-btn--switch"
@@ -6202,6 +6721,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                     🍽️ {t.sdb_log_food}
                   </button>
                   <button
+                    id="btn-sdb-unstructured-neutral-log"
+                    type="button"
+                    className="sdb-empty-neutral-log-btn"
+                    onClick={() => setShowNeutralLogModal(true)}
+                  >
+                    ⚖️ {t.sdb_neutral_log || 'Neutral Log'}
+                  </button>
+                  <button
                     id="btn-sdb-unstructured-tpl"
                     type="button"
                     className="sdb-empty-tpl-btn"
@@ -6226,201 +6753,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                       <span className="sdb-unplanned-section-tag">{t.sdb_food_log_unplanned_tag}</span>
                     </div>
                     <div className="sdb-unplanned-list">
-                      {unplannedVerifications.map(log => {
-                        const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
-                        const outcomeKey = log.detailedOutcome;
-                        const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
-                        const isOntrack = log.status === 'on-track';
-                        const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
-
-                        const logMealType = log.mealType || log.plannedSnapshot.mealType;
-                        const mealTypeLabel = logMealType ? ((t[`sdb_meal_type_${logMealType}` as keyof typeof t] as string | undefined) || logMealType) : '';
-                        const autoTime = log.plannedSnapshot.startTime;
-
-                        const specificFoodNames: string[] = [];
-                        const selections = log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections;
-                        const quantities = log.actualFoodQuantities || log.foodQuantities || log.plannedSnapshot.foodQuantities;
-
-                        if (selections) {
-                          for (const [cat, keys] of Object.entries(selections)) {
-                            if (keys && Array.isArray(keys)) {
-                              for (const k of keys) {
-                                const opt = findFoodOption(cat as FoodCategoryKey, k);
-                                const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
-                                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, k);
-                                const qty = quantities?.[qtyKey];
-                                const qtyStr = formatFoodItemQuantity(qty, t);
-                                specificFoodNames.push(qtyStr ? `${qtyStr} ${label}` : label);
-                              }
-                            }
-                          }
-                        }
-                        const customs = log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods;
-                        if (customs) {
-                          for (const [cat, cList] of Object.entries(customs)) {
-                            if (cList && Array.isArray(cList)) {
-                              for (const cFood of cList) {
-                                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
-                                const qty = quantities?.[qtyKey];
-                                const qtyStr = formatFoodItemQuantity(qty, t);
-                                specificFoodNames.push(qtyStr ? `${qtyStr} ${cFood}` : cFood);
-                              }
-                            }
-                          }
-                        }
-
-                        const logPhotos = log.foodPhotos || (log.foodPhoto ? [log.foodPhoto] : log.plannedSnapshot.foodPhotos || (log.plannedSnapshot.foodPhoto ? [log.plannedSnapshot.foodPhoto] : []));
-
-                        return (
-                          <div
-                            key={log.id}
-                            className={`sdb-unplanned-card sdb-unplanned-card--${log.status}${isTwentyPercent ? ' sdb-unplanned-card--twenty-percent' : ''}`}
-                          >
-                            <div className="sdb-unplanned-card-top">
-                              <div className="sdb-unplanned-card-badges">
-                                <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
-                                {autoTime && (
-                                  <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
-                                    🕒 {autoTime}
-                                  </span>
-                                )}
-                                {mealTypeLabel && (
-                                  <span className="sdb-block-meal-type-badge">
-                                    {mealTypeLabel}
-                                  </span>
-                                )}
-                                {outcomeLabel && (
-                                  <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
-                                    {outcomeLabel}
-                                  </span>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                className="sdb-verified-link sdb-verified-link--clear"
-                                onClick={() => handleClearStatus(log.plannedBlockId)}
-                                aria-label={t.sdb_v_clear_status}
-                              >
-                                {t.sdb_v_clear_status}
-                              </button>
-                            </div>
-                            {desc && <div className="sdb-unplanned-desc">{desc}</div>}
-                            {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
-                              <div className="sdb-unplanned-categories">
-                                {log.actualFoodCategories.map(cat => (
-                                  <span key={cat} className="sdb-unplanned-category-chip">
-                                    {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {specificFoodNames.length > 0 && (
-                              <div className="sdb-unplanned-specific-foods">
-                                <span>• {specificFoodNames.join(', ')}</span>
-                              </div>
-                            )}
-                            {logPhotos.length > 0 && (
-                              <div className="sdb-unplanned-photos sdb-block-photos-cluster">
-                                {logPhotos.map((p, idx) => {
-                                  const url = getPhotoDataUrlSync(p.id);
-                                  return (
-                                    <button
-                                      key={p.id || idx}
-                                      type="button"
-                                      className="sdb-block-photo-thumb-btn"
-                                      onClick={() => setPreviewPhotos({
-                                        photos: logPhotos.map((item, pIdx) => ({
-                                          id: item.id,
-                                          dataUrl: getPhotoDataUrlSync(item.id),
-                                          caption: `${desc} (${t.sdb_food_photo} ${pIdx + 1})`,
-                                        })),
-                                        initialIndex: idx,
-                                      })}
-                                      title={`${t.sdb_view_photo} (${idx + 1}/${logPhotos.length})`}
-                                    >
-                                      {url ? (
-                                        <img src={url} alt={`${desc} photo ${idx + 1}`} className="sdb-block-photo-thumb" />
-                                      ) : (
-                                        <div className="sdb-block-photo-thumb-placeholder">📷</div>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
-                            {isEligibleSlipForDrift(log) && (
-                              <div className="sdb-recovery-drift-container sdb-recovery-drift-container--unplanned">
-                                <div className="sdb-recovery-row">
-                                  <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
-                                  <button
-                                    id={`btn-unplanned-resumed-${log.id}`}
-                                    type="button"
-                                    className={`sdb-resumed-toggle-btn ${log.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
-                                    onClick={() => handleToggleResumed(log.plannedBlockId)}
-                                    aria-pressed={!!log.isResumed}
-                                  >
-                                    <span className="sdb-resumed-toggle-icon" aria-hidden="true">
-                                      {log.isResumed ? '✓' : '⟲'}
-                                    </span>
-                                    <span className="sdb-resumed-toggle-text">
-                                      {log.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
-                                    </span>
-                                  </button>
-                                </div>
-
-                                <div className="sdb-drift-ctrl-wrap">
-                                  <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
-                                  <div className="sdb-drift-btn-group">
-                                    {(!log.driftState || log.driftState === 'none') && (
-                                      <button
-                                        id={`btn-unplanned-drift-start-${log.id}`}
-                                        type="button"
-                                        className="sdb-drift-action-btn sdb-drift-action-btn--start"
-                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'started')}
-                                      >
-                                        <span className="sdb-drift-btn-icon">🌊</span>
-                                        <span>{t.sdb_drift_start}</span>
-                                      </button>
-                                    )}
-
-                                    {(log.driftState === 'started' || log.driftState === 'drifting') && (
-                                      <>
-                                        <button
-                                          id={`btn-unplanned-drift-still-${log.id}`}
-                                          type="button"
-                                          className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${log.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
-                                          onClick={() => handleUpdateDriftState(log.plannedBlockId, 'drifting')}
-                                        >
-                                          <span className="sdb-drift-btn-icon">〰️</span>
-                                          <span>{t.sdb_drift_still}</span>
-                                        </button>
-                                        <button
-                                          id={`btn-unplanned-drift-stop-${log.id}`}
-                                          type="button"
-                                          className="sdb-drift-action-btn sdb-drift-action-btn--stop"
-                                          onClick={() => handleUpdateDriftState(log.plannedBlockId, 'stopped')}
-                                        >
-                                          <span className="sdb-drift-btn-icon">🛑</span>
-                                          <span>{t.sdb_drift_stopped}</span>
-                                        </button>
-                                      </>
-                                    )}
-
-                                    {log.driftState === 'stopped' && (
-                                      <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
-                                        <span className="sdb-drift-badge-icon">✓</span>
-                                        <span>{t.sdb_drift_stopped}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {unplannedVerifications.map(renderUnplannedCard)}
                     </div>
                   </div>
                 )}
@@ -6509,6 +6842,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                       🍽️ {t.sdb_log_food}
                     </button>
                     <button
+                      id="btn-sdb-empty-neutral-log"
+                      type="button"
+                      className="sdb-empty-neutral-log-btn"
+                      onClick={() => setShowNeutralLogModal(true)}
+                    >
+                      ⚖️ {t.sdb_neutral_log || 'Neutral Log'}
+                    </button>
+                    <button
                       id="btn-sdb-empty-template"
                       type="button"
                       className="sdb-empty-tpl-btn"
@@ -6569,238 +6910,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                     <span className="sdb-unplanned-section-tag">{t.sdb_food_log_unplanned_tag}</span>
                   </div>
                   <div className="sdb-unplanned-list">
-                    {unplannedVerifications.map(log => {
-                      const desc = log.actualCustomText?.trim() || log.plannedSnapshot.customText?.trim() || (log.actualFoodCategories && log.actualFoodCategories.length > 0 ? log.actualFoodCategories.map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string | undefined) || c).join(', ') : t.sdb_food_log_modal_badge);
-                      const outcomeKey = log.detailedOutcome;
-                      const outcomeLabel = outcomeKey ? (t[`sdb_outcome_${outcomeKey}` as keyof typeof t] as string) || outcomeKey : '';
-                      const isOntrack = log.status === 'on-track';
-                      const isTwentyPercent = outcomeKey === 'twenty_percent_off_track';
-
-                      const logMealType = log.mealType || log.plannedSnapshot.mealType;
-                      const mealTypeLabel = logMealType ? ((t[`sdb_meal_type_${logMealType}` as keyof typeof t] as string | undefined) || logMealType) : '';
-                      const autoTime = log.plannedSnapshot.startTime;
-
-                      const specificFoodNames: string[] = [];
-                      const selections = log.actualFoodSelections || log.foodSelections || log.plannedSnapshot.foodSelections;
-                      const quantities = log.actualFoodQuantities || log.foodQuantities || log.plannedSnapshot.foodQuantities;
-
-                      if (selections) {
-                        for (const [cat, keys] of Object.entries(selections)) {
-                          if (keys && Array.isArray(keys)) {
-                            for (const k of keys) {
-                              const opt = findFoodOption(cat as FoodCategoryKey, k);
-                              const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : k;
-                              const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, k);
-                              const qty = quantities?.[qtyKey];
-                              const qtyStr = formatFoodItemQuantity(qty, t);
-                              specificFoodNames.push(qtyStr ? `${qtyStr} ${label}` : label);
-                            }
-                          }
-                        }
-                      }
-                      const customs = log.actualCustomFoods || log.customFoods || log.plannedSnapshot.customFoods;
-                      if (customs) {
-                        for (const [cat, cList] of Object.entries(customs)) {
-                          if (cList && Array.isArray(cList)) {
-                            for (const cFood of cList) {
-                              const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
-                              const qty = quantities?.[qtyKey];
-                              const qtyStr = formatFoodItemQuantity(qty, t);
-                              specificFoodNames.push(qtyStr ? `${qtyStr} ${cFood}` : cFood);
-                            }
-                          }
-                        }
-                      }
-
-                      const logPhotos = log.foodPhotos || (log.foodPhoto ? [log.foodPhoto] : log.plannedSnapshot.foodPhotos || (log.plannedSnapshot.foodPhoto ? [log.plannedSnapshot.foodPhoto] : []));
-
-                      return (
-                        <div
-                          key={log.id}
-                          className={`sdb-unplanned-card sdb-unplanned-card--${log.status}${isTwentyPercent ? ' sdb-unplanned-card--twenty-percent' : ''}`}
-                        >
-                          <div className="sdb-unplanned-card-top">
-                            <div className="sdb-unplanned-card-badges">
-                              <span className="sdb-unplanned-pill">{t.sdb_food_log_unplanned_tag}</span>
-                              {autoTime && (
-                                <span className="sdb-food-log-time-badge" style={{ margin: 0, padding: '2px 8px', fontSize: '0.75rem' }}>
-                                  🕒 {autoTime}
-                                </span>
-                              )}
-                              {mealTypeLabel && (
-                                <span className="sdb-block-meal-type-badge">
-                                  {mealTypeLabel}
-                                </span>
-                              )}
-                              {outcomeLabel && (
-                                <span className={`sdb-outcome-pill sdb-outcome-pill--${isOntrack ? 'ontrack' : 'slip'}`}>
-                                  {outcomeLabel}
-                                </span>
-                              )}
-                            </div>
-                            <div className="sdb-unplanned-card-actions">
-                              <button
-                                id={`btn-edit-unplanned-${log.id}`}
-                                type="button"
-                                className="sdb-edit-prominent-btn sdb-unplanned-edit-btn"
-                                onClick={() => setEditingUnplannedLog(log)}
-                                aria-label={t.sdb_btn_customize || 'EDIT'}
-                              >
-                                ✏️ {t.sdb_btn_customize || 'EDIT'}
-                              </button>
-                              <button
-                                type="button"
-                                className="sdb-verified-link sdb-verified-link--clear"
-                                onClick={() => handleClearStatus(log.plannedBlockId)}
-                                aria-label={t.sdb_v_clear_status}
-                              >
-                                {t.sdb_v_clear_status}
-                              </button>
-                            </div>
-                          </div>
-                          {desc && <div className="sdb-unplanned-desc">{desc}</div>}
-                          {log.actualFoodCategories && log.actualFoodCategories.length > 0 && (
-                            <div className="sdb-unplanned-categories">
-                              {log.actualFoodCategories.map(cat => (
-                                <span key={cat} className="sdb-unplanned-category-chip">
-                                  {FOOD_CATEGORY_ICONS[cat]} {t[`sdb_cat_${cat}` as keyof typeof t] as string}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          {specificFoodNames.length > 0 && (
-                            <div className="sdb-unplanned-specific-foods">
-                              <span>• {specificFoodNames.join(', ')}</span>
-                            </div>
-                          )}
-                          {logPhotos.length > 0 && (
-                            <div className="sdb-unplanned-photos sdb-block-photos-cluster">
-                              {logPhotos.map((p, idx) => {
-                                const url = getPhotoDataUrlSync(p.id);
-                                return (
-                                  <button
-                                    key={p.id || idx}
-                                    type="button"
-                                    className="sdb-block-photo-thumb-btn"
-                                    onClick={() => setPreviewPhotos({
-                                      photos: logPhotos.map((item, pIdx) => ({
-                                        id: item.id,
-                                        dataUrl: getPhotoDataUrlSync(item.id),
-                                        caption: `${desc} (${t.sdb_food_photo} ${pIdx + 1})`,
-                                      })),
-                                      initialIndex: idx,
-                                    })}
-                                    title={`${t.sdb_view_photo} (${idx + 1}/${logPhotos.length})`}
-                                  >
-                                    {url ? (
-                                      <img src={url} alt={`${desc} photo ${idx + 1}`} className="sdb-block-photo-thumb" />
-                                    ) : (
-                                      <div className="sdb-block-photo-thumb-placeholder">📷</div>
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/* Recovery & Drift for Eligible Slips (Phase 26D) */}
-                          {isEligibleSlipForDrift(log) && (
-                            <div className="sdb-recovery-drift-container sdb-recovery-drift-container--unplanned">
-                              <div className="sdb-recovery-row">
-                                <span className="sdb-recovery-subhead">{t.sdb_recovery_section_title}</span>
-                                <button
-                                  id={`btn-unplanned-resumed-daily-${log.id}`}
-                                  type="button"
-                                  className={`sdb-resumed-toggle-btn ${log.isResumed ? 'sdb-resumed-toggle-btn--active' : ''}`}
-                                  onClick={() => handleToggleResumed(log.plannedBlockId)}
-                                  aria-pressed={!!log.isResumed}
-                                >
-                                  <span className="sdb-resumed-toggle-icon" aria-hidden="true">
-                                    {log.isResumed ? '✓' : '⟲'}
-                                  </span>
-                                  <span className="sdb-resumed-toggle-text">
-                                    {log.isResumed ? t.sdb_marked_resumed : t.sdb_mark_resumed}
-                                  </span>
-                                </button>
-                              </div>
-
-                              <div className="sdb-drift-ctrl-wrap">
-                                <span className="sdb-drift-subhead">{t.sdb_drift_title}</span>
-                                <div className="sdb-drift-btn-group">
-                                  {(!log.driftState || log.driftState === 'none') && (
-                                    <button
-                                      id={`btn-unplanned-drift-start-daily-${log.id}`}
-                                      type="button"
-                                      className="sdb-drift-action-btn sdb-drift-action-btn--start"
-                                      onClick={() => handleUpdateDriftState(log.plannedBlockId, 'started')}
-                                    >
-                                      <span className="sdb-drift-btn-icon">🌊</span>
-                                      <span>{t.sdb_drift_start}</span>
-                                    </button>
-                                  )}
-
-                                  {(log.driftState === 'started' || log.driftState === 'drifting') && (
-                                    <>
-                                      <button
-                                        id={`btn-unplanned-drift-still-daily-${log.id}`}
-                                        type="button"
-                                        className={`sdb-drift-action-btn sdb-drift-action-btn--drifting ${log.driftState === 'drifting' ? 'sdb-drift-action-btn--active' : ''}`}
-                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'drifting')}
-                                      >
-                                        <span className="sdb-drift-btn-icon">〰️</span>
-                                        <span>{t.sdb_drift_still}</span>
-                                      </button>
-                                      <button
-                                        id={`btn-unplanned-drift-stop-daily-${log.id}`}
-                                        type="button"
-                                        className="sdb-drift-action-btn sdb-drift-action-btn--stop"
-                                        onClick={() => handleUpdateDriftState(log.plannedBlockId, 'stopped')}
-                                      >
-                                        <span className="sdb-drift-btn-icon">🛑</span>
-                                        <span>{t.sdb_drift_stopped}</span>
-                                      </button>
-                                    </>
-                                  )}
-
-                                  {log.driftState === 'stopped' && (
-                                    <div className="sdb-drift-stopped-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <div className="sdb-drift-status-badge sdb-drift-status-badge--stopped">
-                                        <span className="sdb-drift-badge-icon">✓</span>
-                                        <span>{t.sdb_drift_stopped}</span>
-                                      </div>
-                                      {onNavigate && (
-                                        <button
-                                          id={`btn-unplanned-drift-recommit-daily-${log.id}`}
-                                          type="button"
-                                          className="sdb-drift-recommit-btn"
-                                          onClick={() => onNavigate('recommit')}
-                                          style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            padding: '4px 10px',
-                                            background: 'rgba(74, 222, 128, 0.15)',
-                                            border: '1px solid rgba(74, 222, 128, 0.35)',
-                                            borderRadius: '14px',
-                                            color: '#4ade80',
-                                            fontSize: '0.78rem',
-                                            fontWeight: 600,
-                                            cursor: 'pointer',
-                                          }}
-                                        >
-                                          <span>⚡</span>
-                                          <span>{t.recommit_title || 'Re-Commit'}</span>
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {unplannedVerifications.map(renderUnplannedCard)}
                   </div>
                 </div>
               )}
@@ -6947,7 +7057,8 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
             endTime,
             isResumed,
             entryQuantity,
-            customQuantity
+            customQuantity,
+            soupPortion
           ) => {
             if (editingUnplannedLog) {
               updateUnplannedFoodLog(editingUnplannedLog.plannedBlockId, {
@@ -6960,6 +7071,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 customFoods: customs,
                 foodPhotos: photos,
                 foodQuantities: quantities,
+                soupPortion,
                 isUnplanned,
                 targetDateKey,
                 startTime,
@@ -6987,7 +7099,8 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 endTime,
                 isResumed,
                 entryQuantity,
-                customQuantity
+                customQuantity,
+                soupPortion
               );
             }
           }}
@@ -7002,6 +7115,47 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           onCancel={() => {
             setShowFoodLogModal(false);
             setEditingUnplannedLog(null);
+          }}
+          t={t}
+        />
+      )}
+
+      {/* ── Neutral Log Modal (Phase 31C) ── */}
+      {(showNeutralLogModal || editingNeutralLog) && (
+        <NeutralLogModal
+          initial={editingNeutralLog}
+          onSave={(
+            desc,
+            targetDateKey,
+            startTime,
+            endTime,
+            entryQuantity,
+            customQuantity
+          ) => {
+            if (editingNeutralLog) {
+              handleUpdateNeutralLog(
+                editingNeutralLog.plannedBlockId,
+                desc,
+                targetDateKey,
+                startTime,
+                endTime,
+                entryQuantity,
+                customQuantity
+              );
+            } else {
+              handleSaveNeutralLog(
+                desc,
+                targetDateKey,
+                startTime,
+                endTime,
+                entryQuantity,
+                customQuantity
+              );
+            }
+          }}
+          onCancel={() => {
+            setShowNeutralLogModal(false);
+            setEditingNeutralLog(null);
           }}
           t={t}
         />

@@ -22,6 +22,7 @@ import {
   isCanonicalFoodKeyOrLabel,
   getDerivedFoodItems,
   type FoodQuantitiesMap,
+  type SoupPortionKey,
 } from '../data/foodOptions';
 import type { FoodPhotoMetadata } from './photoStorage';
 
@@ -48,6 +49,7 @@ export interface StructuredDietBlock {
   foodSelections?: Partial<Record<FoodCategoryKey, string[]>>; // Phase 7C: canonical specific food keys per category
   customFoods?: Partial<Record<FoodCategoryKey, string[]>>;    // Phase 7C: custom food strings per category
   foodQuantities?: FoodQuantitiesMap; // Phase 28: optional quantities per food item
+  soupPortion?: SoupPortionKey;       // Phase 31A: optional quick soup portion size
   foodPhoto?: FoodPhotoMetadata;      // Phase 6: legacy single photo attachment
   foodPhotos?: FoodPhotoMetadata[];   // Phase 6B: multi-photo support (food + beverages)
 }
@@ -339,6 +341,7 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
     foodSelections: b.foodSelections ? JSON.parse(JSON.stringify(b.foodSelections)) : undefined,
     customFoods: b.customFoods ? JSON.parse(JSON.stringify(b.customFoods)) : undefined,
     foodQuantities: b.foodQuantities ? JSON.parse(JSON.stringify(b.foodQuantities)) : undefined,
+    soupPortion: b.soupPortion,
     foodPhoto: b.foodPhoto ? { ...b.foodPhoto } : undefined,
     foodPhotos: b.foodPhotos ? b.foodPhotos.map(p => ({ ...p })) : undefined,
   }));
@@ -1061,6 +1064,10 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     if (hasAny) foodQuantities = nextQuantities;
   }
 
+  const soupPortion = typeof b.soupPortion === 'string' && ['small', 'medium', 'large', 'xlarge'].includes(b.soupPortion)
+    ? (b.soupPortion as SoupPortionKey)
+    : undefined;
+
   return {
     id: b.id,
     startTime: b.startTime,
@@ -1073,6 +1080,7 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     foodSelections,
     customFoods,
     foodQuantities,
+    soupPortion,
     foodPhoto,
     foodPhotos,
   };
@@ -1182,6 +1190,29 @@ export function getDayPlanForDate(diet: WeeklyStructuredDiet, dateKey: string): 
     ...templateDay,
     blocks: deepCloneBlocks(templateDay.blocks),
   };
+}
+
+/**
+ * Phase 31B: When the user selects or changes a block or food log's start time,
+ * automatically set End Time = Start Time + 30 minutes.
+ * Handles midnight rollover correctly (e.g. 23:45 + 30m = 00:15).
+ * The user can still manually adjust end time afterwards.
+ */
+export function calculateEndTimeFromStart(startTime: string, durationMinutes = 30): string {
+  if (!startTime || typeof startTime !== 'string' || !startTime.includes(':')) {
+    return startTime;
+  }
+  const [hStr, mStr] = startTime.split(':');
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (isNaN(h) || isNaN(m)) {
+    return startTime;
+  }
+  const totalMinutes = (h * 60 + m + durationMinutes) % (24 * 60);
+  const normalizedMinutes = totalMinutes < 0 ? totalMinutes + 24 * 60 : totalMinutes;
+  const endH = Math.floor(normalizedMinutes / 60);
+  const endM = normalizedMinutes % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 }
 
 /**

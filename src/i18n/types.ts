@@ -676,6 +676,7 @@ export interface Translations {
   sdb_cat_desserts: string;
   sdb_cat_snacks: string;
   sdb_cat_beverages: string;
+  sdb_cat_soups: string;
 
   // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
   sdb_awareness_title: string;
@@ -1441,6 +1442,13 @@ export interface Translations {
   sdb_food_opt_diet_soft_drink: string;
   sdb_food_opt_energy_drink: string;
   sdb_food_opt_smoothie: string;
+  sdb_food_opt_vegetable_soup: string;
+  sdb_food_opt_chicken_soup: string;
+  sdb_food_opt_tomato_soup: string;
+  sdb_food_opt_lentil_soup: string;
+  sdb_food_opt_noodle_soup: string;
+  sdb_food_opt_broth: string;
+  sdb_food_opt_other_soup: string;
 
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: string;
@@ -1463,6 +1471,26 @@ export interface Translations {
   sdb_quantity_breakdown: string;
   sdb_quantity_breakdown_desc: string;
   sdb_no_quantities_logged: string;
+
+  // ── Phase 31A: Soup Portions ──
+  sdb_soup_portion_label: string;
+  sdb_soup_portion_small: string;
+  sdb_soup_portion_medium: string;
+  sdb_soup_portion_large: string;
+  sdb_soup_portion_xlarge: string;
+
+  // ── Phase 31C: Neutral Log ──
+  sdb_neutral_log: string;
+  sdb_neutral_badge: string;
+  sdb_add_neutral_log: string;
+  sdb_edit_neutral_log: string;
+  sdb_neutral_log_desc_label: string;
+  sdb_neutral_log_desc_placeholder: string;
+  sdb_neutral_log_desc_required: string;
+  sdb_neutral_log_hint: string;
+  sdb_neutral_quantity_label: string;
+  sdb_neutral_quantity_optional: string;
+  sdb_btn_save_neutral_log: string;
 
   // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
   recommit_btn_cancel: string;

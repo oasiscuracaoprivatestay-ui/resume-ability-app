@@ -36,6 +36,9 @@ export const FOOD_QUANTITY_UNITS = [
 
 export type FoodQuantityUnit = typeof FOOD_QUANTITY_UNITS[number];
 
+export const SOUP_PORTION_KEYS = ['small', 'medium', 'large', 'xlarge'] as const;
+export type SoupPortionKey = typeof SOUP_PORTION_KEYS[number];
+
 export interface FoodItemQuantity {
   /** Numerical amount entered by user (e.g. 1, 2, 0.5, 3) */
   amount: number;
@@ -43,6 +46,8 @@ export interface FoodItemQuantity {
   unit: FoodQuantityUnit;
   /** Optional custom unit text if unit === 'custom' */
   customUnit?: string;
+  /** Phase 31A: Optional explicit soup portion */
+  soupPortion?: SoupPortionKey;
   /** Reserved for future phases (grams) */
   grams?: number;
   /** Reserved for future phases (calories) */
@@ -117,8 +122,18 @@ export function formatFoodItemQuantity(
   return `${amtStr} ${displayUnit}`;
 }
 
+export function formatSoupPortion(portion?: SoupPortionKey | null, t?: any): string {
+  if (!portion) return '';
+  const key = `sdb_soup_portion_${portion}`;
+  if (typeof t === 'function') return t(key) || portion;
+  if (t && typeof t === 'object') return t[key] || portion;
+  if (portion === 'xlarge') return 'X-Large';
+  return portion.charAt(0).toUpperCase() + portion.slice(1);
+}
+
 export function getDefaultFoodUnit(category: FoodCategoryKey, foodKey: string): FoodQuantityUnit {
   const k = foodKey.toLowerCase();
+  if (category === 'soups') return 'portion';
   if (k.includes('bread') || k.includes('toast') || k.includes('pizza') || k.includes('cake')) return 'slice';
   if (['eggs', 'egg', 'apple', 'banana', 'orange', 'pear', 'peach', 'kiwi', 'cookie', 'cookies'].includes(k)) return 'piece';
   if (category === 'beverages' || k.includes('coffee') || k.includes('tea') || k.includes('water') || k.includes('milk') || k.includes('juice')) return 'cup';
@@ -247,6 +262,15 @@ export const CANONICAL_FOOD_OPTIONS: Record<FoodCategoryKey, FoodOptionItem[]> =
     { key: 'diet_soft_drink', category: 'beverages', i18nKey: 'sdb_food_opt_diet_soft_drink' },
     { key: 'energy_drink', category: 'beverages', i18nKey: 'sdb_food_opt_energy_drink' },
     { key: 'smoothie', category: 'beverages', i18nKey: 'sdb_food_opt_smoothie' },
+  ],
+  soups: [
+    { key: 'vegetable_soup', category: 'soups', i18nKey: 'sdb_food_opt_vegetable_soup' },
+    { key: 'chicken_soup', category: 'soups', i18nKey: 'sdb_food_opt_chicken_soup' },
+    { key: 'tomato_soup', category: 'soups', i18nKey: 'sdb_food_opt_tomato_soup' },
+    { key: 'lentil_soup', category: 'soups', i18nKey: 'sdb_food_opt_lentil_soup' },
+    { key: 'noodle_soup', category: 'soups', i18nKey: 'sdb_food_opt_noodle_soup' },
+    { key: 'broth', category: 'soups', i18nKey: 'sdb_food_opt_broth' },
+    { key: 'other_soup', category: 'soups', i18nKey: 'sdb_food_opt_other_soup' },
   ],
 };
 

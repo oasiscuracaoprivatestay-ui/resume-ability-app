@@ -222,6 +222,7 @@ export function isOutsideCoreOutcome(
  * Excludes: 20% OFF TRACK, near_slip, on_track, adjusted_on_track, planned_unstructured.
  */
 export function isEligibleSlipForResume(record: DietBlockVerification): boolean {
+  if (record.recordType === 'neutral') return false;
   if (record.detailedOutcome) {
     return (
       record.detailedOutcome === 'structured_slip' ||
@@ -304,6 +305,9 @@ export function filterVerificationsByPeriod(
     }
 
     for (const entry of daily.entries) {
+      if (entry.recordType === 'neutral') {
+        continue;
+      }
       matchingRecords.push(entry);
     }
   }
@@ -333,6 +337,7 @@ export function getStructureStats(
   records: DietBlockVerification[],
   options?: StructureAnalyticsOptions
 ): StructureAwarenessStatsResult {
+  records = records.filter(r => r.recordType !== 'neutral');
   const fallback = options?.legacySlipFallback || 'unclassified';
   let structuredCoreCount = 0;
   let flexOffTrackCount = 0;
@@ -501,6 +506,7 @@ export function getStructureStats(
  * Empty state: when eligibleCount === 0, hasEligibleSlips is false.
  */
 export function getResumeStats(records: DietBlockVerification[]): ResumeAwarenessStatsResult {
+  records = records.filter(r => r.recordType !== 'neutral');
   const eligible = records.filter(isEligibleSlipForResume);
   const eligibleCount = eligible.length;
   const resumeCount = eligible.filter(r => r.isResumed === true).length;
@@ -543,6 +549,7 @@ export function getResumeStats(records: DietBlockVerification[]): ResumeAwarenes
  *   - (enteredDriftCount / eligibleCount) * 100
  */
 export function getDriftStats(records: DietBlockVerification[]): DriftAwarenessStatsResult {
+  records = records.filter(r => r.recordType !== 'neutral');
   const eligible = records.filter(isEligibleSlipForResume);
   const eligibleCount = eligible.length;
 
@@ -603,6 +610,9 @@ export function getDriftStats(records: DietBlockVerification[]): DriftAwarenessS
  * and deduplicates categories within the same record.
  */
 export function getRecordFoodCategories(record: DietBlockVerification): FoodCategoryKey[] {
+  if (record.recordType === 'neutral') {
+    return [];
+  }
   if (Array.isArray(record.actualFoodCategories) && record.actualFoodCategories.length > 0) {
     return Array.from(new Set(record.actualFoodCategories));
   }
@@ -634,6 +644,7 @@ export function getRecordFoodCategories(record: DietBlockVerification): FoodCate
  * Categories within a single record are deduplicated.
  */
 export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCategoryStatsResult {
+  records = records.filter(r => r.recordType !== 'neutral');
   const counts = {} as Record<FoodCategoryKey, number>;
   for (const key of FOOD_CATEGORY_KEYS) {
     counts[key] = 0;
@@ -686,6 +697,7 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
     desserts: {},
     snacks: {},
     beverages: {},
+    soups: {},
   };
   let totalPortionsLogged = 0;
 
@@ -794,6 +806,7 @@ export function getFoodCategoryStats(records: DietBlockVerification[]): FoodCate
     desserts: [],
     snacks: [],
     beverages: [],
+    soups: [],
   };
 
   for (const cat of FOOD_CATEGORY_KEYS) {
@@ -843,6 +856,9 @@ export interface SpecificFoodStatsResult {
  * Prioritizes actual selections if reported, falling back to planned snapshot.
  */
 export function getRecordSpecificFoods(record: DietBlockVerification): SpecificFoodOccurrence[] {
+  if (record.recordType === 'neutral') {
+    return [];
+  }
   const result: SpecificFoodOccurrence[] = [];
   const foodSelections = record.actualFoodSelections || record.foodSelections || record.plannedSnapshot?.foodSelections;
   const customFoods = record.actualCustomFoods || record.customFoods || record.plannedSnapshot?.customFoods;
@@ -887,6 +903,7 @@ export function getRecordSpecificFoods(record: DietBlockVerification): SpecificF
  * Denominator within category: specific food count / total specific food selections in that category * 100.
  */
 export function getSpecificFoodStats(records: DietBlockVerification[]): SpecificFoodStatsResult {
+  records = records.filter(r => r.recordType !== 'neutral');
   const categoryTotals: Record<FoodCategoryKey, number> = {
     protein: 0,
     simple_carbs: 0,
@@ -897,6 +914,7 @@ export function getSpecificFoodStats(records: DietBlockVerification[]): Specific
     desserts: 0,
     snacks: 0,
     beverages: 0,
+    soups: 0,
   };
 
   const itemMap = new Map<string, { key: string; category: FoodCategoryKey; isCustom: boolean; count: number }>();
@@ -954,6 +972,7 @@ export function getSpecificFoodStats(records: DietBlockVerification[]): Specific
     desserts: { total: categoryTotals.desserts, items: items.filter(i => i.category === 'desserts') },
     snacks: { total: categoryTotals.snacks, items: items.filter(i => i.category === 'snacks') },
     beverages: { total: categoryTotals.beverages, items: items.filter(i => i.category === 'beverages') },
+    soups: { total: categoryTotals.soups, items: items.filter(i => i.category === 'soups') },
   };
 
   return {

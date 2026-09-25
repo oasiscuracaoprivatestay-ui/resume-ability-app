@@ -766,6 +766,7 @@ export const nl: Translations = {
   sdb_cat_desserts: 'Desserts',
   sdb_cat_snacks: 'Snacks',
   sdb_cat_beverages: 'Dranken',
+  sdb_cat_soups: 'Soepen',
 
   // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
   sdb_awareness_title: 'Bewustzijn van Eetstructuur',
@@ -1534,6 +1535,13 @@ export const nl: Translations = {
   sdb_food_opt_diet_soft_drink: 'Light Frisdrank',
   sdb_food_opt_energy_drink: 'Energiedrank',
   sdb_food_opt_smoothie: 'Smoothie',
+  sdb_food_opt_vegetable_soup: 'Groentesoep',
+  sdb_food_opt_chicken_soup: 'Kippensoep',
+  sdb_food_opt_tomato_soup: 'Tomatensoep',
+  sdb_food_opt_lentil_soup: 'Linzensoep',
+  sdb_food_opt_noodle_soup: 'Noedelsoep',
+  sdb_food_opt_broth: 'Bouillon',
+  sdb_food_opt_other_soup: 'Andere Soep',
 
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: 'SDA — De 7 vaardigheden om lichaamsvet te verliezen—en voor altijd weg te houden!',
@@ -1556,6 +1564,26 @@ export const nl: Translations = {
   sdb_quantity_breakdown: 'Voedselporties & Hoeveelheden',
   sdb_quantity_breakdown_desc: 'Optionele hoeveelheden vastgelegd in uw maaltijden en tussendoortjes',
   sdb_no_quantities_logged: 'Nog geen specifieke porties vastgelegd. Hoeveelheden zijn optioneel!',
+
+  // ── Phase 31A: Soup Portions ──
+  sdb_soup_portion_label: 'Soepportie',
+  sdb_soup_portion_small: 'Klein',
+  sdb_soup_portion_medium: 'Medium',
+  sdb_soup_portion_large: 'Groot',
+  sdb_soup_portion_xlarge: 'Extra Groot',
+
+  // ── Phase 31C: Neutral Log ──
+  sdb_neutral_log: 'Neutrale Log',
+  sdb_neutral_badge: 'NEUTRAAL',
+  sdb_add_neutral_log: 'Neutrale Log Toevoegen',
+  sdb_edit_neutral_log: 'Neutrale Log Bewerken',
+  sdb_neutral_log_desc_label: 'Beschrijving / Notitie',
+  sdb_neutral_log_desc_placeholder: 'bijv., Vitamine D, Ochtendsupplementen, Elektrolyten, Persoonlijke notitie...',
+  sdb_neutral_log_desc_required: 'Voer een beschrijving of notitie in voor de neutrale log.',
+  sdb_neutral_log_hint: 'Neutrale records zijn voor vitaminen, supplementen of persoonlijke notities. Ze worden niet als voedsel beoordeeld en hebben geen invloed op je dieetscore of structuurstatistieken.',
+  sdb_neutral_quantity_label: 'Hoeveelheid / Aantal',
+  sdb_neutral_quantity_optional: 'optioneel',
+  sdb_btn_save_neutral_log: 'Neutrale Log Opslaan',
 
   // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
   recommit_btn_cancel: 'Annuleren / Terug naar Hoofdmenu',

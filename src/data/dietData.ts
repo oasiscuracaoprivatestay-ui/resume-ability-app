@@ -48,6 +48,7 @@ export const FOOD_CATEGORY_KEYS = [
   'desserts',
   'snacks',
   'beverages',
+  'soups',
 ] as const;
 
 export type FoodCategoryKey = (typeof FOOD_CATEGORY_KEYS)[number];
@@ -62,6 +63,7 @@ export const FOOD_CATEGORY_ICONS: Record<FoodCategoryKey, string> = {
   desserts:      '🍰',
   snacks:        '🥨',
   beverages:     '💧',
+  soups:         '🥣',
 };
 
 /**
@@ -155,10 +157,20 @@ export function mapLegacyItemsToCategories(items: string[]): FoodCategoryKey[] {
       lower === 'herbal_drink' ||
       lower === 'coffee' ||
       lower === 'herbal tea' ||
-      lower === 'broth' ||
       lower === 'water'
     ) {
       result.add('beverages');
+    }
+    if (
+      lower === 'soups' ||
+      lower === 'soup' ||
+      lower === 'vegetable soup' ||
+      lower === 'chicken soup' ||
+      lower === 'tomato soup' ||
+      lower === 'lentil soup' ||
+      lower === 'noodle soup'
+    ) {
+      result.add('soups');
     }
   }
   return Array.from(result);

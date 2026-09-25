@@ -766,6 +766,7 @@ export const es: Translations = {
   sdb_cat_desserts: 'Postres',
   sdb_cat_snacks: 'Snacks',
   sdb_cat_beverages: 'Bebidas',
+  sdb_cat_soups: 'Sopas',
 
   // ── Phase 3 Structured vs Unstructured Awareness & Analytics ──
   sdb_awareness_title: 'Consciencia de Estructura Alimentaria',
@@ -1534,6 +1535,13 @@ export const es: Translations = {
   sdb_food_opt_diet_soft_drink: 'Refresco Dietético',
   sdb_food_opt_energy_drink: 'Bebida Energética',
   sdb_food_opt_smoothie: 'Batido / Smoothie',
+  sdb_food_opt_vegetable_soup: 'Sopa de Verduras',
+  sdb_food_opt_chicken_soup: 'Sopa de Pollo',
+  sdb_food_opt_tomato_soup: 'Sopa de Tomate',
+  sdb_food_opt_lentil_soup: 'Sopa de Lentejas',
+  sdb_food_opt_noodle_soup: 'Sopa de Fideos',
+  sdb_food_opt_broth: 'Caldo',
+  sdb_food_opt_other_soup: 'Otra Sopa',
 
   // ── Phase 26H Global SDA Branding & Slogan ──
   sda_slogan: 'SDA — Las 7 habilidades para perder grasa corporal—¡y no recuperarla jamás!',
@@ -1556,6 +1564,26 @@ export const es: Translations = {
   sdb_quantity_breakdown: 'Porciones y Cantidades de Alimentos',
   sdb_quantity_breakdown_desc: 'Cantidades opcionales registradas en sus comidas y refrigerios',
   sdb_no_quantities_logged: 'Aún no se han registrado porciones específicas. ¡Las cantidades son opcionales!',
+
+  // ── Phase 31A: Soup Portions ──
+  sdb_soup_portion_label: 'Porción de Sopa',
+  sdb_soup_portion_small: 'Pequeña',
+  sdb_soup_portion_medium: 'Mediana',
+  sdb_soup_portion_large: 'Grande',
+  sdb_soup_portion_xlarge: 'Extra Grande',
+
+  // ── Phase 31C: Neutral Log ──
+  sdb_neutral_log: 'Registro Neutral',
+  sdb_neutral_badge: 'NEUTRAL',
+  sdb_add_neutral_log: 'Añadir Registro Neutral',
+  sdb_edit_neutral_log: 'Editar Registro Neutral',
+  sdb_neutral_log_desc_label: 'Descripción / Nota',
+  sdb_neutral_log_desc_placeholder: 'p. ej., Vitamina D, Suplementos matutinos, Electrolitos, Nota personal...',
+  sdb_neutral_log_desc_required: 'Por favor ingresa una descripción o nota para el Registro Neutral.',
+  sdb_neutral_log_hint: 'Los registros neutrales son para vitaminas, suplementos o notas personales. No se evalúan como comida y no afectan tu puntuación de dieta ni las estadísticas de estructura.',
+  sdb_neutral_quantity_label: 'Cantidad / Porción',
+  sdb_neutral_quantity_optional: 'opcional',
+  sdb_btn_save_neutral_log: 'Guardar Registro Neutral',
 
   // ── Re-Commitment & Commitment Navigation (Sergio Feedback) ──
   recommit_btn_cancel: 'Cancelar / Volver al Menú Principal',
