@@ -691,6 +691,11 @@ export interface Translations {
   sdb_stat_unstructured_count: string;
   sdb_stat_record: string;
   sdb_stat_records: string;
+  sdb_stat_portion: string;
+  sdb_stat_portions: string;
+  sdb_stat_entry: string;
+  sdb_stat_entries: string;
+  sdb_stat_total_portions: string;
   sdb_stat_eating_structure: string;
   sdb_stat_resume_count: string;
   sdb_stat_resume_rate: string;

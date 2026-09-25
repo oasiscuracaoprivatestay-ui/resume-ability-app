@@ -4945,7 +4945,7 @@ function StructureAwarenessCard({
   const { structureStats, resumeStats, driftStats, categoryStats } = summary;
 
   const activeCategories = useMemo(
-    () => categoryStats.items.filter(item => item.count > 0),
+    () => categoryStats.items.filter(item => item.portionCount > 0 || item.count > 0),
     [categoryStats]
   );
 
@@ -5182,7 +5182,9 @@ function StructureAwarenessCard({
           </div>
           {categoryStats.recordsWithCategories > 0 && (
             <span className="sdb-category-records-badge">
-              {t.sdb_records_with_categories.replace('{count}', String(categoryStats.recordsWithCategories))}
+              {categoryStats.hasExplicitPortions && categoryStats.totalPortions > 0
+                ? `${categoryStats.recordsWithCategories} ${categoryStats.recordsWithCategories === 1 ? t.sdb_stat_entry : t.sdb_stat_entries} • ${categoryStats.totalPortions} ${categoryStats.totalPortions === 1 ? t.sdb_stat_portion : t.sdb_stat_portions}`
+                : t.sdb_records_with_categories.replace('{count}', String(categoryStats.recordsWithCategories))}
             </span>
           )}
         </div>
@@ -5205,9 +5207,15 @@ function StructureAwarenessCard({
                     />
                   </div>
                   <div className="sdb-cat-dist-stats">
-                    <span className="sdb-cat-dist-count">
-                      {cat.count} {cat.count === 1 ? t.sdb_stat_record : t.sdb_stat_records}
-                    </span>
+                    {cat.hasExplicitPortions ? (
+                      <span className="sdb-cat-dist-count">
+                        {cat.count} {cat.count === 1 ? t.sdb_stat_entry : t.sdb_stat_entries} • {cat.portionCount} {cat.portionCount === 1 ? t.sdb_stat_portion : t.sdb_stat_portions}
+                      </span>
+                    ) : (
+                      <span className="sdb-cat-dist-count">
+                        {cat.count} {cat.count === 1 ? t.sdb_stat_record : t.sdb_stat_records}
+                      </span>
+                    )}
                     <span className="sdb-cat-dist-pct">• {cat.percentage}%</span>
                   </div>
                 </div>

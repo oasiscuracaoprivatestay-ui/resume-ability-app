@@ -3732,7 +3732,9 @@
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
-  width: 110px;
+  min-width: 90px;
+  width: auto;
+  max-width: 200px;
   flex-shrink: 0;
   font-size: 0.78rem;
   white-space: nowrap;
@@ -3787,7 +3789,7 @@
     width: 110px;
   }
   .sdb-cat-dist-stats {
-    width: 90px;
+    width: auto;
     font-size: 0.74rem;
   }
   .sdb-detailed-outcomes-list {
@@ -3811,8 +3813,8 @@
     font-size: 0.75rem;
   }
   .sdb-cat-dist-stats {
-    width: 80px;
-    font-size: 0.7rem;
+    width: auto;
+    font-size: 0.68rem;
   }
 }
 
