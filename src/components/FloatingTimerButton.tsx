@@ -24,6 +24,7 @@ const HIDDEN_ON: Screen[] = [
   'sda-terms',
   'structured-diet',
   'notification-settings',
+  'coach',
 ];
 
 interface FloatingTimerButtonProps {

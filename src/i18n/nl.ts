@@ -1636,7 +1636,7 @@ export const nl: Translations = {
   coach_intro_title: 'Hoe gaat het op dit moment?',
   coach_intro_sub: 'Praat met je SDA Coach over je structuur, voeding, valkuilen, uitglijders, vooruitgang of wat je nu nodig hebt.',
   coach_composer_placeholder: 'Vraag je coach alles wat je bezighoudt...',
-  coach_send: 'Verzenden',
+  coach_send: 'Versturen',
   coach_clear_conversation: 'Gesprek Wissen',
   coach_clear_confirm: 'Weet je zeker dat je het gesprek met de Coach wilt wissen?',
   coach_prompt_today: 'Hoe doe ik het vandaag?',

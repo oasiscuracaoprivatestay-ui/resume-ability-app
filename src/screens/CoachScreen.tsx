@@ -70,6 +70,14 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
     { id: 'commitment', text: t.coach_prompt_commitment },
   ];
 
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      _onNavigate('home');
+    }
+  };
+
   const handleSend = async (textToSend?: string) => {
     const message = (textToSend ?? inputText).trim();
     if (!message || isThinking) return;
@@ -86,7 +94,10 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
       const updated = loadCoachConversation();
       setMessages(updated.messages);
     } catch {
-      // Handled in engine, reload messages
+      // Preserve input text if submission fails unexpectedly
+      if (!textToSend) {
+        setInputText(message);
+      }
       const updated = loadCoachConversation();
       setMessages(updated.messages);
     } finally {
@@ -176,9 +187,9 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
         <button
           id="btn-coach-back"
           className="coach-header-back"
-          onClick={onBack}
-          aria-label={t.btn_return_to_main}
-          title={t.btn_return_to_main}
+          onClick={handleBack}
+          aria-label={t.btn_return_to_main || 'Go back'}
+          title={t.btn_return_to_main || 'Go back'}
         >
           ←
         </button>
@@ -448,8 +459,10 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
             className="coach-send-btn"
             disabled={!inputText.trim() || isThinking}
             aria-label={t.coach_send}
+            title={t.coach_send}
           >
-            <span>➤</span>
+            <span className="coach-send-btn-text">{t.coach_send}</span>
+            <span className="coach-send-btn-icon" aria-hidden="true">➤</span>
           </button>
         </form>
       </footer>
