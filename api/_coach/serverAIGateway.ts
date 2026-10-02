@@ -346,6 +346,16 @@ export function validateAndReconcileAIResponse(
     }
   }
 
+  // Guard: 20% OFF TRACK is strictly lifestyle flexibility buffer, NEVER a carbohydrate percentage or macronutrient quota
+  const carbHallucinationPattern = /20%\s*(?:healthy\s*)?carb|20%\s*gezonde\s*koolhydrat|20%\s*carbohidrato|20%\s*de\s*(?:tu\s*dieta\s*en\s*)?carbohidrato|20%\s*of\s*(?:your\s*diet\s*from\s*)?carb|20%\s*OFF\s*TRACK\s*(?:means|significa|betekent)\s*20%\s*carb/i;
+  if (carbHallucinationPattern.test(coachingMsg)) {
+    coachingMsg = language === 'es'
+      ? '20% OFF TRACK es un margen de flexibilidad intencional en el estilo de vida (basado en el principio de consistencia 80/20 de Sergio Laurant). Cuenta como un resultado En Estructura (+5 puntos), no es un desliz y no tiene ninguna relación con porcentajes de carbohidratos ni metas de macronutrientes.'
+      : (language === 'nl'
+          ? '20% OFF TRACK is een bewuste flexibiliteitsbuffer voor je levensstijl (gebaseerd op het 80/20-consistentieprincipe van Sergio Laurant). Het telt als een On Track-uitkomst (+5 punten), is geen uitglijder en heeft niets te maken met koolhydraatpercentages of macronutriëntendoelen.'
+          : "20% OFF TRACK is an intentional lifestyle flexibility buffer within Sergio Laurant's 80/20 consistency principle. It is an On-Track outcome (+5 pts), not a slip, and has zero connection to carbohydrate percentages or macronutrient quotas.");
+  }
+
   // 4. Action Proposal Reconciliation (PREVIEW-ONLY, ZERO MUTATION)
   let proposedAction: CoachActionProposal | undefined = undefined;
   const rawObj = raw as any;

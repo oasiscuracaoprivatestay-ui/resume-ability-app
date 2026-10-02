@@ -761,12 +761,12 @@ export function generateCoachingResponse(plan: SDACoachingPlan, language: 'en' |
     const termKey = plan.relevantTerms[0];
     if (termKey === 'twenty_percent_off_track') {
       if (language === 'es') {
-        return '20% OFF TRACK es un margen de flexibilidad intencional (como el equilibrio 80/20). Cuenta como un resultado En Estructura (On Track), no como un desliz, y suma puntos positivos.';
+        return '20% OFF TRACK es un margen de flexibilidad intencional en el estilo de vida (basado en el principio 80/20 de Sergio Laurant). Cuenta como un resultado En Estructura (+5 puntos), no es un desliz y no representa una cuota ni porcentaje de carbohidratos.';
       }
       if (language === 'nl') {
-        return '20% OFF TRACK is een bewuste flexibiliteitsbuffer (zoals de 80/20-balans). Het telt als een On Track-uitkomst, is geen uitglijder en levert positieve punten op.';
+        return '20% OFF TRACK is een bewuste flexibiliteitsbuffer voor je levensstijl (zoals de 80/20-balans van Sergio Laurant). Het telt als een On Track-uitkomst (+5 punten), is geen uitglijder en heeft geen betrekking op koolhydraatpercentages of macro-doelen.';
       }
-      return '20% OFF TRACK is an intentional flexibility buffer (like an 80/20 balance). It is an On-Track outcome, not a slip, and counts positively toward your daily score.';
+      return "20% OFF TRACK is an intentional lifestyle flexibility buffer within Sergio Laurant's 80/20 consistency principle. It is an On-Track outcome (+5 pts), not a slip, and has zero connection to carbohydrate percentages or macronutrient quotas.";
     }
     if (termKey === 'resume_ability') {
       if (language === 'es') {

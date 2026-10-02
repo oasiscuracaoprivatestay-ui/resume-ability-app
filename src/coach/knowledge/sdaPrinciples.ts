@@ -118,15 +118,19 @@ export const SDA_PRINCIPLES: Record<SDAPrincipleId, SDAPrinciple> = {
 
   twenty_percent_off_track_buffer: {
     id: 'twenty_percent_off_track_buffer',
-    title: '20% OFF TRACK Is an Intentional Buffer',
-    statement: '20% OFF TRACK is an intentional flexibility buffer (e.g. 80/20 balance). It is an On-Track outcome, not a slip.',
-    practicalApplication: 'Deliberate flexibility protects long-term adherence. It earns positive outcome score and is completely excluded from slip analytics.',
+    title: '20% OFF TRACK Is an Intentional Flexibility Buffer',
+    statement:
+      '20% OFF TRACK is an intentional flexibility buffer derived from Sergio Laurant\'s 80/20 consistency principle (Book 1 Ch 13 & Book 2 Ch 4). It is a valid On-Track outcome, strictly NOT a slip. It represents conscious real-life flexibility (celebrations, restaurants, social meals, imperfect timing). It has NOTHING to do with carbohydrate percentages, healthy carbs, or macronutrient ratios.',
+    practicalApplication:
+      'Deliberate flexibility protects long-term consistency against fragile perfectionism. It earns +5 points, counts as On Track in progression analytics, and must never be converted into a carbohydrate recommendation or macronutrient rule.',
     prohibitedAssumptions: [
       'Do not categorize 20% OFF TRACK as a structured or unstructured slip.',
-      'Do not label 20% OFF TRACK as unhealthy or a failure.',
+      'Do not label 20% OFF TRACK as unhealthy, a failure, or a "cheat meal".',
+      'NEVER interpret or explain "20% OFF TRACK" as a macronutrient percentage or as an instruction to eat "20% healthy carbs" or "20% carbohydrates".',
+      'NEVER invent personalized daily or weekly carbohydrate targets or macro percentages based on this label.',
     ],
     status: 'defined',
-    sourceRef: 'app_engine:dietVerificationStorage.ts:ON_TRACK_OUTCOMES',
+    sourceRef: 'app_engine:dietVerificationStorage.ts:ON_TRACK_OUTCOMES; SDA_Book_01:Chapter_13; SDA_Book_02:Chapter_04',
   },
 
   commitment_and_why_anchors: {

@@ -1,7 +1,9 @@
 /**
- * SDA AI Coach — Screen Styles (Phase 33)
+ * SDA AI Coach — Screen Styles (Phase 33, 34, 37A & 36B.2)
  *
  * Adheres to the Super Diet-Ability dark mode glassmorphic design system.
+ * Root-cause responsive layout ensuring zero horizontal overflow on mobile viewports:
+ * 320px, 360px, 375px, 390px, 414px, 430px, tablet, and desktop.
  */
 
 .coach-screen {
@@ -9,7 +11,9 @@
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
+  width: 100%;
   max-width: 680px;
+  min-width: 0;
   margin: 0 auto;
   background: #090d16;
   color: #f8fafc;
@@ -30,6 +34,9 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   z-index: 10;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-header-back {
@@ -72,10 +79,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .coach-header-icon {
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .coach-header-title {
@@ -87,6 +96,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .coach-header-status {
@@ -96,6 +106,10 @@
   font-size: 0.72rem;
   font-weight: 500;
   color: #10b981;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .coach-header-status--thinking {
@@ -108,6 +122,7 @@
   border-radius: 50%;
   background: currentColor;
   box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
 }
 
 .coach-header-clear-btn {
@@ -117,6 +132,7 @@
   font-size: 0.95rem;
   width: 36px;
   height: 36px;
+  min-width: 36px;
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -143,6 +159,7 @@
   justify-content: center;
   padding: 16px;
   z-index: 100;
+  box-sizing: border-box;
 }
 
 .coach-modal-card {
@@ -154,6 +171,7 @@
   max-width: 360px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
   text-align: center;
+  box-sizing: border-box;
 }
 
 .coach-modal-title {
@@ -205,6 +223,9 @@
   display: flex;
   flex-direction: column;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 /* ── Intro Empty State ── */
@@ -216,6 +237,9 @@
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-intro-avatar {
@@ -250,6 +274,8 @@
   flex-direction: column;
   gap: 10px;
   text-align: left;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-starters-label {
@@ -263,8 +289,10 @@
 
 .coach-starter-prompts-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-starter-chip {
@@ -282,6 +310,10 @@
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.3;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .coach-starter-chip:hover:not(:disabled) {
@@ -301,13 +333,18 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-message-row {
   display: flex;
   gap: 10px;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-message-row--user {
@@ -321,6 +358,7 @@
 .coach-msg-avatar {
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 50%;
   background: rgba(30, 41, 59, 0.8);
   border: 1px solid rgba(56, 189, 248, 0.3);
@@ -333,13 +371,25 @@
 }
 
 .coach-bubble {
-  max-width: 82%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 12px 16px;
   border-radius: 16px;
   line-height: 1.5;
   font-size: 0.92rem;
+  overflow-wrap: anywhere;
   word-break: break-word;
-  overflow-wrap: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* Precise width constraints preventing overflow on any viewport */
+.coach-message-row--coach .coach-bubble {
+  max-width: calc(100% - 42px); /* 32px avatar + 10px gap */
+}
+
+.coach-message-row--user .coach-bubble {
+  max-width: 85%;
 }
 
 .coach-bubble--user {
@@ -360,6 +410,11 @@
 .coach-bubble-text {
   margin: 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  min-width: 0;
 }
 
 /* ── Thinking Animation ── */
@@ -404,6 +459,11 @@
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(56, 189, 248, 0.3);
   border-radius: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .coach-action-proposal-header {
@@ -411,10 +471,12 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 6px;
+  min-width: 0;
 }
 
 .coach-action-icon {
   font-size: 0.95rem;
+  flex-shrink: 0;
 }
 
 .coach-action-title {
@@ -423,6 +485,9 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #38bdf8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .coach-action-summary {
@@ -430,21 +495,30 @@
   font-size: 0.88rem;
   font-weight: 600;
   color: #f8fafc;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .coach-action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-action-btn {
-  padding: 6px 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   border: none;
   transition: all 0.15s ease;
+  white-space: normal;
+  text-align: center;
 }
 
 .coach-action-btn--confirm {
@@ -485,6 +559,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-clarification-label {
@@ -499,6 +577,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-clarification-chip {
@@ -511,6 +591,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .coach-clarification-chip:hover {
@@ -525,6 +611,8 @@
   gap: 12px;
   margin-bottom: 16px;
   text-align: left;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-edit-label {
@@ -534,6 +622,8 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: #94a3b8;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-edit-input {
@@ -543,6 +633,8 @@
   border-radius: 8px;
   color: #f8fafc;
   font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .coach-edit-input:focus {
@@ -561,6 +653,8 @@
   color: #93c5fd;
   font-size: 0.82rem;
   line-height: 1.4;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Suggested Prompts Bar (Active Chat) ── */
@@ -568,6 +662,10 @@
   padding: 6px 16px 2px;
   background: #090d16;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-active-suggestions-scroll {
@@ -576,6 +674,10 @@
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-active-suggestions-scroll::-webkit-scrollbar {
@@ -592,6 +694,7 @@
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .coach-active-suggestion-chip:hover:not(:disabled) {
@@ -608,6 +711,10 @@
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(148, 163, 184, 0.12);
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-composer-form {
@@ -619,6 +726,10 @@
   border-radius: 14px;
   padding: 6px 8px 6px 14px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coach-composer-form:focus-within {
@@ -667,6 +778,7 @@
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  white-space: nowrap;
 }
 
 .coach-send-btn:hover:not(:disabled) {
@@ -706,33 +818,72 @@
 
 /* ── Responsive Viewport Adjustments ── */
 @media (max-width: 480px) {
+  .coach-header {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .coach-chat-area {
+    padding: 14px 12px;
+  }
   .coach-starter-prompts-grid {
     grid-template-columns: 1fr;
   }
-  .coach-bubble {
+  .coach-message-row {
+    gap: 8px;
+  }
+  .coach-msg-avatar {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 0.85rem;
+  }
+  .coach-message-row--coach .coach-bubble {
+    max-width: calc(100% - 36px); /* 28px avatar + 8px gap */
+  }
+  .coach-message-row--user .coach-bubble {
     max-width: 88%;
   }
-  .coach-send-btn {
-    padding: 0 14px;
+  .coach-bubble {
+    padding: 10px 13px;
     font-size: 0.88rem;
+  }
+  .coach-composer-container {
+    padding: 8px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .coach-send-btn {
+    padding: 0 13px;
+    font-size: 0.88rem;
+    height: 38px;
+    min-height: 38px;
   }
 }
 
 @media (max-width: 380px) {
+  .coach-chat-area {
+    padding: 12px 10px;
+  }
   .coach-send-btn {
-    padding: 0 12px;
-    font-size: 0.85rem;
+    padding: 0 10px;
+    font-size: 0.84rem;
     gap: 4px;
+  }
+  .coach-composer-form {
+    padding: 4px 6px 4px 10px;
   }
 }
 
 @media (max-width: 360px) {
+  .coach-header {
+    padding: 8px 10px;
+    gap: 8px;
+  }
   .coach-header-title {
     font-size: 0.95rem;
   }
   .coach-bubble {
-    font-size: 0.86rem;
-    padding: 10px 12px;
+    font-size: 0.85rem;
+    padding: 8px 10px;
   }
   .coach-starter-chip {
     font-size: 0.76rem;
@@ -745,6 +896,24 @@
     min-height: 36px;
     font-size: 1.1rem;
   }
+  .coach-send-btn {
+    padding: 0 8px;
+    font-size: 0.8rem;
+    gap: 3px;
+  }
+}
+
+@media (max-width: 330px) {
+  .coach-send-btn-text {
+    display: none;
+  }
+  .coach-send-btn {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
 }
 
 @media (max-width: 320px) {
@@ -752,8 +921,11 @@
     display: none;
   }
   .coach-send-btn {
-    width: 40px;
-    min-width: 40px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
     padding: 0;
   }
 }
+

@@ -3,14 +3,14 @@
  *
  * Implements authoritative, server-safe behavioral grounding for the SDA AI Coach.
  * Prepares the compact SDAGroundingPack delivered to the real AI provider,
- * ensuring high coaching quality, conversational grounding, and strict semantic fidelity.
+ * ensuring high coaching quality, conversational grounding, and strict semantic fidelity
+ * across all Seven Authoritative Diet-Abilities (Books 1 to 7).
  *
  * Zero browser or DOM dependencies.
  */
 
 import type {
   CoachContext,
-  KnowledgeGap,
   SDACoachingMode,
   SDAGroundingPack,
   SerializedChatMessage,
@@ -32,13 +32,13 @@ export function buildSDAGroundingPack(
 ): SDAGroundingPack {
   const rawLower = message.toLowerCase().trim();
 
-  // 1. Check for Knowledge Gap first
+  // 1. Check for Knowledge Gap first (Reserved non-diet abilities or external fad diets)
   const gap = checkKnowledgeGap(message);
   if (gap) {
     return {
       identity: getSDAIdentity(),
       coachingMode: 'INFORMATION',
-      primaryGoal: 'Acknowledge knowledge boundary without fabricating uncodified doctrines or abilities',
+      primaryGoal: 'Acknowledge knowledge boundary without fabricating external fad diets or non-diet abilities',
       relevantPrinciples: [
         {
           id: SDA_PRINCIPLES.CONFIRMATION_FIRST.id,
@@ -56,14 +56,14 @@ export function buildSDAGroundingPack(
       ],
       semanticBoundaries: getSemanticBoundaries(),
       contextFacts: [
-        `Active Ability: ${context.ability}`,
+        `Active Ability: ${context?.ability ?? 'diet'}`,
         `Topic status: ${gap.status}`,
       ],
       coachObservations: [
-        `User inquired about uncodified or reserved methodology: "${gap.requestedTopic}"`,
+        `User inquired about out-of-scope or external topic: "${gap.requestedTopic}"`,
       ],
       prohibitedAssumptions: [
-        'Do not invent doctrines, rules, or Seven Diet-Abilities not present in current app source.',
+        'Do not invent doctrines or external diet rules not present in Sergio Laurant’s Seven SDA manuscripts.',
         'Do not substitute generic self-help concepts for missing SDA methodology.',
       ],
       cadenceGuide: 'ACKNOWLEDGE boundary → STATE verified scope → ORIENT to current diet ability.',
@@ -104,6 +104,18 @@ export function buildSDAGroundingPack(
     (/\bdesliz\b|\bdeslices\b|\bdeslicé\b/i.test(rawLower) && !rawLower.includes('resbaladiza')) ||
     (/\buitglijder\b|\buitgegleden\b/i.test(rawLower) && !rawLower.includes('glijdende')) ||
     rawLower.includes('cheated') || rawLower.includes('me salí') || rawLower.includes('went outside my structure');
+
+  const isSafetyConcern =
+    rawLower.includes('dizzy') ||
+    rawLower.includes('duizelig') ||
+    rawLower.includes('mareo') ||
+    rawLower.includes('faint') ||
+    rawLower.includes('chest pain') ||
+    rawLower.includes('palpitation') ||
+    rawLower.includes('shaking') ||
+    rawLower.includes('vomit') ||
+    rawLower.includes('pregnant') ||
+    rawLower.includes('eating disorder');
 
   const isFoodLogging =
     /\b(ate|had|eating|portion|portions|grams|g\b|ml\b|cup|oz\b|chicken|beef|rice|salad|fish|eggs|bread|soup|dinner|lunch|breakfast)\b/i.test(rawLower) &&
@@ -148,16 +160,7 @@ export function buildSDAGroundingPack(
     rawLower.includes('veinte por ciento') ||
     rawLower.includes('twintig procent');
 
-  const isUndefinedAbility =
-    rawLower.includes('sixth diet-ability') ||
-    rawLower.includes('seventh diet-ability') ||
-    rawLower.includes('third diet-ability') ||
-    rawLower.includes('fourth diet-ability') ||
-    rawLower.includes('fifth diet-ability') ||
-    rawLower.includes('sexta habilidad') ||
-    rawLower.includes('zesde dieet');
-
-  // Safe Context Normalization (supports both canonical CoachContext and flat context shapes)
+  // Safe Context Normalization
   const ctxAny = (context || {}) as any;
   const safeCommitmentText = typeof ctxAny.commitment === 'string' ? ctxAny.commitment : '';
   const safeReasons: string[] = Array.isArray(ctxAny?.commitment?.reasons)
@@ -199,10 +202,14 @@ export function buildSDAGroundingPack(
 
   // Determine Coaching Mode & Primary Goal
   let coachingMode: SDACoachingMode = 'SUPPORT';
-  let primaryGoal = 'Support dietary awareness, observable structure, and rapid recovery.';
+  let primaryGoal = 'Support dietary awareness, observable structure, and rapid recovery across the Seven Diet-Abilities.';
   let scenarioGuidance = '';
 
-  if (isLosingControlOrUrge) {
+  if (isSafetyConcern) {
+    coachingMode = 'AWARENESS';
+    primaryGoal = 'Enforce safety stop rules. Immediately instruct the user to cease fasting, nourish safely, and seek medical attention if symptoms persist.';
+    scenarioGuidance = 'Safety strictly supersedes dietary coaching. Instruct user to stop fasting immediately, sit down, consume gentle fluids/electrolytes or food, and consult a physician.';
+  } else if (isLosingControlOrUrge) {
     coachingMode = 'AWARENESS';
     primaryGoal = 'Acknowledge urge/loss of control without calling it a slip. Ground in the next 5-15 minutes and identify the pulling trigger.';
     scenarioGuidance = language === 'es'
@@ -220,23 +227,23 @@ export function buildSDAGroundingPack(
           : 'The user approached their boundary but stopped before crossing it. Reinforce their awareness in action. A Near-Slip is NOT a slip and does NOT count as a Resume.');
   } else if (isSlip) {
     coachingMode = 'RECOVERY';
-    primaryGoal = 'Acknowledge slip honestly without shaming, clarify subtype if unknown, and preserve/support resume recovery.';
+    primaryGoal = 'Normalize the slip with zero shame. Differentiate structured vs unstructured slip, and initiate the 15-minute Resume Method.';
     scenarioGuidance = language === 'es'
-      ? 'Desliz reportado. No juzgues. Si el usuario no especificó si fue Estructurado o No Estructurado, pide aclaración concisa. Si reportó retomar (resumed=true y duración), valida la recuperación sin borrar el desliz.'
+      ? 'El usuario reporta un desliz. Trátalo con curiosidad y calma absoluta. Un desliz es información, no ruina. Pregunta qué comió y orienta a retomar la estructura ahora mismo.'
       : (language === 'nl'
-          ? 'Uitglijder gemeld. Oordeel niet. Vraag kort om verduidelijking (Gestructureerd of Ongestructureerd) als dit niet duidelijk is. Als herstel gemeld is (resumed=true), erken de herstelsnelheid zonder de uitglijder te wissen.'
-          : 'Slip reported. Be non-shaming and objective. If subtype is unspecified, ask a concise clarifying question between Structured Slip and Unstructured Slip. If user reported resuming, record resumed=true and duration without erasing the slip record.');
+          ? 'De gebruiker meldt een uitglijder. Benader dit rustig en zonder oordeel. Een uitglijder is data, geen falen. Vraag wat er gegeten is en richt op direct hervatten.'
+          : 'The user reports a slip. Approach with calm curiosity. A slip is information, not ruin. Help identify what happened and orient to resuming structure immediately with zero delay.');
   } else if (isFoodLogging) {
     coachingMode = 'ACTION_PREPARATION';
-    primaryGoal = 'Prepare concise food log action proposal with portion/quantity semantics requiring confirmation.';
-    scenarioGuidance = 'Extract food items, quantities, and timing. Prepare an action proposal. Do NOT lecture on calories or nutrition. Confirmation is strictly required.';
+    primaryGoal = 'Prepare a structured food log action proposal with outcome and portion evaluation.';
+    scenarioGuidance = 'Extract food items, map to protein/veggies/carbs/fats, determine on_track or 20% off track, and prepare a proposal for user confirmation.';
   } else if (isNeutralLogging) {
     coachingMode = 'ACTION_PREPARATION';
-    primaryGoal = 'Prepare neutral log proposal for hydration/vitamins without food scoring or dosage advice.';
-    scenarioGuidance = 'Acknowledge neutral items. Keep neutral logs separated from food scoring and medical evaluation.';
+    primaryGoal = 'Prepare neutral log proposal for water, vitamins, or supplements without food points.';
+    scenarioGuidance = 'Record non-caloric items in the Neutral Log. Do not assign food points or moral evaluation.';
   } else if (isCommitmentInquiry) {
     coachingMode = 'COMMITMENT';
-    primaryGoal = 'Reference authentic saved commitment and Non-Negotiables data without fabricating promises.';
+    primaryGoal = 'Reinforce active commitment and non-negotiables as the last line of defense.';
     scenarioGuidance = safeContext.hasCommitment
       ? `User has active commitments: ${safeContext.commitmentText || safeContext.nonNegotiables.join(', ') || 'Active'}. Reference them accurately.`
       : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.';
@@ -258,8 +265,9 @@ export function buildSDAGroundingPack(
     scenarioGuidance = 'Summarize today facts objectively without moral grading (good/bad).';
   } else if (isTwentyPercent) {
     coachingMode = 'INFORMATION';
-    primaryGoal = 'Explain 20% OFF TRACK as intentional flexibility buffer that remains an On-Track outcome.';
-    scenarioGuidance = 'Explain 20% OFF TRACK as conscious flexibility (like 80/20 balance). It earns positive points and is never classified as a slip.';
+    primaryGoal = 'Explain 20% OFF TRACK as intentional flexibility buffer under Sergio’s 80/20 rule.';
+    scenarioGuidance =
+      'Explain 20% OFF TRACK strictly as conscious lifestyle flexibility under Sergio’s 80/20 principle (Book 1 Ch 13 & Book 2 Ch 4). It represents real-life events (celebrations, restaurants, social meals, imperfect timing) and is a valid On-Track outcome (+5 pts), NEVER a slip. CRITICAL: NEVER describe it as eating 20% carbohydrates or 20% healthy carbs; it has NO connection to macronutrient percentages.';
   }
 
   // 3. Assemble Curated Principles
@@ -295,40 +303,28 @@ export function buildSDAGroundingPack(
   const coachObservations: string[] = [
     `Current message topic: "${rawLower.slice(0, 80)}"`,
     conversationHistory.length > 0
-      ? `Ongoing conversation: ${conversationHistory.length} prior turns present in memory (Recent turns: ${conversationHistory.length}).`
+      ? `Ongoing conversation: ${conversationHistory.length} prior turns present in memory.`
       : 'Initial message in session.',
   ];
 
   if (isLosingControlOrUrge) {
     coachObservations.push('User reports an acute urge or feeling of losing control; boundary crossing has NOT been confirmed.');
-    if (safeContext.zones.length > 0) {
-      coachObservations.push(`Saved Slippery Zones available for exploration: ${safeContext.zones.join(', ')}`);
-    }
   }
 
   // 6. Prohibited Assumptions
   const prohibitedAssumptions = [
     'NEVER say "you failed", "you cheated", "you ruined your diet", or tell the user to wait until tomorrow.',
     'NEVER assume a slip was resumed unless the user explicitly reported recovery.',
-    'NEVER assume an urge or feeling of losing control is a completed slip (urge/feeling as a completed slip is forbidden).',
-    'NEVER state that a Slippery Zone caused a slip or urge as a proven objective fact (Never state a slippery zone caused a behavior).',
+    'NEVER assume an urge or feeling of losing control is a completed slip.',
+    'NEVER state that a Slippery Zone caused a slip as a proven objective fact.',
     'NEVER fabricate user reasons (Why), commitments, or non-negotiables if none are saved.',
-    'Do not fabricate a saved commitment or pretend the user has one if none are saved.',
-    'Do not fabricate a saved Why reason or pretend you know their Why if none are saved.',
-    'Do NOT invent or fill in remaining Diet-Abilities (3-7); acknowledge the current SDA knowledge base is partial.',
-    'NEVER use generic corporate AI boilerplate (e.g. "I\'m here to support you with your eating structure...").',
-    'NEVER prescribe calories, macros, restrictive meal plans, or medical advice.',
+    'NEVER use generic corporate AI boilerplate.',
+    'NEVER prescribe calories, macros, or restrictive meal plans.',
+    'NEVER tell the user to consume "20% healthy carbs" or reinterpret "20% OFF TRACK" as a carbohydrate percentage or macronutrient ratio.',
+    'NEVER convert the 80/20 lifestyle flexibility principle into a nutritional carbohydrate quota or personalized macro target.',
     'NEVER claim an action was written or score points awarded prior to user confirmation.',
+    'NEVER override medical safety, prescription requirements, or fasting stop rules.',
   ];
-
-  const knowledgeGap: KnowledgeGap | null = isUndefinedAbility
-    ? {
-        requestedTopic: 'Reserved Diet-Ability (Abilities 3–7)',
-        reason: 'The Seven Diet-Abilities knowledge in the app is partial. Diet-Abilities 3 through 7 are reserved and not yet sufficiently defined in current canonical sources.',
-        status: 'reserved',
-        fallbackMessage: 'The current SDA knowledge base in the application is partial. Diet-Abilities 3 through 7 are reserved and not yet defined.',
-      }
-    : null;
 
   return {
     identity: getSDAIdentity(),
@@ -342,18 +338,15 @@ export function buildSDAGroundingPack(
     prohibitedAssumptions,
     cadenceGuide: 'ACKNOWLEDGE state → ORIENT to 5-15 min window & structure → USE SDA concept → ONE next step → CONCISE question or proposal.',
     scenarioGuidance,
-    knowledgeGap,
+    knowledgeGap: null,
     mutationPolicy: 'preview_only',
   };
 }
 
-/**
- * Authoritative SDA Coach identity specification.
- */
 function getSDAIdentity() {
   return {
     name: 'SDA Coach',
-    role: 'Official Super Diet-Ability (SDA) Behavioral Coach. Expert in awareness over perfection, observable dietary structure, non-shaming accountability, and rapid recovery (Resume-Ability).',
+    role: 'Official Super Diet-Ability (SDA) Behavioral Coach grounded in Sergio Laurant\'s complete Seven Diet-Abilities methodology.',
     prohibitedRoles: [
       'generic conversational chatbot',
       'clinical therapist or medical doctor',
@@ -362,24 +355,30 @@ function getSDAIdentity() {
       'commercial diet salesperson',
     ],
     communicationStyle: 'Calm, grounded, empathetic, concise, non-shaming, focused on immediate agency and structure.',
+    superAbilities: [
+      'Resume-Ability (Book 1)',
+      'Loss-Maintenance Ability (Book 2)',
+      'Appetite-Fix Ability (Book 3)',
+      'Insulin-Aware Ability (Book 4)',
+      'Keto-Switching Ability (Book 5)',
+      'Circadian Eating Ability (Book 6)',
+      'Micro-Fasting Ability (Book 7)',
+    ],
   };
 }
 
-/**
- * Authoritative SDA Semantic Boundaries for all 8 outcomes & metadata.
- */
 function getSemanticBoundaries(): string[] {
   return [
-    'ON TRACK: Eating fully aligned with intended structure and planned meal parameters.',
-    'ADJUSTED AND ON TRACK: Plan changed, but user stayed within intended structure, principles, or Non-Negotiables.',
-    'NEAR-SLIP: Approached boundary but stopped BEFORE crossing. It is awareness in action. It is NOT a slip and does NOT count as a Resume.',
-    'STRUCTURED SLIP: Boundary crossed within a scheduled day/window. Data to learn from, followed by immediate opportunity to Resume.',
-    'UNSTRUCTURED SLIP: Planned boundaries or structure were abandoned. Still fully capable of being resumed as soon as awareness returns.',
-    'PLANNED UNSTRUCTURED: Intentional flexibility scheduled in advance (e.g. celebration/holiday). Preserves psychological alignment; never automatically a slip.',
-    '20% OFF TRACK: Intentional flexibility buffer (e.g. 80/20 balance). Positive On-Track outcome, never scored as a slip.',
-    'RESUME: Independent recovery dimension that coexists with a slip without erasing it. Never assume resumed=true unless explicitly stated.',
-    'PLANNED VS UNPLANNED: Unplanned describes scheduling timing, NOT structural alignment. Unplanned does NOT equal Unstructured.',
-    'NEUTRAL LOG: Non-food tracking for hydration, vitamins, and supplements. Non-evaluative, zero food scoring, zero medical dosage advice.',
+    'Level 1 Authority: Grounded in Sergio Laurant’s seven authoritative manuscripts (Resume-Ability, Loss-Maintenance, Appetite-Fix, Insulin-Aware, Keto-Switching, Circadian Eating, Micro-Fasting).',
+    'Resume is an independent recovery dimension that coexists with a Slip without erasing it; resume is not restarting.',
+    'Near-Slip means an urge was paused and stopped before crossing the boundary; it is NOT a slip and does NOT count as a Resume.',
+    'Unplanned eating describes scheduling timing, NOT structural alignment. Unplanned does NOT equal Unstructured.',
+    '20% OFF TRACK is an intentional flexibility buffer derived from Sergio Laurant\'s 80/20 lifestyle principle (Book 1 Ch 13 & Book 2 Ch 4). It is a valid On-Track outcome, never a slip. CRITICAL: NEVER reinterpret 20% OFF TRACK as a macronutrient percentage or as an instruction to consume "20% healthy carbs" or "20% carbohydrates". It has NO relation to carbohydrate grams or percentages.',
+    'Neutral Log records vitamins, supplements, and hydration without food scoring, food categorization, or medical dosage advice.',
+    'Slippery Zones are high-risk situations or triggers, NEVER deterministic causes of slips. Enter them with awareness.',
+    'Confirmation-First: The AI prepares Action Proposals for user review; the AI NEVER mutates storage directly and proposals do NOT award score points.',
+    'Safety Supremacy: Fasting stop rules immediately apply if dizziness, fainting, chest pain, palpitations, or vomiting occur. Refer to medical doctor.',
+    'App Truth: Score points NEVER decrease. Slips never penalize streaks or reduce lifetime XP. Levels range from 0 to 10.',
   ];
 }
 
@@ -454,3 +453,4 @@ You MUST respond with a STRICT JSON OBJECT (no markdown fences, no explanatory p
   "detectedKnowledgeGap"?: {"topic": string, "reason": string, "status": "partial"|"reserved"|"unknown"}
 }`;
 }
+

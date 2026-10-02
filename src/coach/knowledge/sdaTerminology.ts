@@ -140,10 +140,11 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     key: 'twenty_percent_off_track',
     displayName: '20% OFF TRACK',
     shortDefinition: 'An intentional flexibility buffer (e.g. 80/20 balance) that counts as an On-Track outcome, not a slip.',
-    fullExplanation: '20% OFF TRACK provides psychological breathing room within an on-track framework. It is not failure, is never scored as a slip, and is not part of the resume denominator.',
+    fullExplanation:
+      '20% OFF TRACK is an intentional flexibility buffer derived from Sergio Laurant\'s 80/20 consistency principle (Book 1 Ch 13 and Book 2 Ch 4). It is a valid On-Track outcome, strictly not a slip. It represents conscious real-life flexibility (celebrations, restaurants, social events, imperfect timing). It is NEVER a carbohydrate percentage or an instruction to eat 20% healthy carbs.',
     relatedTerms: ['on_track', 'planned_unstructured'],
     status: 'defined',
-    sourceRef: 'app_engine:dietVerificationStorage.ts:twenty_percent_off_track',
+    sourceRef: 'app_engine:dietVerificationStorage.ts:twenty_percent_off_track; SDA_Book_01:Chapter_13; SDA_Book_02:Chapter_04',
   },
 
   resume: {
@@ -217,8 +218,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
   neutral_log: {
     key: 'neutral_log',
     displayName: 'Neutral Log',
-    shortDefinition: 'Informational tracking of vitamins, supplements, water, or general notes without food scoring or structure classification.',
-    fullExplanation: 'Neutral records capture health items without evaluating them as food or triggering dietary judgments.',
+    shortDefinition: 'A flexible, non-evaluative registration record for items or activities the user wants to log without food scoring or forcing food categorization.',
+    fullExplanation: 'A dedicated non-evaluative registration record carrying zero point awards and zero dietary scoring, providing a judgment-free space to record items without dietary evaluation.',
     relatedTerms: ['food_log'],
     status: 'defined',
     sourceRef: 'app_engine:dietVerificationStorage.ts:Phase31C',
@@ -299,4 +300,140 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     status: 'defined',
     sourceRef: 'app_engine:progressionEngine.ts',
   },
+
+  loss_maintenance_ability: {
+    key: 'loss_maintenance_ability',
+    displayName: 'Loss-Maintenance Ability',
+    shortDefinition: 'The central umbrella ability to protect fat loss progress over the long term by maintaining eating structure.',
+    relatedTerms: ['super_diet_ability', 'resume_ability', 'structured_diet'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_02:Chapters_01_02',
+  },
+
+  appetite_fix_ability: {
+    key: 'appetite_fix_ability',
+    displayName: 'Appetite-Fix Ability',
+    shortDefinition: 'The capacity to retrain hunger signals, differentiate biological hunger from cravings, and reset the appetite thermostat.',
+    relatedTerms: ['super_diet_ability', 'appetite_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_03:Chapter_01',
+  },
+
+  insulin_aware_ability: {
+    key: 'insulin_aware_ability',
+    displayName: 'Insulin-Aware Ability',
+    shortDefinition: 'Understanding insulin as a vital metabolic messenger, building balanced whole-food plates, and allowing metabolic pauses.',
+    relatedTerms: ['super_diet_ability', 'structured_diet'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_04:Chapter_02',
+  },
+
+  keto_switching_ability: {
+    key: 'keto_switching_ability',
+    displayName: 'Keto-Switching Ability',
+    shortDefinition: 'The capability to transition smoothly from burning incoming food energy to mobilizing stored body energy.',
+    relatedTerms: ['super_diet_ability', 'insulin_aware_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_05:Chapter_02',
+  },
+
+  circadian_eating_ability: {
+    key: 'circadian_eating_ability',
+    displayName: 'Circadian Eating Ability',
+    shortDefinition: 'Aligning food intake with the body’s 24-hour clock across Eating Phase, Clearing Phase, and Overnight Gap.',
+    relatedTerms: ['super_diet_ability', 'micro_fasting_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_06:Chapter_02',
+  },
+
+  micro_fasting_ability: {
+    key: 'micro_fasting_ability',
+    displayName: 'Micro-Fasting Ability',
+    shortDefinition: 'The capstone ability: building, protecting, and extending spaces between meals one manageable 15-minute block at a time.',
+    relatedTerms: ['super_diet_ability', 'circadian_eating_ability', 'resume_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_07:Chapter_01',
+  },
+
+  restarting_vs_resuming: {
+    key: 'restarting_vs_resuming',
+    displayName: 'Restarting vs Resuming',
+    shortDefinition: 'Restarting implies erasing history; resuming picks up your structure immediately on the very next choice.',
+    relatedTerms: ['resume_ability', 'resume'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01:Chapter_02',
+  },
+
+  fifteen_minute_resume_method: {
+    key: 'fifteen_minute_resume_method',
+    displayName: '15-Minute Resume Method',
+    shortDefinition: 'Starting a 15-minute timer during an urge or after a slip to let dopamine waves crest and settle before choosing.',
+    relatedTerms: ['resume_ability', 'urge_timer'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01:Chapter_11',
+  },
+
+  craving_block: {
+    key: 'craving_block',
+    displayName: 'The Craving Block',
+    shortDefinition: 'A 15-minute micro-fasting block dedicated to allowing conscious choice to return during an urge.',
+    relatedTerms: ['micro_fasting_ability', 'fifteen_minute_resume_method'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_07:Chapter_15',
+  },
+
+  stop_rules: {
+    key: 'stop_rules',
+    displayName: 'Stop Rules',
+    shortDefinition: 'Pre-decided non-negotiable conditions under which fasting terminates immediately for medical safety.',
+    relatedTerms: ['micro_fasting_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_07:Chapter_29',
+  },
+
+  incoming_vs_stored_energy: {
+    key: 'incoming_vs_stored_energy',
+    displayName: 'Incoming vs Stored Energy',
+    shortDefinition: 'The natural cycle between utilizing recently digested calories versus mobilizing stored body fat and glycogen.',
+    relatedTerms: ['keto_switching_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_05:Chapter_02',
+  },
+
+  metabolic_flexibility: {
+    key: 'metabolic_flexibility',
+    displayName: 'Metabolic Flexibility',
+    shortDefinition: 'The capacity of the metabolism to switch smoothly between carbohydrate and fat oxidation without crashes.',
+    relatedTerms: ['keto_switching_ability', 'insulin_aware_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_05:Chapter_04',
+  },
+
+  appetite_thermostat: {
+    key: 'appetite_thermostat',
+    displayName: 'Appetite Thermostat',
+    shortDefinition: 'The adaptive biological hunger regulatory system that can be retrained with whole foods and nutrient density.',
+    relatedTerms: ['appetite_fix_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_03:Chapter_03',
+  },
+
+  satiety_toolbox: {
+    key: 'satiety_toolbox',
+    displayName: 'The Satiety Toolbox',
+    shortDefinition: 'Four biological satiety levers: protein leverage, viscous fiber, food volume/water, and chewing density.',
+    relatedTerms: ['appetite_fix_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_03:Chapter_09',
+  },
+
+  fat_loss_duet: {
+    key: 'fat_loss_duet',
+    displayName: 'The Fat-Loss Duet',
+    shortDefinition: 'Alternating between active moderate deficit phases and structured maintenance consolidation phases.',
+    relatedTerms: ['loss_maintenance_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_02:Chapter_09',
+  },
 };
+
