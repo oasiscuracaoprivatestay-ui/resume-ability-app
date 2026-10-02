@@ -142,6 +142,20 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span>{t.home_structured_diet}</span>
           </button>
 
+          {/* ── SDA AI Coach Entry (Phase 33) ── */}
+          <button
+            id="btn-sda-coach"
+            className="home-btn-action home-btn-action--coach"
+            onClick={() => onNavigate('coach')}
+          >
+            <span className="home-btn-icon">🤖</span>
+            <div className="home-btn-text-col">
+              <span className="home-btn-primary-text">{t.coach_nav_title}</span>
+              <span className="home-btn-sub-text">{t.coach_nav_sub}</span>
+            </div>
+            <span className="home-btn-chevron" aria-hidden="true">→</span>
+          </button>
+
           {/* ── My Commitments Hub & Shortcuts (Phase 7A) ── */}
           <button
             id="btn-my-commitments"

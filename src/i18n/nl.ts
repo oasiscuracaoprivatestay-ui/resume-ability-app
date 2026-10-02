@@ -1626,6 +1626,56 @@ export const nl: Translations = {
   milestone_150_desc: 'Vandaag 150 punten bereikt! Buitengewone discipline en veerkracht.',
   milestone_points_label: 'Dagelijkse Punten',
   milestone_continue_btn: 'Doorgaan',
+
+  // ── Phase 33: SDA AI Coach ──
+  coach_nav_title: 'SDA AI Coach',
+  coach_nav_sub: 'Bespreek je dag, je structuur, je uitglijders en je volgende stap.',
+  coach_screen_title: 'SDA AI Coach',
+  coach_status_ready: 'Online • Gereed',
+  coach_status_thinking: 'Coach denkt na...',
+  coach_intro_title: 'Hoe gaat het op dit moment?',
+  coach_intro_sub: 'Praat met je SDA Coach over je structuur, voeding, valkuilen, uitglijders, vooruitgang of wat je nu nodig hebt.',
+  coach_composer_placeholder: 'Vraag je coach alles wat je bezighoudt...',
+  coach_send: 'Verzenden',
+  coach_clear_conversation: 'Gesprek Wissen',
+  coach_clear_confirm: 'Weet je zeker dat je het gesprek met de Coach wilt wissen?',
+  coach_prompt_today: 'Hoe doe ik het vandaag?',
+  coach_prompt_motivation: 'Ik heb motivatie nodig.',
+  coach_prompt_almost_slipped: 'Ik ben bijna uitgegleden.',
+  coach_prompt_slipped: 'Ik ben uitgegleden.',
+  coach_prompt_structure: 'Help me terug op structuur te komen.',
+  coach_prompt_review: 'Bekijk mijn dag.',
+  coach_prompt_slippery_zones: 'Wat zijn mijn valkuilen?',
+  coach_prompt_commitment: 'Waar heb ik me aan gecommitteerd?',
+  coach_action_understood_as: 'Ik heb dit als volgt begrepen:',
+  coach_action_confirm: 'Bevestigen',
+  coach_action_edit: 'Bewerken',
+  coach_action_cancel: 'Annuleren',
+  coach_action_not_enabled: 'Actie-uitvoering wordt ingeschakeld in de volgende ontwikkelfase.',
+
+  // ── Phase 34: Structured Understanding & Clarification ──
+  coach_clarification_title: 'Verduidelijking Nodig',
+  coach_proposal_title: 'Actievoorstel',
+  coach_proposal_edit_title: 'Voorstel Bewerken',
+  coach_proposal_save_edits: 'Wijzigingen Toepassen',
+  coach_proposal_field_food: 'Voedsel',
+  coach_proposal_field_category: 'Categorie',
+  coach_proposal_field_portions: 'Porties',
+  coach_proposal_field_time: 'Tijd',
+  coach_proposal_field_date: 'Datum',
+  coach_proposal_field_outcome: 'Resultaat',
+  coach_proposal_field_resumed: 'Hervat',
+
+  // ── Phase 35: SDA Knowledge & Coaching Layer ──
+  coach_knowledge_gap_notice: 'Kennisbericht',
+  coach_mode_awareness: 'Zelfreflectie',
+  coach_mode_recovery: 'Herstel',
+  coach_mode_reflection: 'Reflectie',
+  coach_mode_commitment: 'Toewijding',
+  coach_mode_motivation: 'Motivatie',
+
+  // ── Phase 36: Real AI Gateway & Error UX ──
+  coach_error_generic: 'Ik kon dat nu niet verwerken. Probeer het opnieuw.',
 };
 
 

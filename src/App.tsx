@@ -33,6 +33,7 @@ import SettingsScreen from './screens/SettingsScreen';
 import SoundHapticsScreen from './screens/SoundHapticsScreen';
 import { MyCommitmentsScreen } from './screens/MyCommitmentsScreen';
 import { MySlipperyZonesScreen } from './screens/MySlipperyZonesScreen';
+import CoachScreen from './screens/CoachScreen';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
@@ -790,6 +791,10 @@ export default function App() {
 
     case 'sound-haptics':
       content = <SoundHapticsScreen onNavigate={navigate} onBack={goBack} />;
+      break;
+
+    case 'coach':
+      content = <CoachScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     default:

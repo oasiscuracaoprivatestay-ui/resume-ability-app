@@ -1533,6 +1533,56 @@ export interface Translations {
   milestone_150_desc: string;
   milestone_points_label: string;
   milestone_continue_btn: string;
+
+  // ── Phase 33: SDA AI Coach ──
+  coach_nav_title: string;
+  coach_nav_sub: string;
+  coach_screen_title: string;
+  coach_status_ready: string;
+  coach_status_thinking: string;
+  coach_intro_title: string;
+  coach_intro_sub: string;
+  coach_composer_placeholder: string;
+  coach_send: string;
+  coach_clear_conversation: string;
+  coach_clear_confirm: string;
+  coach_prompt_today: string;
+  coach_prompt_motivation: string;
+  coach_prompt_almost_slipped: string;
+  coach_prompt_slipped: string;
+  coach_prompt_structure: string;
+  coach_prompt_review: string;
+  coach_prompt_slippery_zones: string;
+  coach_prompt_commitment: string;
+  coach_action_understood_as: string;
+  coach_action_confirm: string;
+  coach_action_edit: string;
+  coach_action_cancel: string;
+  coach_action_not_enabled: string;
+
+  // ── Phase 34: Structured Understanding & Clarification ──
+  coach_clarification_title: string;
+  coach_proposal_title: string;
+  coach_proposal_edit_title: string;
+  coach_proposal_save_edits: string;
+  coach_proposal_field_food: string;
+  coach_proposal_field_category: string;
+  coach_proposal_field_portions: string;
+  coach_proposal_field_time: string;
+  coach_proposal_field_date: string;
+  coach_proposal_field_outcome: string;
+  coach_proposal_field_resumed: string;
+
+  // ── Phase 35: SDA Knowledge & Coaching Layer ──
+  coach_knowledge_gap_notice: string;
+  coach_mode_awareness: string;
+  coach_mode_recovery: string;
+  coach_mode_reflection: string;
+  coach_mode_commitment: string;
+  coach_mode_motivation: string;
+
+  // ── Phase 36: Real AI Gateway & Error UX ──
+  coach_error_generic: string;
 }
 
 

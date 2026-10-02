@@ -1,0 +1,690 @@
+/**
+ * SDA AI Coach — Screen Styles (Phase 33)
+ *
+ * Adheres to the Super Diet-Ability dark mode glassmorphic design system.
+ */
+
+.coach-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 680px;
+  margin: 0 auto;
+  background: #090d16;
+  color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.coach-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.coach-header-back {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #f1f5f9;
+  font-size: 1.15rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.coach-header-back:hover {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.coach-header-titles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.coach-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coach-header-icon {
+  font-size: 1.1rem;
+}
+
+.coach-header-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coach-header-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #10b981;
+}
+
+.coach-header-status--thinking {
+  color: #38bdf8;
+}
+
+.coach-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.coach-header-clear-btn {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.coach-header-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* ── Clear Modal ── */
+.coach-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+
+.coach-modal-card {
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.coach-modal-title {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.coach-modal-desc {
+  margin: 0 0 20px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.coach-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.coach-modal-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.coach-modal-btn--cancel {
+  background: rgba(51, 65, 85, 0.7);
+  color: #cbd5e1;
+}
+
+.coach-modal-btn--danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* ── Main Chat Area ── */
+.coach-chat-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Intro Empty State ── */
+.coach-intro-card {
+  margin: auto 0;
+  padding: 24px 20px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.coach-intro-avatar {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(56, 189, 248, 0.25));
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.coach-intro-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.coach-intro-sub {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.coach-starter-prompts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.coach-starters-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.coach-starter-prompts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.coach-starter-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  line-height: 1.3;
+}
+
+.coach-starter-chip:hover:not(:disabled) {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+}
+
+.coach-starter-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Message Rows ── */
+.coach-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.coach-message-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.coach-message-row--user {
+  justify-content: flex-end;
+}
+
+.coach-message-row--coach {
+  justify-content: flex-start;
+}
+
+.coach-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.coach-bubble {
+  max-width: 82%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.5;
+  font-size: 0.92rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.coach-bubble--user {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.coach-bubble--coach {
+  background: rgba(30, 41, 59, 0.85);
+  color: #f1f5f9;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.coach-bubble-text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ── Thinking Animation ── */
+.coach-bubble--thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px;
+}
+
+.coach-thinking-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  animation: coachPulse 1.2s infinite ease-in-out;
+}
+
+.coach-thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.coach-thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes coachPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ── Action Proposal Preview Card ── */
+.coach-action-proposal-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+}
+
+.coach-action-proposal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.coach-action-icon {
+  font-size: 0.95rem;
+}
+
+.coach-action-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #38bdf8;
+}
+
+.coach-action-summary {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.coach-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.coach-action-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.coach-action-btn--confirm {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.coach-action-btn--confirm:hover {
+  background: #059669;
+}
+
+.coach-action-btn--edit {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.coach-action-btn--edit:hover {
+  background: rgba(56, 189, 248, 0.35);
+}
+
+.coach-action-btn--cancel {
+  background: rgba(51, 65, 85, 0.7);
+  color: #cbd5e1;
+}
+
+.coach-action-btn--cancel:hover {
+  background: rgba(71, 85, 105, 0.9);
+}
+
+/* ── Clarification Chips (Phase 34) ── */
+.coach-clarification-container {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coach-clarification-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fbbf24;
+}
+
+.coach-clarification-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.coach-clarification-chip {
+  padding: 6px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 20px;
+  color: #fef3c7;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-clarification-chip:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+}
+
+/* ── Proposal Edit Modal Fields ── */
+.coach-edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.coach-edit-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.coach-edit-input {
+  padding: 8px 12px;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.coach-edit-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+.coach-action-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  color: #93c5fd;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+/* ── Suggested Prompts Bar (Active Chat) ── */
+.coach-active-suggestions-bar {
+  padding: 6px 16px 2px;
+  background: #090d16;
+  flex-shrink: 0;
+}
+
+.coach-active-suggestions-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.coach-active-suggestions-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.coach-active-suggestion-chip {
+  padding: 6px 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-active-suggestion-chip:hover:not(:disabled) {
+  background: rgba(51, 65, 85, 0.8);
+  color: #f1f5f9;
+}
+
+/* ── Composer Container ── */
+.coach-composer-container {
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  flex-shrink: 0;
+}
+
+.coach-composer-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  padding: 6px 8px 6px 12px;
+  transition: border-color 0.18s ease;
+}
+
+.coach-composer-form:focus-within {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.coach-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  resize: none;
+  max-height: 100px;
+  outline: none;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+.coach-textarea::placeholder {
+  color: #64748b;
+}
+
+.coach-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #0284c7;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.coach-send-btn:hover:not(:disabled) {
+  background: #0369a1;
+  transform: scale(1.04);
+}
+
+.coach-send-btn:disabled {
+  background: rgba(51, 65, 85, 0.5);
+  color: #64748b;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Responsive Viewport Adjustments ── */
+@media (max-width: 480px) {
+  .coach-starter-prompts-grid {
+    grid-template-columns: 1fr;
+  }
+  .coach-bubble {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 360px) {
+  .coach-header-title {
+    font-size: 0.95rem;
+  }
+  .coach-bubble {
+    font-size: 0.86rem;
+    padding: 10px 12px;
+  }
+  .coach-starter-chip {
+    font-size: 0.76rem;
+    padding: 8px 10px;
+  }
+}

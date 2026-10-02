@@ -1640,6 +1640,56 @@ export const en: Translations = {
   milestone_150_desc: '150 points reached today! Outstanding discipline and resilience.',
   milestone_points_label: 'Daily Points',
   milestone_continue_btn: 'Continue',
+
+  // ── Phase 33: SDA AI Coach ──
+  coach_nav_title: 'SDA AI Coach',
+  coach_nav_sub: 'Talk through your day, your structure, your slips, and your next move.',
+  coach_screen_title: 'SDA AI Coach',
+  coach_status_ready: 'Online • Ready',
+  coach_status_thinking: 'Coach is thinking...',
+  coach_intro_title: 'How are you doing right now?',
+  coach_intro_sub: 'Talk to your SDA Coach about your structure, food, slippery zones, slips, progress, or what you need next.',
+  coach_composer_placeholder: 'Ask your coach anything...',
+  coach_send: 'Send',
+  coach_clear_conversation: 'Clear Conversation',
+  coach_clear_confirm: 'Are you sure you want to clear your conversation with the Coach?',
+  coach_prompt_today: 'How am I doing today?',
+  coach_prompt_motivation: 'I need motivation.',
+  coach_prompt_almost_slipped: 'I almost slipped.',
+  coach_prompt_slipped: 'I slipped.',
+  coach_prompt_structure: 'Help me get back on structure.',
+  coach_prompt_review: 'Review my day.',
+  coach_prompt_slippery_zones: 'What are my slippery zones?',
+  coach_prompt_commitment: 'What did I commit to?',
+  coach_action_understood_as: 'I understood this as:',
+  coach_action_confirm: 'Confirm',
+  coach_action_edit: 'Edit',
+  coach_action_cancel: 'Cancel',
+  coach_action_not_enabled: 'Action execution will be enabled in the next development phase.',
+
+  // ── Phase 34: Structured Understanding & Clarification ──
+  coach_clarification_title: 'Need Clarification',
+  coach_proposal_title: 'Action Proposal',
+  coach_proposal_edit_title: 'Edit Proposal',
+  coach_proposal_save_edits: 'Apply Edits',
+  coach_proposal_field_food: 'Food',
+  coach_proposal_field_category: 'Category',
+  coach_proposal_field_portions: 'Portions',
+  coach_proposal_field_time: 'Time',
+  coach_proposal_field_date: 'Date',
+  coach_proposal_field_outcome: 'Outcome',
+  coach_proposal_field_resumed: 'Resumed',
+
+  // ── Phase 35: SDA Knowledge & Coaching Layer ──
+  coach_knowledge_gap_notice: 'Knowledge Notice',
+  coach_mode_awareness: 'Awareness',
+  coach_mode_recovery: 'Recovery',
+  coach_mode_reflection: 'Reflection',
+  coach_mode_commitment: 'Commitment',
+  coach_mode_motivation: 'Motivation',
+
+  // ── Phase 36: Real AI Gateway & Error UX ──
+  coach_error_generic: "I couldn't process that right now. Please try again.",
 };
 
 

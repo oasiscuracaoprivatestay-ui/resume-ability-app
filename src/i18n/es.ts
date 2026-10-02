@@ -1626,6 +1626,56 @@ export const es: Translations = {
   milestone_150_desc: '¡150 puntos alcanzados hoy! Disciplina y resiliencia sobresalientes.',
   milestone_points_label: 'Puntos Diarios',
   milestone_continue_btn: 'Continuar',
+
+  // ── Phase 33: SDA AI Coach ──
+  coach_nav_title: 'SDA AI Coach',
+  coach_nav_sub: 'Conversa sobre tu día, tu estructura, tus deslices y tu próximo paso.',
+  coach_screen_title: 'SDA AI Coach',
+  coach_status_ready: 'En línea • Listo',
+  coach_status_thinking: 'El Coach está pensando...',
+  coach_intro_title: '¿Cómo te sientes en este momento?',
+  coach_intro_sub: 'Habla con tu Coach SDA sobre tu estructura, comida, zonas resbaladizas, deslices, progreso o lo que necesites ahora.',
+  coach_composer_placeholder: 'Pregúntale a tu coach lo que necesites...',
+  coach_send: 'Enviar',
+  coach_clear_conversation: 'Borrar Conversación',
+  coach_clear_confirm: '¿Estás seguro de que deseas borrar tu conversación con el Coach?',
+  coach_prompt_today: '¿Cómo voy hoy?',
+  coach_prompt_motivation: 'Necesito motivación.',
+  coach_prompt_almost_slipped: 'Casi me deslizo.',
+  coach_prompt_slipped: 'Me deslicé.',
+  coach_prompt_structure: 'Ayúdame a volver a la estructura.',
+  coach_prompt_review: 'Revisar mi día.',
+  coach_prompt_slippery_zones: '¿Cuáles son mis zonas resbaladizas?',
+  coach_prompt_commitment: '¿A qué me comprometí?',
+  coach_action_understood_as: 'Lo entendí de la siguiente manera:',
+  coach_action_confirm: 'Confirmar',
+  coach_action_edit: 'Editar',
+  coach_action_cancel: 'Cancelar',
+  coach_action_not_enabled: 'La ejecución de acciones estará disponible en la próxima fase de desarrollo.',
+
+  // ── Phase 34: Structured Understanding & Clarification ──
+  coach_clarification_title: 'Aclaración Necesaria',
+  coach_proposal_title: 'Propuesta de Acción',
+  coach_proposal_edit_title: 'Editar Propuesta',
+  coach_proposal_save_edits: 'Aplicar Cambios',
+  coach_proposal_field_food: 'Comida',
+  coach_proposal_field_category: 'Categoría',
+  coach_proposal_field_portions: 'Porciones',
+  coach_proposal_field_time: 'Hora',
+  coach_proposal_field_date: 'Fecha',
+  coach_proposal_field_outcome: 'Resultado',
+  coach_proposal_field_resumed: 'Retomado',
+
+  // ── Phase 35: SDA Knowledge & Coaching Layer ──
+  coach_knowledge_gap_notice: 'Aviso de Conocimiento',
+  coach_mode_awareness: 'Autoconciencia',
+  coach_mode_recovery: 'Recuperación',
+  coach_mode_reflection: 'Reflexión',
+  coach_mode_commitment: 'Compromiso',
+  coach_mode_motivation: 'Motivación',
+
+  // ── Phase 36: Real AI Gateway & Error UX ──
+  coach_error_generic: 'No pude procesar eso en este momento. Por favor intenta de nuevo.',
 };
 
 
