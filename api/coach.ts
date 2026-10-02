@@ -35,6 +35,8 @@ export default async function handler(
       model,
       keyConfigured,
       diagnostics: {
+        provider,
+        model,
         providerAvailable: keyConfigured,
         remoteAttempted: false,
         remoteSucceeded: false,
@@ -93,6 +95,8 @@ export default async function handler(
       error: 'Internal Server Error',
       fallbackUsed: true,
       diagnostics: {
+        provider: process.env.AI_PROVIDER || 'openai',
+        model: process.env.AI_MODEL || 'gpt-4o-mini',
         providerAvailable: false,
         remoteAttempted: true,
         remoteSucceeded: false,

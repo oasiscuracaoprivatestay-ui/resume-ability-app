@@ -128,28 +128,30 @@ export function validateGatewayRequest(body: unknown): RequestValidationResult {
 export function validateAndReconcileAIResponse(
   raw: RawAIModelOutput,
   userMessage: string,
-  context: CoachContext,
-  language: 'en' | 'es' | 'nl'
+  context?: CoachContext,
+  language: 'en' | 'es' | 'nl' = 'en'
 ): AIResponseEnvelope {
+  const safeRaw = (raw && typeof raw === 'object') ? raw as Record<string, any> : {};
+
   // 1. Check for Knowledge Gap or Non-Diet Ability
   const staticGap = checkKnowledgeGap(userMessage);
-  const incomingGap = (raw as any)?.knowledgeGap || (raw as any)?.detectedKnowledgeGap;
+  const incomingGap = safeRaw.knowledgeGap || safeRaw.detectedKnowledgeGap;
   const rawGap = (incomingGap && typeof incomingGap === 'object')
     ? incomingGap
     : null;
-  const isNonDietAbility = (raw as any)?.ability && (raw as any)?.ability !== 'diet';
+  const isNonDietAbility = safeRaw.ability && safeRaw.ability !== 'diet';
 
   if (staticGap || rawGap || isNonDietAbility) {
     const gap = staticGap || (rawGap ? {
       requestedTopic: rawGap.pattern || rawGap.topic || rawGap.requestedTopic || 'Non-diet topic',
       reason: rawGap.reason || 'Not yet fully codified in app source.',
       status: rawGap.status || 'partial',
-      fallbackMessage: (raw as any)?.coachingMessage || 'I only coach from verified Super Diet-Ability concepts.',
+      fallbackMessage: safeRaw.coachingMessage || safeRaw.coachMessage || safeRaw.message || 'I only coach from verified Super Diet-Ability concepts.',
     } : {
-      requestedTopic: String((raw as any).ability),
+      requestedTopic: String(safeRaw.ability),
       reason: 'Only Diet-Ability is active in Phase 36.',
       status: 'reserved' as const,
-      fallbackMessage: raw.coachingMessage || 'Only Diet-Ability is supported.',
+      fallbackMessage: safeRaw.coachingMessage || safeRaw.coachMessage || safeRaw.message || 'Only Diet-Ability is supported.',
     });
 
     return {
@@ -186,26 +188,26 @@ export function validateAndReconcileAIResponse(
     'REVIEW_DAY', 'REVIEW_COMMITMENT', 'REVIEW_WHY', 'REVIEW_NON_NEGOTIABLES',
     'REVIEW_SLIPPERY_ZONES', 'GENERAL_COACHING',
   ];
-  let intent: CoachIntentType = (typeof raw === 'object' && raw?.intent && validIntents.includes(raw.intent))
-    ? raw.intent
+  let intent: CoachIntentType = (typeof raw === 'object' && safeRaw.intent && validIntents.includes(safeRaw.intent))
+    ? safeRaw.intent
     : 'GENERAL_COACHING';
   const confidence = typeof raw === 'string'
     ? 0.5
-    : (typeof raw?.confidence === 'number'
-        ? Math.max(0, Math.min(1, raw.confidence))
+    : (typeof safeRaw.confidence === 'number'
+        ? Math.max(0, Math.min(1, safeRaw.confidence))
         : 0.75);
 
   // 3. Entities Reconciliation
   const entities: CoachEntities = {};
   const ambiguities: CoachAmbiguity[] = [];
 
-  if (Array.isArray(raw.ambiguities)) {
-    ambiguities.push(...raw.ambiguities);
+  if (Array.isArray(safeRaw.ambiguities)) {
+    ambiguities.push(...safeRaw.ambiguities);
   }
-  if (raw.clarificationField && raw.clarificationReason) {
+  if (safeRaw.clarificationField && safeRaw.clarificationReason) {
     ambiguities.push({
-      field: raw.clarificationField,
-      reason: raw.clarificationReason,
+      field: safeRaw.clarificationField,
+      reason: safeRaw.clarificationReason,
     });
   }
 
@@ -331,7 +333,7 @@ export function validateAndReconcileAIResponse(
   // Slippery zones trigger check: Guard against causal attribution
   let coachingMsg = typeof raw === 'string'
     ? raw
-    : (raw?.coachingMessage || 'I am here to support your structure.');
+    : (safeRaw.coachingMessage || safeRaw.coachMessage || safeRaw.message || safeRaw.response || 'I am here to support your structure.');
   if (coachingMsg.toLowerCase().includes('caused your slip') || coachingMsg.toLowerCase().includes('caused this slip')) {
     // Sanitize non-causal framing
     const zoneMatch = context?.slipperyZones?.zones?.find(z => coachingMsg.toLowerCase().includes(z.toLowerCase()));
@@ -437,6 +439,52 @@ export function validateAndReconcileAIResponse(
   };
 }
 
+// ── Helper: JSON parsing with markdown code fence stripping ──────────────────
+
+export function parseJSONFromModel(rawText: string): RawAIModelOutput {
+  const trimmed = rawText.trim();
+  let cleaned = trimmed;
+  // Strip markdown code fences if present (e.g. ```json ... ``` or ``` ... ```)
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  }
+  // Try direct parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (parseErr) {
+    // If model output has extra commentary around JSON, attempt substring extraction of outer object
+    const startIdx = cleaned.indexOf('{');
+    const endIdx = cleaned.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx > startIdx) {
+      const slice = cleaned.slice(startIdx, endIdx + 1);
+      return JSON.parse(slice);
+    }
+    throw parseErr;
+  }
+}
+
+export class ProviderError extends Error {
+  providerHttpOk: boolean;
+  providerHttpStatus?: number;
+  failureCategory: FailureCategory;
+  structuredOutputParsed: boolean;
+
+  constructor(
+    message: string,
+    failureCategory: FailureCategory,
+    providerHttpOk = false,
+    providerHttpStatus?: number,
+    structuredOutputParsed = false
+  ) {
+    super(message);
+    this.name = 'ProviderError';
+    this.failureCategory = failureCategory;
+    this.providerHttpOk = providerHttpOk;
+    this.providerHttpStatus = providerHttpStatus;
+    this.structuredOutputParsed = structuredOutputParsed;
+  }
+}
+
 // ── 3. Provider Call Execution ───────────────────────────────────────────────
 
 export async function callAIProvider(
@@ -448,10 +496,22 @@ export async function callAIProvider(
   // Use mock if injected (Offline test safety)
   if (mockAIHandler) {
     const mockRes = await mockAIHandler(instructions, userPrompt);
+    let parsed: RawAIModelOutput;
     if (typeof mockRes === 'string') {
-      return JSON.parse(mockRes);
+      try {
+        parsed = parseJSONFromModel(mockRes);
+      } catch (_parseErr) {
+        throw new ProviderError('FAILED_TO_PARSE_JSON_STRUCTURE', 'STRUCTURED_OUTPUT_PARSE', true, 200, false);
+      }
+    } else {
+      parsed = mockRes;
     }
-    return mockRes;
+    (parsed as any)._meta = {
+      providerHttpOk: true,
+      providerHttpStatus: 200,
+      structuredOutputParsed: true,
+    };
+    return parsed;
   }
 
   const rawKey = config?.apiKey !== undefined
@@ -459,7 +519,7 @@ export async function callAIProvider(
     : (process.env.AI_API_KEY || process.env.AI_PROVIDER_API_KEY || '');
   const apiKey = typeof rawKey === 'string' ? rawKey.trim() : '';
   if (!apiKey) {
-    throw new Error('AI_API_KEY_NOT_CONFIGURED');
+    throw new ProviderError('AI_API_KEY_NOT_CONFIGURED', 'KEY_NOT_CONFIGURED', false);
   }
 
   const provider = config?.provider || (process.env.AI_PROVIDER as any) || 'openai';
@@ -477,7 +537,14 @@ export async function callAIProvider(
 
       // Format bounded conversation history natively for OpenAI
       if (history && history.length > 0) {
-        for (const h of history) {
+        const trimmedPrompt = userPrompt.trim();
+        // Omit duplicate trailing user message if already present in history
+        const filtered = [...history];
+        const last = filtered[filtered.length - 1];
+        if (last && last.role === 'user' && last.text.trim() === trimmedPrompt) {
+          filtered.pop();
+        }
+        for (const h of filtered) {
           const role = h.role === 'coach' ? 'assistant' : 'user';
           messages.push({ role, content: h.text });
         }
@@ -485,44 +552,75 @@ export async function callAIProvider(
 
       messages.push({ role: 'user', content: userPrompt });
 
-      const res = await fetch(endpointUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          response_format: { type: 'json_object' },
-          messages,
-          temperature: config?.temperature ?? 0.2,
-          max_tokens: config?.maxTokens ?? 700,
-        }),
-        signal: controller.signal,
-      });
+      let res: Response;
+      try {
+        res = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            response_format: { type: 'json_object' },
+            messages,
+            temperature: config?.temperature ?? 0.2,
+            max_tokens: config?.maxTokens ?? 1000,
+          }),
+          signal: controller.signal,
+        });
+      } catch (fetchErr: any) {
+        if (fetchErr?.name === 'AbortError' || controller.signal.aborted) {
+          throw new ProviderError('GATEWAY_TIMEOUT', 'TIMEOUT', false);
+        }
+        throw new ProviderError('NETWORK_ERROR', 'NETWORK_ERROR', false);
+      }
 
       if (!res.ok) {
-        throw new Error(`PROVIDER_HTTP_${res.status}`);
+        const status = res.status;
+        let failureCat: FailureCategory = 'PROVIDER_REJECTED';
+        if (status === 401 || status === 403) {
+          failureCat = 'AUTH_FAILED';
+        } else if (status === 429) {
+          failureCat = 'RATE_LIMIT_OR_QUOTA';
+        } else if (status === 400) {
+          failureCat = 'BAD_REQUEST';
+        }
+        throw new ProviderError(`PROVIDER_HTTP_${status}`, failureCat, false, status);
       }
 
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error('EMPTY_PROVIDER_RESPONSE');
+      let data: any;
+      try {
+        data = await res.json();
+      } catch (_jsonErr) {
+        throw new ProviderError('INVALID_PROVIDER_JSON', 'STRUCTURED_OUTPUT_PARSE', true, res.status, false);
       }
 
-      return JSON.parse(content) as RawAIModelOutput;
-    } catch (err: any) {
-      if (err?.name === 'AbortError' || controller.signal.aborted) {
-        throw new Error('GATEWAY_TIMEOUT');
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        throw new ProviderError('EMPTY_PROVIDER_RESPONSE', 'EMPTY_RESPONSE', true, res.status, false);
       }
-      throw err;
+
+      let parsed: RawAIModelOutput;
+      try {
+        parsed = parseJSONFromModel(content);
+      } catch (_parseErr) {
+        throw new ProviderError('FAILED_TO_PARSE_JSON_STRUCTURE', 'STRUCTURED_OUTPUT_PARSE', true, res.status, false);
+      }
+
+      (parsed as any)._meta = {
+        providerHttpOk: true,
+        providerHttpStatus: res.status,
+        structuredOutputParsed: true,
+      };
+
+      return parsed;
     } finally {
       clearTimeout(timeout);
     }
   }
 
-  throw new Error(`UNSUPPORTED_PROVIDER_${provider}`);
+  throw new ProviderError(`UNSUPPORTED_PROVIDER_${provider}`, 'PROVIDER_REJECTED', false);
 }
 
 // ── 4. Main Server Gateway Turn Handler ──────────────────────────────────────
@@ -538,21 +636,27 @@ export async function handleCoachGatewayRequest(
     diagnostics: GatewayDiagnostics;
   };
 }> {
+  const provider = config?.provider || (process.env.AI_PROVIDER as any) || 'openai';
+  const model = config?.model || process.env.AI_MODEL || 'gpt-4o-mini';
+
   // 1. Validate incoming request
   const validation = validateGatewayRequest(body);
   if (!validation.valid) {
+    const diag: GatewayDiagnostics = {
+      provider,
+      model,
+      providerAvailable: false,
+      remoteAttempted: false,
+      remoteSucceeded: false,
+      fallbackUsed: true,
+      failureCategory: 'BAD_REQUEST',
+    };
     return {
       status: validation.statusCode || 400,
       envelope: {
         error: validation.error || 'BAD_REQUEST',
         fallbackUsed: true,
-        diagnostics: {
-          providerAvailable: false,
-          remoteAttempted: false,
-          remoteSucceeded: false,
-          fallbackUsed: true,
-          failureCategory: 'BAD_REQUEST',
-        },
+        diagnostics: diag,
       },
     };
   }
@@ -565,74 +669,123 @@ export async function handleCoachGatewayRequest(
 
   // 2. If no server API key configured, signal fallback without throwing
   if (!apiKey && !mockAIHandler) {
+    const diag: GatewayDiagnostics = {
+      provider,
+      model,
+      providerAvailable: false,
+      remoteAttempted: false,
+      remoteSucceeded: false,
+      fallbackUsed: true,
+      failureCategory: 'KEY_NOT_CONFIGURED',
+      conversationTurnsIncluded: (dto.conversationHistory || []).length,
+    };
     return {
       status: 200,
       envelope: {
         error: 'AI_KEY_NOT_CONFIGURED_FALLBACK_ACTIVE',
         fallbackUsed: true,
-        diagnostics: {
-          providerAvailable: false,
-          remoteAttempted: false,
-          remoteSucceeded: false,
-          fallbackUsed: true,
-          failureCategory: 'KEY_NOT_CONFIGURED',
-        },
+        diagnostics: diag,
       },
     };
   }
+
+  const history = (dto.conversationHistory || []).slice(-MAX_CONVERSATION_HISTORY);
+  const diagnostics: GatewayDiagnostics = {
+    provider,
+    model,
+    providerAvailable: Boolean(apiKey) || Boolean(mockAIHandler),
+    remoteAttempted: true,
+    providerHttpOk: undefined,
+    providerHttpStatus: undefined,
+    remoteSucceeded: false,
+    structuredOutputParsed: false,
+    structuredOutputValid: false,
+    reconciliationApplied: false,
+    fallbackUsed: false,
+    failureCategory: 'NONE',
+    coachingMode: undefined,
+    conversationTurnsIncluded: history.length,
+  };
 
   try {
     // 3. Build comprehensive Grounding Pack & system instructions
     const pack = buildSDAGroundingPack(dto.message, dto.context, dto.language, dto.conversationHistory);
     const instructions = compileSDASystemPrompt(pack, dto.language);
 
-    // Bounded conversation history
-    const history = (dto.conversationHistory || []).slice(-MAX_CONVERSATION_HISTORY);
-
     // 4. Call AI provider with native multi-turn history
     const rawOutput = await callAIProvider(instructions, dto.message, config, history);
 
+    const meta = (rawOutput as any)?._meta;
+    diagnostics.providerHttpOk = meta?.providerHttpOk ?? true;
+    diagnostics.providerHttpStatus = meta?.providerHttpStatus ?? 200;
+    diagnostics.structuredOutputParsed = meta?.structuredOutputParsed ?? true;
+
     // 5. Reconcile with canonical domain truth
     const envelope = validateAndReconcileAIResponse(rawOutput, dto.message, dto.context, dto.language);
+    diagnostics.structuredOutputValid = true;
+    diagnostics.reconciliationApplied = true;
+    diagnostics.remoteSucceeded = true;
+    diagnostics.fallbackUsed = false;
+    diagnostics.failureCategory = 'NONE';
+    diagnostics.coachingMode = envelope.coaching.mode;
+
     envelope.fallbackUsed = false;
-    envelope.diagnostics = {
-      providerAvailable: true,
-      remoteAttempted: true,
-      remoteSucceeded: true,
-      fallbackUsed: false,
-      failureCategory: 'NONE',
-    };
+    envelope.diagnostics = diagnostics;
+
+    // Minimal safe production log on success (NO PROMPT, NO USER TEXT, NO SECRETS)
+    console.log(
+      `[SDA_COACH_REMOTE] provider=${diagnostics.provider} httpOk=true status=${diagnostics.providerHttpStatus} parsed=true valid=true fallback=false mode=${diagnostics.coachingMode}`
+    );
 
     return {
       status: 200,
       envelope,
     };
   } catch (err: any) {
-    let failureCategory: FailureCategory = 'NETWORK_ERROR';
-    const msg = String(err?.message || '');
-    if (err?.name === 'AbortError' || msg.includes('TIMEOUT') || msg.includes('aborted')) {
-      failureCategory = 'TIMEOUT';
-    } else if (msg.includes('PROVIDER_HTTP_')) {
-      failureCategory = 'PROVIDER_REJECTED';
-    } else if (msg.includes('AI_API_KEY_NOT_CONFIGURED')) {
-      failureCategory = 'KEY_NOT_CONFIGURED';
-    } else if (msg.includes('EMPTY_PROVIDER') || msg.includes('JSON') || msg.includes('VALIDATION')) {
-      failureCategory = 'VALIDATION_FAILED';
+    diagnostics.fallbackUsed = true;
+    diagnostics.remoteSucceeded = false;
+
+    if (err instanceof ProviderError) {
+      diagnostics.providerHttpOk = err.providerHttpOk;
+      diagnostics.providerHttpStatus = err.providerHttpStatus;
+      diagnostics.failureCategory = err.failureCategory;
+      diagnostics.structuredOutputParsed = err.structuredOutputParsed;
+      diagnostics.structuredOutputValid = false;
+      diagnostics.reconciliationApplied = false;
+    } else {
+      let failureCategory: FailureCategory = 'NETWORK_ERROR';
+      const msg = String(err?.message || '');
+      if (err?.name === 'AbortError' || msg.includes('TIMEOUT') || msg.includes('aborted')) {
+        failureCategory = 'TIMEOUT';
+      } else if (msg.includes('PROVIDER_HTTP_')) {
+        failureCategory = 'PROVIDER_REJECTED';
+      } else if (msg.includes('AI_API_KEY_NOT_CONFIGURED')) {
+        failureCategory = 'KEY_NOT_CONFIGURED';
+      } else if (msg.includes('EMPTY_PROVIDER')) {
+        failureCategory = 'EMPTY_RESPONSE';
+      } else if (msg.includes('JSON') || msg.includes('PARSE')) {
+        failureCategory = 'STRUCTURED_OUTPUT_PARSE';
+      } else if (msg.includes('VALIDATION')) {
+        failureCategory = 'VALIDATION_FAILED';
+      }
+      diagnostics.providerHttpOk = false;
+      diagnostics.failureCategory = failureCategory;
+      diagnostics.structuredOutputParsed = false;
+      diagnostics.structuredOutputValid = false;
+      diagnostics.reconciliationApplied = false;
     }
 
-    // Safe error without leaking internal secrets or stack traces
+    // Safe error log line for failed remote attempts (NO PROMPT, NO USER TEXT, NO API KEY, NO RAW BODY)
+    console.error(
+      `[SDA_COACH_REMOTE] provider=${diagnostics.provider} httpOk=${Boolean(diagnostics.providerHttpOk)} status=${diagnostics.providerHttpStatus ?? 'none'} parsed=${Boolean(diagnostics.structuredOutputParsed)} valid=${Boolean(diagnostics.structuredOutputValid)} fallback=true failure=${diagnostics.failureCategory}`
+    );
+
     return {
       status: 200,
       envelope: {
         error: 'AI_GATEWAY_FAILURE_FALLBACK_ACTIVE',
         fallbackUsed: true,
-        diagnostics: {
-          providerAvailable: Boolean(apiKey),
-          remoteAttempted: true,
-          remoteSucceeded: false,
-          fallbackUsed: true,
-          failureCategory,
-        },
+        diagnostics,
       },
     };
   }

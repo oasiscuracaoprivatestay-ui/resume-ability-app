@@ -261,17 +261,30 @@ export type FailureCategory =
   | 'NONE'
   | 'KEY_NOT_CONFIGURED'
   | 'PROVIDER_REJECTED'
+  | 'AUTH_FAILED'
+  | 'RATE_LIMIT_OR_QUOTA'
+  | 'EMPTY_RESPONSE'
+  | 'STRUCTURED_OUTPUT_PARSE'
   | 'VALIDATION_FAILED'
   | 'TIMEOUT'
   | 'NETWORK_ERROR'
   | 'BAD_REQUEST';
 
 export interface GatewayDiagnostics {
+  provider?: string;
+  model?: string;
   providerAvailable: boolean;
   remoteAttempted: boolean;
+  providerHttpOk?: boolean;
+  providerHttpStatus?: number;
   remoteSucceeded: boolean;
+  structuredOutputParsed?: boolean;
+  structuredOutputValid?: boolean;
+  reconciliationApplied?: boolean;
   fallbackUsed: boolean;
   failureCategory: FailureCategory;
+  coachingMode?: string;
+  conversationTurnsIncluded?: number;
 }
 
 export interface KnowledgeGap {

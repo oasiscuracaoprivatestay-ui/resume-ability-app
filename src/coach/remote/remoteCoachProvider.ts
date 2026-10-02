@@ -20,6 +20,7 @@ import { LocalCoachProvider } from '../localCoachProvider';
 import type {
   AIResponseEnvelope,
   CoachGatewayRequestDTO,
+  FailureCategory,
   GatewayDiagnostics,
   SerializedChatMessage,
 } from './types';
@@ -95,13 +96,31 @@ export class RemoteCoachProvider implements CoachProvider {
         clearTimeout(timeoutHandle);
 
         if (!response.ok) {
+          const status = response.status;
+          let failureCategory: FailureCategory = 'PROVIDER_REJECTED';
+          if (status === 401 || status === 403) {
+            failureCategory = 'AUTH_FAILED';
+          } else if (status === 429) {
+            failureCategory = 'RATE_LIMIT_OR_QUOTA';
+          } else if (status === 400) {
+            failureCategory = 'BAD_REQUEST';
+          }
           this.lastDiagnostics = {
+            provider: 'openai',
             providerAvailable: false,
             remoteAttempted: true,
+            providerHttpOk: false,
+            providerHttpStatus: status,
             remoteSucceeded: false,
             fallbackUsed: true,
-            failureCategory: 'PROVIDER_REJECTED',
+            failureCategory,
           };
+          if (typeof window !== 'undefined') {
+            (window as any).__LAST_COACH_DIAGNOSTICS__ = this.lastDiagnostics;
+          }
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('[RemoteCoachProvider] Fallback active due to HTTP status:', status);
+          }
           // Non-200 HTTP response -> fallback
           return await this.fallbackProvider.sendMessage(request);
         }
@@ -109,10 +128,16 @@ export class RemoteCoachProvider implements CoachProvider {
         const data = await response.json();
         if (data.diagnostics) {
           this.lastDiagnostics = data.diagnostics;
+          if (typeof window !== 'undefined') {
+            (window as any).__LAST_COACH_DIAGNOSTICS__ = data.diagnostics;
+          }
         }
 
         // Check if gateway signaled fallback
         if (data.fallbackUsed || !data.understanding || !data.coaching) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('[RemoteCoachProvider] Gateway fallback used:', data.diagnostics?.failureCategory);
+          }
           return await this.fallbackProvider.sendMessage(request);
         }
 
@@ -144,13 +169,22 @@ export class RemoteCoachProvider implements CoachProvider {
         };
       } catch (fetchError: any) {
         clearTimeout(timeoutHandle);
+        const isTimeout = fetchError?.name === 'AbortError';
         this.lastDiagnostics = {
+          provider: 'openai',
           providerAvailable: false,
           remoteAttempted: true,
+          providerHttpOk: false,
           remoteSucceeded: false,
           fallbackUsed: true,
-          failureCategory: fetchError?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+          failureCategory: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
         };
+        if (typeof window !== 'undefined') {
+          (window as any).__LAST_COACH_DIAGNOSTICS__ = this.lastDiagnostics;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[RemoteCoachProvider] Fetch error fallback:', this.lastDiagnostics.failureCategory);
+        }
         // Network failure, abort/timeout, or parse error -> fallback to deterministic engine
         return await this.fallbackProvider.sendMessage(request);
       }
