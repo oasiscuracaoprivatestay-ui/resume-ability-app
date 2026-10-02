@@ -177,6 +177,9 @@ export interface CoachContext {
     checkInCount: number;
     slipsCount: number;
     resumedCount: number;
+    latestCheckInStatus?: string | null;
+    topCategories?: Array<{ category: string; portions: number; percentage: number }>;
+    recentFoods?: Array<{ name: string; portions: number }>;
     latestBlock?: {
       startTime: string;
       endTime: string;
@@ -197,6 +200,41 @@ export interface CoachContext {
     levelTitle: string;
     xp: number;
   };
+  structuredDiet?: {
+    hasPlan: boolean;
+    todayPlannedCount: number;
+    nextPlannedMealTime?: string;
+  };
+}
+
+export interface SDAGroundingPack {
+  identity: {
+    name: string;
+    role: string;
+    prohibitedRoles: string[];
+    communicationStyle: string;
+  };
+  coachingMode: SDACoachingMode;
+  primaryGoal: string;
+  relevantPrinciples: Array<{
+    id: string;
+    title: string;
+    statement: string;
+    prohibitedAssumptions: string[];
+  }>;
+  relevantTerms: Array<{
+    key: string;
+    displayName: string;
+    shortDefinition: string;
+  }>;
+  semanticBoundaries: string[];
+  contextFacts: string[];
+  coachObservations: string[];
+  prohibitedAssumptions: string[];
+  cadenceGuide: string;
+  scenarioGuidance?: string;
+  knowledgeGap?: KnowledgeGap | null;
+  mutationPolicy: 'preview_only';
 }
 
 // ── Client → Server Wire Protocol ─────────────────────────────────────────────

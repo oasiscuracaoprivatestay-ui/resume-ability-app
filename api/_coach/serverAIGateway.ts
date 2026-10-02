@@ -35,14 +35,21 @@ import {
   type GatewayDiagnostics,
   type RawAIModelOutput,
   type SDACoachingMode,
+  type SerializedChatMessage,
   type ServerAIConfig,
 } from './types.js';
 import {
-  buildAIKnowledgeProjection,
-  buildSDAAISystemInstructions,
   checkKnowledgeGap,
 } from './knowledge.js';
+export {
+  buildAIKnowledgeProjection,
+  buildSDAAISystemInstructions,
+} from './knowledge.js';
 import { resolveCategoryTerm } from './resolvers.js';
+import {
+  buildSDAGroundingPack,
+  compileSDASystemPrompt,
+} from './groundingPack.js';
 
 // ── Test Mock Injection (Offline Automation Safety) ──────────────────────────
 
@@ -126,15 +133,18 @@ export function validateAndReconcileAIResponse(
 ): AIResponseEnvelope {
   // 1. Check for Knowledge Gap or Non-Diet Ability
   const staticGap = checkKnowledgeGap(userMessage);
-  const rawGap = raw.detectedKnowledgeGap || (raw as any).knowledgeGap;
-  const isNonDietAbility = (raw as any).ability && (raw as any).ability !== 'diet';
+  const incomingGap = (raw as any)?.knowledgeGap || (raw as any)?.detectedKnowledgeGap;
+  const rawGap = (incomingGap && typeof incomingGap === 'object')
+    ? incomingGap
+    : null;
+  const isNonDietAbility = (raw as any)?.ability && (raw as any)?.ability !== 'diet';
 
   if (staticGap || rawGap || isNonDietAbility) {
     const gap = staticGap || (rawGap ? {
-      requestedTopic: rawGap.topic || rawGap.pattern || 'Non-diet topic',
+      requestedTopic: rawGap.pattern || rawGap.topic || rawGap.requestedTopic || 'Non-diet topic',
       reason: rawGap.reason || 'Not yet fully codified in app source.',
       status: rawGap.status || 'partial',
-      fallbackMessage: raw.coachingMessage || 'I only coach from verified Super Diet-Ability concepts.',
+      fallbackMessage: (raw as any)?.coachingMessage || 'I only coach from verified Super Diet-Ability concepts.',
     } : {
       requestedTopic: String((raw as any).ability),
       reason: 'Only Diet-Ability is active in Phase 36.',
@@ -176,10 +186,14 @@ export function validateAndReconcileAIResponse(
     'REVIEW_DAY', 'REVIEW_COMMITMENT', 'REVIEW_WHY', 'REVIEW_NON_NEGOTIABLES',
     'REVIEW_SLIPPERY_ZONES', 'GENERAL_COACHING',
   ];
-  const intent: CoachIntentType = validIntents.includes(raw.intent) ? raw.intent : 'GENERAL_COACHING';
-  const confidence = typeof raw.confidence === 'number'
-    ? Math.max(0, Math.min(1, raw.confidence))
-    : 0.75;
+  let intent: CoachIntentType = (typeof raw === 'object' && raw?.intent && validIntents.includes(raw.intent))
+    ? raw.intent
+    : 'GENERAL_COACHING';
+  const confidence = typeof raw === 'string'
+    ? 0.5
+    : (typeof raw?.confidence === 'number'
+        ? Math.max(0, Math.min(1, raw.confidence))
+        : 0.75);
 
   // 3. Entities Reconciliation
   const entities: CoachEntities = {};
@@ -236,6 +250,41 @@ export function validateAndReconcileAIResponse(
     entities.plannedStatus = raw.entities.plannedStatus;
   }
 
+  const rawLower = userMessage.toLowerCase();
+
+  // Guard: "I didn't plan it, but stayed within my structure" -> Unplanned On-Track, NOT Unstructured Slip
+  if (
+    rawLower.includes('within my structure') ||
+    rawLower.includes('dentro de mi estructura') ||
+    rawLower.includes('binnen mijn structuur')
+  ) {
+    if (entities.outcome === 'unstructured_slip') {
+      entities.outcome = 'on_track';
+    }
+  }
+
+  // Guard: Intentional flexibility / outside ideal structure but not a slip -> 20% OFF TRACK
+  if (
+    (rawLower.includes('20%') || rawLower.includes('twenty percent') || rawLower.includes('outside my ideal structure') || rawLower.includes('intentional flexibility')) &&
+    (rawLower.includes("wasn't a slip") || rawLower.includes('not a slip') || rawLower.includes('no fue un desliz') || rawLower.includes('geen uitglijder'))
+  ) {
+    entities.outcome = 'twenty_percent_off_track';
+  }
+
+  // Guard: Losing control / intense urge alone is NOT a completed slip
+  const isUrgeOnly =
+    (rawLower.includes('losing control') || rawLower.includes('perdiendo el control') || rawLower.includes('controle verliezen') ||
+     rawLower.includes('craving') || rawLower.includes('tempted') || rawLower.includes('urge')) &&
+    !rawLower.includes('ate') && !rawLower.includes('had ') && !rawLower.includes('slipped') && !rawLower.includes('deslicé') && !rawLower.includes('uitgegleden');
+  if (isUrgeOnly) {
+    if (intent === 'LOG_SLIP') {
+      intent = 'GENERAL_COACHING';
+    }
+    if (entities.outcome && (entities.outcome === 'structured_slip' || entities.outcome === 'unstructured_slip')) {
+      delete entities.outcome;
+    }
+  }
+
   // Time format check (HH:MM 24h)
   if (raw.entities?.startTime) {
     if (/^([01]\d|2[0-3]):[0-5]\d$/.test(raw.entities.startTime)) {
@@ -280,10 +329,12 @@ export function validateAndReconcileAIResponse(
   }
 
   // Slippery zones trigger check: Guard against causal attribution
-  let coachingMsg = raw.coachingMessage || 'I am here to support your structure.';
+  let coachingMsg = typeof raw === 'string'
+    ? raw
+    : (raw?.coachingMessage || 'I am here to support your structure.');
   if (coachingMsg.toLowerCase().includes('caused your slip') || coachingMsg.toLowerCase().includes('caused this slip')) {
     // Sanitize non-causal framing
-    const zoneMatch = context.slipperyZones.zones.find(z => coachingMsg.toLowerCase().includes(z.toLowerCase()));
+    const zoneMatch = context?.slipperyZones?.zones?.find(z => coachingMsg.toLowerCase().includes(z.toLowerCase()));
     if (zoneMatch) {
       coachingMsg = language === 'es'
         ? `"${zoneMatch}" es una de tus Zonas Resbaladizas guardadas. ¿Formó parte de este momento?`
@@ -295,7 +346,10 @@ export function validateAndReconcileAIResponse(
 
   // 4. Action Proposal Reconciliation (PREVIEW-ONLY, ZERO MUTATION)
   let proposedAction: CoachActionProposal | undefined = undefined;
-  const actionType = (raw.proposedActionType || raw.actionProposal?.type) as CoachActionType | undefined;
+  const rawObj = raw as any;
+  const rawActionType = raw.proposedActionType || raw.actionProposal?.type || rawObj?.proposedAction?.type;
+  const normalizedActionType = typeof rawActionType === 'string' ? rawActionType.toUpperCase() as CoachActionType : undefined;
+  const actionType = normalizedActionType;
   if (actionType) {
     if (CANONICAL_ACTION_TYPES.includes(actionType)) {
       if (entities.outcome === 'twenty_percent_off_track' && actionType === 'LOG_SLIP') {
@@ -310,8 +364,8 @@ export function validateAndReconcileAIResponse(
           type: actionType,
           confidence: confidence,
           requiresConfirmation: true, // STRICTLY MANDATORY - USER CANNOT OVERRIDE
-          payload: (raw.proposedActionPayload || raw.actionProposal?.payload || {}) as Record<string, unknown>,
-          humanReadableSummary: raw.proposedActionSummary || raw.actionProposal?.humanReadableSummary || `${actionType} proposal`,
+          payload: (raw.proposedActionPayload || raw.actionProposal?.payload || rawObj?.proposedAction?.payload || {}) as Record<string, unknown>,
+          humanReadableSummary: raw.proposedActionSummary || raw.actionProposal?.humanReadableSummary || rawObj?.proposedAction?.humanReadableSummary || `${actionType} proposal`,
         };
       }
     } else {
@@ -388,7 +442,8 @@ export function validateAndReconcileAIResponse(
 export async function callAIProvider(
   instructions: string,
   userPrompt: string,
-  config?: Partial<ServerAIConfig>
+  config?: Partial<ServerAIConfig>,
+  history?: SerializedChatMessage[]
 ): Promise<RawAIModelOutput> {
   // Use mock if injected (Offline test safety)
   if (mockAIHandler) {
@@ -416,6 +471,20 @@ export async function callAIProvider(
     const timeout = setTimeout(() => controller.abort(), GATEWAY_TIMEOUT_MS);
 
     try {
+      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        { role: 'system', content: instructions },
+      ];
+
+      // Format bounded conversation history natively for OpenAI
+      if (history && history.length > 0) {
+        for (const h of history) {
+          const role = h.role === 'coach' ? 'assistant' : 'user';
+          messages.push({ role, content: h.text });
+        }
+      }
+
+      messages.push({ role: 'user', content: userPrompt });
+
       const res = await fetch(endpointUrl, {
         method: 'POST',
         headers: {
@@ -425,10 +494,7 @@ export async function callAIProvider(
         body: JSON.stringify({
           model,
           response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: instructions },
-            { role: 'user', content: userPrompt },
-          ],
+          messages,
           temperature: config?.temperature ?? 0.2,
           max_tokens: config?.maxTokens ?? 700,
         }),
@@ -516,19 +582,15 @@ export async function handleCoachGatewayRequest(
   }
 
   try {
-    // 3. Build knowledge projection & system instructions
-    const projection = buildAIKnowledgeProjection(dto.message, dto.context);
-    const instructions = buildSDAAISystemInstructions(dto.language, projection, dto.context);
+    // 3. Build comprehensive Grounding Pack & system instructions
+    const pack = buildSDAGroundingPack(dto.message, dto.context, dto.language, dto.conversationHistory);
+    const instructions = compileSDASystemPrompt(pack, dto.language);
 
-    // Bounded conversation history formatting
+    // Bounded conversation history
     const history = (dto.conversationHistory || []).slice(-MAX_CONVERSATION_HISTORY);
-    const historyBlock = history.length > 0
-      ? `Recent Conversation:\n${history.map(h => `${h.role.toUpperCase()}: ${h.text}`).join('\n')}\n\n`
-      : '';
-    const userPrompt = `${historyBlock}USER: ${dto.message}`;
 
-    // 4. Call AI provider
-    const rawOutput = await callAIProvider(instructions, userPrompt, config);
+    // 4. Call AI provider with native multi-turn history
+    const rawOutput = await callAIProvider(instructions, dto.message, config, history);
 
     // 5. Reconcile with canonical domain truth
     const envelope = validateAndReconcileAIResponse(rawOutput, dto.message, dto.context, dto.language);

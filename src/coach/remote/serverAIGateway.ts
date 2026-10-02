@@ -11,6 +11,8 @@ export {
   validateAndReconcileAIResponse,
   buildAIKnowledgeProjection,
   buildSDAAISystemInstructions,
+  buildSDAGroundingPack,
+  compileSDASystemPrompt,
   callAIProvider,
   setMockAIHandlerForTesting,
   GATEWAY_TIMEOUT_MS,
