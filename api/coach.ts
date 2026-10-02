@@ -12,7 +12,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'http';
-import { handleCoachGatewayRequest } from '../src/coach/remote/serverAIGateway';
+import { handleCoachGatewayRequest } from './_coach/serverAIGateway.js';
 
 export default async function handler(
   req: IncomingMessage & { body?: any },
