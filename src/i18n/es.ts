@@ -1676,6 +1676,17 @@ export const es: Translations = {
 
   // ── Phase 36: Real AI Gateway & Error UX ──
   coach_error_generic: 'No pude procesar eso en este momento. Por favor intenta de nuevo.',
+
+  // ── Phase 38A: SDA Voice Coach ──
+  coach_voice_mic_button: 'Entrada de voz (Micrófono)',
+  coach_voice_listening: 'Escuchando... habla ahora',
+  coach_voice_processing: 'Procesando voz...',
+  coach_voice_stop_mic: 'Detener escucha',
+  coach_voice_listen_response: 'Escuchar',
+  coach_voice_stop_response: 'Detener',
+  coach_voice_motivation_button: 'Motivación por voz',
+  coach_voice_advice_button: 'Consejo por voz',
+  coach_voice_error_mic: 'Error de micrófono. Puedes escribir en su lugar.',
 };
 
 

@@ -28,7 +28,8 @@ export function buildSDAGroundingPack(
   message: string,
   context: CoachContext,
   language: 'en' | 'es' | 'nl',
-  conversationHistory: SerializedChatMessage[] = []
+  conversationHistory: SerializedChatMessage[] = [],
+  responseModality: 'text' | 'voice' | 'text_and_voice' = 'text'
 ): SDAGroundingPack {
   const rawLower = message.toLowerCase().trim();
 
@@ -70,6 +71,7 @@ export function buildSDAGroundingPack(
       scenarioGuidance: gap.fallbackMessage,
       knowledgeGap: gap,
       mutationPolicy: 'preview_only',
+      responseModality,
     };
   }
 
@@ -340,6 +342,7 @@ export function buildSDAGroundingPack(
     scenarioGuidance,
     knowledgeGap: null,
     mutationPolicy: 'preview_only',
+    responseModality,
   };
 }
 
@@ -403,6 +406,7 @@ ${langReq}
 - Tone: ${pack.identity.communicationStyle}
 - Never use robotic chatbot cliches (e.g. "I'm here to support you with your eating structure...").
 - Keep responses concise (usually 2 to 4 sentences). Do NOT lecture or produce bulleted essays unless specifically requested.
+${(pack.responseModality === 'voice' || pack.responseModality === 'text_and_voice') ? '- Spoken Delivery Rhythm: Output is formatted for spoken audio delivery. Keep sentences direct, natural, and conversational (2 to 4 sentences). Avoid markdown formatting, asterisks, or bullet dumps where feasible, while preserving all safety rules and SDA boundaries.\n' : ''}
 
 ### ACTIVE COACHING MODE & GOAL FOR THIS TURN:
 - Mode: ${pack.coachingMode}

@@ -21,8 +21,12 @@ import {
   loadCoachConversation,
   saveCoachConversation,
   clearCoachConversation,
+  voiceController,
+  requestAudioMotivation,
+  requestAudioAdvice,
   type CoachMessage,
   type CoachActionProposal,
+  type VoiceSessionState,
 } from '../coach';
 import './CoachScreen.css';
 
@@ -38,6 +42,7 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
   const [isThinking, setIsThinking] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [voiceState, setVoiceState] = useState<VoiceSessionState>(() => voiceController.getState());
 
   // Proposal edit modal state (Phase 34)
   const [editingProposal, setEditingProposal] = useState<{
@@ -49,6 +54,18 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Subscribe to Voice Controller state updates
+  useEffect(() => {
+    const unsubscribe = voiceController.subscribe(state => {
+      setVoiceState(state);
+    });
+    return () => {
+      unsubscribe();
+      voiceController.stopSpeaking();
+      voiceController.cancelListening();
+    };
+  }, []);
+
   // Auto-scroll to latest message
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,10 +75,12 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
     scrollToBottom();
   }, [messages, isThinking]);
 
-  // Starter prompts
+  // Starter prompts including dedicated Audio Motivation & Audio Advice
   const starterPrompts = [
     { id: 'today', text: t.coach_prompt_today },
     { id: 'motivation', text: t.coach_prompt_motivation },
+    { id: 'audio_motivation', text: `🎙️ ${t.coach_voice_motivation_button}` },
+    { id: 'audio_advice', text: `🎙️ ${t.coach_voice_advice_button}` },
     { id: 'almost_slipped', text: t.coach_prompt_almost_slipped },
     { id: 'slipped', text: t.coach_prompt_slipped },
     { id: 'structure', text: t.coach_prompt_structure },
@@ -102,6 +121,70 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
       setMessages(updated.messages);
     } finally {
       setIsThinking(false);
+    }
+  };
+
+  const handlePromptClick = async (prompt: { id: string; text: string }) => {
+    if (isThinking) return;
+
+    if (prompt.id === 'audio_motivation') {
+      setIsThinking(true);
+      setActionNotice(null);
+      try {
+        await requestAudioMotivation(lang as 'en' | 'es' | 'nl');
+        const updated = loadCoachConversation();
+        setMessages(updated.messages);
+      } catch {
+        setActionNotice(t.coach_error_generic);
+      } finally {
+        setIsThinking(false);
+      }
+      return;
+    }
+
+    if (prompt.id === 'audio_advice') {
+      setIsThinking(true);
+      setActionNotice(null);
+      try {
+        await requestAudioAdvice(lang as 'en' | 'es' | 'nl');
+        const updated = loadCoachConversation();
+        setMessages(updated.messages);
+      } catch {
+        setActionNotice(t.coach_error_generic);
+      } finally {
+        setIsThinking(false);
+      }
+      return;
+    }
+
+    handleSend(prompt.text);
+  };
+
+  const handleToggleMic = async () => {
+    if (isThinking) return;
+
+    if (voiceState.inputState === 'listening') {
+      const transcript = await voiceController.stopListening();
+      if (transcript && transcript.text.trim()) {
+        handleSend(transcript.text);
+      }
+    } else {
+      try {
+        await voiceController.startListening(lang as 'en' | 'es' | 'nl', (partial) => {
+          setInputText(partial);
+        });
+      } catch {
+        setActionNotice(t.coach_voice_error_mic);
+      }
+    }
+  };
+
+  const handleToggleListen = async (msg: CoachMessage) => {
+    if (voiceController.isSpeakingMessage(msg.id)) {
+      await voiceController.stopSpeaking();
+    } else {
+      // Only final validated Coach text is spoken
+      await voiceController.speakResponse(msg.text, lang as 'en' | 'es' | 'nl', 'coach_response', msg.id);
     }
   };
 
@@ -307,10 +390,10 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
                     key={prompt.id}
                     id={`btn-starter-${prompt.id}`}
                     className="coach-starter-chip"
-                    onClick={() => handleSend(prompt.text)}
+                    onClick={() => handlePromptClick(prompt)}
                     disabled={isThinking}
                   >
-                    <span>💬</span>
+                    <span>{prompt.id.startsWith('audio_') ? '🎙️' : '💬'}</span>
                     <span>{prompt.text}</span>
                   </button>
                 ))}
@@ -331,6 +414,27 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
                 )}
                 <div className={`coach-bubble coach-bubble--${msg.role}`}>
                   <p className="coach-bubble-text">{msg.text}</p>
+
+                  {/* Spoken Response Listen Control (Phase 38A) */}
+                  {msg.role === 'coach' && (
+                    <div className="coach-bubble-voice-row">
+                      <button
+                        type="button"
+                        id={`btn-voice-listen-${msg.id}`}
+                        className={`coach-listen-btn ${voiceController.isSpeakingMessage(msg.id) ? 'coach-listen-btn--active' : ''}`}
+                        onClick={() => handleToggleListen(msg)}
+                        aria-label={voiceController.isSpeakingMessage(msg.id) ? t.coach_voice_stop_response : t.coach_voice_listen_response}
+                        title={voiceController.isSpeakingMessage(msg.id) ? t.coach_voice_stop_response : t.coach_voice_listen_response}
+                      >
+                        <span className="coach-listen-icon" aria-hidden="true">
+                          {voiceController.isSpeakingMessage(msg.id) ? '⏹' : '🔊'}
+                        </span>
+                        <span className="coach-listen-text">
+                          {voiceController.isSpeakingMessage(msg.id) ? t.coach_voice_stop_response : t.coach_voice_listen_response}
+                        </span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Clarification Choice Chips (Phase 34) */}
                   {msg.understanding?.requiresClarification && msg.understanding.ambiguities.length > 0 && (
@@ -422,7 +526,7 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
               <button
                 key={prompt.id}
                 className="coach-active-suggestion-chip"
-                onClick={() => handleSend(prompt.text)}
+                onClick={() => handlePromptClick(prompt)}
                 disabled={isThinking}
               >
                 {prompt.text}
@@ -432,8 +536,22 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
         </div>
       )}
 
-      {/* ── Composer ── */}
+      {/* ── Composer with Voice Input (Phase 38A) ── */}
       <footer className="coach-composer-container">
+        {voiceState.inputState === 'listening' && (
+          <div className="coach-voice-listening-banner" role="status" aria-live="polite">
+            <span className="coach-voice-pulse" aria-hidden="true" />
+            <span className="coach-voice-banner-text">{t.coach_voice_listening}</span>
+            <button
+              type="button"
+              className="coach-voice-cancel-btn"
+              onClick={() => voiceController.cancelListening()}
+              aria-label="Cancel"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <form
           className="coach-composer-form"
           onSubmit={e => {
@@ -441,6 +559,19 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
             handleSend();
           }}
         >
+          <button
+            id="btn-coach-mic"
+            type="button"
+            className={`coach-mic-btn coach-mic-btn--${voiceState.inputState}`}
+            onClick={handleToggleMic}
+            disabled={isThinking}
+            aria-label={voiceState.inputState === 'listening' ? t.coach_voice_stop_mic : t.coach_voice_mic_button}
+            title={voiceState.inputState === 'listening' ? t.coach_voice_stop_mic : t.coach_voice_mic_button}
+          >
+            <span className="coach-mic-icon" aria-hidden="true">
+              {voiceState.inputState === 'listening' ? '⏹' : '🎙️'}
+            </span>
+          </button>
           <textarea
             ref={textareaRef}
             id="coach-input"

@@ -1676,6 +1676,17 @@ export const nl: Translations = {
 
   // ── Phase 36: Real AI Gateway & Error UX ──
   coach_error_generic: 'Ik kon dat nu niet verwerken. Probeer het opnieuw.',
+
+  // ── Phase 38A: SDA Voice Coach ──
+  coach_voice_mic_button: 'Spraakinvoer (Microfoon)',
+  coach_voice_listening: 'Luisteren... spreek nu',
+  coach_voice_processing: 'Spraak verwerken...',
+  coach_voice_stop_mic: 'Stoppen met luisteren',
+  coach_voice_listen_response: 'Luisteren',
+  coach_voice_stop_response: 'Stoppen',
+  coach_voice_motivation_button: 'Gesproken Motivatie',
+  coach_voice_advice_button: 'Gesproken Advies',
+  coach_voice_error_mic: 'Microfoonfout. Je kunt in plaats daarvan typen.',
 };
 
 

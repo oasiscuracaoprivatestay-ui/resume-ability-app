@@ -719,7 +719,13 @@ export async function handleCoachGatewayRequest(
 
   try {
     // 3. Build comprehensive Grounding Pack & system instructions
-    const pack = buildSDAGroundingPack(dto.message, dto.context, dto.language, dto.conversationHistory);
+    const pack = buildSDAGroundingPack(
+      dto.message,
+      dto.context,
+      dto.language,
+      dto.conversationHistory,
+      dto.responseModality || 'text'
+    );
     const instructions = compileSDASystemPrompt(pack, dto.language);
 
     // 4. Call AI provider with native multi-turn history

@@ -235,6 +235,7 @@ export interface SDAGroundingPack {
   scenarioGuidance?: string;
   knowledgeGap?: KnowledgeGap | null;
   mutationPolicy: 'preview_only';
+  responseModality?: 'text' | 'voice' | 'text_and_voice';
 }
 
 // ── Client → Server Wire Protocol ─────────────────────────────────────────────
@@ -249,6 +250,7 @@ export interface CoachGatewayRequestDTO {
   language: 'en' | 'es' | 'nl';
   context: CoachContext;
   conversationHistory: SerializedChatMessage[];
+  responseModality?: 'text' | 'voice' | 'text_and_voice';
 }
 
 export interface AICoachingPayload {

@@ -1583,6 +1583,17 @@ export interface Translations {
 
   // ── Phase 36: Real AI Gateway & Error UX ──
   coach_error_generic: string;
+
+  // ── Phase 38A: SDA Voice Coach ──
+  coach_voice_mic_button: string;
+  coach_voice_listening: string;
+  coach_voice_processing: string;
+  coach_voice_stop_mic: string;
+  coach_voice_listen_response: string;
+  coach_voice_stop_response: string;
+  coach_voice_motivation_button: string;
+  coach_voice_advice_button: string;
+  coach_voice_error_mic: string;
 }
 
 

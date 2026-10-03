@@ -15,3 +15,4 @@ export * from './localCoachProvider';
 export * from './coachEngine';
 export * from './knowledge';
 export * from './remote';
+export * from './voice';
