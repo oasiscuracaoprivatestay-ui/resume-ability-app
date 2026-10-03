@@ -34,6 +34,7 @@ import SoundHapticsScreen from './screens/SoundHapticsScreen';
 import { MyCommitmentsScreen } from './screens/MyCommitmentsScreen';
 import { MySlipperyZonesScreen } from './screens/MySlipperyZonesScreen';
 import CoachScreen from './screens/CoachScreen';
+import { ChallengesScreen } from './screens/ChallengesScreen';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
@@ -795,6 +796,10 @@ export default function App() {
 
     case 'coach':
       content = <CoachScreen onNavigate={navigate} onBack={goBack} />;
+      break;
+
+    case 'challenges':
+      content = <ChallengesScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     default:

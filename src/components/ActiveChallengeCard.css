@@ -1,0 +1,196 @@
+/**
+ * SDA Ability Challenges System — Active Challenge Card Styles
+ */
+
+.challenge-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(20, 26, 38, 0.95), rgba(12, 17, 27, 0.98));
+  border: 1px solid rgba(50, 180, 160, 0.25);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.challenge-card:hover {
+  border-color: rgba(50, 180, 160, 0.45);
+}
+
+.challenge-card--entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: rgba(70, 90, 120, 0.3);
+}
+
+.challenge-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.challenge-card-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.challenge-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.challenge-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.02em;
+}
+
+.challenge-card-sub {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.challenge-card-cta,
+.challenge-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(30, 45, 65, 0.6);
+  border: 1px solid rgba(50, 180, 160, 0.3);
+  border-radius: 10px;
+  color: #38bdf8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.challenge-card-cta:hover,
+.challenge-card-btn:hover {
+  background: rgba(50, 180, 160, 0.15);
+  border-color: rgba(50, 180, 160, 0.55);
+  color: #2dd4bf;
+}
+
+.challenge-card-arrow {
+  transition: transform 0.2s ease;
+}
+
+.challenge-card-cta:hover .challenge-card-arrow,
+.challenge-card-btn:hover .challenge-card-arrow {
+  transform: translateX(3px);
+}
+
+/* Active challenge styling */
+.challenge-card--active {
+  border-color: rgba(45, 212, 191, 0.4);
+  background: linear-gradient(135deg, rgba(16, 28, 42, 0.95), rgba(10, 18, 30, 0.98));
+}
+
+.challenge-card-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.challenge-card-ability-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2dd4bf;
+}
+
+.challenge-card-days-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(45, 212, 191, 0.15);
+  color: #5eead4;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+}
+
+.challenge-card-status-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.challenge-card-day-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.challenge-card-remaining {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Dots visualizer */
+.challenge-card-dots {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.challenge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.challenge-dot--past {
+  background: #0ea5e9;
+  border: 1px solid #38bdf8;
+}
+
+.challenge-dot--current {
+  background: #2dd4bf;
+  border: 2px solid #99f6e4;
+  box-shadow: 0 0 8px rgba(45, 212, 191, 0.6);
+  transform: scale(1.15);
+}
+
+.challenge-dot--upcoming {
+  background: transparent;
+  border: 1.5px solid rgba(148, 163, 184, 0.35);
+}
+
+.challenge-dot--resumed {
+  background: #10b981;
+  border: 1.5px solid #34d399;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.45);
+}
+
+.challenge-card-stats-row {
+  margin-bottom: 14px;
+}
+
+.challenge-card-stat {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}

@@ -14,12 +14,14 @@ import type {
   SDACoachingMode,
   SDAGroundingPack,
   SerializedChatMessage,
+  SDAGroundedKnowledgeTrace,
 } from './types.js';
 import {
   SDA_PRINCIPLES,
   SDA_TERMINOLOGY,
   checkKnowledgeGap,
 } from './knowledge.js';
+import { retrieveSDAKnowledge } from '../../src/coach/knowledge/retrieval/sdaRetrievalEngine.js';
 
 /**
  * Builds the comprehensive SDAGroundingPack for a user turn.
@@ -300,6 +302,9 @@ export function buildSDAGroundingPack(
     `Saved Non-Negotiables: ${safeContext.nonNegotiables.length > 0 ? safeContext.nonNegotiables.join(' | ') : 'None saved'}`,
     `Saved Slippery Zones: ${safeContext.zones.length > 0 ? safeContext.zones.join(', ') : 'None saved'}`,
     `Structured Diet: ${safeContext.structuredDietActive ? `Active (${safeContext.structuredDietBlocks} planned blocks)` : 'No plan active'}`,
+    context.challenge?.hasActiveChallenge && context.challenge.activeChallenge
+      ? `Active Challenge: Day ${context.challenge.activeChallenge.currentDay} of ${context.challenge.activeChallenge.durationDays}-Day Resume-Ability Challenge (${context.challenge.activeChallenge.daysRemaining} days remaining, ${context.challenge.activeChallenge.resumedSlips}/${context.challenge.activeChallenge.eligibleSlips} resumed, Resume Rate: ${context.challenge.activeChallenge.resumeRate !== null ? `${context.challenge.activeChallenge.resumeRate}%` : 'No slips yet'})`
+      : 'Active Challenge: None currently active',
   ];
 
   const coachObservations: string[] = [
@@ -316,6 +321,8 @@ export function buildSDAGroundingPack(
   // 6. Prohibited Assumptions
   const prohibitedAssumptions = [
     'NEVER say "you failed", "you cheated", "you ruined your diet", or tell the user to wait until tomorrow.',
+    'NEVER describe a slip as failing a challenge; Resume-Ability challenges exist to practice recovery and consistency, not perfection.',
+    'NEVER create, cancel, or modify challenges through AI; challenge actions are strictly user-managed in the UI.',
     'NEVER assume a slip was resumed unless the user explicitly reported recovery.',
     'NEVER assume an urge or feeling of losing control is a completed slip.',
     'NEVER state that a Slippery Zone caused a slip as a proven objective fact.',
@@ -324,8 +331,70 @@ export function buildSDAGroundingPack(
     'NEVER prescribe calories, macros, or restrictive meal plans.',
     'NEVER tell the user to consume "20% healthy carbs" or reinterpret "20% OFF TRACK" as a carbohydrate percentage or macronutrient ratio.',
     'NEVER convert the 80/20 lifestyle flexibility principle into a nutritional carbohydrate quota or personalized macro target.',
+    'Active vs Locked Ability Guardrail: NEVER claim or imply that challenges for Loss-Maintenance Ability, Appetite-Fix Ability, Insulin-Aware Ability, Keto-Switching Ability, Circadian Eating Ability, or Micro-Fasting Ability are currently active or available to start in the app. Currently, ONLY Resume-Ability has an active challenge. The other six abilities are foundational SDA concepts available for educational guidance and future release.',
+    'Quote and Attribution Authenticity Guardrail: NEVER invent verbatim direct quotes attributed to Sergio Laurant or use quotation marks around phrases not directly verified from the seven canonical manuscript books. Express core SDA principles faithfully in the Coach\'s own voice as guidance rather than fabricated author quotes.',
+    'Health and Safety Guardrail: NEVER clear a user medically or diagnose medical conditions; an app can say NO to a target, but can NEVER clear a user medically. Extended fasting is contraindicated for pregnancy, nursing, history of eating disorders, or uncontrolled diabetes.',
     'NEVER claim an action was written or score points awarded prior to user confirmation.',
     'NEVER override medical safety, prescription requirements, or fasting stop rules.',
+  ];
+
+  // 5. Dynamic Knowledge Retrieval from 176-Chapter Corpus
+  const retrievalResult = retrieveSDAKnowledge({
+    rawText: message,
+    abilityId: context?.challenge?.activeChallenge?.abilityId ? 'resume_ability' : undefined,
+    intent: isSlip ? 'LOG_SLIP' : (isFoodLogging ? 'LOG_FOOD' : undefined),
+    slipContext: isSlip,
+    resumeContext: Boolean(ctxAny?.lastSlipResumed),
+    challengeContext: context?.challenge?.hasActiveChallenge
+      ? {
+          active: true,
+          currentDay: context.challenge.activeChallenge?.currentDay,
+          durationDays: context.challenge.activeChallenge?.durationDays,
+        }
+      : undefined,
+    limit: 3,
+  });
+
+  const groundedKnowledgeUnits: SDAGroundedKnowledgeTrace[] = retrievalResult.units.map((u) => ({
+    id: u.id,
+    sourceType: 'sergio-manuscript' as const,
+    bookNumber: u.bookNumber,
+    chapter: u.chapter,
+    chapterTitle: u.chapterTitle,
+    abilityId: u.abilityId,
+    topic: u.topicTags.join(', '),
+    concepts: u.concepts,
+    summarySnippet: u.content.slice(0, 160),
+    authorityLevel: 'primary-doctrine' as const,
+  }));
+
+  const groundedKnowledgeIds = retrievalResult.units.map((u) => u.id);
+
+  const activeConflicts = [
+    {
+      conflictId: 'conflict_80_20_vs_20_percent_off_track',
+      domain: 'app_product_behavior',
+      governingAuthority: 'sergio-direct-instruction',
+      doctrinalMeaning: '80/20 represents lifestyle consistency (80% structured foundation, 20% flexibility zone for real-life events). It has zero connection to carbs or macronutrient percentages.',
+      appProductBehavior: '20% OFF TRACK is an On-Track meal outcome (+5 pts), strictly not a slip.',
+      resolutionPolicy: 'For doctrine/concepts, Sergio manuscripts govern. For in-app logging and score calculation, Sergio direct instructions govern. Never describe 20% OFF TRACK as 20% carbs.',
+    },
+    {
+      conflictId: 'conflict_resume_ability_challenge_durations',
+      domain: 'app_product_behavior',
+      governingAuthority: 'sergio-direct-instruction',
+      doctrinalMeaning: 'Book 1 describes 5 developmental levels of Resume-Ability as lifelong recovery habits without fixed day limits.',
+      appProductBehavior: 'Sergio direct instruction provides 1, 3, 7, 30, and 90 day challenges in the app.',
+      resolutionPolicy: 'Resume-Ability is practiced through discrete challenge durations without altering its foundational nature.',
+    },
+    {
+      conflictId: 'conflict_slip_types_manuscript_vs_operational',
+      domain: 'doctrine_and_concepts',
+      governingAuthority: 'sergio-manuscript',
+      doctrinalMeaning: 'Book 1 Chapter 5 defines 5 behavioral slip types: Timing Slip, Impulse Eating Slip, Hunger Misinterpretation Slip, Portion Slip, Structure Slip.',
+      appProductBehavior: 'App operational store tracks structured_slip vs unstructured_slip based on active blocks.',
+      resolutionPolicy: 'In coaching reflection, the 5 manuscript slip types govern root-cause diagnosis. In app data storage, operational classifications govern.',
+    },
   ];
 
   return {
@@ -343,6 +412,9 @@ export function buildSDAGroundingPack(
     knowledgeGap: null,
     mutationPolicy: 'preview_only',
     responseModality,
+    groundedKnowledgeUnits,
+    groundedKnowledgeIds,
+    activeConflicts,
   };
 }
 

@@ -21,6 +21,7 @@ import type {
   CoachContextSlipperyZones,
   CoachContextProgression,
   CoachContextStructuredDiet,
+  CoachContextChallenge,
 } from './types';
 import { ACTIVE_ABILITY_ID } from './types';
 import { getLocalDateKey, loadWeeklyDiet, getDayPlanForDate } from '../utils/dietStorage';
@@ -31,6 +32,7 @@ import { loadSlipperyZones } from '../utils/slipperyZonesStorage';
 import { getTodayCheckIns, getLatestCheckIn } from '../utils/checkInStorage';
 import { getTodayDietVerification } from '../utils/dietVerificationStorage';
 import { getFoodCategoryStats } from '../utils/dietStructureAnalytics';
+import { getActiveChallenge, deriveChallengeProgress } from '../challenges';
 
 /**
  * Builds the normalized, read-only CoachContext for the current user state.
@@ -210,6 +212,39 @@ export function buildCoachContext(dateKey = getLocalDateKey()): CoachContext {
     // Safe defaults
   }
 
+  // ── 6. Ability Challenge Status (Phase 37: Read-Only) ──────────────────────
+  let challengeContext: CoachContextChallenge = {
+    hasActiveChallenge: false,
+  };
+
+  try {
+    const rawActive = getActiveChallenge();
+    if (rawActive && rawActive.status === 'active') {
+      const active = deriveChallengeProgress(rawActive, dateKey);
+      if (active.status === 'active') {
+        challengeContext = {
+          hasActiveChallenge: true,
+          activeChallenge: {
+            id: active.id,
+            abilityId: active.abilityId,
+            challengeType: active.challengeType,
+            durationDays: active.durationDays,
+            currentDay: active.currentDay,
+            daysRemaining: active.daysRemaining,
+            startDate: active.startDate,
+            endDate: active.endDate,
+            status: active.status,
+            eligibleSlips: active.relevantEventCounts.eligibleSlips,
+            resumedSlips: active.relevantEventCounts.resumedSlips,
+            resumeRate: active.relevantEventCounts.resumeRate,
+          },
+        };
+      }
+    }
+  } catch {
+    // Safe defaults
+  }
+
   return {
     ability: ACTIVE_ABILITY_ID,
     dateKey,
@@ -218,5 +253,6 @@ export function buildCoachContext(dateKey = getLocalDateKey()): CoachContext {
     slipperyZones,
     progression,
     structuredDiet,
+    challenge: challengeContext,
   };
 }

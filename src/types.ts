@@ -32,7 +32,8 @@ export type Screen =
   | 'daily-review'
   | 'my-commitments'
   | 'my-slippery-zones'
-  | 'coach';
+  | 'coach'
+  | 'challenges';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';

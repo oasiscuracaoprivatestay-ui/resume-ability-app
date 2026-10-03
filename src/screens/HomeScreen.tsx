@@ -3,6 +3,7 @@ import { useTranslation } from '../i18n';
 import { PROGRAM_URL, FEEDBACK_EMAIL, FEEDBACK_SUBJECT } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
 import GlobalScoreBadge from '../components/GlobalScoreBadge';
+import { ActiveChallengeCard } from '../components/ActiveChallengeCard';
 import './HomeScreen.css';
 
 interface HomeScreenProps {
@@ -155,6 +156,9 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             </div>
             <span className="home-btn-chevron" aria-hidden="true">→</span>
           </button>
+
+          {/* ── Ability Challenges Entry / Active Hub (Phase 37) ── */}
+          <ActiveChallengeCard onNavigate={onNavigate} />
 
           {/* ── My Commitments Hub & Shortcuts (Phase 7A) ── */}
           <button

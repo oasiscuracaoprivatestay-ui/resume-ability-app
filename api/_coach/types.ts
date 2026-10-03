@@ -205,6 +205,23 @@ export interface CoachContext {
     todayPlannedCount: number;
     nextPlannedMealTime?: string;
   };
+  challenge?: {
+    hasActiveChallenge: boolean;
+    activeChallenge?: {
+      id: string;
+      abilityId: string;
+      challengeType: string;
+      durationDays: number;
+      currentDay: number;
+      daysRemaining: number;
+      startDate: string;
+      endDate: string;
+      status: 'active' | 'completed' | 'cancelled';
+      eligibleSlips: number;
+      resumedSlips: number;
+      resumeRate: number | null;
+    };
+  };
 }
 
 export interface SDAGroundingPack {
@@ -236,6 +253,41 @@ export interface SDAGroundingPack {
   knowledgeGap?: KnowledgeGap | null;
   mutationPolicy: 'preview_only';
   responseModality?: 'text' | 'voice' | 'text_and_voice';
+  groundedKnowledgeUnits?: SDAGroundedKnowledgeTrace[];
+  groundedKnowledgeIds?: string[];
+  activeConflicts?: Array<{
+    conflictId: string;
+    domain: string;
+    governingAuthority: string;
+    doctrinalMeaning: string;
+    appProductBehavior: string;
+    resolutionPolicy: string;
+  }>;
+}
+
+export type SDAKnowledgeSourceType =
+  | 'sergio-manuscript'
+  | 'sergio-direct-instruction'
+  | 'app-operational'
+  | 'developer-normalization';
+
+export type SDAAuthorityLevel =
+  | 'primary-doctrine'
+  | 'product-directive'
+  | 'operational-schema'
+  | 'developer-normalization';
+
+export interface SDAGroundedKnowledgeTrace {
+  id: string;
+  sourceType: SDAKnowledgeSourceType;
+  bookNumber?: number;
+  chapter?: number;
+  chapterTitle?: string;
+  abilityId: string;
+  topic?: string;
+  concepts?: string[];
+  summarySnippet?: string;
+  authorityLevel?: SDAAuthorityLevel;
 }
 
 // ── Client → Server Wire Protocol ─────────────────────────────────────────────
@@ -305,6 +357,14 @@ export interface AIResponseEnvelope {
   knowledgeGap?: KnowledgeGap;
   fallbackUsed?: boolean;
   diagnostics?: GatewayDiagnostics;
+  groundingTrace?: {
+    groundedKnowledgeIds: string[];
+    sourceTypes: SDAKnowledgeSourceType[];
+    books: number[];
+    chapters: number[];
+    abilities: string[];
+    topics: string[];
+  };
 }
 
 // ── Model IO & Config ─────────────────────────────────────────────────────────

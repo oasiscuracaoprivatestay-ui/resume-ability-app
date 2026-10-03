@@ -169,12 +169,59 @@ export function retrieveSDAKnowledge(query: RetrievalQuery): RetrievalResult {
 
   const scoredUnits: ScoredUnit[] = [];
 
+  const isSlipIntent =
+    Boolean(query.slipContext) ||
+    query.intent === 'LOG_SLIP' ||
+    rawLower.includes('slip') ||
+    rawLower.includes('slipped') ||
+    rawLower.includes('fell off');
+
+  const isResumeIntent =
+    Boolean(query.resumeContext) ||
+    query.intent === 'LOG_RESUME' ||
+    rawLower.includes('resume') ||
+    rawLower.includes('resuming') ||
+    rawLower.includes('recommit');
+
+  const isBreakdownQuery =
+    rawLower.includes('break down') ||
+    rawLower.includes('breakdown') ||
+    rawLower.includes('recovery sequence') ||
+    rawLower.includes('order of abilities');
+
+  const isSlipTaxonomyQuery =
+    rawLower.includes('five types of slips') ||
+    rawLower.includes('5 types of slips') ||
+    rawLower.includes('types of slip') ||
+    rawLower.includes('what are my slips');
+
   for (const unit of ALL_SDA_KNOWLEDGE_UNITS) {
     let score = 0;
 
-    // Safety priority boost
+    // Safety priority boost (highest priority)
     if (matchedSafety.length > 0 && unit.safetyClassification === 'safety_boundary') {
-      score += 100;
+      score += 150;
+    }
+
+    // Specific landmark chapters
+    if (isBreakdownQuery && unit.bookNumber === 1 && unit.chapter === 22) {
+      score += 120;
+    }
+    if (isSlipTaxonomyQuery && unit.bookNumber === 1 && unit.chapter === 5) {
+      score += 120;
+    }
+
+    // Slip/Resume intent priority (Book 1 Resume-Ability is the core foundation)
+    if ((isSlipIntent || isResumeIntent) && unit.bookNumber === 1) {
+      score += 45;
+      if (unit.chapter === 3 || unit.chapter === 5 || unit.chapter === 11 || unit.chapter === 14) {
+        score += 25;
+      }
+    }
+
+    // Challenge context boost
+    if (query.challengeContext?.active && unit.bookNumber === 1) {
+      score += 15;
     }
 
     // Chapter title matching
@@ -184,7 +231,7 @@ export function retrieveSDAKnowledge(query: RetrievalQuery): RetrievalResult {
 
     // Direct ability match
     if (matchedAbilities.has(unit.abilityId as CanonicalDietAbilityId)) {
-      score += 20;
+      score += 25;
     }
 
     // Related abilities match

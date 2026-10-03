@@ -143,6 +143,24 @@ export interface CoachContextStructuredDiet {
   nextPlannedMealTime?: string;
 }
 
+export interface CoachContextChallenge {
+  hasActiveChallenge: boolean;
+  activeChallenge?: {
+    id: string;
+    abilityId: string;
+    challengeType: string;
+    durationDays: number;
+    currentDay: number;
+    daysRemaining: number;
+    startDate: string;
+    endDate: string;
+    status: 'active' | 'completed' | 'cancelled';
+    eligibleSlips: number;
+    resumedSlips: number;
+    resumeRate: number | null;
+  };
+}
+
 export interface CoachContext {
   ability: AbilityId;
   dateKey: string;
@@ -151,6 +169,7 @@ export interface CoachContext {
   slipperyZones: CoachContextSlipperyZones;
   progression: CoachContextProgression;
   structuredDiet: CoachContextStructuredDiet;
+  challenge?: CoachContextChallenge;
 }
 
 // ── Structured Understanding Model (Phase 34) ───────────────────────────────

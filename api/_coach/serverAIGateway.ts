@@ -748,6 +748,17 @@ export async function handleCoachGatewayRequest(
     envelope.fallbackUsed = false;
     envelope.diagnostics = diagnostics;
 
+    if (pack.groundedKnowledgeUnits && pack.groundedKnowledgeUnits.length > 0) {
+      envelope.groundingTrace = {
+        groundedKnowledgeIds: pack.groundedKnowledgeIds || [],
+        sourceTypes: pack.groundedKnowledgeUnits.map((u) => u.sourceType),
+        books: pack.groundedKnowledgeUnits.map((u) => u.bookNumber).filter(Boolean) as number[],
+        chapters: pack.groundedKnowledgeUnits.map((u) => u.chapter).filter(Boolean) as number[],
+        abilities: pack.groundedKnowledgeUnits.map((u) => u.abilityId),
+        topics: pack.groundedKnowledgeUnits.map((u) => u.topic || ''),
+      };
+    }
+
     // Minimal safe production log on success (NO PROMPT, NO USER TEXT, NO SECRETS)
     console.log(
       `[SDA_COACH_REMOTE] provider=${diagnostics.provider} httpOk=true status=${diagnostics.providerHttpStatus} parsed=true valid=true fallback=false mode=${diagnostics.coachingMode}`

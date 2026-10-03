@@ -1,8 +1,13 @@
 /**
- * Canonical Seven Diet-Abilities Registry (Phase 36B)
+ * Canonical Seven Diet-Abilities Registry (Phase 36B / Phase 38)
  *
  * Source: The Seven Authoritative Sergio Laurant Super Diet-Ability Manuscripts.
  * Domain: 'diet' within the broader Super Ability architecture.
+ *
+ * Authority Model (Phase 38):
+ * - All Seven Abilities are grounded in Authoritative Sergio Laurant Manuscripts (Category A).
+ * - Only Resume-Ability currently has an active, operational in-app challenge.
+ * - Remaining six abilities are conceptual guidance and doctrine-only until specifically implemented.
  */
 
 import type { CanonicalAbilityDefinition, CanonicalDietAbilityId } from '../types';
@@ -41,6 +46,12 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       micro_fasting_ability: 'Micro-Fasting provides the progressive time containers used to bridge back after slips.',
     },
     sourceBookFile: 'SDA_Book_01_Resume-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'active_challenge',
+    coachingAvailability: 'full_coaching',
+    breakdownOrder: 7, // Final failure point
+    recoveryOrder: 1,  // Rebuilt first: foundation of all recovery
   },
 
   loss_maintenance_ability: {
@@ -75,6 +86,12 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       micro_fasting_ability: 'Fasting intervals provide strategic maintenance tools when used with proper readiness.',
     },
     sourceBookFile: 'SDA_Book_02_Loss-Maintenance-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 6,
+    recoveryOrder: 2,
   },
 
   appetite_fix_ability: {
@@ -109,6 +126,12 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       micro_fasting_ability: 'You cannot safely micro-fast until physical hunger is distinguishable from cravings.',
     },
     sourceBookFile: 'SDA_Book_03_Appetite-Fix-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 5,
+    recoveryOrder: 3,
   },
 
   insulin_aware_ability: {
@@ -139,10 +162,16 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       loss_maintenance_ability: 'Insulin sensitivity is a cornerstone of long-term metabolic health and fat loss defense.',
       appetite_fix_ability: 'Preventing sharp insulin spikes directly resolves the ravenous hunger roller coaster.',
       keto_switching_ability: 'Lowering baseline insulin is the physiological prerequisite for opening the keto switch.',
-      circadian_eating_ability: 'Insulin sensitivity is naturally higher earlier in the day and drops significantly at night.',
+      circadian_eating_ability: 'Insulin sensitivity is naturally higher earlier in the day and drops sharply as melatonin rises.',
       micro_fasting_ability: 'Metabolic pauses are the entry-level blocks that build toward micro-fasting.',
     },
     sourceBookFile: 'SDA_Book_04_Insulin-Aware-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 4,
+    recoveryOrder: 4,
   },
 
   keto_switching_ability: {
@@ -177,6 +206,12 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       micro_fasting_ability: 'Keto-switching capability is the biological engine that makes micro-fasting comfortable.',
     },
     sourceBookFile: 'SDA_Book_05_Keto-Switching-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 3,
+    recoveryOrder: 5,
   },
 
   circadian_eating_ability: {
@@ -212,6 +247,12 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       micro_fasting_ability: 'Micro-fasting is built directly upon the foundation of the circadian overnight gap.',
     },
     sourceBookFile: 'SDA_Book_06_Circadian-Eating-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 2,
+    recoveryOrder: 6,
   },
 
   micro_fasting_ability: {
@@ -250,8 +291,44 @@ export const CANONICAL_SEVEN_DIET_ABILITIES: Record<CanonicalDietAbilityId, Cano
       circadian_eating_ability: 'Micro-fasts must be aligned with circadian rhythms rather than distorting them.',
     },
     sourceBookFile: 'SDA_Book_07_Micro-Fasting-Ability.docx',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+    appFeatureStatus: 'locked_future_ability',
+    coachingAvailability: 'conceptual_guidance',
+    breakdownOrder: 1, // First to break
+    recoveryOrder: 7,  // Final culmination of mastery
   },
 };
+
+/**
+ * Authoritative Breakdown Sequence from Sergio Laurant (Book 1, Chapter 22):
+ * When diet discipline erodes, abilities break down in this sequential order:
+ * Micro-Fasting -> Circadian -> Keto-Switching -> Insulin-Aware -> Appetite-Fix -> Loss-Maintenance -> Resume-Ability
+ */
+export const MANUSCRIPT_BREAKDOWN_SEQUENCE: CanonicalDietAbilityId[] = [
+  'micro_fasting_ability',
+  'circadian_eating_ability',
+  'keto_switching_ability',
+  'insulin_aware_ability',
+  'appetite_fix_ability',
+  'loss_maintenance_ability',
+  'resume_ability',
+];
+
+/**
+ * Authoritative Recovery Sequence from Sergio Laurant (Book 1, Chapter 22):
+ * When rebuilding after disruption, restore abilities in this sequential order:
+ * Resume-Ability -> Loss-Maintenance -> Appetite-Fix -> Insulin-Aware -> Keto-Switching -> Circadian -> Micro-Fasting
+ */
+export const MANUSCRIPT_RECOVERY_SEQUENCE: CanonicalDietAbilityId[] = [
+  'resume_ability',
+  'loss_maintenance_ability',
+  'appetite_fix_ability',
+  'insulin_aware_ability',
+  'keto_switching_ability',
+  'circadian_eating_ability',
+  'micro_fasting_ability',
+];
 
 /**
  * Super Ability Ecosystem mapping

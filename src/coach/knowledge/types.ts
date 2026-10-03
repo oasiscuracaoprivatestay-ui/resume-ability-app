@@ -19,7 +19,25 @@ export type KnowledgeAuthority =
   | 'general_model';        // General model knowledge (language only, not SDA rules)
 
 /**
- * Phase 36B.1 Strict Source Authority Taxonomy
+ * Phase 38 Formal Knowledge Source Type
+ */
+export type SDAKnowledgeSourceType =
+  | 'sergio-manuscript'          // Authoritative text of Books 1 through 7
+  | 'sergio-direct-instruction'  // Direct instructions from Sergio Laurant for app behavior/scoring/features
+  | 'app-operational'            // App runtime schemas, local storage mechanics, data models
+  | 'developer-normalization';   // Inferred/derived formatting, lowest authority
+
+/**
+ * Phase 38 Explicit Authority Policy Hierarchy
+ */
+export type SDAAuthorityLevel =
+  | 'primary-doctrine'       // Primary authority for SDA doctrine, philosophy, and terminology
+  | 'product-directive'      // Primary authority for app UX, logging, scoring, and operational features
+  | 'operational-schema'     // Authority for internal state, data structures, and tech implementations
+  | 'developer-normalization';// Lowest authority: formatting, UI slugs, technical defaults
+
+/**
+ * Phase 36B.1 Strict Source Authority Taxonomy (preserved for backward compatibility)
  */
 export type SourceAuthority =
   | 'MANUSCRIPT_EXPLICIT'   // Directly and clearly stated by Sergio Laurant in a manuscript
@@ -38,6 +56,42 @@ export type SafetyClassification =
   | 'standard'              // Normal behavioral coaching
   | 'safety_boundary'       // Safety protocol, health boundary, or medical boundary
   | 'contraindicated';      // Absolute contraindication (e.g. extended fasting with ED/pregnancy)
+
+/**
+ * Phase 38B Domain-Sensitive Authority Classification
+ */
+export type AuthorityDomain =
+  | 'doctrine_and_concepts'   // Philosophy, definitions, recovery principles -> Category A (sergio-manuscript)
+  | 'app_product_behavior'    // In-app scoring, check-in flows, UI buttons, challenge rules -> Category B (sergio-direct-instruction)
+  | 'technical_runtime'       // Local storage, countdown math, offline sync -> Category C (app-operational)
+  | 'developer_normalization';// Convenience aliases, derived slugs -> Category D (developer-normalization)
+
+/**
+ * Phase 38B Knowledge Conflict & Operational Override Specification
+ */
+export interface KnowledgeConflictOverride {
+  conflictId: string;
+  domain: AuthorityDomain;
+  governingAuthority: SDAKnowledgeSourceType;
+  governingSource: string;
+  underlyingDoctrinalSource?: string;
+  conceptName: string;
+  doctrinalMeaning: string;
+  appProductBehavior: string;
+  resolutionPolicy: string;
+  effectiveFor: string;
+  conflictStatus: 'resolved_operational_override' | 'harmonized_derivation' | 'doctrine_preserved';
+}
+
+export type HealthSafetyCategory =
+  | 'behavioral'            // Purely behavioral / psychological / habit coaching
+  | 'metabolic_concept'     // Physiological / metabolic explanation within SDA framework
+  | 'safety_critical';      // Medical boundary, contraindication, or emergency stop rule
+
+export type HealthClaimType =
+  | 'sda_framework_guidance'        // Guidance from Sergio's manuscript books; educational framework
+  | 'conservative_stop_rule'        // Precautionary behavioral stop rule
+  | 'app_boundary';                 // Boundary where app refuses unsafe target but never medically clears
 
 export type AppFeatureStatus =
   | 'APP_CURRENT'           // Implemented, working in the current application
@@ -68,6 +122,12 @@ export interface CanonicalAbilityDefinition {
   keyNonNegotiables: string[];
   relationshipsWithOtherAbilities: Record<string, string>;
   sourceBookFile: string;
+  sourceType?: SDAKnowledgeSourceType;
+  authorityLevel?: SDAAuthorityLevel;
+  appFeatureStatus?: 'active_challenge' | 'doctrine_only' | 'locked_future_ability';
+  coachingAvailability?: 'full_coaching' | 'conceptual_guidance';
+  breakdownOrder?: number;      // 1 (first to break) to 7 (last to break)
+  recoveryOrder?: number;       // 1 (first to rebuild) to 7 (last to rebuild)
 }
 
 // ── Granular Knowledge Unit ──────────────────────────────────────────────────
@@ -90,6 +150,16 @@ export interface SDAKnowledgeUnit {
   sourceRef: string;
   authority: KnowledgeAuthority;
   sourceAuthority?: SourceAuthority; // Phase 36B.1: MANUSCRIPT_EXPLICIT | MANUSCRIPT_DERIVED | etc.
+  sourceType?: SDAKnowledgeSourceType; // Phase 38 provenance model
+  authorityLevel?: SDAAuthorityLevel;   // Phase 38 authority hierarchy
+  sourceDocument?: string;
+  sourceBook?: number;
+  sourceChapter?: string | number;
+  sourceSection?: string;
+  verificationStatus?: 'verified' | 'provisional' | 'deprecated';
+  healthSafetyCategory?: HealthSafetyCategory;
+  safetyNotes?: string;
+  lastReviewed?: string;
   safetyClassification: SafetyClassification;
   relatedAbilities: CanonicalDietAbilityId[];
   relatedAppFeatures: string[];
@@ -103,6 +173,8 @@ export interface AppKnowledgeUnit {
   name: string;
   status: AppFeatureStatus;
   sourceAuthority?: SourceAuthority; // Phase 36B.1: APP_EXPLICIT | RESERVED
+  sourceType?: SDAKnowledgeSourceType; // Phase 38 provenance model
+  authorityLevel?: SDAAuthorityLevel;   // Phase 38 authority hierarchy
   screen?: string;
   description: string;
   userActions: string[];
@@ -155,6 +227,11 @@ export type SDATermKey =
   | 'near_slip'
   | 'structured_slip'
   | 'unstructured_slip'
+  | 'timing_slip'
+  | 'impulse_slip'
+  | 'hunger_misinterpretation_slip'
+  | 'portion_slip'
+  | 'structure_slip'
   | 'planned_unstructured'
   | 'twenty_percent_off_track'
   | 'resume'
@@ -189,9 +266,12 @@ export interface SDATerm {
   shortDefinition: string;
   fullExplanation?: string;
   relatedTerms: SDATermKey[];
-  status: KnowledgeStatus;
+  status: KnowledgeStatus | 'deprecated';
   sourceRef: string;
   authority?: KnowledgeAuthority;
+  sourceType?: SDAKnowledgeSourceType;
+  authorityLevel?: SDAAuthorityLevel;
+  canonicalAliasFor?: SDATermKey;
 }
 
 // ── Core Methodology Principles ──────────────────────────────────────────────
@@ -325,6 +405,13 @@ export interface RetrievalQuery {
   topicTags?: string[];
   appFeature?: string;
   includeSafety?: boolean;
+  slipContext?: boolean;
+  resumeContext?: boolean;
+  challengeContext?: {
+    active: boolean;
+    currentDay?: number;
+    durationDays?: number;
+  };
   limit?: number;
 }
 

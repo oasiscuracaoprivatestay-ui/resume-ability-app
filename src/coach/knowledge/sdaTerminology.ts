@@ -35,27 +35,36 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     fullExplanation: 'Resume-Ability is the foundational superpower in the SDA system. It shifts focus from avoiding all mistakes to drastically shortening the time and emotional cost of returning to your plan.',
     relatedTerms: ['super_diet_ability', 'resume', 'structured_slip', 'unstructured_slip'],
     status: 'defined',
-    sourceRef: 'app_terminology:sda_term_ra',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx; app_terminology:sda_term_ra',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
+
 
   appetite_ability: {
     key: 'appetite_ability',
-    displayName: 'Appetite Ability',
-    shortDefinition: 'The capacity to maintain boundaries against social pressure and distinguish emotional urges from physical nourishment.',
-    fullExplanation: 'Partially referenced in coaching data: involves recognizing when food offers from others are emotional or social rituals rather than true appetite requirements.',
-    relatedTerms: ['super_diet_ability', 'delay_ability'],
-    status: 'partial',
-    sourceRef: 'app_data:coaching.ts:people_social',
+    displayName: 'Appetite Ability [Deprecated Alias]',
+    shortDefinition: '[Deprecated alias for Appetite-Fix Ability] Use canonical appetite_fix_ability instead.',
+    fullExplanation: 'Deprecated in Phase 38. The authoritative manuscript audit established that Sergio Laurant\'s canonical name is Appetite-Fix Ability (Book 3). This key is retained strictly as a backward-compatibility alias.',
+    relatedTerms: ['appetite_fix_ability', 'super_diet_ability'],
+    status: 'deprecated',
+    sourceRef: 'app_data:coaching.ts:people_social (legacy)',
+    sourceType: 'developer-normalization',
+    authorityLevel: 'developer-normalization',
+    canonicalAliasFor: 'appetite_fix_ability',
   },
 
   delay_ability: {
     key: 'delay_ability',
-    displayName: 'Delay Ability',
-    shortDefinition: 'The skill of interrupting conditioned urges with a dedicated 15-minute pause before acting.',
-    fullExplanation: 'Partially referenced in coaching data: uses the 15-minute urge container to let dopamine surges settle so decisions are made consciously.',
-    relatedTerms: ['super_diet_ability', 'urge_timer', 'resume_ability'],
-    status: 'partial',
-    sourceRef: 'app_data:coaching.ts:delay',
+    displayName: 'Delay Ability [Deprecated Non-Canonical]',
+    shortDefinition: '[Deprecated non-canonical concept] Not one of Sergio\'s Seven Diet-Abilities. Mapped to The 15-Minute Resume Method.',
+    fullExplanation: 'Deprecated in Phase 38. The manuscript audit confirmed that Delay Ability is not one of Sergio Laurant\'s Seven Diet-Abilities. Its intended behavioral technique is The 15-Minute Resume Method (Book 1 Ch 11) or Metabolic Pauses (Book 4 Ch 13). Retained as an alias to avoid breaking legacy references.',
+    relatedTerms: ['fifteen_minute_resume_method', 'urge_timer', 'resume_ability'],
+    status: 'deprecated',
+    sourceRef: 'app_data:coaching.ts:delay (legacy)',
+    sourceType: 'developer-normalization',
+    authorityLevel: 'developer-normalization',
+    canonicalAliasFor: 'fifteen_minute_resume_method',
   },
 
   structured_diet: {
@@ -109,21 +118,86 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
   structured_slip: {
     key: 'structured_slip',
     displayName: 'Structured Slip',
-    shortDefinition: 'A slip that occurs within a structured day (e.g. eating off-plan foods or outside designated meal windows).',
-    fullExplanation: 'Valuable behavioral data showing where structure met an urge. Followed immediately by the opportunity to Resume.',
+    shortDefinition: 'An app operational record for a slip occurring on an active structured day.',
+    fullExplanation: 'App operational outcome layer: records when a slip occurs within a day where an active Structured Diet baseline is defined. Followed immediately by the opportunity to Resume.',
     relatedTerms: ['unstructured_slip', 'resume', 'slippery_zones'],
     status: 'defined',
     sourceRef: 'app_terminology:sda_term_slip',
+    sourceType: 'app-operational',
+    authorityLevel: 'operational-schema',
   },
 
   unstructured_slip: {
     key: 'unstructured_slip',
     displayName: 'Unstructured Slip',
-    shortDefinition: 'A slip that occurs during an unstructured day or when boundaries are completely absent.',
-    fullExplanation: 'Occurs when structure is dropped or absent. Still fully capable of being resumed as soon as conscious awareness returns.',
+    shortDefinition: 'An app operational record for a slip occurring on an unstructured day.',
+    fullExplanation: 'App operational outcome layer: records when a slip occurs on a day without active meal boundaries or schedule. Still fully capable of being resumed as soon as conscious awareness returns.',
     relatedTerms: ['structured_slip', 'resume'],
     status: 'defined',
     sourceRef: 'app_engine:dietVerificationStorage.ts:unstructured_slip',
+    sourceType: 'app-operational',
+    authorityLevel: 'operational-schema',
+  },
+
+  // ── The Five Manuscript Slip Types (Sergio Laurant, Book 1 Chapter 5) ──────
+  timing_slip: {
+    key: 'timing_slip',
+    displayName: 'Timing Slip',
+    shortDefinition: 'A slip where eating windows quietly expand, meals start too early, or finish too late.',
+    fullExplanation: 'From Sergio Laurant (Book 1 Ch 5): Timing slips feel innocent because they often do not involve dramatic overeating, but they quietly remove the uninterrupted boundaries that metabolic systems need to rest.',
+    relatedTerms: ['structured_slip', 'circadian_eating_ability', 'resume'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx:Chapter_05',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+  },
+
+  impulse_slip: {
+    key: 'impulse_slip',
+    displayName: 'Impulse Eating Slip',
+    shortDefinition: 'A slip where eating happens automatically and almost unconsciously without a deliberate decision.',
+    fullExplanation: 'From Sergio Laurant (Book 1 Ch 5): Impulse eating slips completely bypass conscious intention. Recognizing them requires slowing down the transition moments (e.g. arriving home after work).',
+    relatedTerms: ['structured_slip', 'fifteen_minute_resume_method', 'slippery_zones'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx:Chapter_05',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+  },
+
+  hunger_misinterpretation_slip: {
+    key: 'hunger_misinterpretation_slip',
+    displayName: 'Hunger Misinterpretation Slip',
+    shortDefinition: 'A slip where appetite, emotional cravings, or fatigue are mistaken for genuine biological hunger.',
+    fullExplanation: 'From Sergio Laurant (Book 1 Ch 5): The body actually needed rest, hydration, a change of scenery, or a 10-minute pause, but appetite sent the person to food instead.',
+    relatedTerms: ['structured_slip', 'appetite_fix_ability', 'fifteen_minute_resume_method'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx:Chapter_05',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+  },
+
+  portion_slip: {
+    key: 'portion_slip',
+    displayName: 'Portion Slip',
+    shortDefinition: 'A slip where a meal begins structurally but continues past satiety because food is delicious or stopping feels incomplete.',
+    fullExplanation: 'From Sergio Laurant (Book 1 Ch 5): The meal started On Track, but stopping was delayed. The remedy is establishing definitive meal closures and boundary awareness.',
+    relatedTerms: ['structured_slip', 'keto_switching_ability', 'appetite_fix_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx:Chapter_05',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
+  },
+
+  structure_slip: {
+    key: 'structure_slip',
+    displayName: 'Structure Slip',
+    shortDefinition: 'A quiet, gradual softening of the entire day\'s architecture through grazing and snacking.',
+    fullExplanation: 'From Sergio Laurant (Book 1 Ch 5): The most common and quietest slip. No single dramatic binge, but continuous small caloric drinks, grazing, and unclear boundaries that soften the Structured Diet baseline.',
+    relatedTerms: ['structured_slip', 'loss_maintenance_ability', 'resume_ability'],
+    status: 'defined',
+    sourceRef: 'SDA_Book_01_Resume-Ability.docx:Chapter_05',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   planned_unstructured: {
@@ -134,6 +208,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['twenty_percent_off_track', 'structure', 'planned'],
     status: 'defined',
     sourceRef: 'app_engine:dietVerificationStorage.ts:planned_unstructured',
+    sourceType: 'app-operational',
+    authorityLevel: 'operational-schema',
   },
 
   twenty_percent_off_track: {
@@ -145,6 +221,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['on_track', 'planned_unstructured'],
     status: 'defined',
     sourceRef: 'app_engine:dietVerificationStorage.ts:twenty_percent_off_track; SDA_Book_01:Chapter_13; SDA_Book_02:Chapter_04',
+    sourceType: 'sergio-direct-instruction',
+    authorityLevel: 'product-directive',
   },
 
   resume: {
@@ -223,6 +301,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['food_log'],
     status: 'defined',
     sourceRef: 'app_engine:dietVerificationStorage.ts:Phase31C',
+    sourceType: 'sergio-direct-instruction',
+    authorityLevel: 'product-directive',
   },
 
   food_log: {
@@ -308,15 +388,20 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['super_diet_ability', 'resume_ability', 'structured_diet'],
     status: 'defined',
     sourceRef: 'SDA_Book_02:Chapters_01_02',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   appetite_fix_ability: {
     key: 'appetite_fix_ability',
     displayName: 'Appetite-Fix Ability',
     shortDefinition: 'The capacity to retrain hunger signals, differentiate biological hunger from cravings, and reset the appetite thermostat.',
-    relatedTerms: ['super_diet_ability', 'appetite_ability'],
+    fullExplanation: 'Authoritative Book 3 ability in Super Diet-Ability. Focuses on fixing meal satiety (the Satiety Toolbox: protein, fiber, water volume, chew density) so the spaces between meals can be protected without willpower battles.',
+    relatedTerms: ['super_diet_ability', 'appetite_ability', 'satiety_toolbox'],
     status: 'defined',
-    sourceRef: 'SDA_Book_03:Chapter_01',
+    sourceRef: 'SDA_Book_03_Appetite-Fix-Ability.docx:Chapter_01',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   insulin_aware_ability: {
@@ -326,6 +411,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['super_diet_ability', 'structured_diet'],
     status: 'defined',
     sourceRef: 'SDA_Book_04:Chapter_02',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   keto_switching_ability: {
@@ -335,6 +422,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['super_diet_ability', 'insulin_aware_ability'],
     status: 'defined',
     sourceRef: 'SDA_Book_05:Chapter_02',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   circadian_eating_ability: {
@@ -344,6 +433,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['super_diet_ability', 'micro_fasting_ability'],
     status: 'defined',
     sourceRef: 'SDA_Book_06:Chapter_02',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   micro_fasting_ability: {
@@ -353,6 +444,8 @@ export const SDA_TERMINOLOGY: Record<SDATermKey, SDATerm> = {
     relatedTerms: ['super_diet_ability', 'circadian_eating_ability', 'resume_ability'],
     status: 'defined',
     sourceRef: 'SDA_Book_07:Chapter_01',
+    sourceType: 'sergio-manuscript',
+    authorityLevel: 'primary-doctrine',
   },
 
   restarting_vs_resuming: {
