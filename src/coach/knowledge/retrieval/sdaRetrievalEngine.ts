@@ -27,8 +27,8 @@ import {
   ALL_SDA_KNOWLEDGE_UNITS,
   APP_KNOWLEDGE_UNITS,
   SDA_SAFETY_PROTOCOLS,
-} from '../corpus';
-import { CANONICAL_SEVEN_DIET_ABILITIES } from '../abilities/sevenDietAbilities';
+} from '../corpus/index.js';
+import { CANONICAL_SEVEN_DIET_ABILITIES } from '../abilities/sevenDietAbilities.js';
 
 /**
  * Known unsupported topics that must trigger a KnowledgeGap rather than generic advice.

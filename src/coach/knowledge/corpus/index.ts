@@ -6,15 +6,15 @@
  */
 
 import type { SDAKnowledgeUnit, AppKnowledgeUnit } from '../types';
-import { BOOK_01_RESUME_ABILITY_UNITS } from './book01ResumeAbility';
-import { BOOK_02_LOSS_MAINTENANCE_UNITS } from './book02LossMaintenance';
-import { BOOK_03_APPETITE_FIX_UNITS } from './book03AppetiteFix';
-import { BOOK_04_INSULIN_AWARE_UNITS } from './book04InsulinAware';
-import { BOOK_05_KETO_SWITCHING_UNITS } from './book05KetoSwitching';
-import { BOOK_06_CIRCADIAN_EATING_UNITS } from './book06CircadianEating';
-import { BOOK_07_MICRO_FASTING_UNITS } from './book07MicroFasting';
-import { SAFETY_KNOWLEDGE_UNITS, SDA_SAFETY_PROTOCOLS } from './safetyCorpus';
-import { APP_KNOWLEDGE_UNITS } from './appKnowledgeCorpus';
+import { BOOK_01_RESUME_ABILITY_UNITS } from './book01ResumeAbility.js';
+import { BOOK_02_LOSS_MAINTENANCE_UNITS } from './book02LossMaintenance.js';
+import { BOOK_03_APPETITE_FIX_UNITS } from './book03AppetiteFix.js';
+import { BOOK_04_INSULIN_AWARE_UNITS } from './book04InsulinAware.js';
+import { BOOK_05_KETO_SWITCHING_UNITS } from './book05KetoSwitching.js';
+import { BOOK_06_CIRCADIAN_EATING_UNITS } from './book06CircadianEating.js';
+import { BOOK_07_MICRO_FASTING_UNITS } from './book07MicroFasting.js';
+import { SAFETY_KNOWLEDGE_UNITS, SDA_SAFETY_PROTOCOLS } from './safetyCorpus.js';
+import { APP_KNOWLEDGE_UNITS } from './appKnowledgeCorpus.js';
 
 export {
   BOOK_01_RESUME_ABILITY_UNITS,
