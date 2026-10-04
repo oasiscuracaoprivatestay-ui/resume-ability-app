@@ -499,6 +499,51 @@ export function validateAndReconcileAIResponse(
     }
   }
 
+  // ── Conversational Semantic Reconciliation (Phase 39C.1 — Resume vs Check-In) ─
+  const isResumeIntent = intent === 'LOG_RESUME' ||
+    actionType === 'LOG_RESUME' ||
+    /\b(back on structure|back on track|resumed|resume my slip|resume the slip|resume last slip|resume the latest slip|got back on track|returned to my structure)\b/i.test(rawLower) ||
+    /\b(de vuelta en estructura|volv[ií] a la estructura|retomado|retom[eé]|retomar mi desliz|retomar el desliz)\b/i.test(rawLower) ||
+    /\b(weer op schema|terug op schema|hervat)\b/i.test(rawLower);
+
+  if (isResumeIntent) {
+    // If the LLM confused returning to structure with checking in (e.g. "You've checked in as on-structure")
+    const checkInConfusionPattern = /(?:you(?:'ve| have)?\s+checked\s+in\s+as\s+on[- ]?structure|you(?:'ve| have)?\s+checked\s+in\b|has\s+hecho\s+un\s+check[- ]?in|te\s+has\s+registrado\s+como\s+en\s+estructura|je\s+hebt\s+ingecheckt\s+als\s+op\s+schema)/gi;
+    if (checkInConfusionPattern.test(coachingMsg)) {
+      const RESUME_ACK_REPLACEMENT: Record<'en' | 'es' | 'nl', string> = {
+        en: "You're back on structure. That's Resume-Ability in action.",
+        es: "Estás de vuelta en tu estructura. Eso es Resume-Ability en acción.",
+        nl: "Je bent weer op schema. Dat is Resume-Ability in actie.",
+      };
+      coachingMsg = coachingMsg.replace(checkInConfusionPattern, RESUME_ACK_REPLACEMENT[language] || RESUME_ACK_REPLACEMENT.en);
+    }
+  }
+
+  // ── Pre-Confirmation Persistence Sanitization (Phase 39C.1 — Section 5) ────────
+  // When an action proposal is prepared for user review (requiresConfirmation is true),
+  // conversational AI must NOT claim that the action was already completed, saved, or recorded.
+  if (proposedAction) {
+    const prematureClaims = [
+      // Resume claims
+      { pattern: /(?:your\s+resume\s+has\s+been\s+recorded|tu\s+retorno\s+ha\s+sido\s+registrado|je\s+hervatting\s+is\s+vastgelegd)/gi, replace: language === 'es' ? 'Puedes confirmar este registro de Resume abajo' : (language === 'nl' ? 'Je kunt deze hervatting hieronder bevestigen' : "Review the proposal below to confirm your Resume") },
+      { pattern: /(?:your\s+slip\s+has\s+been\s+marked\s+as\s+resumed|tu\s+desliz\s+ha\s+sido\s+marcado\s+como\s+retomado|je\s+uitglijder\s+is\s+gemarkeerd\s+als\s+hervat)/gi, replace: language === 'es' ? 'Puedes confirmar el Resume de tu desliz abajo' : (language === 'nl' ? 'Je kunt de hervatting van je uitglijder hieronder bevestigen' : "Review the proposal below to resume your slip") },
+      { pattern: /(?:i(?:'ve| have)?\s+marked\s+(?:your\s+slip\s+as\s+resumed|you\s+as\s+resumed)|he\s+marcado\s+tu\s+desliz\s+como\s+retomado|ik\s+heb\s+je\s+uitglijder\s+als\s+hervat\s+gemarkeerd)/gi, replace: language === 'es' ? 'He preparado la propuesta de Resume' : (language === 'nl' ? 'Ik heb het hervattingsvoorstel klaargezet' : "I've prepared the Resume proposal") },
+      // Food claims
+      { pattern: /(?:i(?:'ve| have)?\s+(?:logged|recorded)\s+your\s+(?:meal|food)|he\s+registrado\s+tu\s+(?:comida|alimento)|ik\s+heb\s+je\s+maaltijd\s+(?:gelogd|vastgelegd))/gi, replace: language === 'es' ? 'He preparado el registro de este alimento' : (language === 'nl' ? 'Ik heb dit maaltijdvoorstel klaargezet' : "I've prepared this food log proposal") },
+      { pattern: /(?:your\s+(?:meal|food)\s+has\s+been\s+(?:logged|recorded)|tu\s+comida\s+ha\s+sido\s+registrada|je\s+maaltijd\s+is\s+(?:gelogd|vastgelegd))/gi, replace: language === 'es' ? 'Revisa la propuesta abajo para confirmar' : (language === 'nl' ? 'Bekijk het voorstel hieronder om te bevestigen' : "Review the proposal below to confirm") },
+      // Check-in claims
+      { pattern: /(?:you(?:'ve| have)?\s+successfully\s+checked\s+in|has\s+completado\s+tu\s+check[- ]?in|je\s+bent\s+succesvol\s+ingecheckt)/gi, replace: language === 'es' ? 'He preparado tu Daily Check-In' : (language === 'nl' ? 'Ik heb je Daily Check-In klaargezet' : "I've prepared your Daily Check-In proposal") },
+      { pattern: /(?:your\s+check[- ]?in\s+has\s+been\s+recorded|tu\s+check[- ]?in\s+ha\s+sido\s+registrado|je\s+check[- ]?in\s+is\s+vastgelegd)/gi, replace: language === 'es' ? 'Revisa tu Daily Check-In abajo para confirmar' : (language === 'nl' ? 'Bekijk je Daily Check-In hieronder om te bevestigen' : "Review your Daily Check-In below to confirm") },
+      // Slip claims
+      { pattern: /(?:your\s+slip\s+has\s+been\s+recorded|tu\s+desliz\s+ha\s+sido\s+registrado|je\s+uitglijder\s+is\s+vastgelegd)/gi, replace: language === 'es' ? 'He preparado el registro de tu desliz' : (language === 'nl' ? 'Ik heb je uitglijdervoorstel klaargezet' : "I've prepared this slip proposal") },
+      { pattern: /(?:i(?:'ve| have)?\s+recorded\s+your\s+slip|he\s+registrado\s+tu\s+desliz|ik\s+heb\s+je\s+uitglijder\s+vastgelegd)/gi, replace: language === 'es' ? 'He preparado el registro de tu desliz' : (language === 'nl' ? 'Ik heb je uitglijdervoorstel klaargezet' : "I've prepared this slip proposal") },
+    ];
+
+    for (const claim of prematureClaims) {
+      coachingMsg = coachingMsg.replace(claim.pattern, claim.replace);
+    }
+  }
+
   return {
     version: 1,
     ability: 'diet',

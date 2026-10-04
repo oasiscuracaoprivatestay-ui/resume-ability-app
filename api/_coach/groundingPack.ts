@@ -188,6 +188,14 @@ export function buildSDAGroundingPack(
     rawLower.includes('cómo voy hoy') ||
     rawLower.includes('hoe doe ik het');
 
+  const isResume =
+    !isSlip && !isNearSlip && !isLosingControlOrUrge &&
+    (
+      /\b(back on structure|back on track|resumed|resume my slip|resume the slip|resume last slip|resume the latest slip|got back on track|returned to my structure)\b/i.test(rawLower) ||
+      /\b(de vuelta en estructura|volv[ií] a la estructura|retomado|retom[eé]|retomar mi desliz|retomar el desliz)\b/i.test(rawLower) ||
+      /\b(weer op schema|terug op schema|hervat)\b/i.test(rawLower)
+    );
+
   // Safe Context Normalization
   const ctxAny = (context || {}) as any;
   const safeCommitmentText = typeof ctxAny.commitment === 'string' ? ctxAny.commitment : '';
@@ -278,6 +286,14 @@ export function buildSDAGroundingPack(
       : (language === 'nl'
           ? 'De gebruiker meldt een uitglijder. Benader dit rustig en zonder oordeel. Een uitglijder is data, geen falen. Vraag wat er gegeten is en richt op direct hervatten.'
           : 'The user reports a slip. Approach with calm curiosity. A slip is information, not ruin. Help identify what happened and orient to resuming structure immediately with zero delay.');
+  } else if (isResume) {
+    coachingMode = 'RECOVERY';
+    primaryGoal = 'Acknowledge return to structure as Resume-Ability in action. Do NOT claim that a Daily Check-In or Resume was recorded.';
+    scenarioGuidance = language === 'es'
+      ? 'El usuario informa que ha vuelto a su estructura después de un desliz. Reconoce este retorno como Resume-Ability en acción ("Estás de vuelta en tu estructura. Eso es Resume-Ability en acción"). REGLA CRÍTICA: NO digas que el usuario hizo un Daily Check-In ni que se registró en estructura; retomar la estructura es Resume-Ability, NO un Daily Check-In. REGLA CRÍTICA: NO afirmes que el Resume ha sido guardado, registrado o completado antes de que el usuario confirme la propuesta.'
+      : (language === 'nl'
+          ? 'De gebruiker meldt weer op schema te zijn na een uitglijder. Erken deze terugkeer als Resume-Ability in actie ("Je bent weer op schema. Dat is Resume-Ability in actie"). KRITIEKE REGEL: Zeg NOOIT dat de gebruiker heeft ingecheckt of op schema is ingecheckt; terugkeren naar structuur is Resume-Ability, GEEN Daily Check-In. KRITIEKE REGEL: Beweer NOOIT dat de hervatting al is opgeslagen of geregistreerd voordat de gebruiker bevestigt.'
+          : "The user reports being back on structure after a slip. Acknowledge this return to structure as Resume-Ability in action (e.g. \"You're back on structure. That's Resume-Ability in action.\"). CRITICAL: Do NOT say the user 'checked in' or 'checked in as on-structure'; returning to structure after a slip is Resume-Ability, NOT a Daily Check-In. CRITICAL: Do NOT state that the Resume has already been recorded, saved, or marked resumed prior to user confirmation.");
   } else if (isFoodLogging && isExplicitActionRequest) {
     coachingMode = 'ACTION_PREPARATION';
     primaryGoal = 'Prepare a structured food log action proposal with portion evaluation.';
@@ -379,6 +395,9 @@ export function buildSDAGroundingPack(
     'Quote and Attribution Authenticity Guardrail: NEVER invent verbatim direct quotes attributed to Sergio Laurant or use quotation marks around phrases not directly verified from the seven canonical manuscript books. Express core SDA principles faithfully in the Coach\'s own voice as guidance rather than fabricated author quotes.',
     'Health and Safety Guardrail: NEVER clear a user medically or diagnose medical conditions; an app can say NO to a target, but can NEVER clear a user medically. Extended fasting is contraindicated for pregnancy, nursing, history of eating disorders, or uncontrolled diabetes.',
     'NEVER claim an action was written or score points awarded prior to user confirmation.',
+    'NEVER state or imply that an action proposal (food log, check-in, slip, or resume) has already been saved, logged, recorded, checked in, or marked complete before explicit user confirmation.',
+    'NEVER say the user "checked in", "checked in as on-structure", or performed a Daily Check-In when they report returning to structure ("back on structure", "resumed"). Returning to structure after a slip is Resume-Ability in action, NOT a Daily Check-In.',
+    'NEVER say "Your Resume has been recorded" or "Your slip has been marked as resumed" before the user confirms the action proposal.',
     'NEVER override medical safety, prescription requirements, or fasting stop rules.',
     'NEVER classify ordinary food reporting as 20% OFF TRACK based only on food type.',
     'NEVER state that food was unplanned unless the user or authoritative app context establishes that fact.',
@@ -503,6 +522,8 @@ function getSemanticBoundaries(): string[] {
     'Confirmation-First: The AI prepares Action Proposals for user review; the AI NEVER mutates storage directly and proposals do NOT award score points.',
     'Safety Supremacy: Fasting stop rules immediately apply if dizziness, fainting, chest pain, palpitations, or vomiting occur. Refer to medical doctor.',
     'App Truth: Score points NEVER decrease. Slips never penalize streaks or reduce lifetime XP. Levels range from 0 to 10.',
+    'Resume vs Daily Check-In: Returning to structure ("back on structure", "resumed", "got back on track") is Resume-Ability in action. It is strictly separate from a Daily Check-In. Never say the user checked in when they report resuming or returning to structure.',
+    'Pre-Confirmation Boundary: The Coach prepares Action Proposals for user confirmation. The Coach must NEVER claim that an action has already been saved, logged, checked in, recorded, or marked complete before the user clicks Confirm.',
   ];
 }
 

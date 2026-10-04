@@ -172,6 +172,51 @@ export class RemoteCoachProvider implements CoachProvider {
         // Executable proposal authority comes strictly from deterministic understanding.
         const effectiveProposal = safeDeterministicProposal;
 
+        // Semantic Reconciliation (Phase 39C.1):
+        const lang = request.language || 'en';
+
+        // 1. State D: Zero unresolved targets for Resume -> clear, supportive message without proposal
+        if (deterministic.intent === 'LOG_RESUME' && !effectiveProposal && !deterministic.requiresClarification) {
+          const NO_TARGET_MESSAGES: Record<string, string> = {
+            en: "You're already back on structure, and there isn't an unresolved slip that needs to be marked as resumed. Keep moving forward with your structure.",
+            es: "Ya estás de vuelta en tu estructura y no hay ningún desliz pendiente por marcar como retomado. Sigue adelante con tu estructura.",
+            nl: "Je bent alweer op schema en er is geen openstaande uitglijder die nog als hervat gemarkeerd moet worden. Blijf gefocust doorgaan met je schema.",
+          };
+          responseText = NO_TARGET_MESSAGES[lang] || NO_TARGET_MESSAGES.en;
+        }
+
+        // 2. State B: Resume proposal exists -> cleanse check-in confusion
+        if (effectiveProposal && effectiveProposal.type === 'LOG_RESUME') {
+          const checkInConfusionPattern = /(?:you(?:'ve| have)?\s+checked\s+in\s+as\s+on[- ]?structure|you(?:'ve| have)?\s+checked\s+in\b|has\s+hecho\s+un\s+check[- ]?in|te\s+has\s+registrado\s+como\s+en\s+estructura|je\s+hebt\s+ingecheckt\s+als\s+op\s+schema)/gi;
+          if (checkInConfusionPattern.test(responseText)) {
+            const RESUME_ACK: Record<string, string> = {
+              en: "You're back on structure. That's Resume-Ability in action.",
+              es: "Estás de vuelta en tu estructura. Eso es Resume-Ability en acción.",
+              nl: "Je bent weer op schema. Dat is Resume-Ability in actie.",
+            };
+            responseText = responseText.replace(checkInConfusionPattern, RESUME_ACK[lang] || RESUME_ACK.en);
+          }
+        }
+
+        // 3. Pre-Confirmation Persistence Sanitization (Section 5)
+        if (effectiveProposal) {
+          const prematureClaims = [
+            { pattern: /(?:your\s+resume\s+has\s+been\s+recorded|tu\s+retorno\s+ha\s+sido\s+registrado|je\s+hervatting\s+is\s+vastgelegd)/gi, replace: lang === 'es' ? 'Puedes confirmar este registro de Resume abajo' : (lang === 'nl' ? 'Je kunt deze hervatting hieronder bevestigen' : "Review the proposal below to confirm your Resume") },
+            { pattern: /(?:your\s+slip\s+has\s+been\s+marked\s+as\s+resumed|tu\s+desliz\s+ha\s+sido\s+marcado\s+como\s+retomado|je\s+uitglijder\s+is\s+gemarkeerd\s+als\s+hervat)/gi, replace: lang === 'es' ? 'Puedes confirmar el Resume de tu desliz abajo' : (lang === 'nl' ? 'Je kunt de hervatting van je uitglijder hieronder bevestigen' : "Review the proposal below to resume your slip") },
+            { pattern: /(?:i(?:'ve| have)?\s+marked\s+(?:your\s+slip\s+as\s+resumed|you\s+as\s+resumed)|he\s+marcado\s+tu\s+desliz\s+como\s+retomado|ik\s+heb\s+je\s+uitglijder\s+als\s+hervat\s+gemarkeerd)/gi, replace: lang === 'es' ? 'He preparado la propuesta de Resume' : (lang === 'nl' ? 'Ik heb het hervattingsvoorstel klaargezet' : "I've prepared the Resume proposal") },
+            { pattern: /(?:i(?:'ve| have)?\s+(?:logged|recorded)\s+your\s+(?:meal|food)|he\s+registrado\s+tu\s+(?:comida|alimento)|ik\s+heb\s+je\s+maaltijd\s+(?:gelogd|vastgelegd))/gi, replace: lang === 'es' ? 'He preparado el registro de este alimento' : (lang === 'nl' ? 'Ik heb dit maaltijdvoorstel klaargezet' : "I've prepared this food log proposal") },
+            { pattern: /(?:your\s+(?:meal|food)\s+has\s+been\s+(?:logged|recorded)|tu\s+comida\s+ha\s+sido\s+registrada|je\s+maaltijd\s+is\s+(?:gelogd|vastgelegd))/gi, replace: lang === 'es' ? 'Revisa la propuesta abajo para confirmar' : (lang === 'nl' ? 'Bekijk het voorstel hieronder om te bevestigen' : "Review the proposal below to confirm") },
+            { pattern: /(?:you(?:'ve| have)?\s+successfully\s+checked\s+in|has\s+completado\s+tu\s+check[- ]?in|je\s+bent\s+succesvol\s+ingecheckt)/gi, replace: lang === 'es' ? 'He preparado tu Daily Check-In' : (lang === 'nl' ? 'Ik heb je Daily Check-In klaargezet' : "I've prepared your Daily Check-In proposal") },
+            { pattern: /(?:your\s+check[- ]?in\s+has\s+been\s+recorded|tu\s+check[- ]?in\s+ha\s+sido\s+registrado|je\s+check[- ]?in\s+is\s+vastgelegd)/gi, replace: lang === 'es' ? 'Revisa tu Daily Check-In abajo para confirmar' : (lang === 'nl' ? 'Bekijk je Daily Check-In hieronder om te bevestigen' : "Review your Daily Check-In below to confirm") },
+            { pattern: /(?:your\s+slip\s+has\s+been\s+recorded|tu\s+desliz\s+ha\s+sido\s+registrado|je\s+uitglijder\s+is\s+vastgelegd)/gi, replace: lang === 'es' ? 'He preparado el registro de tu desliz' : (lang === 'nl' ? 'Ik heb je uitglijdervoorstel klaargezet' : "I've prepared this slip proposal") },
+            { pattern: /(?:i(?:'ve| have)?\s+recorded\s+your\s+slip|he\s+registrado\s+tu\s+desliz|ik\s+heb\s+je\s+uitglijder\s+vastgelegd)/gi, replace: lang === 'es' ? 'He preparado el registro de tu desliz' : (lang === 'nl' ? 'Ik heb je uitglijdervoorstel klaargezet' : "I've prepared this slip proposal") },
+          ];
+
+          for (const claim of prematureClaims) {
+            responseText = responseText.replace(claim.pattern, claim.replace);
+          }
+        }
+
         const coachMsg: CoachMessage = {
           id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           role: 'coach',
