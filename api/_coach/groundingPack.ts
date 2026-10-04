@@ -280,12 +280,12 @@ export function buildSDAGroundingPack(
           : 'The user reports a slip. Approach with calm curiosity. A slip is information, not ruin. Help identify what happened and orient to resuming structure immediately with zero delay.');
   } else if (isFoodLogging && isExplicitActionRequest) {
     coachingMode = 'ACTION_PREPARATION';
-    primaryGoal = 'Prepare a structured food log action proposal with outcome and portion evaluation.';
-    scenarioGuidance = 'Extract food items, map to protein/veggies/carbs/fats, determine on_track or 20% off track, and prepare a proposal for user confirmation.';
+    primaryGoal = 'Prepare a structured food log action proposal with portion evaluation.';
+    scenarioGuidance = 'Extract food items and map categories for conversational understanding. Do NOT infer adherence status from the food itself. Ordinary food reporting must NOT be described as unplanned, off-track, Near-Slip, or Slip without evidence. 20% OFF TRACK may ONLY be discussed as the user\'s operational state when explicitly supported by the user message or authoritative deterministic context. "Unplanned" and "20% OFF TRACK" are NOT synonyms; unplanned eating describes timing metadata and does not by itself establish structural alignment. Prepare the proposal for user confirmation.';
   } else if (isFoodLogging) {
     coachingMode = 'ACTION_PREPARATION';
-    primaryGoal = 'Prepare a structured food log action proposal with outcome and portion evaluation.';
-    scenarioGuidance = 'Extract food items, map to protein/veggies/carbs/fats, determine on_track or 20% off track, and prepare a proposal for user confirmation.';
+    primaryGoal = 'Prepare a structured food log action proposal with portion evaluation.';
+    scenarioGuidance = 'Extract food items and map categories for conversational understanding. Do NOT infer adherence status from the food itself. Ordinary food reporting must NOT be described as unplanned, off-track, Near-Slip, or Slip without evidence. 20% OFF TRACK may ONLY be discussed as the user\'s operational state when explicitly supported by the user message or authoritative deterministic context. "Unplanned" and "20% OFF TRACK" are NOT synonyms; unplanned eating describes timing metadata and does not by itself establish structural alignment. Prepare the proposal for user confirmation.';
   } else if (isNeutralLogging) {
     coachingMode = 'ACTION_PREPARATION';
     primaryGoal = 'Prepare neutral log proposal for water, vitamins, or supplements without food points.';
@@ -380,6 +380,11 @@ export function buildSDAGroundingPack(
     'Health and Safety Guardrail: NEVER clear a user medically or diagnose medical conditions; an app can say NO to a target, but can NEVER clear a user medically. Extended fasting is contraindicated for pregnancy, nursing, history of eating disorders, or uncontrolled diabetes.',
     'NEVER claim an action was written or score points awarded prior to user confirmation.',
     'NEVER override medical safety, prescription requirements, or fasting stop rules.',
+    'NEVER classify ordinary food reporting as 20% OFF TRACK based only on food type.',
+    'NEVER state that food was unplanned unless the user or authoritative app context establishes that fact.',
+    'NEVER equate unplanned with 20% OFF TRACK: unplanned eating describes scheduling timing, NOT structural alignment.',
+    'NEVER infer fries, dessert, snacks, or any food type as a slip or 20% OFF TRACK without explicit user statement or authoritative data.',
+    'NEVER infer chicken, protein, vegetables, or any food type as definitely compliant with a specific Structured Diet block unless actual structure data establishes it.',
   ];
 
   // 5. Dynamic Knowledge Retrieval from 176-Chapter Corpus

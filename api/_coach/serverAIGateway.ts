@@ -436,6 +436,69 @@ export function validateAndReconcileAIResponse(
     }
   }
 
+  // ── Conversational Semantic Reconciliation (Phase 39B.2) ───────────────────
+  // Operational SDA classifications (20% OFF TRACK, unplanned, slip, on structure)
+  // must be evidence-based and must NOT be invented by the LLM for ordinary food reporting.
+  const isFoodLog = intent === 'LOG_FOOD' ||
+    /\b(ate|had|eating|portion|portions|grams|g\b|ml\b|cup|oz\b|chicken|beef|rice|salad|fish|eggs|bread|soup|dinner|lunch|breakfast)\b/i.test(rawLower);
+
+  let finalFollowUpQuestion = raw.followUpQuestion;
+
+  if (isFoodLog) {
+    const has20PercentSupport =
+      /(?:\b20%|\b20\s*percent\b|\bveinte\s*por\s*ciento\b|\btwintig\s*procent\b)/i.test(rawLower) ||
+      entities.outcome === 'twenty_percent_off_track';
+    const hasUnplannedSupport =
+      /\b(?:unplanned|didn't plan|did not plan|no planead[oa]|ongepland|wasn't in my plan|not in my plan|outside my plan|fuera de mi plan|niet in mijn plan)\b/i.test(rawLower) ||
+      entities.plannedStatus === 'unplanned';
+    const hasSlipSupport =
+      /\b(?:slip|slipped|slipping|deslic[eé]|desliz|uitglijder|uitgegleden)\b/i.test(rawLower) ||
+      entities.outcome === 'structured_slip' ||
+      entities.outcome === 'unstructured_slip' ||
+      entities.outcome === 'near_slip';
+    const hasNearSlipSupport =
+      /\b(?:near[-\s]?slip|casi\s*me\s*salgo|bijna\s*uitgegleden|close\s*to\s*slipping)\b/i.test(rawLower) ||
+      entities.checkInStatus === 'near-slip' ||
+      entities.outcome === 'near_slip';
+    const hasResumeSupport =
+      /\b(?:resume|resumed|resuming|retom[eé]|hervat)\b/i.test(rawLower) ||
+      entities.resumed === true;
+    const hasOnStructureSupport =
+      /\b(?:on structure|on-structure|en estructura|op schema)\b/i.test(rawLower) ||
+      entities.checkInStatus === 'on-structure';
+
+    const isSentenceUnsupported = (s: string) => {
+      const sTrim = s.trim();
+      if (!sTrim) return false;
+      if (!has20PercentSupport && /(?:\b20%|\b20\s*percent\b|\bveinte\s*por\s*ciento\b|\btwintig\s*procent\b)/i.test(sTrim)) return true;
+      if (!hasUnplannedSupport && /\b(?:unplanned|no planead[oa]|ongepland)\b/i.test(sTrim)) return true;
+      if (!hasSlipSupport && /\b(?:counts? as a slip|is a slip|was a slip|cuenta como desliz|es un desliz|fue un desliz|is een uitglijder|telt als uitglijder|that counts as a slip)\b/i.test(sTrim)) return true;
+      if (!hasNearSlipSupport && /\b(?:counts? as a near[-\s]?slip|is a near[-\s]?slip|counts as near-slip)\b/i.test(sTrim)) return true;
+      if (!hasResumeSupport && /\b(?:you resumed|resumed after|retomaste después|hervat na)\b/i.test(sTrim)) return true;
+      if (!hasOnStructureSupport && /\b(?:stayed (?:perfectly )?on structure|perfectamente en estructura|perfect op schema)\b/i.test(sTrim)) return true;
+      return false;
+    };
+
+    const sentenceRegex = /[^.!?]+[.!?]+|\S+$/g;
+    const sentences = coachingMsg.match(sentenceRegex) || [coachingMsg];
+    const validSentences = sentences.filter((s: string) => !isSentenceUnsupported(s));
+
+    if (validSentences.length === 0) {
+      const NEUTRAL_FOOD_LOG_FALLBACK: Record<'en' | 'es' | 'nl', string> = {
+        en: 'I can help you log this food entry. Review the details below and confirm if they are correct.',
+        es: 'Puedo ayudarte a registrar este alimento. Revisa los detalles abajo y confirma si son correctos.',
+        nl: 'Ik kan je helpen deze maaltijd te loggen. Bekijk de onderstaande details en bevestig of ze kloppen.',
+      };
+      coachingMsg = NEUTRAL_FOOD_LOG_FALLBACK[language] || NEUTRAL_FOOD_LOG_FALLBACK.en;
+    } else {
+      coachingMsg = validSentences.map((s: string) => s.trim()).join(' ');
+    }
+
+    if (finalFollowUpQuestion && isSentenceUnsupported(finalFollowUpQuestion)) {
+      finalFollowUpQuestion = undefined;
+    }
+  }
+
   return {
     version: 1,
     ability: 'diet',
@@ -443,7 +506,7 @@ export function validateAndReconcileAIResponse(
     coaching: {
       mode: finalMode,
       message: coachingMsg,
-      followUpQuestion: raw.followUpQuestion,
+      followUpQuestion: finalFollowUpQuestion,
     },
     proposedAction,
   };
