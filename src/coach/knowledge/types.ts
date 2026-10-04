@@ -8,7 +8,7 @@
  * - General Model Knowledge (For reasoning/language; NOT authoritative SDA methodology)
  */
 
-import type { AbilityId, CoachActionProposal } from '../types';
+import type { AbilityId, CoachActionProposal, PersonalStateQueryCategory } from '../types';
 
 // ── Source Authority Model ───────────────────────────────────────────────────
 
@@ -341,6 +341,8 @@ export interface SDACoachingPlan {
   prohibitedAssumptions: string[];
   knowledgeGap?: KnowledgeGap;
   responseTemplate?: string;
+  queryCategory?: PersonalStateQueryCategory;
+  rawMessage?: string;
 }
 
 // ── Knowledge Base Contracts ─────────────────────────────────────────────────

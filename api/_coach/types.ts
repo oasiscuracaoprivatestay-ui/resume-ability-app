@@ -27,6 +27,20 @@ export type CoachIntentType =
   | 'REVIEW_SLIPPERY_ZONES'
   | 'GENERAL_COACHING';
 
+// ── Personal State Query Categories (Phase 40C) ──────────────────────────────
+
+export type PersonalStateQueryCategory =
+  | 'PROGRESS_SUMMARY'
+  | 'SCORING_STATUS'
+  | 'RESUME_ABILITY_STATUS'
+  | 'CHECK_IN_STATUS'
+  | 'DIET_STATUS'
+  | 'SLIP_RESUME_STATUS'
+  | 'CHALLENGE_STATUS'
+  | 'NEXT_BEST_FOCUS'
+  | 'COMMITMENT_RECALL'
+  | 'NON_NEGOTIABLE_RECALL';
+
 export type CoachActionType =
   | 'LOG_FOOD'
   | 'LOG_NEUTRAL'
@@ -138,6 +152,7 @@ export interface CoachEntities {
   startTime?: string;
   checkInStatus?: CheckInStatus;
   targetDate?: string;
+  queryCategory?: PersonalStateQueryCategory;
 }
 
 export interface CoachAmbiguity {
@@ -165,6 +180,7 @@ export interface CoachUnderstanding {
   ambiguities: CoachAmbiguity[];
   requiresClarification: boolean;
   proposedAction?: CoachActionProposal;
+  queryCategory?: PersonalStateQueryCategory;
 }
 
 // ── Read-Only Normalized Coach Context (Privacy Minimized — Phase 40B) ───────────

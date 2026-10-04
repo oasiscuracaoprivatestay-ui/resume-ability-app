@@ -74,6 +74,20 @@ export type CoachIntentType =
   | 'UPDATE_FOOD_LOG'
   | 'RECOMMIT';
 
+// ── Personal State Query Categories (Phase 40C) ──────────────────────────────
+
+export type PersonalStateQueryCategory =
+  | 'PROGRESS_SUMMARY'
+  | 'SCORING_STATUS'
+  | 'RESUME_ABILITY_STATUS'
+  | 'CHECK_IN_STATUS'
+  | 'DIET_STATUS'
+  | 'SLIP_RESUME_STATUS'
+  | 'CHALLENGE_STATUS'
+  | 'NEXT_BEST_FOCUS'
+  | 'COMMITMENT_RECALL'
+  | 'NON_NEGOTIABLE_RECALL';
+
 export interface CoachIntent {
   type: CoachIntentType;
   confidence: number;
@@ -305,6 +319,7 @@ export interface CoachEntities {
     freeText?: string;
   };
   checkInStatus?: CheckInStatus;
+  queryCategory?: PersonalStateQueryCategory;
 }
 
 export interface CoachAmbiguityOption {
@@ -329,6 +344,7 @@ export interface CoachUnderstanding {
   ambiguities: CoachAmbiguity[];
   requiresClarification: boolean;
   proposedAction?: CoachActionProposal;
+  queryCategory?: PersonalStateQueryCategory;
 }
 
 // ── Provider Contracts ────────────────────────────────────────────────────────

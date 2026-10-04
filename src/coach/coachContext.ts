@@ -386,7 +386,7 @@ export function buildCoachContext(dateKey = getLocalDateKey()): CoachContext {
 export function isWhyInquiry(message: string): boolean {
   const lower = (message || '').toLowerCase();
   return (
-    /\b(?:why did i commit|what is my why|why am i doing this|show my why|review my why|my reasons|remind me why)\b/i.test(lower) ||
+    /\b(?:why did i commit|what(?:'s| is) my why|why am i doing this|show my why|review my why|my reasons|remind me why)\b/i.test(lower) ||
     /\b(?:por qu[eé] me compromet[ií]|cu[aá]l es mi por qu[eé]|mis motivos|mis razones)\b/i.test(lower) ||
     /\b(?:waarom heb ik me gecommitteerd|wat is mijn waarom|mijn redenen)\b/i.test(lower)
   );
@@ -395,9 +395,9 @@ export function isWhyInquiry(message: string): boolean {
 export function isNonNegotiablesInquiry(message: string): boolean {
   const lower = (message || '').toLowerCase();
   return (
-    /\b(?:what are my non[- ]negotiables|show my non[- ]negotiables|review my non[- ]negotiables|list my non[- ]negotiables|my rules|what are my rules)\b/i.test(lower) ||
+    /\b(?:what are my non[- ]negotiables|show my non[- ]negotiables|review my non[- ]negotiables|list my non[- ]negotiables|my rules|what are my rules|show (?:my )?rules)\b/i.test(lower) ||
     /\b(?:cu[aá]les son mis no negociables|mostrar mis no negociables|mis reglas|ver mis no negociables)\b/i.test(lower) ||
-    /\b(?:wat zijn mijn niet[- ]onderhandelbare|toon mijn niet[- ]onderhandelbare|mijn regels)\b/i.test(lower)
+    /\b(?:wat zijn mijn niet[- ]onderhandelbare|toon mijn niet[- ]onderhandelbare|mijn regels|toon (?:mijn )?regels)\b/i.test(lower)
   );
 }
 

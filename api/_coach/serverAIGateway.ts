@@ -50,6 +50,7 @@ import {
   buildSDAGroundingPack,
   compileSDASystemPrompt,
 } from './groundingPack.js';
+import { classifyPersonalStateQuery } from '../../src/coach/personalProgressCoach.js';
 
 // ── Test Mock Injection (Offline Automation Safety) ──────────────────────────
 
@@ -356,13 +357,42 @@ export function validateAndReconcileAIResponse(
           : "20% OFF TRACK is an intentional lifestyle flexibility buffer within Sergio Laurant's 80/20 consistency principle. It is an On-Track outcome (+5 pts), not a slip, and has zero connection to carbohydrate percentages or macronutrient quotas.");
   }
 
+  // Personal State Question Guardrails (Phase 40C)
+  const personalStateCategory = classifyPersonalStateQuery(userMessage);
+
+  // Guard: Zero-denominator Resume Rate must never display 0%
+  const dietResumeRate = context?.dietSlipResume?.dietResumeRate ?? null;
+  if (personalStateCategory === 'SLIP_RESUME_STATUS' && dietResumeRate === null && /resume rate|tasa de resume/i.test(userMessage)) {
+    if (/\b0%(?!\d)/.test(coachingMsg)) {
+      coachingMsg = language === 'es'
+        ? 'No tienes oportunidades de desliz elegibles hoy, por lo que aún no hay una tasa de Resume para calcular.'
+        : (language === 'nl'
+            ? 'Je hebt vandaag geen in aanmerking komende uitglijders, dus er is nog geen Resume Rate te berekenen.'
+            : "You don't have any eligible Diet Slip opportunities today, so there isn't a Resume Rate to calculate yet.");
+    }
+  }
+
+  // Guard: Metric separation - do not let todayPoints be reported as the Resume-Ability score
+  if (personalStateCategory === 'RESUME_ABILITY_STATUS') {
+    const todayPts = context?.scoring?.todayPoints ?? context?.today?.todayScore ?? 0;
+    const resumeIndex = context?.resumeAbility?.dailyResumeAbilityIndex ?? null;
+    const conflationPattern = new RegExp(`(?:resume[- ]ability\\s*(?:score|index)\\s*(?:is\\s*)?${todayPts}\\b)`, 'i');
+    if (resumeIndex !== null && conflationPattern.test(coachingMsg) && todayPts !== resumeIndex) {
+      coachingMsg = coachingMsg.replace(conflationPattern, `Daily Resume-Ability Index is ${resumeIndex}/100`);
+    }
+  }
+
   // 4. Action Proposal Reconciliation (PREVIEW-ONLY, ZERO MUTATION)
   let proposedAction: CoachActionProposal | undefined = undefined;
   const rawObj = raw as any;
   const rawActionType = raw.proposedActionType || raw.actionProposal?.type || rawObj?.proposedAction?.type;
   const normalizedActionType = typeof rawActionType === 'string' ? rawActionType.toUpperCase() as CoachActionType : undefined;
   const actionType = normalizedActionType;
-  if (actionType) {
+
+  if (personalStateCategory) {
+    // Read-only personal state queries NEVER create action proposals
+    proposedAction = undefined;
+  } else if (actionType) {
     if (CANONICAL_ACTION_TYPES.includes(actionType)) {
       if (entities.outcome === 'twenty_percent_off_track' && actionType === 'LOG_SLIP') {
         ambiguities.push({
@@ -388,20 +418,26 @@ export function validateAndReconcileAIResponse(
     }
   }
 
-  const requiresClarification = Boolean(
-    raw.requiresClarification || ambiguities.length > 0 || raw.clarificationField
-  );
+  const requiresClarification = personalStateCategory
+    ? false
+    : Boolean(raw.requiresClarification || ambiguities.length > 0 || raw.clarificationField);
 
   const understanding: CoachUnderstanding = {
     id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     ability: 'diet',
     rawText: userMessage,
-    intent,
+    intent: personalStateCategory
+      ? (personalStateCategory === 'COMMITMENT_RECALL' ? 'REVIEW_WHY' : (personalStateCategory === 'NON_NEGOTIABLE_RECALL' ? 'REVIEW_NON_NEGOTIABLES' : 'CHECK_TODAY_STATUS'))
+      : intent,
     confidence,
-    entities,
+    entities: {
+      ...entities,
+      queryCategory: personalStateCategory || undefined,
+    },
     ambiguities,
     requiresClarification,
     proposedAction,
+    queryCategory: personalStateCategory || undefined,
   };
 
   let finalMode: SDACoachingMode = 'SUPPORT';

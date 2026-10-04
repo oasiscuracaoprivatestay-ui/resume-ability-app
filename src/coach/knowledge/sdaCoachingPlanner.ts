@@ -20,6 +20,7 @@ import type {
   SDAPrincipleId,
   SDATermKey,
 } from './types';
+import { generatePersonalProgressResponse } from '../personalProgressCoach';
 
 export interface BuildCoachingPlanOptions {
   message: string;
@@ -54,6 +55,44 @@ export function buildCoachingPlan(options: BuildCoachingPlanOptions): SDACoachin
         'Do not guess uncodified Seven Diet-Abilities.',
       ],
       knowledgeGap,
+    };
+  }
+
+  // 1.5 Personal State Question Coaching (Phase 40C)
+  if (understanding.queryCategory) {
+    let mode: import('./types').SDACoachingMode = 'REFLECTION';
+    if (understanding.queryCategory === 'NEXT_BEST_FOCUS') mode = 'SUPPORT';
+    else if (understanding.queryCategory === 'COMMITMENT_RECALL') mode = 'MOTIVATION';
+    else if (understanding.queryCategory === 'NON_NEGOTIABLE_RECALL') mode = 'COMMITMENT';
+
+    const responseTemplate = generatePersonalProgressResponse(
+      understanding.queryCategory,
+      context,
+      language,
+      message
+    );
+
+    return {
+      mode,
+      primaryGoal: `Provide verified personal progress coaching for ${understanding.queryCategory}`,
+      relevantPrinciples: ['positive_reporting_no_punishment', 'structure_is_observable', 'resume_speed_is_true_power'],
+      relevantTerms: ['score', 'structure', 'resume_ability'],
+      contextFacts: [
+        `Today points: ${context.scoring?.todayPoints ?? context.today?.todayScore ?? 0}`,
+        `Daily Resume-Ability index: ${context.resumeAbility?.dailyResumeAbilityIndex ?? 'None'}`,
+      ],
+      coachObservations: [`User requested personal progress query: ${understanding.queryCategory}`],
+      questions: [],
+      shouldAskQuestion: false,
+      shouldOfferAction: false,
+      prohibitedAssumptions: [
+        'Do not conflate today points with daily resume-ability index.',
+        'Do not manufacture praise or problems unsupported by the snapshot.',
+        'Do not mutate app state.',
+      ],
+      responseTemplate,
+      queryCategory: understanding.queryCategory,
+      rawMessage: message,
     };
   }
 
@@ -467,6 +506,11 @@ export function buildCoachingPlan(options: BuildCoachingPlanOptions): SDACoachin
  * Adheres strictly to the SDA communication guidelines (non-shaming, calm, concise, grounded).
  */
 export function generateCoachingResponse(plan: SDACoachingPlan, language: 'en' | 'es' | 'nl' = 'en'): string {
+  // 0. Explicit Response Template (e.g. Phase 40C Personal Progress)
+  if (plan.responseTemplate) {
+    return plan.responseTemplate;
+  }
+
   // 1. Knowledge Gap Handling
   if (plan.knowledgeGap) {
     if (language === 'es') {

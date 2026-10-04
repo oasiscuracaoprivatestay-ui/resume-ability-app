@@ -32,6 +32,7 @@ import { parseNaturalTime, parseNaturalDate } from './coachDateTime';
 import { createActionProposal } from './coachActions';
 import { FOOD_CATEGORY_KEYS } from '../data/dietData';
 import { getUnresolvedDietSlips } from '../utils/dietVerificationStorage';
+import { classifyPersonalStateQuery } from './personalProgressCoach';
 
 export class DeterministicUnderstandingProvider implements CoachUnderstandingProvider {
   readonly id = 'deterministic';
@@ -66,6 +67,31 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
     const dateResult = parseNaturalDate(rawText, context?.dateKey);
     if (dateResult.dateKey) {
       entities.date = dateResult.dateKey;
+    }
+
+    // ── 1.5. Check for Read-Only Personal State Queries (Phase 40C) ─────────
+    const personalStateCategory = classifyPersonalStateQuery(rawText);
+    if (personalStateCategory) {
+      let mappedIntent: CoachIntentType = 'CHECK_TODAY_STATUS';
+      if (personalStateCategory === 'COMMITMENT_RECALL') mappedIntent = 'REVIEW_WHY';
+      else if (personalStateCategory === 'NON_NEGOTIABLE_RECALL') mappedIntent = 'REVIEW_NON_NEGOTIABLES';
+      else if (personalStateCategory === 'CHALLENGE_STATUS' || personalStateCategory === 'NEXT_BEST_FOCUS') mappedIntent = 'GENERAL_COACHING';
+
+      return {
+        id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        ability: ACTIVE_ABILITY_ID,
+        rawText,
+        intent: mappedIntent,
+        confidence: CONFIDENCE_THRESHOLDS.CANONICAL_EXACT,
+        entities: {
+          ...entities,
+          queryCategory: personalStateCategory,
+        },
+        ambiguities: [],
+        requiresClarification: false,
+        proposedAction: undefined,
+        queryCategory: personalStateCategory,
+      };
     }
 
     // ── 2. Check for Neutral Log ─────────────────────────────────────────────
@@ -163,6 +189,7 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
     const isReportingNewSlip = /\b(?:i slipped|deslic[eé]|uitgegleden)\b/i.test(rawText);
 
     const isResumePhrase =
+      !isConceptualQuestion &&
       !isExplicitCheckIn &&
       !isReportingNewSlip &&
       (
@@ -295,7 +322,7 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
 
     // ── 3. Check for Daily Check-In ──────────────────────────────────────────
     const checkInStatus = resolveCheckInStatus(rawText);
-    const isCheckInPhrase = /\b(?:check(?:ing)?\s*(?:me\s*)?in|check[- ]?in|i'm on structure|im on structure|estoy en estructura|ik ben op schema|close to slipping)\b/i.test(rawText);
+    const isCheckInPhrase = !isConceptualQuestion && /\b(?:check(?:ing)?\s*(?:me\s*)?in|check[- ]?in|i'm on structure|im on structure|estoy en estructura|ik ben op schema|close to slipping)\b/i.test(rawText);
 
     if (isCheckInPhrase && !/had|ate|comí|gegeten/i.test(rawText)) {
       intent = 'LOG_CHECK_IN';

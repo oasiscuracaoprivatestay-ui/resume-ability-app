@@ -22,6 +22,7 @@ import {
   checkKnowledgeGap,
 } from './knowledge.js';
 import { retrieveSDAKnowledge } from '../../src/coach/knowledge/retrieval/sdaRetrievalEngine.js';
+import { classifyPersonalStateQuery } from '../../src/coach/personalProgressCoach.js';
 
 /**
  * Builds the comprehensive SDAGroundingPack for a user turn.
@@ -188,7 +189,10 @@ export function buildSDAGroundingPack(
     rawLower.includes('cómo voy hoy') ||
     rawLower.includes('hoe doe ik het');
 
+  const personalStateCategory = classifyPersonalStateQuery(message);
+
   const isResume =
+    !isConceptualQuestion &&
     !isSlip && !isNearSlip && !isLosingControlOrUrge &&
     (
       /\b(back on structure|back on track|resumed|resume my slip|resume the slip|resume last slip|resume the latest slip|got back on track|returned to my structure)\b/i.test(rawLower) ||
@@ -271,6 +275,54 @@ export function buildSDAGroundingPack(
       : (language === 'nl'
           ? 'De gebruiker naderde de grens maar stopte op tijd. Erken deze zelfbeheersing. Een Bijna-Uitglijder is GEEN uitglijder en telt NIET als Resume.'
           : 'The user approached their boundary but stopped before crossing it. Reinforce their awareness in action. A Near-Slip is NOT a slip and does NOT count as a Resume.');
+  } else if (personalStateCategory === 'PROGRESS_SUMMARY') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Provide high-quality progress summary prioritizing today points, Daily Resume-Ability Index, check-in, diet, and slip recovery.';
+    scenarioGuidance = `Summarize today verified facts: Today points (${todayPoints}), Daily Resume-Ability Index (${dailyResumeAbilityIndex !== null ? `${dailyResumeAbilityIndex}/100` : 'not yet calculated'}), Check-In (${hasCheckedInToday ? `checked in ${checkInCountToday}x, status: ${latestCheckInStatus}` : 'not completed yet'}), Diet entries (${dietEntriesLoggedToday} logged), True Slips (${dietSlipsToday} slips, ${hasUnresolvedDietSlip ? 'unresolved slip pending' : 'all resumed'}). CRITICAL: Today points and Daily Resume-Ability Index are strictly separate metrics. Do not dump every raw number. Keep it calm, grounded, concise.`;
+  } else if (personalStateCategory === 'SCORING_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report verified points, lifetime score, or level faithfully from context facts.';
+    scenarioGuidance = `Report verified today points (${todayPoints}), lifetime points (${lifetimePoints}), and level (${level}: ${levelTitle}). Never invent, guess, or modify points.`;
+  } else if (personalStateCategory === 'RESUME_ABILITY_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report Daily Resume-Ability Index strictly from verified context facts.';
+    scenarioGuidance = `CRITICAL METRIC SEPARATION: Answer using Daily Resume-Ability Index (${dailyResumeAbilityIndex !== null ? `${dailyResumeAbilityIndex}/100` : 'not yet calculated'}). NEVER report today points as a Resume-Ability score. Explain behavioral recovery opportunity.`;
+  } else if (personalStateCategory === 'CHECK_IN_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report Daily Check-In status strictly from verified check-in snapshot.';
+    scenarioGuidance = `Use verified check-in facts (${hasCheckedInToday ? `checked in ${checkInCountToday}x, latest: ${latestCheckInStatus}` : 'not checked in yet today'}). Diet logs must NEVER be counted as check-ins. Do NOT create an action proposal for a question.`;
+  } else if (personalStateCategory === 'DIET_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report structured diet status and logged entries from verified diet snapshot.';
+    scenarioGuidance = `Report logged diet entries (${dietEntriesLoggedToday} logged: ${onTrackCountToday} On Track, ${twentyPercentCountToday} 20% OFF TRACK, ${neutralCountToday} Neutral, ${dietSlipsToday} Slips). Only mention non-zero categories. Do NOT create an action proposal for a question.`;
+  } else if (personalStateCategory === 'SLIP_RESUME_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report true slip and recovery facts from verified dietSlipResume snapshot.';
+    scenarioGuidance = `Use verified facts: dietSlipsToday = ${dietSlipsToday}, dietResumesToday = ${dietResumesToday}, hasUnresolvedDietSlip = ${hasUnresolvedDietSlip}, dietResumeRate = ${dietResumeRate}. 20% OFF TRACK is NOT a slip. Near Slip is NOT a slip. Neutral is NOT a slip. If Resume Rate is asked when denominator is 0, state that there are no eligible opportunities today (never show 0%). Do NOT create an action proposal for a question.`;
+  } else if (personalStateCategory === 'CHALLENGE_STATUS') {
+    coachingMode = 'REFLECTION';
+    primaryGoal = 'Report active challenge status from verified challenge snapshot.';
+    scenarioGuidance = `Report active challenge status (${context.challenge?.hasActiveChallenge && context.challenge.activeChallenge ? `Day ${context.challenge.activeChallenge.currentDay} of ${context.challenge.activeChallenge.durationDays}-Day Resume-Ability Challenge, ${context.challenge.activeChallenge.daysRemaining} days remaining` : 'No active challenge'}). Never expose internal UUIDs or timestamps.`;
+  } else if (personalStateCategory === 'NEXT_BEST_FOCUS') {
+    coachingMode = 'SUPPORT';
+    primaryGoal = 'Recommend next best focus strictly following SDA priority logic.';
+    scenarioGuidance = `Apply deterministic priority: 1. Unresolved true Diet Slip (${hasUnresolvedDietSlip ? 'YES - focus on Resume' : 'none'}), 2. Missing Daily Check-In (${!hasCheckedInToday ? 'YES - focus on Check-In' : 'completed'}), 3. Active challenge focus, 4. Next planned structure block, 5. Commitment / Non-Negotiables, 6. Maintain current structure. Do NOT automatically mutate state.`;
+  } else if (personalStateCategory === 'COMMITMENT_RECALL' || isWhyInquiry) {
+    coachingMode = 'MOTIVATION';
+    primaryGoal = 'Ground user in their authentic personal Why reasons.';
+    scenarioGuidance = safeReasons.length > 0
+      ? `User saved Why reasons: ${safeReasons.join(' | ')}. Anchor to these authentic reasons.`
+      : (whyCount > 0
+          ? `User has ${whyCount} Why reasons saved in CoachContext, but the text is not in the current safe context. Mention they can view them in My Commitments.`
+          : 'User has no saved Why reasons. Suggest identifying a personal reason without inventing one.');
+  } else if (personalStateCategory === 'NON_NEGOTIABLE_RECALL' || isCommitmentInquiry) {
+    coachingMode = 'COMMITMENT';
+    primaryGoal = 'Reinforce active commitment and non-negotiables as the last line of defense.';
+    scenarioGuidance = safeNonNegotiables.length > 0
+      ? `User saved Non-Negotiables: ${safeNonNegotiables.join(', ')}. Reinforce them accurately.`
+      : (nonNegotiablesCount > 0 || hasNonNegotiables || hasCommitment
+          ? `User has active commitments saved (${whyCount} Why reasons, ${nonNegotiablesCount} Non-Negotiables). Anchor them to their structure.`
+          : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.');
   } else if (isTwentyPercent && isExplicitActionRequest) {
     coachingMode = 'ACTION_PREPARATION';
     primaryGoal = 'Prepare a 20% OFF TRACK meal outcome proposal (+5 pts On Track, non-slip) for user confirmation.';
@@ -316,22 +368,6 @@ export function buildSDAGroundingPack(
     coachingMode = 'ACTION_PREPARATION';
     primaryGoal = 'Prepare neutral log proposal for water, vitamins, or supplements without food points.';
     scenarioGuidance = 'Record non-caloric items in the Neutral Log. Do not assign food points or moral evaluation.';
-  } else if (isCommitmentInquiry) {
-    coachingMode = 'COMMITMENT';
-    primaryGoal = 'Reinforce active commitment and non-negotiables as the last line of defense.';
-    scenarioGuidance = safeNonNegotiables.length > 0
-      ? `User saved Non-Negotiables: ${safeNonNegotiables.join(', ')}. Reinforce them accurately.`
-      : (hasNonNegotiables || hasCommitment
-          ? `User has active commitments saved (${whyCount} Why reasons, ${nonNegotiablesCount} Non-Negotiables). Anchor them to their structure.`
-          : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.');
-  } else if (isWhyInquiry) {
-    coachingMode = 'MOTIVATION';
-    primaryGoal = 'Ground user in their authentic personal Why reasons.';
-    scenarioGuidance = safeReasons.length > 0
-      ? `User saved Why reasons: ${safeReasons.join(', ')}. Anchor to these authentic reasons.`
-      : (whyCount > 0
-          ? `User has ${whyCount} Why reasons saved in CoachContext. Invite them to reflect on their personal motivation.`
-          : 'User has no saved Why reasons. Suggest identifying a personal reason without inventing one.');
   } else if (isSlipperyZonesInquiry) {
     coachingMode = 'AWARENESS';
     primaryGoal = 'Review saved high-risk trigger contexts non-causally.';
@@ -427,6 +463,9 @@ export function buildSDAGroundingPack(
     'NEVER equate unplanned with 20% OFF TRACK: unplanned eating describes scheduling timing, NOT structural alignment.',
     'NEVER infer fries, dessert, snacks, or any food type as a slip or 20% OFF TRACK without explicit user statement or authoritative data.',
     'NEVER infer chicken, protein, vegetables, or any food type as definitely compliant with a specific Structured Diet block unless actual structure data establishes it.',
+    'NEVER conflate today points (gamified XP) with Daily Resume-Ability Index (0-100 behavioral dial). Never call today points a Resume-Ability score.',
+    'NEVER display 0% for Resume Rate when there are zero eligible slip opportunities (denominator is zero). State that there are no eligible opportunities to evaluate.',
+    'NEVER create an action proposal or claim an action was logged when the user asks a read-only question (e.g. "Did I check in today?", "Did I slip today?", "How many points do I have?").',
   ];
 
   // 5. Dynamic Knowledge Retrieval from 176-Chapter Corpus
