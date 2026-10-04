@@ -148,7 +148,10 @@ export interface StructureAwarenessStats {
 
 export interface DailyVerificationStats {
   plannedCount: number;
-  reportedCount: number;
+  reportedCount: number; // backward-compatible alias for plannedReportedCount
+  plannedReportedCount: number;
+  unplannedReportedCount: number;
+  totalReportedCount: number;
   onTrackCount: number;
   slipCount: number;
   resumeCount: number;
@@ -1265,12 +1268,16 @@ export function calculateStructureStats(records: DietBlockVerification[]): Struc
 export function getDailyVerificationStats(
   plannedBlocksCount: number,
   dateKey = getLocalDateKey(),
+  scheduledBlockIds?: string[],
 ): DailyVerificationStats {
   const daily = getDailyDietVerification(dateKey);
   if (!daily || daily.entries.length === 0) {
     return {
       plannedCount: plannedBlocksCount,
       reportedCount: 0,
+      plannedReportedCount: 0,
+      unplannedReportedCount: 0,
+      totalReportedCount: 0,
       onTrackCount: 0,
       slipCount: 0,
       resumeCount: 0,
@@ -1288,18 +1295,39 @@ export function getDailyVerificationStats(
 
   let onTrackCount = 0;
   let slipCount = 0;
+  let plannedReportedCount = 0;
+  let unplannedReportedCount = 0;
 
   for (const entry of uniqueMap.values()) {
     if (entry.status === 'on-track') onTrackCount++;
     else if (entry.status === 'slip') slipCount++;
+
+    const isExplicitUnplanned = entry.isUnplanned === true || entry.plannedBlockId.startsWith('unplanned_');
+    const isPlannedBlock =
+      !isExplicitUnplanned &&
+      plannedBlocksCount > 0 &&
+      (!scheduledBlockIds || scheduledBlockIds.includes(entry.plannedBlockId));
+
+    if (isPlannedBlock) {
+      plannedReportedCount++;
+    } else {
+      unplannedReportedCount++;
+    }
   }
+
+  // Cap plannedReportedCount at plannedBlocksCount to guard against any plan mismatch edge cases
+  const safePlannedReportedCount = Math.min(plannedReportedCount, plannedBlocksCount);
+  const totalReportedCount = onTrackCount + slipCount;
 
   const uniqueRecords = Array.from(uniqueMap.values());
   const resumeStats = calculateResumeStats(uniqueRecords);
 
   return {
     plannedCount: plannedBlocksCount,
-    reportedCount: onTrackCount + slipCount,
+    reportedCount: safePlannedReportedCount,
+    plannedReportedCount: safePlannedReportedCount,
+    unplannedReportedCount,
+    totalReportedCount,
     onTrackCount,
     slipCount,
     resumeCount: resumeStats.resumeCount,

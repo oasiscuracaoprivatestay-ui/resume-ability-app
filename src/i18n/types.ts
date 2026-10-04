@@ -600,6 +600,7 @@ export interface Translations {
   sdb_today_unstructured_title: string;
   sdb_today_unstructured_desc: string;
   dash_diet_today_title: string;
+  dash_diet_today_entries_logged: string;
   dash_breakdown_diet_on_track: string;
   dash_breakdown_diet_slip: string;
 

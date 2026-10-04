@@ -300,7 +300,7 @@ export const en: Translations = {
   // ── Dashboard ──
   dash_label: 'Diagnostic Summary',
   dash_heading: 'Daily Pulse',
-  dash_slips_today: 'Slips Today',
+  dash_slips_today: 'Recovery Slips Today',
   dash_most_frequent: 'Most Frequent Zone',
   dash_avg_recovery: 'Avg Recovery Time',
   dash_empty: 'No slips recorded yet. Stay aware.',
@@ -704,6 +704,7 @@ export const en: Translations = {
   sdb_today_unstructured_title: 'Today is an Unstructured Day',
   sdb_today_unstructured_desc: 'This day was intentionally planned to be flexible.',
   dash_diet_today_title: 'STRUCTURED DIET TODAY',
+  dash_diet_today_entries_logged: '{count} entries logged',
   dash_breakdown_diet_on_track: 'Structured Diet — On Track',
   dash_breakdown_diet_slip: 'Structured Diet — Honest Slip',
 

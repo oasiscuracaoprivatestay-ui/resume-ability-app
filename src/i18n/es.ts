@@ -290,7 +290,7 @@ export const es: Translations = {
 
   dash_label: 'Resumen diagnóstico',
   dash_heading: 'Pulso diario',
-  dash_slips_today: 'Deslices hoy',
+  dash_slips_today: 'Deslices de recuperación hoy',
   dash_most_frequent: 'Zona más frecuente',
   dash_avg_recovery: 'Tiempo promedio',
   dash_empty: 'Sin deslices registrados aún. Mantente consciente.',
@@ -690,6 +690,7 @@ export const es: Translations = {
   sdb_today_unstructured_title: 'Hoy es un Día No Estructurado',
   sdb_today_unstructured_desc: 'Este día fue planificado intencionalmente para ser flexible.',
   dash_diet_today_title: 'DIETA ESTRUCTURADA HOY',
+  dash_diet_today_entries_logged: '{count} registros guardados',
   dash_breakdown_diet_on_track: 'Dieta Estructurada — En Rumbo',
   dash_breakdown_diet_slip: 'Dieta Estructurada — Desliz Honesto',
 

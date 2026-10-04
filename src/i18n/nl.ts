@@ -290,7 +290,7 @@ export const nl: Translations = {
 
   dash_label: 'Diagnostisch overzicht',
   dash_heading: 'Dagelijkse pols',
-  dash_slips_today: 'Misstappen vandaag',
+  dash_slips_today: 'Herstel-misstappen vandaag',
   dash_most_frequent: 'Meest voorkomende zone',
   dash_avg_recovery: 'Gem. hersteltijd',
   dash_empty: 'Nog geen misstappen geregistreerd. Blijf bewust.',
@@ -690,6 +690,7 @@ export const nl: Translations = {
   sdb_today_unstructured_title: 'Vandaag is een Ongestructureerde Dag',
   sdb_today_unstructured_desc: 'Deze dag was bewust gepland om flexibel te zijn.',
   dash_diet_today_title: 'GESTRUCTUREERD DIEET VANDAAG',
+  dash_diet_today_entries_logged: '{count} registraties opgeslagen',
   dash_breakdown_diet_on_track: 'Gestructureerd Dieet — Op Schema',
   dash_breakdown_diet_slip: 'Gestructureerd Dieet — Eerlijke Slip',
 

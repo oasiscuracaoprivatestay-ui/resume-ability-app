@@ -16,7 +16,7 @@ import {
 } from '../utils/checkInStorage';
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
 import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
-import { getDailyVerificationStats, loadAllDietVerifications } from '../utils/dietVerificationStorage';
+import { getDailyVerificationStats, loadAllDietVerifications, getLocalDateKey } from '../utils/dietVerificationStorage';
 import { getAwarenessSummary } from '../utils/dietStructureAnalytics';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
 import {
@@ -152,8 +152,10 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     const weekly = loadWeeklyDiet();
     const todayKey = getLocalTodayKey();
     const todayPlan = getDayPlan(weekly, todayKey);
-    const plannedCount = todayPlan.mode === 'structured' ? todayPlan.blocks.length : 0;
-    return getDailyVerificationStats(plannedCount);
+    const scheduledBlocks = todayPlan.mode === 'structured' ? todayPlan.blocks : [];
+    const plannedCount = scheduledBlocks.length;
+    const scheduledBlockIds = scheduledBlocks.map((b) => b.id);
+    return getDailyVerificationStats(plannedCount, getLocalDateKey(), scheduledBlockIds);
   }, [refreshKey]);
 
   const todayAwareness = useMemo(() => {
@@ -229,7 +231,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
             </div>
           </div>
 
-          {(dietStats.plannedCount > 0 || dietStats.reportedCount > 0) && (
+          {(dietStats.plannedCount > 0 || dietStats.totalReportedCount > 0) && (
             <div
               className="dash-card dash-card--interactive dash-card--diet-today"
               id="dash-card-diet-today"
@@ -244,13 +246,15 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
               </div>
               <div className="dash-card-row">
                 <span className="dash-card-value">
-                  {t.sdb_v_reported_summary
-                    .replace('{reported}', String(dietStats.reportedCount))
-                    .replace('{total}', String(dietStats.plannedCount))}
+                  {dietStats.plannedCount > 0
+                    ? t.sdb_v_reported_summary
+                        .replace('{reported}', String(dietStats.plannedReportedCount))
+                        .replace('{total}', String(dietStats.plannedCount))
+                    : t.dash_diet_today_entries_logged.replace('{count}', String(dietStats.totalReportedCount))}
                 </span>
                 <span className="dash-card-icon">🥗</span>
               </div>
-              {dietStats.reportedCount > 0 && (
+              {dietStats.totalReportedCount > 0 && (
                 <>
                   <div className="dash-diet-breakdown">
                     <span className="dash-diet-badge dash-diet-badge--on-track">
