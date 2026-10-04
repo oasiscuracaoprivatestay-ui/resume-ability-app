@@ -15,8 +15,10 @@ import type {
   CoachProvider,
   CoachRequest,
   CoachResponse,
+  CoachActionType,
 } from '../types';
 import { LocalCoachProvider } from '../localCoachProvider';
+import { deterministicUnderstandingEngine } from '../deterministicUnderstanding';
 import type {
   AIResponseEnvelope,
   CoachGatewayRequestDTO,
@@ -66,7 +68,14 @@ export class RemoteCoachProvider implements CoachProvider {
     this.isRequestPending = true;
 
     try {
-      // 1. Prepare bounded history (last N messages)
+      // 1. Run deterministic understanding engine on user's exact message (Phase 39B.1)
+      const deterministic = await deterministicUnderstandingEngine.understand({
+        text: request.message,
+        language: request.language,
+        context: request.context,
+      });
+
+      // 2. Prepare bounded history (last N messages)
       const boundedHistory: SerializedChatMessage[] = (request.conversationHistory || [])
         .slice(-MAX_CONVERSATION_HISTORY)
         .map(m => ({ role: m.role, text: m.text }));
@@ -149,23 +158,37 @@ export class RemoteCoachProvider implements CoachProvider {
           responseText = `${responseText}\n\n${envelope.coaching.followUpQuestion}`;
         }
 
+        // Deterministic Proposal Authority (Phase 39B.1)
+        // Supported safe proposal families: LOG_CHECK_IN, LOG_FOOD, LOG_SLIP, LOG_NEUTRAL
+        const SAFE_PROPOSAL_TYPES: readonly CoachActionType[] = ['LOG_CHECK_IN', 'LOG_FOOD', 'LOG_SLIP', 'LOG_NEUTRAL'];
+        const safeDeterministicProposal =
+          !deterministic.requiresClarification &&
+          deterministic.proposedAction &&
+          SAFE_PROPOSAL_TYPES.includes(deterministic.proposedAction.type)
+            ? deterministic.proposedAction
+            : undefined;
+
+        // Remote AI output must NEVER override or invent executable proposals.
+        // Executable proposal authority comes strictly from deterministic understanding.
+        const effectiveProposal = safeDeterministicProposal;
+
         const coachMsg: CoachMessage = {
           id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           role: 'coach',
           text: responseText,
           createdAt: Date.now(),
-          actionProposal: envelope.proposedAction,
-          understanding: envelope.understanding,
+          actionProposal: effectiveProposal,
+          understanding: deterministic,
         };
 
         return {
           message: coachMsg,
           intent: {
-            type: envelope.understanding.intent,
-            confidence: envelope.understanding.confidence,
+            type: deterministic.intent !== 'GENERAL_COACHING' ? deterministic.intent : envelope.understanding.intent,
+            confidence: deterministic.intent !== 'GENERAL_COACHING' ? deterministic.confidence : envelope.understanding.confidence,
           },
-          understanding: envelope.understanding,
-          actionProposal: envelope.proposedAction,
+          understanding: deterministic,
+          actionProposal: effectiveProposal,
         };
       } catch (fetchError: any) {
         clearTimeout(timeoutHandle);

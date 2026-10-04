@@ -157,18 +157,84 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
       };
     }
 
+    // ── 3. Check for Daily Check-In ──────────────────────────────────────────
+    const checkInStatus = resolveCheckInStatus(rawText);
+    const isCheckInPhrase = /\b(?:check(?:ing)?\s*(?:me\s*)?in|check[- ]?in|i'm on structure|im on structure|estoy en estructura|ik ben op schema|close to slipping)\b/i.test(rawText);
+
+    if (isCheckInPhrase && !/had|ate|comí|gegeten/i.test(rawText)) {
+      intent = 'LOG_CHECK_IN';
+
+      if (checkInStatus) {
+        confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
+        entities.checkInStatus = checkInStatus;
+
+        const proposal = createActionProposal(
+          'LOG_CHECK_IN',
+          {
+            status: checkInStatus,
+            date: entities.date,
+            timestamp: Date.now(),
+          },
+          `Daily Check-In: ${checkInStatus === 'on-structure' ? 'On Structure' : (checkInStatus === 'near-slip' ? 'Near Slip' : 'Slip')}`
+        );
+
+        return {
+          id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          ability: ACTIVE_ABILITY_ID,
+          rawText,
+          intent,
+          confidence,
+          entities,
+          ambiguities,
+          requiresClarification,
+          proposedAction: proposal,
+        };
+      } else {
+        // Explicit check-in phrase without status (e.g. "I want to check in.")
+        // Must ask for check-in status clarification — DO NOT silently assume On Structure
+        confidence = CONFIDENCE_THRESHOLDS.STRONG_DETERMINISTIC;
+        requiresClarification = true;
+        ambiguities.push({
+          field: 'checkInStatus',
+          reason: 'How was your adherence today?',
+          options: [
+            { label: 'On Structure', value: 'on-structure', description: 'Followed my planned food structure' },
+            { label: 'Near Slip', value: 'near-slip', description: 'Felt close to slipping but stayed in control' },
+            { label: 'Slip', value: 'slip', description: 'Departed from my planned food structure' },
+          ],
+        });
+
+        return {
+          id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          ability: ACTIVE_ABILITY_ID,
+          rawText,
+          intent,
+          confidence,
+          entities,
+          ambiguities,
+          requiresClarification,
+          proposedAction: undefined,
+        };
+      }
+    }
+
+    // ── 4. Check for Slip ───────────────────────────────────────────────────
     const outcomeRes = resolveOutcome(rawText);
+    if (outcomeRes && outcomeRes.outcome === 'structured_slip' && /\b(?:unstructured|no\s*estructurado|ongestructureerd)\b/i.test(rawText)) {
+      outcomeRes.outcome = 'unstructured_slip';
+    }
     const isSlipQuestion = isConceptualQuestion && !isExplicitAction &&
       (/\b(?:did i slip|does .*count as a slip|is .*a slip|what is a slip|cuenta como desliz|es un desliz|is dit een uitglijder)\b/i.test(rawText) ||
        rawText.toLowerCase().includes('did i slip') ||
        rawText.toLowerCase().includes('count as a slip'));
 
     const slipKeyword = !isSlipQuestion && /\b(?:slipped|i slipped|deslic[eé]|uitgegleden|had a slip)\b/i.test(rawText);
+    const isTrueSlipOutcome = outcomeRes && (outcomeRes.outcome === 'structured_slip' || outcomeRes.outcome === 'unstructured_slip');
 
-    if (!isSlipQuestion && (outcomeRes || slipKeyword)) {
+    if (!isSlipQuestion && (isTrueSlipOutcome || slipKeyword)) {
       intent = 'LOG_SLIP';
 
-      if (outcomeRes) {
+      if (isTrueSlipOutcome) {
         confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
         entities.outcome = outcomeRes.outcome;
         entities.resumed = outcomeRes.resumed;
@@ -205,38 +271,6 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
           formatSlipProposalSummary(entities.outcome, entities.resumed, entities.resumeDurationMinutes, entities.startTime)
         );
       }
-
-      return {
-        id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        ability: ACTIVE_ABILITY_ID,
-        rawText,
-        intent,
-        confidence,
-        entities,
-        ambiguities,
-        requiresClarification,
-        proposedAction: proposal,
-      };
-    }
-
-    // ── 4. Check for Daily Check-In ──────────────────────────────────────────
-    const checkInStatus = resolveCheckInStatus(rawText);
-    const isCheckInPhrase = /\b(?:check[- ]?in|i'm on structure|im on structure|close to slipping)\b/i.test(rawText);
-
-    if (checkInStatus && isCheckInPhrase && !/had|ate|comí|gegeten/i.test(rawText)) {
-      intent = 'LOG_CHECK_IN';
-      confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
-      entities.checkInStatus = checkInStatus;
-
-      const proposal = createActionProposal(
-        'LOG_CHECK_IN',
-        {
-          status: checkInStatus,
-          date: entities.date,
-          timestamp: Date.now(),
-        },
-        `Daily Check-In: ${checkInStatus === 'on-structure' ? 'On Structure' : (checkInStatus === 'near-slip' ? 'Near Slip' : 'Slip')}`
-      );
 
       return {
         id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
