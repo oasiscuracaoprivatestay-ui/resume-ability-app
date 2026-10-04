@@ -1559,6 +1559,10 @@ export interface Translations {
   coach_action_edit: string;
   coach_action_cancel: string;
   coach_action_not_enabled: string;
+  coach_action_executing: string;
+  coach_action_success: string;
+  coach_action_expired: string;
+  coach_action_error: string;
 
   // ── Phase 34: Structured Understanding & Clarification ──
   coach_clarification_title: string;

@@ -549,6 +549,42 @@
   background: rgba(71, 85, 105, 0.9);
 }
 
+.coach-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.coach-action-proposal-card--executed {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(6, 78, 59, 0.15);
+}
+
+.coach-action-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  color: #34d399;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.coach-action-check {
+  font-size: 0.95rem;
+}
+
+.coach-action-points {
+  background: rgba(16, 185, 129, 0.25);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #6ee7b7;
+}
+
 /* ── Clarification Chips (Phase 34) ── */
 .coach-clarification-container {
   margin-top: 12px;

@@ -1652,6 +1652,10 @@ export const nl: Translations = {
   coach_action_edit: 'Bewerken',
   coach_action_cancel: 'Annuleren',
   coach_action_not_enabled: 'Actie-uitvoering wordt ingeschakeld in de volgende ontwikkelfase.',
+  coach_action_executing: 'Opslaan...',
+  coach_action_success: 'Vastgelegd',
+  coach_action_expired: 'Dit voorstel is verlopen. Maak een nieuwe aan.',
+  coach_action_error: 'Kon actie niet uitvoeren.',
 
   // ── Phase 34: Structured Understanding & Clarification ──
   coach_clarification_title: 'Verduidelijking Nodig',

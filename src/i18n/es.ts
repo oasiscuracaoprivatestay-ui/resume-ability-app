@@ -1652,6 +1652,10 @@ export const es: Translations = {
   coach_action_edit: 'Editar',
   coach_action_cancel: 'Cancelar',
   coach_action_not_enabled: 'La ejecución de acciones estará disponible en la próxima fase de desarrollo.',
+  coach_action_executing: 'Guardando...',
+  coach_action_success: 'Registrado',
+  coach_action_expired: 'Esta propuesta ha caducado. Por favor, crea una nueva.',
+  coach_action_error: 'No se pudo ejecutar la acción.',
 
   // ── Phase 34: Structured Understanding & Clarification ──
   coach_clarification_title: 'Aclaración Necesaria',

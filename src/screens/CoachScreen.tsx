@@ -27,6 +27,7 @@ import {
   type CoachMessage,
   type CoachActionProposal,
   type VoiceSessionState,
+  executeActionProposal,
 } from '../coach';
 import './CoachScreen.css';
 
@@ -42,6 +43,7 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
   const [isThinking, setIsThinking] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [executingProposalId, setExecutingProposalId] = useState<string | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceSessionState>(() => voiceController.getState());
 
   // Proposal edit modal state (Phase 34)
@@ -221,13 +223,63 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
     setActionNotice(null);
   };
 
-  const handleConfirmAction = (_proposal: CoachActionProposal) => {
-    // Phase 33 & 34 Confirmation-First: Strictly no mutation. Inform the user truthfully.
-    setActionNotice(t.coach_action_not_enabled);
+  const handleConfirmAction = async (proposal: CoachActionProposal) => {
+    if (executingProposalId) return;
+    if (proposal.executed) return;
+
+    setExecutingProposalId(proposal.id);
+    setActionNotice(null);
+
+    try {
+      const result = await executeActionProposal(proposal);
+
+      if (result.success) {
+        const updated = messages.map(m => {
+          if (m.actionProposal && m.actionProposal.id === proposal.id) {
+            const updatedProposal: CoachActionProposal = {
+              ...m.actionProposal,
+              executed: true,
+              executedAt: Date.now(),
+              executionStatus: 'executed',
+              recordId: result.recordId,
+              pointsAwarded: result.pointsAwarded,
+            };
+            return {
+              ...m,
+              actionProposal: updatedProposal,
+            };
+          }
+          return m;
+        });
+
+        setMessages(updated);
+        saveCoachConversation({
+          schemaVersion: 1,
+          ability: 'diet',
+          messages: updated,
+          updatedAt: Date.now(),
+        });
+
+        const ptsText = typeof result.pointsAwarded === 'number' && result.pointsAwarded > 0
+          ? ` (+${result.pointsAwarded} pts)`
+          : '';
+        setActionNotice(`${t.coach_action_success || 'Recorded'}${ptsText}`);
+      } else {
+        if (result.status === 'expired') {
+          setActionNotice(t.coach_action_expired || 'This proposal has expired. Please create a new one.');
+        } else {
+          setActionNotice(result.message || t.coach_action_error || 'Could not execute action.');
+        }
+      }
+    } catch {
+      setActionNotice(t.coach_action_error || 'Could not execute action.');
+    } finally {
+      setExecutingProposalId(null);
+    }
   };
 
   const handleOpenEditProposal = (msg: CoachMessage) => {
-    if (!msg.actionProposal) return;
+    if (!msg.actionProposal || msg.actionProposal.executed) return;
     const payload = msg.actionProposal.payload as Record<string, unknown>;
     setEditingProposal({
       messageId: msg.id,
@@ -242,7 +294,11 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
       if (m.id === editingProposal.messageId && m.actionProposal) {
         const updatedProposal: CoachActionProposal = {
           ...m.actionProposal,
+          id: `proposal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           humanReadableSummary: editingProposal.summary,
+          executed: false,
+          executionStatus: 'pending',
+          createdAt: Date.now(),
           payload: {
             ...m.actionProposal.payload,
             startTime: editingProposal.time || undefined,
@@ -475,37 +531,57 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
                     </div>
                   )}
 
-                  {/* Action Proposal Preview Card (Phase 33 & 34) */}
+                  {/* Action Proposal Preview Card (Phase 33 & 34 & 39B) */}
                   {msg.actionProposal && (
-                    <div className="coach-action-proposal-card" id={`action-${msg.actionProposal.id}`}>
+                    <div
+                      className={`coach-action-proposal-card ${msg.actionProposal.executed ? 'coach-action-proposal-card--executed' : ''}`}
+                      id={`action-${msg.actionProposal.id}`}
+                    >
                       <div className="coach-action-proposal-header">
-                        <span className="coach-action-icon">📋</span>
-                        <span className="coach-action-title">{t.coach_proposal_title}</span>
+                        <span className="coach-action-icon">{msg.actionProposal.executed ? '✓' : '📋'}</span>
+                        <span className="coach-action-title">
+                          {msg.actionProposal.executed ? (t.coach_action_success || 'Recorded') : t.coach_proposal_title}
+                        </span>
                       </div>
                       <p className="coach-action-summary">{msg.actionProposal.humanReadableSummary}</p>
-                      <div className="coach-action-buttons">
-                        <button
-                          id={`btn-confirm-action-${msg.actionProposal.id}`}
-                          className="coach-action-btn coach-action-btn--confirm"
-                          onClick={() => handleConfirmAction(msg.actionProposal!)}
-                        >
-                          {t.coach_action_confirm}
-                        </button>
-                        <button
-                          id={`btn-edit-action-${msg.actionProposal.id}`}
-                          className="coach-action-btn coach-action-btn--edit"
-                          onClick={() => handleOpenEditProposal(msg)}
-                        >
-                          {t.coach_action_edit}
-                        </button>
-                        <button
-                          id={`btn-cancel-action-${msg.actionProposal.id}`}
-                          className="coach-action-btn coach-action-btn--cancel"
-                          onClick={() => handleCancelAction(msg.id)}
-                        >
-                          {t.coach_action_cancel}
-                        </button>
-                      </div>
+                      {msg.actionProposal.executed ? (
+                        <div className="coach-action-completed-badge" id={`action-completed-${msg.actionProposal.id}`}>
+                          <span className="coach-action-check">✓</span>
+                          <span>{t.coach_action_success || 'Recorded'}</span>
+                          {typeof msg.actionProposal.pointsAwarded === 'number' && msg.actionProposal.pointsAwarded > 0 && (
+                            <span className="coach-action-points">+{msg.actionProposal.pointsAwarded} pts</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="coach-action-buttons">
+                          <button
+                            id={`btn-confirm-action-${msg.actionProposal.id}`}
+                            className="coach-action-btn coach-action-btn--confirm"
+                            onClick={() => handleConfirmAction(msg.actionProposal!)}
+                            disabled={executingProposalId !== null}
+                          >
+                            {executingProposalId === msg.actionProposal.id
+                              ? (t.coach_action_executing || 'Saving...')
+                              : t.coach_action_confirm}
+                          </button>
+                          <button
+                            id={`btn-edit-action-${msg.actionProposal.id}`}
+                            className="coach-action-btn coach-action-btn--edit"
+                            onClick={() => handleOpenEditProposal(msg)}
+                            disabled={executingProposalId !== null}
+                          >
+                            {t.coach_action_edit}
+                          </button>
+                          <button
+                            id={`btn-cancel-action-${msg.actionProposal.id}`}
+                            className="coach-action-btn coach-action-btn--cancel"
+                            onClick={() => handleCancelAction(msg.id)}
+                            disabled={executingProposalId !== null}
+                          >
+                            {t.coach_action_cancel}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

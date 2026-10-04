@@ -1666,6 +1666,10 @@ export const en: Translations = {
   coach_action_edit: 'Edit',
   coach_action_cancel: 'Cancel',
   coach_action_not_enabled: 'Action execution will be enabled in the next development phase.',
+  coach_action_executing: 'Saving...',
+  coach_action_success: 'Recorded',
+  coach_action_expired: 'This proposal has expired. Please create a new one.',
+  coach_action_error: 'Could not execute action.',
 
   // ── Phase 34: Structured Understanding & Clarification ──
   coach_clarification_title: 'Need Clarification',

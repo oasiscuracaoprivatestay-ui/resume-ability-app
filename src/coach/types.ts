@@ -99,7 +99,23 @@ export interface CoachActionProposal {
   requiresConfirmation: boolean;
   payload: Record<string, unknown>;
   humanReadableSummary: string;
+  createdAt?: number;
+  executed?: boolean;
+  executedAt?: number;
+  executionStatus?: 'pending' | 'executing' | 'executed' | 'already_executed' | 'failed' | 'rejected' | 'expired';
+  recordId?: string;
+  pointsAwarded?: number;
 }
+
+export interface CoachExecutionResult {
+  success: boolean;
+  actionType: CoachActionType;
+  recordId?: string;
+  pointsAwarded?: number;
+  status: 'executed' | 'already_executed' | 'failed' | 'rejected' | 'expired';
+  message: string;
+}
+
 
 // ── Read-Only Normalized Coach Context (Privacy Minimized) ─────────────────────
 
