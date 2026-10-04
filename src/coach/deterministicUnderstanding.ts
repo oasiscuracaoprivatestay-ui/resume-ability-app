@@ -106,10 +106,29 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
     }
 
     // ── 3. Check for Slip / Near-Slip / 20% OFF TRACK ────────────────────────
+    const isExplicitAction = /\b(?:log|record|register|track|add|anota|anotar|registra|registrar|invoeren|opslaan)\b/i.test(rawText);
+    const isConceptualQuestion = rawText.endsWith('?') ||
+      /\b(?:what|why|how|does|did|is|can|explain|tell me about|c[oó]mo|por qu[eé]|qu[eé]|acaso|cuenta como|hoe|waarom|wat|betekent)\b/i.test(rawText);
+
     const isExplicitOffTrack = /20%|20\s*percent|veinte\s*por\s*ciento|20\s*procent/i.test(rawText) &&
       /off\s*track|fuera|buiten/i.test(rawText);
 
     if (isExplicitOffTrack) {
+      if (isConceptualQuestion && !isExplicitAction) {
+        // Conceptual inquiry like "Does 20% OFF TRACK count as a slip?" — do NOT create action proposal
+        return {
+          id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          ability: ACTIVE_ABILITY_ID,
+          rawText,
+          intent: 'GENERAL_COACHING',
+          confidence: CONFIDENCE_THRESHOLDS.CANONICAL_EXACT,
+          entities: { outcome: 'twenty_percent_off_track' },
+          ambiguities,
+          requiresClarification: false,
+          proposedAction: undefined,
+        };
+      }
+
       intent = 'LOG_SLIP';
       confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
       entities.outcome = 'twenty_percent_off_track';
@@ -139,9 +158,14 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
     }
 
     const outcomeRes = resolveOutcome(rawText);
-    const slipKeyword = /\b(?:slipped|i slipped|deslic[eé]|uitgegleden|had a slip)\b/i.test(rawText);
+    const isSlipQuestion = isConceptualQuestion && !isExplicitAction &&
+      (/\b(?:did i slip|does .*count as a slip|is .*a slip|what is a slip|cuenta como desliz|es un desliz|is dit een uitglijder)\b/i.test(rawText) ||
+       rawText.toLowerCase().includes('did i slip') ||
+       rawText.toLowerCase().includes('count as a slip'));
 
-    if (outcomeRes || slipKeyword) {
+    const slipKeyword = !isSlipQuestion && /\b(?:slipped|i slipped|deslic[eé]|uitgegleden|had a slip)\b/i.test(rawText);
+
+    if (!isSlipQuestion && (outcomeRes || slipKeyword)) {
       intent = 'LOG_SLIP';
 
       if (outcomeRes) {
@@ -150,7 +174,7 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
         entities.resumed = outcomeRes.resumed;
         entities.resumeDurationMinutes = outcomeRes.resumeDurationMinutes;
       } else {
-        // "I slipped." without specifying subtype
+        // "I slipped." without specifying subtype — user explicitly stated true slip occurred
         const resumeInfo = parseResumeDetails(rawText);
         entities.resumed = resumeInfo.resumed;
         entities.resumeDurationMinutes = resumeInfo.durationMinutes;
@@ -161,7 +185,6 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
           field: 'outcome',
           reason: 'Please choose the type of slip to record it accurately.',
           options: [
-            { label: 'Near-Slip', value: 'near_slip', description: 'Stopped before crossing the boundary' },
             { label: 'Structured Slip', value: 'structured_slip', description: 'Departed from plan within defined limits' },
             { label: 'Unstructured Slip', value: 'unstructured_slip', description: 'Total departure from food structure' },
           ],
