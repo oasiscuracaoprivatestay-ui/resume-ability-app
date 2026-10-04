@@ -160,19 +160,38 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
     handleSend(prompt.text);
   };
 
+  const handleTranscriptResult = (transcript: any) => {
+    if (transcript && transcript.text && transcript.text.trim()) {
+      setActionNotice(null);
+      handleSend(transcript.text);
+    } else {
+      const err = voiceController.getState().lastError;
+      if (err) {
+        setActionNotice(t.coach_voice_error_transcription);
+      } else {
+        setActionNotice(t.coach_voice_no_speech);
+      }
+    }
+  };
+
   const handleToggleMic = async () => {
     if (isThinking) return;
 
     if (voiceState.inputState === 'listening') {
       const transcript = await voiceController.stopListening();
-      if (transcript && transcript.text.trim()) {
-        handleSend(transcript.text);
-      }
-    } else {
+      handleTranscriptResult(transcript);
+    } else if (voiceState.inputState === 'idle' || voiceState.inputState === 'error' || voiceState.inputState === 'complete') {
+      setActionNotice(null);
       try {
-        await voiceController.startListening(lang as 'en' | 'es' | 'nl', (partial) => {
-          setInputText(partial);
-        });
+        await voiceController.startListening(
+          lang as 'en' | 'es' | 'nl',
+          (partial) => {
+            setInputText(partial);
+          },
+          (autoTranscript) => {
+            handleTranscriptResult(autoTranscript);
+          }
+        );
       } catch {
         setActionNotice(t.coach_voice_error_mic);
       }
@@ -538,18 +557,22 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
 
       {/* ── Composer with Voice Input (Phase 38A) ── */}
       <footer className="coach-composer-container">
-        {voiceState.inputState === 'listening' && (
+        {(voiceState.inputState === 'listening' || voiceState.inputState === 'transcribing') && (
           <div className="coach-voice-listening-banner" role="status" aria-live="polite">
-            <span className="coach-voice-pulse" aria-hidden="true" />
-            <span className="coach-voice-banner-text">{t.coach_voice_listening}</span>
-            <button
-              type="button"
-              className="coach-voice-cancel-btn"
-              onClick={() => voiceController.cancelListening()}
-              aria-label="Cancel"
-            >
-              ✕
-            </button>
+            <span className={voiceState.inputState === 'transcribing' ? 'coach-voice-pulse coach-voice-pulse--transcribing' : 'coach-voice-pulse'} aria-hidden="true" />
+            <span className="coach-voice-banner-text">
+              {voiceState.inputState === 'transcribing' ? t.coach_voice_processing : t.coach_voice_listening}
+            </span>
+            {voiceState.inputState === 'listening' && (
+              <button
+                type="button"
+                className="coach-voice-cancel-btn"
+                onClick={() => voiceController.cancelListening()}
+                aria-label="Cancel"
+              >
+                ✕
+              </button>
+            )}
           </div>
         )}
         <form

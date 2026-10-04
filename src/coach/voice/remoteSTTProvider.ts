@@ -17,6 +17,29 @@ import type {
 } from './types';
 import { AudioRecorder } from './audioRecorder';
 
+/**
+ * Asynchronously converts an audio Blob to a base64 payload string without data URI scheme.
+ * Avoids CPU-intensive byte loops and large intermediate array allocations on mobile devices.
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        const commaIndex = result.indexOf(',');
+        resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+      } else {
+        reject(new Error('Unexpected FileReader result format during audio base64 conversion'));
+      }
+    };
+    reader.onerror = () => {
+      reject(reader.error || new Error('FileReader error during audio conversion'));
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 export class RemoteSpeechToTextProvider implements SpeechToTextProvider {
   readonly id = 'remote_openai_stt';
   readonly name = 'OpenAI Remote Speech Transcription';
@@ -50,15 +73,19 @@ export class RemoteSpeechToTextProvider implements SpeechToTextProvider {
   async stopListening(): Promise<VoiceTranscript | null> {
     const result = await this.recorder.stop();
     if (!result || !result.blob || result.blob.size === 0) {
+      console.warn('[SDA-VOICE-CLIENT] empty_recording');
       return null;
     }
 
     try {
-      // Convert Blob to Base64 in memory
-      const arrayBuffer = await result.blob.arrayBuffer();
-      const base64Audio = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
+      console.log('[SDA-VOICE-CLIENT] transcription_requested', {
+        mimeType: result.mimeType,
+        blobSize: result.blob.size,
+        language: this.currentLanguage,
+      });
+
+      // Browser-native asynchronous base64 conversion (Phase V1.1)
+      const base64Audio = await blobToBase64(result.blob);
 
       const payload = {
         audioBase64: base64Audio,
@@ -76,6 +103,10 @@ export class RemoteSpeechToTextProvider implements SpeechToTextProvider {
 
       if (!response.ok) {
         const errorJson = await response.json().catch(() => ({}));
+        console.error('[SDA-VOICE-CLIENT] transcription_failed', {
+          status: response.status,
+          mimeType: result.mimeType,
+        });
         throw new Error(errorJson.error || `Voice transcription failed with status ${response.status}`);
       }
 
@@ -83,8 +114,16 @@ export class RemoteSpeechToTextProvider implements SpeechToTextProvider {
       const text = (json.text || '').trim();
 
       if (!text) {
+        console.warn('[SDA-VOICE-CLIENT] transcription_empty', {
+          mimeType: result.mimeType,
+        });
         return null;
       }
+
+      console.log('[SDA-VOICE-CLIENT] transcription_succeeded', {
+        mimeType: result.mimeType,
+        language: this.currentLanguage,
+      });
 
       const transcript: VoiceTranscript = {
         id: `vt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -97,6 +136,9 @@ export class RemoteSpeechToTextProvider implements SpeechToTextProvider {
 
       return transcript;
     } catch (err: any) {
+      console.error('[SDA-VOICE-CLIENT] transcription_failed', {
+        message: err.message,
+      });
       throw new Error(err.message || 'Voice transcription failed');
     }
   }

@@ -49,6 +49,8 @@ export class VoiceController {
   };
 
   private listeners: Array<(state: VoiceSessionState) => void> = [];
+  private autoStopTimer: any = null;
+  private onAutoStopCallback: ((transcript: VoiceTranscript | null) => void) | null = null;
 
   constructor(
     sttProvider?: SpeechToTextProvider,
@@ -57,6 +59,13 @@ export class VoiceController {
     this.sttProvider = sttProvider || createDefaultSTTProvider();
     this.ttsProvider = ttsProvider || createDefaultTTSProvider();
     this.state.capabilityStatus = getVoiceCapabilityStatus();
+  }
+
+  private clearAutoStopTimer(): void {
+    if (this.autoStopTimer) {
+      clearTimeout(this.autoStopTimer);
+      this.autoStopTimer = null;
+    }
   }
 
   // ── Provider Configuration ──────────────────────────────────────────────────
@@ -118,11 +127,16 @@ export class VoiceController {
    */
   async startListening(
     language: 'en' | 'es' | 'nl' = this.config.language,
-    onInterim?: (partialText: string) => void
+    onInterim?: (partialText: string) => void,
+    onAutoStop?: (transcript: VoiceTranscript | null) => void,
+    maxDurationMs = 15000
   ): Promise<void> {
-    if (this.state.inputState === 'listening') {
+    if (this.state.inputState === 'listening' || this.state.inputState === 'transcribing') {
       return;
     }
+
+    this.clearAutoStopTimer();
+    this.onAutoStopCallback = onAutoStop || null;
 
     this.updateState({
       inputState: 'requesting_permission',
@@ -142,6 +156,7 @@ export class VoiceController {
           if (onInterim) onInterim(partial);
         },
         (err) => {
+          this.clearAutoStopTimer();
           this.updateState({
             inputState: 'error',
             lastError: err.message,
@@ -149,8 +164,26 @@ export class VoiceController {
         }
       );
 
+      // Verify that the provider is actually recording before establishing Listening state (Phase V1.1)
+      if (typeof this.sttProvider.isListening === 'function' && !this.sttProvider.isListening()) {
+        throw new Error('Audio recorder failed to enter active recording state.');
+      }
+
       this.updateState({ inputState: 'listening' });
+
+      // Lightweight 15-second safety auto-stop (Phase V1.1)
+      this.autoStopTimer = setTimeout(async () => {
+        if (this.state.inputState === 'listening') {
+          console.log('[SDA-VOICE-CLIENT] 15-second safety auto-stop triggered');
+          const cb = this.onAutoStopCallback;
+          const transcript = await this.stopListening();
+          if (cb) {
+            cb(transcript);
+          }
+        }
+      }, maxDurationMs);
     } catch (err: any) {
+      this.clearAutoStopTimer();
       this.updateState({
         inputState: 'error',
         lastError: err?.message || 'Failed to start microphone',
@@ -163,6 +196,8 @@ export class VoiceController {
    * Stops listening, produces VoiceTranscript, and transitions to idle or complete.
    */
   async stopListening(): Promise<VoiceTranscript | null> {
+    this.clearAutoStopTimer();
+
     if (this.state.inputState !== 'listening') {
       return null;
     }
@@ -202,6 +237,7 @@ export class VoiceController {
    * Cancels active recording without producing a transcript.
    */
   async cancelListening(): Promise<void> {
+    this.clearAutoStopTimer();
     await this.sttProvider.cancelListening();
     this.updateState({
       inputState: 'idle',

@@ -132,6 +132,13 @@ export async function handleTranscribeVoice(
   }
 
   const model = DEFAULT_STT_MODEL;
+  const startTime = Date.now();
+
+  console.log('[SDA_VOICE_STT] Transcription requested', {
+    mimeType,
+    byteSize: audioBuffer.length,
+    language,
+  });
 
   try {
     const extension = mimeType.includes('mp4') ? 'mp4' : (mimeType.includes('ogg') ? 'ogg' : (mimeType.includes('wav') ? 'wav' : 'webm'));
@@ -160,6 +167,12 @@ export async function handleTranscribeVoice(
 
     if (!response.ok) {
       const errText = await response.text();
+      console.error('[SDA_VOICE_STT] Provider failure', {
+        mimeType,
+        byteSize: audioBuffer.length,
+        providerStatus: response.status,
+        durationMs: Date.now() - startTime,
+      });
       return {
         status: response.status >= 500 ? 502 : response.status,
         body: {
@@ -173,6 +186,15 @@ export async function handleTranscribeVoice(
 
     const json = (await response.json()) as { text?: string };
     const transcribedText = (json.text || '').trim();
+    const emptyTranscript = transcribedText.length === 0;
+
+    console.log('[SDA_VOICE_STT] Provider success', {
+      mimeType,
+      byteSize: audioBuffer.length,
+      providerStatus: response.status,
+      emptyTranscript,
+      durationMs: Date.now() - startTime,
+    });
 
     const normalized: NormalizedTranscriptDTO = {
       text: transcribedText,
@@ -187,11 +209,22 @@ export async function handleTranscribeVoice(
     };
   } catch (err: any) {
     if (err.name === 'AbortError') {
+      console.error('[SDA_VOICE_STT] Transcription timeout', {
+        mimeType,
+        byteSize: audioBuffer.length,
+        durationMs: Date.now() - startTime,
+      });
       return {
         status: 504,
         body: { error: 'Voice transcription timed out', code: 'TIMEOUT' },
       };
     }
+    console.error('[SDA_VOICE_STT] Network failure', {
+      mimeType,
+      byteSize: audioBuffer.length,
+      error: err?.message || 'NETWORK_ERROR',
+      durationMs: Date.now() - startTime,
+    });
     return {
       status: 502,
       body: { error: 'Failed to communicate with voice transcription provider', code: 'NETWORK_ERROR' },

@@ -913,11 +913,16 @@
   }
 }
 
+.coach-voice-pulse--transcribing {
+  background: #38bdf8;
+}
+
 .coach-voice-banner-text {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .coach-voice-cancel-btn {

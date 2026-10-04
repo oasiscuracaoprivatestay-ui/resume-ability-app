@@ -71,6 +71,20 @@ export class AudioRecorder {
         },
       });
 
+      // Verify audio track exists and is active (Phase V1.1)
+      const audioTracks = this.mediaStream.getAudioTracks();
+      const primaryTrack = audioTracks[0];
+      if (!primaryTrack || primaryTrack.readyState !== 'live') {
+        throw new Error('Microphone audio track is not active.');
+      }
+
+      // Handle track mute or ended states safely
+      primaryTrack.onended = () => {
+        if (this.recording) {
+          console.warn('[SDA-VOICE-CLIENT] Microphone audio track ended unexpectedly');
+        }
+      };
+
       this.activeMimeType = this.selectSupportedMimeType();
       this.recordedChunks = [];
 
@@ -87,8 +101,25 @@ export class AudioRecorder {
         }
       };
 
+      // For MP4 recording (Safari/WebKit), start() without timeslice produces a valid, complete MP4 container.
+      // For WebM/Ogg, chunked recording (250ms) remains safe.
+      const isMp4 = (this.activeMimeType || '').toLowerCase().includes('mp4');
+      if (isMp4) {
+        this.mediaRecorder.start();
+      } else {
+        this.mediaRecorder.start(250);
+      }
+
+      // Verify that recorder is genuinely in recording state (Phase V1.1)
+      if (this.mediaRecorder.state !== 'recording') {
+        throw new Error('MediaRecorder failed to enter recording state.');
+      }
+
       this.recording = true;
-      this.mediaRecorder.start(250); // collect 250ms chunks
+      console.log('[SDA-VOICE-CLIENT] recording_started', {
+        mimeType: this.activeMimeType,
+        recorderState: this.mediaRecorder.state,
+      });
     } catch (err: any) {
       this.releaseTracks();
       this.recording = false;
@@ -109,11 +140,17 @@ export class AudioRecorder {
     }
 
     return new Promise((resolve) => {
-      this.mediaRecorder!.onstop = () => {
+      const recorder = this.mediaRecorder!;
+
+      recorder.onstop = () => {
         this.recording = false;
+        // Do NOT stop MediaStream tracks before final recorder data has been collected
         this.releaseTracks();
 
         if (this.recordedChunks.length === 0) {
+          console.warn('[SDA-VOICE-CLIENT] empty_recording', {
+            mimeType: this.activeMimeType,
+          });
           resolve(null);
           return;
         }
@@ -122,12 +159,18 @@ export class AudioRecorder {
           type: this.activeMimeType || 'audio/webm',
         });
         this.recordedChunks = [];
+
+        console.log('[SDA-VOICE-CLIENT] recording_stopped', {
+          mimeType: this.activeMimeType,
+          blobSize: combinedBlob.size,
+        });
+
         resolve({ blob: combinedBlob, mimeType: this.activeMimeType || 'audio/webm' });
       };
 
       try {
-        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-          this.mediaRecorder.stop();
+        if (recorder.state !== 'inactive') {
+          recorder.stop();
         } else {
           this.recording = false;
           this.releaseTracks();

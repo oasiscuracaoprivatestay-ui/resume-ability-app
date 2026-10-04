@@ -1584,7 +1584,7 @@ export interface Translations {
   // ── Phase 36: Real AI Gateway & Error UX ──
   coach_error_generic: string;
 
-  // ── Phase 38A: SDA Voice Coach ──
+  // ── Phase 38A / Phase V1.1: SDA Voice Coach ──
   coach_voice_mic_button: string;
   coach_voice_listening: string;
   coach_voice_processing: string;
@@ -1594,6 +1594,8 @@ export interface Translations {
   coach_voice_motivation_button: string;
   coach_voice_advice_button: string;
   coach_voice_error_mic: string;
+  coach_voice_no_speech: string;
+  coach_voice_error_transcription: string;
 
   // ── Phase 37: Ability Challenges System ──
   common_back: string;

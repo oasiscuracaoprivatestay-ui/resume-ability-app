@@ -1691,16 +1691,18 @@ export const en: Translations = {
   // ── Phase 36: Real AI Gateway & Error UX ──
   coach_error_generic: "I couldn't process that right now. Please try again.",
 
-  // ── Phase 38A: SDA Voice Coach ──
+  // ── Phase 38A / Phase V1.1: SDA Voice Coach ──
   coach_voice_mic_button: 'Voice input (Microphone)',
-  coach_voice_listening: 'Listening... speak now',
+  coach_voice_listening: "Listening... Tap stop when you're done.",
   coach_voice_processing: 'Processing voice...',
-  coach_voice_stop_mic: 'Stop listening',
+  coach_voice_stop_mic: 'Stop and send recording',
   coach_voice_listen_response: 'Listen',
   coach_voice_stop_response: 'Stop',
   coach_voice_motivation_button: 'Spoken Motivation',
   coach_voice_advice_button: 'Spoken Advice',
   coach_voice_error_mic: 'Microphone error. You can type instead.',
+  coach_voice_no_speech: "I couldn't detect any speech. Please try again and tap stop when you're done.",
+  coach_voice_error_transcription: 'Voice transcription failed. You can type instead or try again.',
 
   // ── Phase 37: Ability Challenges System ──
   common_back: 'Back',
