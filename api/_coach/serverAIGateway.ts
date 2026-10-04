@@ -382,6 +382,65 @@ export function validateAndReconcileAIResponse(
     }
   }
 
+  // Guard: Personal Recall Zero-State & Factual Reconciliation (Phase 40D.2)
+  if (personalStateCategory === 'COMMITMENT_RECALL') {
+    const whyCount = context?.commitment?.whyCount ?? (Array.isArray(context?.commitment?.reasons) ? context.commitment.reasons.length : 0);
+    const safeReasons = Array.isArray(context?.turnScopedSensitive?.reasons) ? context.turnScopedSensitive.reasons : [];
+
+    if (whyCount === 0 || (safeReasons.length === 0 && whyCount === 0)) {
+      coachingMsg = language === 'es'
+        ? 'Aún no has guardado motivos personales en tu Porqué. Puedes añadirlos en Mis Compromisos.'
+        : (language === 'nl'
+            ? 'Je hebt nog geen persoonlijke Waarom-redenen opgeslagen. Je kunt ze toevoegen in Mijn Verplichtingen.'
+            : "You haven't saved any personal Why reasons yet. You can add your reasons in My Commitment.");
+    } else if (safeReasons.length > 0) {
+      const quotesAnySafe = safeReasons.some(r => coachingMsg.toLowerCase().includes(r.toLowerCase()));
+      if (!quotesAnySafe) {
+        const list = safeReasons.map((r, i) => `${i + 1}. "${r}"`).join('\n');
+        coachingMsg = language === 'es'
+          ? `Aquí está tu Porqué personal:\n${list}\n\nTen presente este propósito cuando sientas impulsos.`
+          : (language === 'nl'
+              ? `Dit is jouw persoonlijke Waarom:\n${list}\n\nHoud dit doel voor ogen wanneer er verleiding ontstaat.`
+              : `Here is your personal Why:\n${list}\n\nKeep this purpose front of mind whenever urges arise.`);
+      }
+    } else if (whyCount > 0 && safeReasons.length === 0) {
+      coachingMsg = language === 'es'
+        ? 'Tienes motivos personales guardados, pero el texto no está disponible en el contexto actual del Coach. Puedes verlos en Mis Compromisos.'
+        : (language === 'nl'
+            ? 'Je hebt persoonlijke redenen opgeslagen, maar de tekst is niet beschikbaar in de huidige Coach-context. Je kunt ze bekijken in Mijn Verplichtingen.'
+            : "You have saved Why reasons, but their text isn't available in the current Coach context. You can view them in My Commitment.");
+    }
+  }
+
+  if (personalStateCategory === 'NON_NEGOTIABLE_RECALL') {
+    const nnCount = context?.nonNegotiables?.nonNegotiablesCount ?? (Array.isArray(context?.commitment?.nonNegotiables) ? context.commitment.nonNegotiables.length : 0);
+    const safeRules = Array.isArray(context?.turnScopedSensitive?.nonNegotiables) ? context.turnScopedSensitive.nonNegotiables : [];
+
+    if (nnCount === 0 || (safeRules.length === 0 && nnCount === 0)) {
+      coachingMsg = language === 'es'
+        ? 'Aún no has definido reglas No Negociables. Puedes añadirlas en Mis Compromisos.'
+        : (language === 'nl'
+            ? 'Je hebt nog geen niet-onderhandelbare regels ingesteld. Je kunt ze toevoegen in Mijn Verplichtingen.'
+            : "You haven't set any Non-Negotiables yet. You can add them in My Commitment.");
+    } else if (safeRules.length > 0) {
+      const quotesAnySafe = safeRules.some(r => coachingMsg.toLowerCase().includes(r.toLowerCase()));
+      if (!quotesAnySafe) {
+        const list = safeRules.map((n, i) => `${i + 1}. 🛡️ ${n}`).join('\n');
+        coachingMsg = language === 'es'
+          ? `Aquí están tus No Negociables:\n${list}\n\nEstos límites te protegen contra desvíos involuntarios.`
+          : (language === 'nl'
+              ? `Dit zijn jouw niet-onderhandelbare regels:\n${list}\n\nDeze grenzen beschermen je tegen onbewust afdwalen.`
+              : `Here are your Non-Negotiables:\n${list}\n\nThese boundaries protect you from unthinking drift.`);
+      }
+    } else if (nnCount > 0 && safeRules.length === 0) {
+      coachingMsg = language === 'es'
+        ? 'Tienes reglas No Negociables guardadas, pero el texto no está disponible en el contexto actual del Coach. Puedes verlas en Mis Compromisos.'
+        : (language === 'nl'
+            ? 'Je hebt niet-onderhandelbare regels opgeslagen, maar de tekst is niet beschikbaar in de huidige Coach-context. Je kunt ze bekijken in Mijn Verplichtingen.'
+            : "You have saved Non-Negotiables, but their text isn't available in the current Coach context. You can view them in My Commitment.");
+    }
+  }
+
   // 4. Action Proposal Reconciliation (PREVIEW-ONLY, ZERO MUTATION)
   let proposedAction: CoachActionProposal | undefined = undefined;
   const rawObj = raw as any;

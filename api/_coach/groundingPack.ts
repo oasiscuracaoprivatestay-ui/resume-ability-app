@@ -311,18 +311,18 @@ export function buildSDAGroundingPack(
     coachingMode = 'MOTIVATION';
     primaryGoal = 'Ground user in their authentic personal Why reasons.';
     scenarioGuidance = safeReasons.length > 0
-      ? `User saved Why reasons: ${safeReasons.join(' | ')}. Anchor to these authentic reasons.`
+      ? `User saved Why reasons: ${safeReasons.join(' | ')}. Answer using ONLY these authentic reasons. NEVER add, guess, or invent any other personal motivations.`
       : (whyCount > 0
-          ? `User has ${whyCount} Why reasons saved in CoachContext, but the text is not in the current safe context. Mention they can view them in My Commitments.`
-          : 'User has no saved Why reasons. Suggest identifying a personal reason without inventing one.');
+          ? `User has saved Why reasons in the app, but the text is not available in the current Coach context. State: "You have saved Why reasons, but their text isn't available in the current Coach context. You can view them in My Commitment."`
+          : 'User has no saved Why reasons. State clearly: "You haven\'t saved any personal Why reasons yet. You can add your reasons in My Commitment." (or Mis Compromisos in Spanish, Mijn Verplichtingen in Dutch). STRICT PROHIBITION: Do NOT brainstorm, invent, guess, or suggest example reasons like health, energy, confidence, appearance, or weight loss. Do not ask the user what motivates them in a personal recall response.');
   } else if (personalStateCategory === 'NON_NEGOTIABLE_RECALL' || isCommitmentInquiry) {
     coachingMode = 'COMMITMENT';
     primaryGoal = 'Reinforce active commitment and non-negotiables as the last line of defense.';
     scenarioGuidance = safeNonNegotiables.length > 0
-      ? `User saved Non-Negotiables: ${safeNonNegotiables.join(', ')}. Reinforce them accurately.`
-      : (nonNegotiablesCount > 0 || hasNonNegotiables || hasCommitment
-          ? `User has active commitments saved (${whyCount} Why reasons, ${nonNegotiablesCount} Non-Negotiables). Anchor them to their structure.`
-          : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.');
+      ? `User saved Non-Negotiables: ${safeNonNegotiables.join(', ')}. Answer using ONLY these authentic rules. NEVER add, guess, or invent any other rules.`
+      : (nonNegotiablesCount > 0 || hasNonNegotiables
+          ? `User has saved Non-Negotiables in the app, but the text is not available in the current Coach context. State: "You have saved Non-Negotiables, but their text isn't available in the current Coach context. You can view them in My Commitment."`
+          : 'User has no saved Non-Negotiables. State clearly: "You haven\'t set any Non-Negotiables yet. You can add them in My Commitment." (or Mis Compromisos in Spanish, Mijn Verplichtingen in Dutch). STRICT PROHIBITION: Do NOT invent rules, suggest rules, or present generic diet rules as user rules.');
   } else if (isTwentyPercent && isExplicitActionRequest) {
     coachingMode = 'ACTION_PREPARATION';
     primaryGoal = 'Prepare a 20% OFF TRACK meal outcome proposal (+5 pts On Track, non-slip) for user confirmation.';
@@ -445,7 +445,7 @@ export function buildSDAGroundingPack(
     'NEVER assume a slip was resumed unless the user explicitly reported recovery.',
     'NEVER assume an urge or feeling of losing control is a completed slip.',
     'NEVER state that a Slippery Zone caused a slip as a proven objective fact.',
-    'NEVER fabricate user reasons (Why), commitments, or non-negotiables if none are saved.',
+    'NEVER fabricate, guess, or suggest user reasons (Why), commitments, or non-negotiables. For personal recall queries when none are saved, state that none are saved and refer to My Commitment; NEVER brainstorm or suggest example motivations like health, energy, confidence, appearance, or weight loss.',
     'NEVER use generic corporate AI boilerplate.',
     'NEVER prescribe calories, macros, or restrictive meal plans.',
     'NEVER tell the user to consume "20% healthy carbs" or reinterpret "20% OFF TRACK" as a carbohydrate percentage or macronutrient ratio.',
