@@ -167,9 +167,90 @@ export interface CoachUnderstanding {
   proposedAction?: CoachActionProposal;
 }
 
+// ── Read-Only Normalized Coach Context (Privacy Minimized — Phase 40B) ───────────
+
+export interface NormalizedScoringSnapshot {
+  todayPoints: number;
+  lifetimePoints: number;
+  level: number;
+  levelTitle: string;
+}
+
+export interface NormalizedCheckInSnapshot {
+  hasCheckedInToday: boolean;
+  checkInCountToday: number;
+  latestCheckInStatus: 'on-structure' | 'near-slip' | 'slip' | null;
+}
+
+export interface NormalizedDietSnapshot {
+  hasStructuredDiet: boolean;
+  plannedBlocksCount: number;
+  dietEntriesLoggedToday: number;
+  onTrackCountToday: number;
+  twentyPercentCountToday: number;
+  neutralCountToday: number;
+  totalPortions: number;
+  topCategories: Array<{ category: string; portions: number; percentage: number }>;
+}
+
+export interface NormalizedDietSlipResumeSnapshot {
+  dietSlipsToday: number;
+  dietResumesToday: number;
+  hasUnresolvedDietSlip: boolean;
+  unresolvedDietSlipCount: number;
+  dietResumeRate: number | null;
+}
+
+export interface NormalizedResumeAbilitySnapshot {
+  dailyResumeAbilityIndex: number;
+}
+
+export interface NormalizedChallengeSnapshot {
+  hasActiveChallenge: boolean;
+  activeChallenge?: {
+    abilityId: string;
+    durationDays: number;
+    currentDay: number;
+    daysRemaining: number;
+    eligibleSlips: number;
+    resumedSlips: number;
+    resumeRate: number | null;
+  };
+}
+
+export interface NormalizedCommitmentSnapshot {
+  hasCommitment: boolean;
+  whyCount: number;
+  reasons?: string[];
+}
+
+export interface NormalizedNonNegotiablesSnapshot {
+  hasNonNegotiables: boolean;
+  nonNegotiablesCount: number;
+  nonNegotiables?: string[];
+}
+
+export interface NormalizedSlipperyZonesSnapshot {
+  count: number;
+  zones?: string[];
+}
+
+export interface TurnScopedSensitiveContext {
+  reasons?: string[];
+  nonNegotiables?: string[];
+}
+
 export interface CoachContext {
   ability: AbilityId;
   language?: 'en' | 'es' | 'nl';
+  dateKey?: string;
+  scoring?: NormalizedScoringSnapshot;
+  checkIn?: NormalizedCheckInSnapshot;
+  diet?: NormalizedDietSnapshot;
+  dietSlipResume?: NormalizedDietSlipResumeSnapshot;
+  resumeAbility?: NormalizedResumeAbilitySnapshot;
+  nonNegotiables?: NormalizedNonNegotiablesSnapshot;
+  turnScopedSensitive?: TurnScopedSensitiveContext;
   today: {
     todayScore: number;
     foodLogsCount: number;
@@ -189,16 +270,19 @@ export interface CoachContext {
   };
   commitment: {
     hasCommitment: boolean;
+    whyCount?: number;
     reasons: string[];
     nonNegotiables: string[];
   };
   slipperyZones: {
+    count?: number;
     zones: string[];
   };
   progression: {
     level: number;
     levelTitle: string;
-    xp: number;
+    xp?: number;
+    lifetimeScore?: number;
   };
   structuredDiet?: {
     hasPlan: boolean;
@@ -208,14 +292,14 @@ export interface CoachContext {
   challenge?: {
     hasActiveChallenge: boolean;
     activeChallenge?: {
-      id: string;
+      id?: string;
       abilityId: string;
       challengeType: string;
       durationDays: number;
       currentDay: number;
       daysRemaining: number;
-      startDate: string;
-      endDate: string;
+      startDate?: string;
+      endDate?: string;
       status: 'active' | 'completed' | 'cancelled';
       eligibleSlips: number;
       resumedSlips: number;

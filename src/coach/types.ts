@@ -117,7 +117,78 @@ export interface CoachExecutionResult {
 }
 
 
-// ── Read-Only Normalized Coach Context (Privacy Minimized) ─────────────────────
+// ── Read-Only Normalized Coach Context (Privacy Minimized — Phase 40B) ───────────
+
+export interface NormalizedScoringSnapshot {
+  todayPoints: number;
+  lifetimePoints: number;
+  level: number;
+  levelTitle: string;
+}
+
+export interface NormalizedCheckInSnapshot {
+  hasCheckedInToday: boolean;
+  checkInCountToday: number;
+  latestCheckInStatus: 'on-structure' | 'near-slip' | 'slip' | null;
+}
+
+export interface NormalizedDietSnapshot {
+  hasStructuredDiet: boolean;
+  plannedBlocksCount: number;
+  dietEntriesLoggedToday: number;
+  onTrackCountToday: number;
+  twentyPercentCountToday: number;
+  neutralCountToday: number;
+  totalPortions: number;
+  topCategories: Array<{ category: string; portions: number; percentage: number }>;
+}
+
+export interface NormalizedDietSlipResumeSnapshot {
+  dietSlipsToday: number;
+  dietResumesToday: number;
+  hasUnresolvedDietSlip: boolean;
+  unresolvedDietSlipCount: number;
+  dietResumeRate: number | null;
+}
+
+export interface NormalizedResumeAbilitySnapshot {
+  dailyResumeAbilityIndex: number;
+}
+
+export interface NormalizedChallengeSnapshot {
+  hasActiveChallenge: boolean;
+  activeChallenge?: {
+    abilityId: string;
+    durationDays: number;
+    currentDay: number;
+    daysRemaining: number;
+    eligibleSlips: number;
+    resumedSlips: number;
+    resumeRate: number | null;
+  };
+}
+
+export interface NormalizedCommitmentSnapshot {
+  hasCommitment: boolean;
+  whyCount: number;
+  reasons?: string[]; // Preserved locally, stripped remotely unless turn-scoped
+}
+
+export interface NormalizedNonNegotiablesSnapshot {
+  hasNonNegotiables: boolean;
+  nonNegotiablesCount: number;
+  nonNegotiables?: string[]; // Preserved locally, stripped remotely unless turn-scoped
+}
+
+export interface NormalizedSlipperyZonesSnapshot {
+  count: number;
+  zones?: string[]; // Preserved locally, stripped remotely
+}
+
+export interface TurnScopedSensitiveContext {
+  reasons?: string[];
+  nonNegotiables?: string[];
+}
 
 export interface CoachContextToday {
   dateKey: string;
@@ -130,7 +201,7 @@ export interface CoachContextToday {
   slipsCount: number;
   resumedCount: number;
   topCategories: Array<{ category: string; portions: number; percentage: number }>;
-  recentFoods: Array<{ name: string; portions: number }>;
+  recentFoods?: Array<{ name: string; portions: number }>;
 }
 
 export interface CoachContextCommitment {
@@ -139,6 +210,7 @@ export interface CoachContextCommitment {
   nonNegotiables: string[];
   reviewCount: number;
   lastReviewedAt: string | null;
+  whyCount?: number;
 }
 
 export interface CoachContextSlipperyZones {
@@ -180,12 +252,19 @@ export interface CoachContextChallenge {
 export interface CoachContext {
   ability: AbilityId;
   dateKey: string;
+  scoring: NormalizedScoringSnapshot;
+  checkIn: NormalizedCheckInSnapshot;
+  diet: NormalizedDietSnapshot;
+  dietSlipResume: NormalizedDietSlipResumeSnapshot;
+  resumeAbility: NormalizedResumeAbilitySnapshot;
+  commitment: CoachContextCommitment & NormalizedCommitmentSnapshot;
+  nonNegotiables: NormalizedNonNegotiablesSnapshot;
+  slipperyZones: CoachContextSlipperyZones & NormalizedSlipperyZonesSnapshot;
+  challenge?: CoachContextChallenge & NormalizedChallengeSnapshot;
+  turnScopedSensitive?: TurnScopedSensitiveContext;
   today: CoachContextToday;
-  commitment: CoachContextCommitment;
-  slipperyZones: CoachContextSlipperyZones;
   progression: CoachContextProgression;
   structuredDiet: CoachContextStructuredDiet;
-  challenge?: CoachContextChallenge;
 }
 
 // ── Structured Understanding Model (Phase 34) ───────────────────────────────

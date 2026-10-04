@@ -198,43 +198,53 @@ export function buildSDAGroundingPack(
 
   // Safe Context Normalization
   const ctxAny = (context || {}) as any;
-  const safeCommitmentText = typeof ctxAny.commitment === 'string' ? ctxAny.commitment : '';
-  const safeReasons: string[] = Array.isArray(ctxAny?.commitment?.reasons)
-    ? ctxAny.commitment.reasons
-    : (typeof ctxAny?.why === 'string' && ctxAny.why ? [ctxAny.why] : []);
-  const safeNonNegotiables: string[] = Array.isArray(ctxAny?.commitment?.nonNegotiables)
-    ? ctxAny.commitment.nonNegotiables
-    : (Array.isArray(ctxAny?.nonNegotiables) ? ctxAny.nonNegotiables : []);
-  const safeHasCommitment = Boolean(
-    ctxAny?.commitment?.hasCommitment ||
-    safeCommitmentText ||
-    safeReasons.length > 0 ||
-    safeNonNegotiables.length > 0
-  );
-  const safeZones: string[] = Array.isArray(ctxAny?.slipperyZones?.zones)
-    ? ctxAny.slipperyZones.zones
-    : (Array.isArray(ctxAny?.slipperyZones)
-        ? ctxAny.slipperyZones.map((z: any) => typeof z === 'string' ? z : (z?.title ? `${z.title}${z.trigger ? ` (${z.trigger})` : ''}` : JSON.stringify(z)))
-        : []);
 
-  const safeContext = {
-    todayScore: ctxAny?.today?.todayScore ?? 0,
-    foodLogsCount: ctxAny?.today?.foodLogsCount ?? 0,
-    totalPortions: ctxAny?.today?.totalPortions ?? 0,
-    checkInCount: ctxAny?.today?.checkInCount ?? 0,
-    slipsCount: ctxAny?.today?.slipsCount ?? 0,
-    resumedCount: ctxAny?.today?.resumedCount ?? 0,
-    latestCheckInStatus: ctxAny?.today?.latestCheckInStatus || ctxAny?.latestCheckInStatus || null,
-    level: ctxAny?.progression?.level ?? 1,
-    levelTitle: ctxAny?.progression?.levelTitle ?? 'Starter',
-    hasCommitment: safeHasCommitment,
-    commitmentText: safeCommitmentText,
-    reasons: safeReasons,
-    nonNegotiables: safeNonNegotiables,
-    zones: safeZones,
-    structuredDietActive: Boolean(ctxAny?.structuredDiet?.hasPlan),
-    structuredDietBlocks: ctxAny?.structuredDiet?.todayPlannedCount ?? 0,
-  };
+  // Normalized scoring (Phase 40B)
+  const todayPoints = ctxAny?.scoring?.todayPoints ?? ctxAny?.today?.todayScore ?? 0;
+  const lifetimePoints = ctxAny?.scoring?.lifetimePoints ?? ctxAny?.progression?.lifetimeScore ?? 0;
+  const level = ctxAny?.scoring?.level ?? ctxAny?.progression?.level ?? 1;
+  const levelTitle = ctxAny?.scoring?.levelTitle ?? ctxAny?.progression?.levelTitle ?? `Level ${level}`;
+
+  // Normalized check-in
+  const hasCheckedInToday = ctxAny?.checkIn?.hasCheckedInToday ?? ((ctxAny?.today?.checkInCount ?? 0) > 0);
+  const checkInCountToday = ctxAny?.checkIn?.checkInCountToday ?? ctxAny?.today?.checkInCount ?? 0;
+  const latestCheckInStatus = ctxAny?.checkIn?.latestCheckInStatus || ctxAny?.today?.latestCheckInStatus || null;
+
+  // Normalized diet structure & verifications
+  const hasStructuredDiet = ctxAny?.diet?.hasStructuredDiet ?? Boolean(ctxAny?.structuredDiet?.hasPlan);
+  const plannedBlocksCount = ctxAny?.diet?.plannedBlocksCount ?? ctxAny?.structuredDiet?.todayPlannedCount ?? 0;
+  const dietEntriesLoggedToday = ctxAny?.diet?.dietEntriesLoggedToday ?? ctxAny?.today?.foodLogsCount ?? 0;
+  const onTrackCountToday = ctxAny?.diet?.onTrackCountToday ?? 0;
+  const twentyPercentCountToday = ctxAny?.diet?.twentyPercentCountToday ?? 0;
+  const neutralCountToday = ctxAny?.diet?.neutralCountToday ?? ctxAny?.today?.neutralLogsCount ?? 0;
+  const totalPortions = ctxAny?.diet?.totalPortions ?? ctxAny?.today?.totalPortions ?? 0;
+
+  // Normalized diet slips & resumes
+  const dietSlipsToday = ctxAny?.dietSlipResume?.dietSlipsToday ?? ctxAny?.today?.slipsCount ?? 0;
+  const dietResumesToday = ctxAny?.dietSlipResume?.dietResumesToday ?? ctxAny?.today?.resumedCount ?? 0;
+  const hasUnresolvedDietSlip = Boolean(ctxAny?.dietSlipResume?.hasUnresolvedDietSlip);
+  const unresolvedDietSlipCount = ctxAny?.dietSlipResume?.unresolvedDietSlipCount ?? (hasUnresolvedDietSlip ? 1 : 0);
+  const dietResumeRate = ctxAny?.dietSlipResume?.dietResumeRate ?? null;
+
+  // Normalized Daily Resume-Ability Index (0-100)
+  const dailyResumeAbilityIndex = typeof ctxAny?.resumeAbility?.dailyResumeAbilityIndex === 'number'
+    ? ctxAny.resumeAbility.dailyResumeAbilityIndex
+    : null;
+
+  // Commitment & Non-Negotiables
+  const whyCount = ctxAny?.commitment?.whyCount ?? (Array.isArray(ctxAny?.commitment?.reasons) ? ctxAny.commitment.reasons.length : 0);
+  const nonNegotiablesCount = ctxAny?.nonNegotiables?.nonNegotiablesCount ?? (Array.isArray(ctxAny?.commitment?.nonNegotiables) ? ctxAny.commitment.nonNegotiables.length : 0);
+  const hasCommitment = Boolean(ctxAny?.commitment?.hasCommitment || whyCount > 0 || nonNegotiablesCount > 0);
+  const hasNonNegotiables = Boolean(ctxAny?.nonNegotiables?.hasNonNegotiables || nonNegotiablesCount > 0);
+
+  // Turn-scoped sensitive values ONLY (strictly stripped from default context)
+  const safeReasons: string[] = Array.isArray(ctxAny?.turnScopedSensitive?.reasons)
+    ? ctxAny.turnScopedSensitive.reasons
+    : [];
+  const safeNonNegotiables: string[] = Array.isArray(ctxAny?.turnScopedSensitive?.nonNegotiables)
+    ? ctxAny.turnScopedSensitive.nonNegotiables
+    : [];
+  const safeZonesCount: number = ctxAny?.slipperyZones?.count ?? (Array.isArray(ctxAny?.slipperyZones?.zones) ? ctxAny.slipperyZones.zones.length : 0);
 
   // Determine Coaching Mode & Primary Goal
   let coachingMode: SDACoachingMode = 'SUPPORT';
@@ -309,25 +319,29 @@ export function buildSDAGroundingPack(
   } else if (isCommitmentInquiry) {
     coachingMode = 'COMMITMENT';
     primaryGoal = 'Reinforce active commitment and non-negotiables as the last line of defense.';
-    scenarioGuidance = safeContext.hasCommitment
-      ? `User has active commitments: ${safeContext.commitmentText || safeContext.nonNegotiables.join(', ') || 'Active'}. Reference them accurately.`
-      : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.';
+    scenarioGuidance = safeNonNegotiables.length > 0
+      ? `User saved Non-Negotiables: ${safeNonNegotiables.join(', ')}. Reinforce them accurately.`
+      : (hasNonNegotiables || hasCommitment
+          ? `User has active commitments saved (${whyCount} Why reasons, ${nonNegotiablesCount} Non-Negotiables). Anchor them to their structure.`
+          : 'User has no saved commitments. State kindly that none are currently saved in CoachContext.');
   } else if (isWhyInquiry) {
     coachingMode = 'MOTIVATION';
     primaryGoal = 'Ground user in their authentic personal Why reasons.';
-    scenarioGuidance = safeContext.reasons.length > 0
-      ? `User saved Why reasons: ${safeContext.reasons.join(', ')}. Anchor to these authentic reasons.`
-      : 'User has no saved Why reasons. Suggest identifying a personal reason without inventing one.';
+    scenarioGuidance = safeReasons.length > 0
+      ? `User saved Why reasons: ${safeReasons.join(', ')}. Anchor to these authentic reasons.`
+      : (whyCount > 0
+          ? `User has ${whyCount} Why reasons saved in CoachContext. Invite them to reflect on their personal motivation.`
+          : 'User has no saved Why reasons. Suggest identifying a personal reason without inventing one.');
   } else if (isSlipperyZonesInquiry) {
     coachingMode = 'AWARENESS';
     primaryGoal = 'Review saved high-risk trigger contexts non-causally.';
-    scenarioGuidance = safeContext.zones.length > 0
-      ? `Saved Slippery Zones: ${safeContext.zones.join(', ')}. Treat them as high-risk contexts, NEVER deterministic causes.`
+    scenarioGuidance = safeZonesCount > 0
+      ? `User has ${safeZonesCount} saved Slippery Zones. Treat them as high-risk contexts, NEVER deterministic causes.`
       : 'User has no saved Slippery Zones. Suggest identifying high-risk situations.';
   } else if (isStatusInquiry) {
     coachingMode = 'REFLECTION';
-    primaryGoal = 'Provide calm, factual summary of today score, food logs, check-ins, and structure status.';
-    scenarioGuidance = 'Summarize today facts objectively without moral grading (good/bad).';
+    primaryGoal = 'Provide calm, factual summary of today points, daily resume-ability index, food logs, check-ins, and structure status.';
+    scenarioGuidance = 'Summarize today facts objectively using the verified context facts (points, check-in status, diet logs, and recovery) without moral grading (good/bad). Note: Today points and Daily Resume-Ability index are distinct metrics; do not conflate them.';
   } else if (isAbilityConceptualInquiry) {
     coachingMode = 'INFORMATION';
     primaryGoal = 'Provide authoritative, grounded educational guidance on the requested Super Diet-Ability.';
@@ -353,19 +367,28 @@ export function buildSDAGroundingPack(
 
   // 5. Build Explicit Context Facts vs Observations
   const contextFacts: string[] = [
-    `Today Score: ${safeContext.todayScore} pts (Level ${safeContext.level}: ${safeContext.levelTitle})`,
-    `Food Logs Today: ${safeContext.foodLogsCount} entries (${safeContext.totalPortions} portions)`,
-    `Daily Check-Ins Today: ${safeContext.checkInCount} (Latest status: ${safeContext.latestCheckInStatus || 'none'})`,
-    `Slips / Resumes Today: ${safeContext.slipsCount} slips / ${safeContext.resumedCount} resumed`,
-    `Has Saved Commitment: ${safeContext.hasCommitment}${safeContext.commitmentText ? ` ("${safeContext.commitmentText}")` : ''}`,
-    `Saved Why Reasons: ${safeContext.reasons.length > 0 ? safeContext.reasons.join(' | ') : 'None saved'}`,
-    `Saved Non-Negotiables: ${safeContext.nonNegotiables.length > 0 ? safeContext.nonNegotiables.join(' | ') : 'None saved'}`,
-    `Saved Slippery Zones: ${safeContext.zones.length > 0 ? safeContext.zones.join(', ') : 'None saved'}`,
-    `Structured Diet: ${safeContext.structuredDietActive ? `Active (${safeContext.structuredDietBlocks} planned blocks)` : 'No plan active'}`,
+    `Today points: ${todayPoints} (Level ${level}: ${levelTitle}, Lifetime: ${lifetimePoints} pts)`,
+    dailyResumeAbilityIndex !== null
+      ? `Daily Resume-Ability index: ${dailyResumeAbilityIndex}/100`
+      : `Daily Resume-Ability index: None calculated yet today`,
+    `Checked in today: ${hasCheckedInToday ? 'yes' : 'no'} (Count: ${checkInCountToday}, Latest status: ${latestCheckInStatus || 'none'})`,
+    `Diet entries today: ${dietEntriesLoggedToday} (${totalPortions} portions, On Track: ${onTrackCountToday}, 20% OFF TRACK: ${twentyPercentCountToday}, Neutral: ${neutralCountToday})`,
+    `True Diet slips today: ${dietSlipsToday} (${dietResumesToday} resumed${dietResumeRate !== null ? `, Resume Rate: ${dietResumeRate}%` : ''})`,
+    `Unresolved Diet slip: ${hasUnresolvedDietSlip ? `yes (${unresolvedDietSlipCount} pending)` : 'no'}`,
+    `Structured Diet plan: ${hasStructuredDiet ? `Active (${plannedBlocksCount} planned blocks)` : 'None active'}`,
     context.challenge?.hasActiveChallenge && context.challenge.activeChallenge
       ? `Active Challenge: Day ${context.challenge.activeChallenge.currentDay} of ${context.challenge.activeChallenge.durationDays}-Day Resume-Ability Challenge (${context.challenge.activeChallenge.daysRemaining} days remaining, ${context.challenge.activeChallenge.resumedSlips}/${context.challenge.activeChallenge.eligibleSlips} resumed, Resume Rate: ${context.challenge.activeChallenge.resumeRate !== null ? `${context.challenge.activeChallenge.resumeRate}%` : 'No slips yet'})`
       : 'Active Challenge: None currently active',
+    `Commitment: ${hasCommitment ? `Active (${whyCount} Why reasons, ${nonNegotiablesCount} Non-Negotiables)` : 'None saved'}`,
+    `Slippery Zones saved: ${safeZonesCount > 0 ? `${safeZonesCount} zones` : 'None saved'}`,
   ];
+
+  if (safeReasons.length > 0) {
+    contextFacts.push(`Saved Why Reasons (user-requested): ${safeReasons.join(' | ')}`);
+  }
+  if (safeNonNegotiables.length > 0) {
+    contextFacts.push(`Saved Non-Negotiables (user-requested): ${safeNonNegotiables.join(' | ')}`);
+  }
 
   const coachObservations: string[] = [
     `Current message topic: "${rawLower.slice(0, 80)}"`,
@@ -524,6 +547,7 @@ function getSemanticBoundaries(): string[] {
     'App Truth: Score points NEVER decrease. Slips never penalize streaks or reduce lifetime XP. Levels range from 0 to 10.',
     'Resume vs Daily Check-In: Returning to structure ("back on structure", "resumed", "got back on track") is Resume-Ability in action. It is strictly separate from a Daily Check-In. Never say the user checked in when they report resuming or returning to structure.',
     'Pre-Confirmation Boundary: The Coach prepares Action Proposals for user confirmation. The Coach must NEVER claim that an action has already been saved, logged, checked in, recorded, or marked complete before the user clicks Confirm.',
+    'Metrics Separation: "Today points" (gamified XP points that never decrease) is strictly distinct from the "Daily Resume-Ability Index" (a 0-100 behavioral recovery index). Never confuse, blend, or conflate today points with the daily resume-ability index.',
   ];
 }
 

@@ -19,6 +19,7 @@ import type {
 } from '../types';
 import { LocalCoachProvider } from '../localCoachProvider';
 import { deterministicUnderstandingEngine } from '../deterministicUnderstanding';
+import { projectRemoteSafeContext } from '../coachContext';
 import type {
   AIResponseEnvelope,
   CoachGatewayRequestDTO,
@@ -80,11 +81,16 @@ export class RemoteCoachProvider implements CoachProvider {
         .slice(-MAX_CONVERSATION_HISTORY)
         .map(m => ({ role: m.role, text: m.text }));
 
-      // 2. Prepare normalized DTO
+      // 3. Project remote-safe context (Phase 40B Privacy Boundary)
+      const remoteSafeContext = request.context
+        ? projectRemoteSafeContext(request.context, request.message)
+        : request.context;
+
+      // 4. Prepare normalized DTO
       const payload: CoachGatewayRequestDTO = {
         message: request.message,
         language: request.language,
-        context: request.context,
+        context: remoteSafeContext,
         conversationHistory: boundedHistory,
       };
 
