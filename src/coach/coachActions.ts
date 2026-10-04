@@ -29,6 +29,7 @@ import { ACTIVE_ABILITY_ID } from './types';
 import { saveCheckIn, type CheckInStatus } from '../utils/checkInStorage';
 import {
   saveUnplannedFoodLog,
+  resumeDietSlip,
   type DetailedBlockOutcome,
 } from '../utils/dietVerificationStorage';
 import { recordScoreEvent, type ScoreActivityType } from '../utils/scoringEngine';
@@ -44,6 +45,7 @@ export const EXECUTABLE_ACTION_TYPES: readonly CoachActionType[] = [
   'LOG_FOOD',
   'LOG_SLIP',
   'LOG_NEUTRAL',
+  'LOG_RESUME',
 ] as const;
 
 // ── Execution Receipts (Idempotency) ──────────────────────────────────────────
@@ -416,6 +418,68 @@ export async function executeActionProposal(
           pointsAwarded: 0,
           status: 'executed',
           message: 'Recorded Neutral Log.',
+        };
+      }
+
+      case 'LOG_RESUME': {
+        const dateKey = typeof payload.dateKey === 'string' && payload.dateKey.trim()
+          ? payload.dateKey.trim()
+          : (typeof payload.date === 'string' && payload.date.trim() ? payload.date.trim() : getLocalDateKey());
+        const recordId = typeof payload.recordId === 'string' && payload.recordId.trim() ? payload.recordId.trim() : undefined;
+        const plannedBlockId = typeof payload.plannedBlockId === 'string' && payload.plannedBlockId.trim() ? payload.plannedBlockId.trim() : undefined;
+
+        if (!recordId && !plannedBlockId) {
+          return {
+            success: false,
+            actionType: 'LOG_RESUME',
+            status: 'rejected',
+            message: 'Resume proposal missing target slip identification (recordId or plannedBlockId).',
+          };
+        }
+
+        const resumeResult = resumeDietSlip({
+          dateKey,
+          recordId,
+          plannedBlockId,
+        });
+
+        if (resumeResult.status === 'already_resumed') {
+          return {
+            success: true,
+            actionType: 'LOG_RESUME',
+            status: 'already_executed',
+            recordId: resumeResult.record?.id,
+            pointsAwarded: 0,
+            message: 'Target slip is already marked as resumed.',
+          };
+        }
+
+        if (!resumeResult.success) {
+          return {
+            success: false,
+            actionType: 'LOG_RESUME',
+            status: 'failed',
+            message: resumeResult.message || `Failed to resume slip (${resumeResult.status}).`,
+          };
+        }
+
+        // Diet Resume awards strictly 0 points
+        const receipt: CoachExecutionReceipt = {
+          proposalId: proposal.id,
+          actionType: 'LOG_RESUME',
+          executedAt: Date.now(),
+          recordId: resumeResult.record?.id,
+          pointsAwarded: 0,
+        };
+        saveExecutionReceipt(receipt);
+
+        return {
+          success: true,
+          actionType: 'LOG_RESUME',
+          recordId: resumeResult.record?.id,
+          pointsAwarded: 0,
+          status: 'executed',
+          message: 'Resume recorded.',
         };
       }
 

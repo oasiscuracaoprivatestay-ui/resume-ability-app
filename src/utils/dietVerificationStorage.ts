@@ -1376,4 +1376,167 @@ export function clearAllDietVerifications(): void {
   }
 }
 
+// ── Unresolved Slips & Canonical Diet Resume (Phase 39C) ──────────────────────
+
+export interface UnresolvedDietSlipInfo {
+  dateKey: string;
+  recordId: string;
+  plannedBlockId: string;
+  detailedOutcome?: DetailedBlockOutcome;
+  description?: string;
+  startTime?: string;
+  verifiedAt: number;
+  status: DietVerificationStatus;
+}
+
+/**
+ * Returns all unresolved (unresumed) Resume-eligible true slips across stored verifications,
+ * sorted chronologically newest first (verifiedAt descending).
+ * Does not mutate storage. Excludes neutral records, non-slips, and already-resumed slips.
+ */
+export function getUnresolvedDietSlips(dateKey?: string): UnresolvedDietSlipInfo[] {
+  const all = loadAllDietVerifications();
+  const results: UnresolvedDietSlipInfo[] = [];
+
+  const targetDateKeys = dateKey ? [dateKey] : Object.keys(all);
+
+  for (const dk of targetDateKeys) {
+    const daily = all[dk];
+    if (!daily || !Array.isArray(daily.entries)) continue;
+
+    for (const entry of daily.entries) {
+      if (entry.recordType === 'neutral') continue;
+      if (!isEligibleSlipRecord(entry)) continue;
+      if (entry.isResumed === true) continue;
+
+      const desc = (entry.actualCustomText || entry.plannedSnapshot?.customText || '').trim();
+      const verifiedAt = typeof entry.verifiedAt === 'number' ? entry.verifiedAt : 0;
+      const startTime = entry.startTime || entry.plannedSnapshot?.startTime;
+
+      results.push({
+        dateKey: dk,
+        recordId: entry.id,
+        plannedBlockId: entry.plannedBlockId,
+        detailedOutcome: entry.detailedOutcome,
+        description: desc || undefined,
+        startTime,
+        verifiedAt,
+        status: entry.status,
+      });
+    }
+  }
+
+  // Sort newest first by verifiedAt descending, fallback to dateKey
+  results.sort((a, b) => {
+    if (b.verifiedAt !== a.verifiedAt) {
+      return b.verifiedAt - a.verifiedAt;
+    }
+    return b.dateKey.localeCompare(a.dateKey);
+  });
+
+  return results;
+}
+
+export type ResumeDietSlipStatus = 'resumed' | 'already_resumed' | 'not_found' | 'not_eligible';
+
+export interface ResumeDietSlipResult {
+  success: boolean;
+  status: ResumeDietSlipStatus;
+  record?: DietBlockVerification;
+  message?: string;
+}
+
+/**
+ * Safely marks a specific diet slip as resumed in canonical storage.
+ * Resolves by exact target identifiers: recordId and/or plannedBlockId on target date.
+ * Validates eligibility and enforces storage-level idempotency (does not overwrite resumedAt if already true).
+ */
+export function resumeDietSlip(params: {
+  dateKey: string;
+  recordId?: string;
+  plannedBlockId?: string;
+}): ResumeDietSlipResult {
+  const all = loadAllDietVerifications();
+  let targetDateKey = params.dateKey;
+  let daily = all[targetDateKey];
+
+  // Primary lookup by recordId, then fallback by plannedBlockId within dateKey
+  let idx = -1;
+  if (daily && Array.isArray(daily.entries)) {
+    if (params.recordId) {
+      idx = daily.entries.findIndex(e => e.id === params.recordId);
+    }
+    if (idx === -1 && params.plannedBlockId) {
+      idx = daily.entries.findIndex(e => e.plannedBlockId === params.plannedBlockId);
+    }
+  }
+
+  // Cross-date fallback lookup if not found under specified dateKey
+  if (idx === -1) {
+    for (const [dk, d] of Object.entries(all)) {
+      if (!Array.isArray(d.entries)) continue;
+      let foundIdx = -1;
+      if (params.recordId) {
+        foundIdx = d.entries.findIndex(e => e.id === params.recordId);
+      }
+      if (foundIdx === -1 && params.plannedBlockId) {
+        foundIdx = d.entries.findIndex(e => e.plannedBlockId === params.plannedBlockId);
+      }
+      if (foundIdx !== -1) {
+        targetDateKey = dk;
+        daily = d;
+        idx = foundIdx;
+        break;
+      }
+    }
+  }
+
+  if (!daily || idx === -1) {
+    return {
+      success: false,
+      status: 'not_found',
+      message: 'Target slip record was not found in diet verifications.',
+    };
+  }
+
+  const existing = daily.entries[idx];
+
+  // Validate eligibility
+  if (!isEligibleSlipRecord(existing)) {
+    return {
+      success: false,
+      status: 'not_eligible',
+      record: existing,
+      message: 'Target record is not an eligible true slip for Resume.',
+    };
+  }
+
+  // Storage-level idempotency: if already resumed, return safe result without mutating resumedAt or side effects
+  if (existing.isResumed === true) {
+    return {
+      success: false,
+      status: 'already_resumed',
+      record: existing,
+      message: 'Slip was already marked as resumed.',
+    };
+  }
+
+  const updated: DietBlockVerification = {
+    ...existing,
+    isResumed: true,
+    resumedAt: existing.resumedAt || Date.now(),
+  };
+
+  daily.entries[idx] = updated;
+  all[targetDateKey] = daily;
+  saveAllDietVerifications(all);
+
+  return {
+    success: true,
+    status: 'resumed',
+    record: updated,
+    message: 'Slip successfully marked as resumed.',
+  };
+}
+
 

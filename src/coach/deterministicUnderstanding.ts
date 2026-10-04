@@ -31,6 +31,7 @@ import {
 import { parseNaturalTime, parseNaturalDate } from './coachDateTime';
 import { createActionProposal } from './coachActions';
 import { FOOD_CATEGORY_KEYS } from '../data/dietData';
+import { getUnresolvedDietSlips } from '../utils/dietVerificationStorage';
 
 export class DeterministicUnderstandingProvider implements CoachUnderstandingProvider {
   readonly id = 'deterministic';
@@ -154,6 +155,141 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
         ambiguities,
         requiresClarification,
         proposedAction: proposal,
+      };
+    }
+
+    // ── 2.5. Check for Confirmed Resume (Phase 39C) ──────────────────────────
+    const isExplicitCheckIn = /\b(?:check(?:ing)?\s*(?:me\s*)?in|check[- ]?in)\b/i.test(rawText);
+    const isReportingNewSlip = /\b(?:i slipped|deslic[eé]|uitgegleden)\b/i.test(rawText);
+
+    const isResumePhrase =
+      !isExplicitCheckIn &&
+      !isReportingNewSlip &&
+      (
+        /\b(?:i'm|im|i am)\s+back\s+on\s+(?:structure|track)\b/i.test(rawText) ||
+        /\bback\s+on\s+(?:structure|track)\b/i.test(rawText) ||
+        /\b(?:i\s+)?resumed\b/i.test(rawText) ||
+        /\bresume\s+(?:.*?\s+)?slip\b/i.test(rawText) ||
+        /\bresumed?\s+after\s+(?:(?:my|the)\s+)?slip\b/i.test(rawText) ||
+        /\b(?:i\s+)?got\s+back\s+on\s+(?:track|structure)\b/i.test(rawText) ||
+        /\b(?:i\s+)?returned\s+to\s+(?:my\s+)?structure\b/i.test(rawText) ||
+        /\b(?:estoy\s+de\s+vuelta\s+en\s+estructura|volv[ií]\s+a\s+(?:la\s+)?estructura|he\s+retomado|retom[eé]|retomar\s+(?:.*?\s+)?desliz)\b/i.test(rawText) ||
+        /\b(?:weer|terug)\s+op\s+schema\b/i.test(rawText) ||
+        /\b(?:ik\s+ben\s+weer\s+op\s+schema|ik\s+heb\s+hervat|hervat\s+(?:.*?\s+)?(?:slip|misstap))\b/i.test(rawText)
+      );
+
+    if (isResumePhrase) {
+      intent = 'LOG_RESUME';
+      const isExplicitLastSlip = /\b(?:last|latest|[uú]ltim[oa]|laatste)\b/i.test(rawText);
+      const unresolvedSlips = getUnresolvedDietSlips();
+
+      if (unresolvedSlips.length === 0) {
+        // Zero targets: conversational only, no executable proposal
+        confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
+        return {
+          id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          ability: ACTIVE_ABILITY_ID,
+          rawText,
+          intent,
+          confidence,
+          entities: {},
+          ambiguities: [],
+          requiresClarification: false,
+          proposedAction: undefined,
+        };
+      }
+
+      let selectedSlip: import('../utils/dietVerificationStorage').UnresolvedDietSlipInfo | undefined;
+
+      if (unresolvedSlips.length === 1) {
+        selectedSlip = unresolvedSlips[0];
+      } else if (isExplicitLastSlip) {
+        // User explicitly requested last/latest slip
+        selectedSlip = unresolvedSlips[0];
+      } else {
+        // Multiple slips: check if user specifically identified one by outcome or time
+        const hasUnstructured = /\bunstructured\b/i.test(rawText);
+        const hasStructured = /\bstructured\b/i.test(rawText) && !hasUnstructured;
+
+        const matched = unresolvedSlips.filter(slip => {
+          if (slip.startTime && rawText.includes(slip.startTime)) return true;
+          if (hasUnstructured && slip.detailedOutcome === 'unstructured_slip') return true;
+          if (hasStructured && slip.detailedOutcome === 'structured_slip') return true;
+          return false;
+        });
+
+        if (matched.length === 1) {
+          selectedSlip = matched[0];
+        }
+      }
+
+      if (selectedSlip) {
+        confidence = CONFIDENCE_THRESHOLDS.CANONICAL_EXACT;
+
+        const outcomeLabel = selectedSlip.detailedOutcome === 'structured_slip'
+          ? 'Structured Slip'
+          : (selectedSlip.detailedOutcome === 'unstructured_slip' ? 'Unstructured Slip' : 'Slip');
+        const summary = `Resume from ${outcomeLabel}`;
+
+        const proposal = createActionProposal(
+          'LOG_RESUME',
+          {
+            dateKey: selectedSlip.dateKey,
+            recordId: selectedSlip.recordId,
+            plannedBlockId: selectedSlip.plannedBlockId,
+            outcome: selectedSlip.detailedOutcome,
+            verifiedAt: selectedSlip.verifiedAt,
+            description: selectedSlip.description,
+          },
+          summary
+        );
+
+        return {
+          id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          ability: ACTIVE_ABILITY_ID,
+          rawText,
+          intent,
+          confidence,
+          entities: {
+            date: selectedSlip.dateKey,
+            outcome: selectedSlip.detailedOutcome,
+            resumed: true,
+          },
+          ambiguities: [],
+          requiresClarification: false,
+          proposedAction: proposal,
+        };
+      }
+
+      // Multiple targets with generic language -> Conservative clarification requirement
+      confidence = CONFIDENCE_THRESHOLDS.STRONG_DETERMINISTIC;
+      requiresClarification = true;
+      ambiguities.push({
+        field: 'targetSlip',
+        reason: 'You have multiple unresolved slips. Which slip would you like to resume?',
+        options: unresolvedSlips.slice(0, 4).map(slip => {
+          const outcomeLabel = slip.detailedOutcome === 'structured_slip'
+            ? 'Structured Slip'
+            : (slip.detailedOutcome === 'unstructured_slip' ? 'Unstructured Slip' : 'Slip');
+          const timeLabel = slip.startTime ? ` at ${slip.startTime}` : ` (${slip.dateKey})`;
+          return {
+            label: `Resume ${outcomeLabel}${timeLabel}`,
+            value: slip.recordId,
+            description: slip.description ? `${outcomeLabel}: ${slip.description}` : `${outcomeLabel}${timeLabel}`,
+          };
+        }),
+      });
+
+      return {
+        id: `und-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        ability: ACTIVE_ABILITY_ID,
+        rawText,
+        intent,
+        confidence,
+        entities: {},
+        ambiguities,
+        requiresClarification: true,
+        proposedAction: undefined,
       };
     }
 

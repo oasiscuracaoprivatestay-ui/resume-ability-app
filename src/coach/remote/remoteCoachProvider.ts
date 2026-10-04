@@ -159,8 +159,8 @@ export class RemoteCoachProvider implements CoachProvider {
         }
 
         // Deterministic Proposal Authority (Phase 39B.1)
-        // Supported safe proposal families: LOG_CHECK_IN, LOG_FOOD, LOG_SLIP, LOG_NEUTRAL
-        const SAFE_PROPOSAL_TYPES: readonly CoachActionType[] = ['LOG_CHECK_IN', 'LOG_FOOD', 'LOG_SLIP', 'LOG_NEUTRAL'];
+        // Supported safe proposal families: LOG_CHECK_IN, LOG_FOOD, LOG_SLIP, LOG_NEUTRAL, LOG_RESUME
+        const SAFE_PROPOSAL_TYPES: readonly CoachActionType[] = ['LOG_CHECK_IN', 'LOG_FOOD', 'LOG_SLIP', 'LOG_NEUTRAL', 'LOG_RESUME'];
         const safeDeterministicProposal =
           !deterministic.requiresClarification &&
           deterministic.proposedAction &&
