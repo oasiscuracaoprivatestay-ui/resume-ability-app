@@ -1765,6 +1765,23 @@ export const es: Translations = {
   challenge_status_completed: 'Completado',
   challenge_status_cancelled: 'Cancelado',
   challenge_status_active: 'Activo',
+
+  // ── Phase 41B: Challenge Behavioral Trigger Reminder Preferences ──
+  challenge_reminders_section_title: 'MANTÉN ESTE DESAFÍO PRESENTE',
+  challenge_reminders_section_desc: 'Recibe recordatorios amables durante el día para registrarte, evaluar tu estado y reconectar con tu Desafío.',
+  challenge_reminders_toggle_label: 'Recordatorios del Desafío',
+  challenge_reminders_frequency_label: '¿Con qué frecuencia?',
+  challenge_reminders_freq_1x: 'Una vez al día',
+  challenge_reminders_freq_2x: 'Dos veces al día',
+  challenge_reminders_freq_3x: 'Tres veces al día',
+  challenge_reminders_freq_custom: 'Personalizado',
+  challenge_reminders_times_label: 'Horas de los Recordatorios',
+  challenge_reminders_add_time: '+ Agregar Hora',
+  challenge_reminders_remove_time: 'Eliminar',
+  challenge_reminders_max_reached: 'Se alcanzó el límite máximo de 6 recordatorios por día',
+  challenge_reminders_time_invalid: 'Por favor ingresa una hora válida (HH:mm)',
+  challenge_reminders_delivery_note: 'La entrega de notificaciones se puede habilitar una vez que comience tu Desafío.',
+  challenge_reminders_off: 'Desactivado',
 };
 
 

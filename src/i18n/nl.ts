@@ -1765,6 +1765,23 @@ export const nl: Translations = {
   challenge_status_completed: 'Voltooid',
   challenge_status_cancelled: 'Geannuleerd',
   challenge_status_active: 'Actief',
+
+  // ── Phase 41B: Challenge Behavioral Trigger Reminder Preferences ──
+  challenge_reminders_section_title: 'HOUD DEZE UITDAGING SCHERP IN GEDACHTEN',
+  challenge_reminders_section_desc: 'Ontvang vriendelijke herinneringen gedurende de dag om in te checken, je status te melden en opnieuw te verbinden met je Uitdaging.',
+  challenge_reminders_toggle_label: 'Uitdagingsherinneringen',
+  challenge_reminders_frequency_label: 'Hoe vaak?',
+  challenge_reminders_freq_1x: 'Eén keer per dag',
+  challenge_reminders_freq_2x: 'Twee keer per dag',
+  challenge_reminders_freq_3x: 'Drie keer per dag',
+  challenge_reminders_freq_custom: 'Aangepast',
+  challenge_reminders_times_label: 'Herinneringstijden',
+  challenge_reminders_add_time: '+ Tijd Toevoegen',
+  challenge_reminders_remove_time: 'Verwijderen',
+  challenge_reminders_max_reached: 'Maximaal 6 herinneringen per dag bereikt',
+  challenge_reminders_time_invalid: 'Voer een geldige tijd in (UU:mm)',
+  challenge_reminders_delivery_note: 'Meldingen kunnen worden ingeschakeld nadat je Uitdaging is gestart.',
+  challenge_reminders_off: 'Uit',
 };
 
 

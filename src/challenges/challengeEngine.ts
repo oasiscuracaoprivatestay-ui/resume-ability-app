@@ -21,6 +21,7 @@ import type {
   ChallengeDurationDays,
   ChallengeEventCounts,
   ChallengeInstance,
+  ChallengeReminderConfig,
 } from './types';
 import {
   getActiveChallenge,
@@ -33,6 +34,66 @@ import {
   isEligibleSlipRecord,
 } from '../utils/dietVerificationStorage';
 import { loadSlips } from '../utils';
+
+// ── Reminder Validation Helpers (Phase 41B) ───────────────────────────────────
+
+/**
+ * Validates and normalizes challenge reminder configuration.
+ *
+ * Rules:
+ * - If reminders are disabled: returns normalized config with reminderEnabled: false and reminderTimes: [].
+ * - If reminders are enabled:
+ *   - reminderTimes must be valid HH:mm format.
+ *   - Duplicate times are rejected/deduplicated.
+ *   - Times are sorted chronologically.
+ *   - Must have at least 1 valid time and at most 6 valid times.
+ *   - 1x expects 1 time, 2x expects 2 times, 3x expects 3 times, custom allows 1-6 times.
+ */
+export function validateAndNormalizeReminderConfig(config?: Partial<ChallengeReminderConfig>): ChallengeReminderConfig {
+  if (!config || !config.reminderEnabled) {
+    return {
+      reminderEnabled: false,
+      reminderFrequency: config?.reminderFrequency || '1x',
+      reminderTimes: [],
+    };
+  }
+
+  const validFrequencies = ['1x', '2x', '3x', 'custom'] as const;
+  const frequency = validFrequencies.includes(config.reminderFrequency as any)
+    ? (config.reminderFrequency as ChallengeReminderConfig['reminderFrequency'])
+    : '1x';
+
+  const rawTimes = Array.isArray(config.reminderTimes) ? config.reminderTimes : [];
+  const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+  // Validate format and deduplicate preserving chronological order
+  const uniqueTimes = Array.from(new Set(rawTimes.filter(t => typeof t === 'string' && timeRegex.test(t.trim())).map(t => t.trim())));
+  uniqueTimes.sort();
+
+  if (uniqueTimes.length === 0) {
+    throw new Error('At least one valid reminder time (HH:mm) is required when reminders are enabled.');
+  }
+
+  if (uniqueTimes.length > 6) {
+    throw new Error('A maximum of 6 reminder times per day is supported.');
+  }
+
+  // Frequency preset validation
+  if (frequency === '1x' && uniqueTimes.length !== 1) {
+    // If multiple were provided, slice to 1
+    uniqueTimes.splice(1);
+  } else if (frequency === '2x' && uniqueTimes.length !== 2) {
+    if (uniqueTimes.length > 2) uniqueTimes.splice(2);
+  } else if (frequency === '3x' && uniqueTimes.length !== 3) {
+    if (uniqueTimes.length > 3) uniqueTimes.splice(3);
+  }
+
+  return {
+    reminderEnabled: true,
+    reminderFrequency: frequency,
+    reminderTimes: uniqueTimes,
+  };
+}
 
 // ── Local Calendar Date Helpers ───────────────────────────────────────────────
 
@@ -275,11 +336,13 @@ export function getChallengeDayBreakdown(
 /**
  * Starts a new challenge instance.
  * Enforces the One Active Challenge rule.
+ * Optionally accepts reminderConfig (Phase 41B) for behavioral triggers.
  */
 export function startChallenge(
   abilityId: ChallengeAbilityId = 'resume-ability',
   durationDays: ChallengeDurationDays = 7,
-  startDateKey = getLocalDateKey()
+  startDateKey = getLocalDateKey(),
+  reminderConfig?: Partial<ChallengeReminderConfig>
 ): ChallengeInstance {
   const existing = getActiveChallenge();
   if (existing && existing.status === 'active') {
@@ -290,6 +353,7 @@ export function startChallenge(
     }
   }
 
+  const normalizedReminders = validateAndNormalizeReminderConfig(reminderConfig);
   const endDateKey = addDaysToDateKey(startDateKey, durationDays - 1);
   const now = Date.now();
 
@@ -315,6 +379,9 @@ export function startChallenge(
       daysCompleted: 0,
       totalDays: durationDays,
     },
+    reminderEnabled: normalizedReminders.reminderEnabled,
+    reminderFrequency: normalizedReminders.reminderFrequency,
+    reminderTimes: normalizedReminders.reminderTimes,
   };
 
   const derived = deriveChallengeProgress(initialInstance, startDateKey);

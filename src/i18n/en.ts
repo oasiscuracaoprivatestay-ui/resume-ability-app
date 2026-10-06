@@ -1779,6 +1779,23 @@ export const en: Translations = {
   challenge_status_completed: 'Completed',
   challenge_status_cancelled: 'Cancelled',
   challenge_status_active: 'Active',
+
+  // ── Phase 41B: Challenge Behavioral Trigger Reminder Preferences ──
+  challenge_reminders_section_title: 'KEEP THIS CHALLENGE TOP OF MIND',
+  challenge_reminders_section_desc: 'Get gentle reminders during the day to check in, report your status, and reconnect with your Challenge.',
+  challenge_reminders_toggle_label: 'Challenge Reminders',
+  challenge_reminders_frequency_label: 'How often?',
+  challenge_reminders_freq_1x: 'Once a day',
+  challenge_reminders_freq_2x: 'Twice a day',
+  challenge_reminders_freq_3x: 'Three times a day',
+  challenge_reminders_freq_custom: 'Custom',
+  challenge_reminders_times_label: 'Reminder Times',
+  challenge_reminders_add_time: '+ Add Time',
+  challenge_reminders_remove_time: 'Remove',
+  challenge_reminders_max_reached: 'Maximum 6 reminders per day reached',
+  challenge_reminders_time_invalid: 'Please enter a valid time (HH:mm)',
+  challenge_reminders_delivery_note: 'Notification delivery can be enabled after your Challenge starts.',
+  challenge_reminders_off: 'Off',
 };
 
 

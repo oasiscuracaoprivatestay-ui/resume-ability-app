@@ -1672,6 +1672,23 @@ export interface Translations {
   challenge_status_completed: string;
   challenge_status_cancelled: string;
   challenge_status_active: string;
+
+  // ── Phase 41B: Challenge Behavioral Trigger Reminder Preferences ──
+  challenge_reminders_section_title: string;
+  challenge_reminders_section_desc: string;
+  challenge_reminders_toggle_label: string;
+  challenge_reminders_frequency_label: string;
+  challenge_reminders_freq_1x: string;
+  challenge_reminders_freq_2x: string;
+  challenge_reminders_freq_3x: string;
+  challenge_reminders_freq_custom: string;
+  challenge_reminders_times_label: string;
+  challenge_reminders_add_time: string;
+  challenge_reminders_remove_time: string;
+  challenge_reminders_max_reached: string;
+  challenge_reminders_time_invalid: string;
+  challenge_reminders_delivery_note: string;
+  challenge_reminders_off: string;
 }
 
 

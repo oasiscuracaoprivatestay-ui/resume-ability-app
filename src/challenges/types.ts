@@ -62,6 +62,14 @@ export interface ChallengeEventCounts {
   totalDays: number;
 }
 
+export type ChallengeReminderFrequency = '1x' | '2x' | '3x' | 'custom';
+
+export interface ChallengeReminderConfig {
+  reminderEnabled: boolean;
+  reminderFrequency: ChallengeReminderFrequency;
+  reminderTimes: string[]; // HH:mm format, e.g. ["09:00", "18:00"]
+}
+
 export interface ChallengeInstance {
   id: string;
   abilityId: ChallengeAbilityId;
@@ -79,6 +87,10 @@ export interface ChallengeInstance {
   daysRemaining: number; // 0 when on or after final day
   progress: number;      // 0.0 to 1.0 (clamped)
   relevantEventCounts: ChallengeEventCounts;
+  // Phase 41B: Behavioral trigger reminder preferences
+  reminderEnabled?: boolean;
+  reminderFrequency?: ChallengeReminderFrequency;
+  reminderTimes?: string[];
 }
 
 export interface ChallengeDefinition {

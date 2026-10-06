@@ -24,6 +24,31 @@ function createDefaultStore(): ChallengeStore {
 }
 
 /**
+ * Normalizes a ChallengeInstance to guarantee backward compatibility (Phase 41B).
+ * Legacy challenges without reminder fields are safely enriched with deterministic defaults:
+ * reminderEnabled -> false
+ * reminderFrequency -> '1x'
+ * reminderTimes -> []
+ */
+export function normalizeChallengeInstance(raw: any): ChallengeInstance {
+  const reminderEnabled = typeof raw.reminderEnabled === 'boolean' ? raw.reminderEnabled : false;
+  const validFrequencies = ['1x', '2x', '3x', 'custom'];
+  const reminderFrequency = validFrequencies.includes(raw.reminderFrequency)
+    ? raw.reminderFrequency
+    : '1x';
+  const reminderTimes = Array.isArray(raw.reminderTimes)
+    ? raw.reminderTimes.filter((t: any) => typeof t === 'string' && /^\d{2}:\d{2}$/.test(t))
+    : [];
+
+  return {
+    ...raw,
+    reminderEnabled,
+    reminderFrequency,
+    reminderTimes,
+  };
+}
+
+/**
  * Loads the challenge store from localStorage with schema validation.
  */
 export function loadChallengeStore(): ChallengeStore {
@@ -43,9 +68,11 @@ export function loadChallengeStore(): ChallengeStore {
     return {
       version: 1,
       activeChallenge: (parsed.activeChallenge && typeof parsed.activeChallenge === 'object')
-        ? parsed.activeChallenge
+        ? normalizeChallengeInstance(parsed.activeChallenge)
         : null,
-      history: Array.isArray(parsed.history) ? parsed.history : [],
+      history: Array.isArray(parsed.history)
+        ? parsed.history.map(normalizeChallengeInstance)
+        : [],
     };
   } catch {
     return createDefaultStore();

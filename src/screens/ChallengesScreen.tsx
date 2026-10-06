@@ -22,6 +22,7 @@ import {
   ChallengeInstance,
   ChallengeDurationDays,
   ChallengeAbilityId,
+  ChallengeReminderFrequency,
   CHALLENGE_DEFINITIONS,
   RESUME_ABILITY_CHALLENGE_DEFINITION,
 } from '../challenges';
@@ -43,6 +44,12 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
   // Start wizard state
   const [selectedAbility, setSelectedAbility] = useState<ChallengeAbilityId>('resume-ability');
   const [selectedDuration, setSelectedDuration] = useState<ChallengeDurationDays>(7);
+
+  // Phase 41B: Reminder preferences state
+  const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
+  const [reminderFrequency, setReminderFrequency] = useState<ChallengeReminderFrequency>('1x');
+  const [reminderTimes, setReminderTimes] = useState<string[]>(['09:00']);
+
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -59,10 +66,60 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
     return () => window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
   }, []);
 
+  const handleFrequencyChange = (freq: ChallengeReminderFrequency) => {
+    setReminderFrequency(freq);
+    if (freq === '1x') {
+      setReminderTimes(['09:00']);
+    } else if (freq === '2x') {
+      setReminderTimes(['09:00', '18:00']);
+    } else if (freq === '3x') {
+      setReminderTimes(['09:00', '14:00', '19:00']);
+    } else if (freq === 'custom') {
+      if (reminderTimes.length === 0) {
+        setReminderTimes(['09:00']);
+      }
+    }
+  };
+
+  const handleTimeChange = (index: number, newTime: string) => {
+    const updated = [...reminderTimes];
+    updated[index] = newTime;
+    setReminderTimes(updated);
+  };
+
+  const handleAddCustomTime = () => {
+    if (reminderTimes.length >= 6) return;
+    // Suggest next reasonable hour or default
+    const lastTime = reminderTimes[reminderTimes.length - 1] || '09:00';
+    const [h] = lastTime.split(':').map(Number);
+    const nextH = !isNaN(h) && h < 22 ? String(h + 2).padStart(2, '0') + ':00' : '20:00';
+    setReminderTimes([...reminderTimes, nextH]);
+  };
+
+  const handleRemoveCustomTime = (index: number) => {
+    if (reminderTimes.length <= 1) return;
+    setReminderTimes(reminderTimes.filter((_, i) => i !== index));
+  };
+
   const handleStartChallenge = () => {
     try {
       setErrorMessage(null);
-      const newInstance = startChallenge(selectedAbility, selectedDuration);
+      const newInstance = startChallenge(
+        selectedAbility,
+        selectedDuration,
+        undefined,
+        remindersEnabled
+          ? {
+              reminderEnabled: true,
+              reminderFrequency,
+              reminderTimes,
+            }
+          : {
+              reminderEnabled: false,
+              reminderFrequency,
+              reminderTimes: [],
+            }
+      );
       setActiveChallenge(newInstance);
       playFeedback('commit');
     } catch (err: any) {
@@ -184,9 +241,24 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
             /* ── ACTIVE CHALLENGE DETAIL VIEW ── */
             <div className="challenges-active-view">
               <div className="challenge-hub-hero">
-                <div className="challenge-hub-badge">
-                  <span>🏆</span>
-                  <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div className="challenge-hub-badge">
+                    <span>🏆</span>
+                    <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
+                  </div>
+                  {activeChallenge.reminderEnabled && (
+                    <div
+                      className="challenge-hub-badge"
+                      style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.35)', color: '#38bdf8' }}
+                    >
+                      <span>🔔</span>
+                      <span>
+                        {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
+                          ? activeChallenge.reminderTimes.join(', ')
+                          : activeChallenge.reminderFrequency || 'Reminders'}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <h2 className="challenge-hub-title">
                   {t.challenge_day_of_total
@@ -380,7 +452,119 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                 </div>
               </div>
 
-              {/* Step 3: Review Challenge & Philosophy */}
+              {/* Step 3: Keep This Challenge Top of Mind (Phase 41B Reminders) */}
+              <div className="wizard-step">
+                <div className="challenge-reminders-card">
+                  <div className="reminders-card-header">
+                    <h4 className="reminders-section-title">
+                      {t.challenge_reminders_section_title || 'KEEP THIS CHALLENGE TOP OF MIND'}
+                    </h4>
+                    <p className="reminders-section-desc">
+                      {t.challenge_reminders_section_desc ||
+                        'Get gentle reminders during the day to check in, report your status, and reconnect with your Challenge.'}
+                    </p>
+                  </div>
+
+                  <div className="reminders-toggle-row">
+                    <label className="reminders-toggle-label" htmlFor="toggle-challenge-reminders">
+                      <input
+                        id="toggle-challenge-reminders"
+                        type="checkbox"
+                        className="reminders-toggle-input"
+                        checked={remindersEnabled}
+                        onChange={(e) => setRemindersEnabled(e.target.checked)}
+                      />
+                      <span>{t.challenge_reminders_toggle_label || 'Challenge Reminders'}</span>
+                    </label>
+                  </div>
+
+                  {remindersEnabled && (
+                    <div className="reminders-controls">
+                      <div className="reminders-freq-label">
+                        {t.challenge_reminders_frequency_label || 'How often?'}
+                      </div>
+                      <div className="reminders-freq-grid">
+                        <button
+                          type="button"
+                          id="btn-freq-1x"
+                          className={`reminders-freq-btn ${reminderFrequency === '1x' ? 'reminders-freq-btn--selected' : ''}`}
+                          onClick={() => handleFrequencyChange('1x')}
+                        >
+                          {t.challenge_reminders_freq_1x || 'Once a day'}
+                        </button>
+                        <button
+                          type="button"
+                          id="btn-freq-2x"
+                          className={`reminders-freq-btn ${reminderFrequency === '2x' ? 'reminders-freq-btn--selected' : ''}`}
+                          onClick={() => handleFrequencyChange('2x')}
+                        >
+                          {t.challenge_reminders_freq_2x || 'Twice a day'}
+                        </button>
+                        <button
+                          type="button"
+                          id="btn-freq-3x"
+                          className={`reminders-freq-btn ${reminderFrequency === '3x' ? 'reminders-freq-btn--selected' : ''}`}
+                          onClick={() => handleFrequencyChange('3x')}
+                        >
+                          {t.challenge_reminders_freq_3x || 'Three times a day'}
+                        </button>
+                        <button
+                          type="button"
+                          id="btn-freq-custom"
+                          className={`reminders-freq-btn ${reminderFrequency === 'custom' ? 'reminders-freq-btn--selected' : ''}`}
+                          onClick={() => handleFrequencyChange('custom')}
+                        >
+                          {t.challenge_reminders_freq_custom || 'Custom'}
+                        </button>
+                      </div>
+
+                      <div className="reminders-times-label">
+                        {t.challenge_reminders_times_label || 'Reminder Times'}
+                      </div>
+                      <div className="reminders-times-list">
+                        {reminderTimes.map((time, idx) => (
+                          <div key={idx} className="reminder-time-row">
+                            <span className="reminder-time-index">#{idx + 1}</span>
+                            <input
+                              type="time"
+                              id={`input-reminder-time-${idx}`}
+                              className="reminder-time-input"
+                              value={time}
+                              onChange={(e) => handleTimeChange(idx, e.target.value)}
+                            />
+                            {reminderFrequency === 'custom' && reminderTimes.length > 1 && (
+                              <button
+                                type="button"
+                                className="reminder-time-remove-btn"
+                                onClick={() => handleRemoveCustomTime(idx)}
+                              >
+                                {t.challenge_reminders_remove_time || 'Remove'}
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {reminderFrequency === 'custom' && reminderTimes.length < 6 && (
+                          <button
+                            type="button"
+                            id="btn-add-reminder-time"
+                            className="reminder-time-add-btn"
+                            onClick={handleAddCustomTime}
+                          >
+                            {t.challenge_reminders_add_time || '+ Add Time'}
+                          </button>
+                        )}
+                      </div>
+
+                      <p className="reminders-notice">
+                        {t.challenge_reminders_delivery_note ||
+                          'Notification delivery can be enabled after your Challenge starts.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 4: Review Challenge & Philosophy */}
               <div className="wizard-review-card">
                 <h3 className="wizard-review-title">
                   {t.challenge_review_heading || 'Challenge Commitment'}
@@ -393,6 +577,14 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                   <div className="review-detail-row">
                     <span className="detail-label">{t.challenge_selected_duration || 'Duration'}:</span>
                     <span className="detail-val">{selectedDuration} {selectedDuration === 1 ? 'Day' : 'Days'}</span>
+                  </div>
+                  <div className="review-detail-row">
+                    <span className="detail-label">{t.challenge_reminders_toggle_label || 'Challenge Reminders'}:</span>
+                    <span className="detail-val">
+                      {remindersEnabled
+                        ? `${reminderTimes.length}x (${reminderTimes.join(', ')})`
+                        : (t.challenge_reminders_off || 'Off')}
+                    </span>
                   </div>
                 </div>
 
