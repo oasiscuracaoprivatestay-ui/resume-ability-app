@@ -10,16 +10,36 @@
  * - Emits 'resume-ability:challenge-updated' window events on change for reactive UI.
  */
 
-import type { ChallengeInstance, ChallengeStore } from './types';
+import type { ChallengeInstance, ChallengeStore, ChallengeInvitationState, SnoozeOptionDays } from './types';
 
 export const CHALLENGE_STORAGE_KEY = 'resume-ability-challenges';
 export const CHALLENGE_UPDATED_EVENT = 'resume-ability:challenge-updated';
+
+/** Default cooldown between invitation prompts: 24 hours (ms) */
+export const CHALLENGE_INVITATION_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 function createDefaultStore(): ChallengeStore {
   return {
     version: 1,
     activeChallenge: null,
     history: [],
+    invitation: {
+      snoozeUntil: null,
+      lastPromptAt: null,
+    },
+  };
+}
+
+/**
+ * Normalizes invitation state with deterministic defaults (Phase 41C).
+ */
+export function normalizeInvitationState(raw: any): ChallengeInvitationState {
+  if (!raw || typeof raw !== 'object') {
+    return { snoozeUntil: null, lastPromptAt: null };
+  }
+  return {
+    snoozeUntil: typeof raw.snoozeUntil === 'number' && Number.isFinite(raw.snoozeUntil) ? raw.snoozeUntil : null,
+    lastPromptAt: typeof raw.lastPromptAt === 'number' && Number.isFinite(raw.lastPromptAt) ? raw.lastPromptAt : null,
   };
 }
 
@@ -73,6 +93,7 @@ export function loadChallengeStore(): ChallengeStore {
       history: Array.isArray(parsed.history)
         ? parsed.history.map(normalizeChallengeInstance)
         : [],
+      invitation: normalizeInvitationState(parsed.invitation),
     };
   } catch {
     return createDefaultStore();
@@ -146,4 +167,92 @@ export function clearChallengeStore(): void {
   } catch {
     // Ignore
   }
+}
+
+// ── Challenge Invitation & Snooze Logic (Phase 41C) ───────────────────────────
+
+/**
+ * Retrieves the current challenge invitation & snooze state.
+ */
+export function getChallengeInvitationState(): ChallengeInvitationState {
+  const store = loadChallengeStore();
+  return store.invitation || { snoozeUntil: null, lastPromptAt: null };
+}
+
+/**
+ * Snoozes the challenge invitation for a specified duration in days,
+ * or applies standard 24h cooldown if days is 'not_now'.
+ */
+export function setChallengeInvitationSnooze(option: SnoozeOptionDays | 'not_now', now = Date.now()): void {
+  const store = loadChallengeStore();
+  let snoozeDurationMs: number;
+
+  if (option === 'not_now') {
+    snoozeDurationMs = CHALLENGE_INVITATION_COOLDOWN_MS; // 24 hours
+  } else {
+    snoozeDurationMs = option * 24 * 60 * 60 * 1000;
+  }
+
+  const snoozeUntil = now + snoozeDurationMs;
+  store.invitation = {
+    snoozeUntil,
+    lastPromptAt: now,
+  };
+  saveChallengeStore(store);
+}
+
+/**
+ * Records that the invitation was intentionally surfaced to the user.
+ * Prevents re-prompting on rapid re-renders.
+ */
+export function markChallengeInvitationPrompted(now = Date.now()): void {
+  const store = loadChallengeStore();
+  store.invitation = {
+    snoozeUntil: store.invitation?.snoozeUntil ?? null,
+    lastPromptAt: now,
+  };
+  saveChallengeStore(store);
+}
+
+/**
+ * Pure deterministic eligibility check for the challenge invitation card.
+ *
+ * Rules:
+ * 1. Must NOT have an active challenge (`activeChallenge === null`).
+ * 2. Must NOT be currently snoozed (`snoozeUntil === null` OR `now >= snoozeUntil`).
+ * 3. Must satisfy the anti-nagging cooldown:
+ *    - At least 24 hours since `lastPromptAt` (unless never prompted).
+ * 4. Must satisfy challenge conclusion cooldown:
+ *    - At least 24 hours since the most recent challenge completed/cancelled in history.
+ */
+export function canShowChallengeInvitation(now = Date.now()): boolean {
+  const store = loadChallengeStore();
+
+  // Rule 1: Never show if an active challenge exists
+  if (store.activeChallenge && store.activeChallenge.status === 'active') {
+    return false;
+  }
+
+  const invitation = store.invitation || { snoozeUntil: null, lastPromptAt: null };
+
+  // Rule 2: Never show if snooze is in the future
+  if (invitation.snoozeUntil !== null && now < invitation.snoozeUntil) {
+    return false;
+  }
+
+  // Rule 3: Anti-nagging cooldown (24h since last prompted / dismissed)
+  if (invitation.lastPromptAt !== null && (now - invitation.lastPromptAt) < CHALLENGE_INVITATION_COOLDOWN_MS) {
+    return false;
+  }
+
+  // Rule 4: Challenge conclusion cooldown (24h since last challenge ended)
+  if (store.history && store.history.length > 0) {
+    const latestHistory = store.history[0];
+    const concludedAt = latestHistory.completedAt || latestHistory.cancelledAt || latestHistory.createdAt;
+    if (concludedAt && (now - concludedAt) < CHALLENGE_INVITATION_COOLDOWN_MS) {
+      return false;
+    }
+  }
+
+  return true;
 }

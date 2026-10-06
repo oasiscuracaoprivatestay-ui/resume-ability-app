@@ -194,3 +194,102 @@
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* ── Phase 41C: Challenge Invitation & Snooze Styles ── */
+.challenge-card--invite {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: linear-gradient(135deg, rgba(16, 26, 40, 0.96), rgba(10, 16, 26, 0.98));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.challenge-invite-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.challenge-card-cta--primary {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: rgba(45, 212, 191, 0.45);
+  color: #2dd4bf;
+  font-weight: 700;
+}
+
+.challenge-card-cta--primary:hover {
+  background: rgba(45, 212, 191, 0.25);
+  border-color: #2dd4bf;
+  color: #5eead4;
+}
+
+.challenge-card-cta--secondary {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+}
+
+.challenge-card-cta--secondary:hover {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+
+.challenge-snooze-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.challenge-snooze-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.challenge-snooze-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.snooze-pill-btn {
+  padding: 8px 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 36px;
+  text-align: center;
+}
+
+.snooze-pill-btn:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.snooze-not-now-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: center;
+  transition: color 0.15s ease;
+}
+
+.snooze-not-now-btn:hover {
+  color: #94a3b8;
+  text-decoration: underline;
+}
+

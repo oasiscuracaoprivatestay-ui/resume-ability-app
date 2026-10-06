@@ -1782,6 +1782,19 @@ export const nl: Translations = {
   challenge_reminders_time_invalid: 'Voer een geldige tijd in (UU:mm)',
   challenge_reminders_delivery_note: 'Meldingen kunnen worden ingeschakeld nadat je Uitdaging is gestart.',
   challenge_reminders_off: 'Uit',
+
+  // ── Phase 41C: Challenge Invitation & Snooze ──
+  challenge_invite_title: 'KLAAR VOOR EEN UITDAGING?',
+  challenge_invite_body: 'Breng je Resume-Ability in de praktijk en bouw consistentie op, dag voor dag.',
+  challenge_invite_btn_start: 'START EEN UITDAGING',
+  challenge_invite_btn_later: 'HERINNER MIJ LATER',
+  challenge_snooze_heading: 'Herinner mij over...',
+  challenge_snooze_1d: '1 Dag',
+  challenge_snooze_3d: '3 Dagen',
+  challenge_snooze_7d: '7 Dagen',
+  challenge_snooze_14d: '14 Dagen',
+  challenge_snooze_30d: '30 Dagen',
+  challenge_snooze_not_now: 'Nu niet',
 };
 
 

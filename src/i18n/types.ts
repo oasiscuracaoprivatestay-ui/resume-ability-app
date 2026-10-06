@@ -1689,6 +1689,19 @@ export interface Translations {
   challenge_reminders_time_invalid: string;
   challenge_reminders_delivery_note: string;
   challenge_reminders_off: string;
+
+  // ── Phase 41C: Challenge Invitation & Snooze ──
+  challenge_invite_title: string;
+  challenge_invite_body: string;
+  challenge_invite_btn_start: string;
+  challenge_invite_btn_later: string;
+  challenge_snooze_heading: string;
+  challenge_snooze_1d: string;
+  challenge_snooze_3d: string;
+  challenge_snooze_7d: string;
+  challenge_snooze_14d: string;
+  challenge_snooze_30d: string;
+  challenge_snooze_not_now: string;
 }
 
 

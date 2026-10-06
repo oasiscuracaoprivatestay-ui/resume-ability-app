@@ -1796,6 +1796,19 @@ export const en: Translations = {
   challenge_reminders_time_invalid: 'Please enter a valid time (HH:mm)',
   challenge_reminders_delivery_note: 'Notification delivery can be enabled after your Challenge starts.',
   challenge_reminders_off: 'Off',
+
+  // ── Phase 41C: Challenge Invitation & Snooze ──
+  challenge_invite_title: 'READY FOR A CHALLENGE?',
+  challenge_invite_body: 'Put your Resume-Ability into practice and build consistency one day at a time.',
+  challenge_invite_btn_start: 'START A CHALLENGE',
+  challenge_invite_btn_later: 'REMIND ME LATER',
+  challenge_snooze_heading: 'Remind me in...',
+  challenge_snooze_1d: '1 Day',
+  challenge_snooze_3d: '3 Days',
+  challenge_snooze_7d: '7 Days',
+  challenge_snooze_14d: '14 Days',
+  challenge_snooze_30d: '30 Days',
+  challenge_snooze_not_now: 'Not Now',
 };
 
 

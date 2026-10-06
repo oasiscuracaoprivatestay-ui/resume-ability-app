@@ -10,9 +10,13 @@ import { useTranslation } from '../i18n';
 import {
   syncCurrentChallenge,
   getChallengeDayBreakdown,
+  canShowChallengeInvitation,
+  setChallengeInvitationSnooze,
+  markChallengeInvitationPrompted,
   CHALLENGE_UPDATED_EVENT,
   ChallengeInstance,
   ChallengeDayProgress,
+  SnoozeOptionDays,
 } from '../challenges';
 import './ActiveChallengeCard.css';
 
@@ -24,14 +28,19 @@ export const ActiveChallengeCard: React.FC<ActiveChallengeCardProps> = ({ onNavi
   const { t } = useTranslation();
   const [activeChallenge, setActiveChallenge] = useState<ChallengeInstance | null>(null);
   const [days, setDays] = useState<ChallengeDayProgress[]>([]);
+  const [showInvitation, setShowInvitation] = useState<boolean>(false);
+  const [showSnoozeMenu, setShowSnoozeMenu] = useState<boolean>(false);
 
   const refresh = () => {
     const current = syncCurrentChallenge();
     setActiveChallenge(current);
     if (current && current.status === 'active') {
       setDays(getChallengeDayBreakdown(current));
+      setShowInvitation(false);
     } else {
       setDays([]);
+      const eligible = canShowChallengeInvitation();
+      setShowInvitation(eligible);
     }
   };
 
@@ -42,26 +51,110 @@ export const ActiveChallengeCard: React.FC<ActiveChallengeCardProps> = ({ onNavi
     return () => window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
   }, []);
 
+  const handleStartChallengeFromInvite = () => {
+    markChallengeInvitationPrompted();
+    onNavigate('challenges');
+  };
+
+  const handleSnooze = (option: SnoozeOptionDays | 'not_now') => {
+    setChallengeInvitationSnooze(option);
+    setShowSnoozeMenu(false);
+    setShowInvitation(false);
+  };
+
   if (!activeChallenge || activeChallenge.status !== 'active') {
+    // If not eligible for invitation (snoozed or in 24h cooldown), do not render
+    if (!showInvitation) {
+      return null;
+    }
+
     return (
-      <div className="challenge-card challenge-card--entry">
+      <div className="challenge-card challenge-card--invite" id="challenge-invitation-card">
         <div className="challenge-card-header">
-          <span className="challenge-card-icon">🏆</span>
+          <span className="challenge-card-icon">⚡</span>
           <div className="challenge-card-text">
-            <span className="challenge-card-title">{t.challenge_home_entry_title || 'Ability Challenges'}</span>
+            <span className="challenge-card-title">{t.challenge_invite_title || 'READY FOR A CHALLENGE?'}</span>
             <span className="challenge-card-sub">
-              {t.challenge_home_entry_sub || 'Practice Resume-Ability with a 1, 3, 7, 30, or 90-day challenge.'}
+              {t.challenge_invite_body || 'Put your Resume-Ability into practice and build consistency one day at a time.'}
             </span>
           </div>
         </div>
-        <button
-          id="btn-home-start-challenge"
-          className="challenge-card-cta"
-          onClick={() => onNavigate('challenges')}
-        >
-          <span>{t.challenge_btn_choose || 'Choose Challenge'}</span>
-          <span className="challenge-card-arrow">→</span>
-        </button>
+
+        {!showSnoozeMenu ? (
+          <div className="challenge-invite-actions">
+            <button
+              id="btn-invite-start-challenge"
+              className="challenge-card-cta challenge-card-cta--primary"
+              onClick={handleStartChallengeFromInvite}
+            >
+              <span>{t.challenge_invite_btn_start || 'START A CHALLENGE'}</span>
+              <span className="challenge-card-arrow">→</span>
+            </button>
+            <button
+              id="btn-invite-remind-later"
+              className="challenge-card-cta challenge-card-cta--secondary"
+              onClick={() => setShowSnoozeMenu(true)}
+            >
+              <span>{t.challenge_invite_btn_later || 'REMIND ME LATER'}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="challenge-snooze-container">
+            <div className="challenge-snooze-heading">
+              {t.challenge_snooze_heading || 'Remind me in...'}
+            </div>
+            <div className="challenge-snooze-grid">
+              <button
+                type="button"
+                id="btn-snooze-1d"
+                className="snooze-pill-btn"
+                onClick={() => handleSnooze(1)}
+              >
+                {t.challenge_snooze_1d || '1 Day'}
+              </button>
+              <button
+                type="button"
+                id="btn-snooze-3d"
+                className="snooze-pill-btn"
+                onClick={() => handleSnooze(3)}
+              >
+                {t.challenge_snooze_3d || '3 Days'}
+              </button>
+              <button
+                type="button"
+                id="btn-snooze-7d"
+                className="snooze-pill-btn"
+                onClick={() => handleSnooze(7)}
+              >
+                {t.challenge_snooze_7d || '7 Days'}
+              </button>
+              <button
+                type="button"
+                id="btn-snooze-14d"
+                className="snooze-pill-btn"
+                onClick={() => handleSnooze(14)}
+              >
+                {t.challenge_snooze_14d || '14 Days'}
+              </button>
+              <button
+                type="button"
+                id="btn-snooze-30d"
+                className="snooze-pill-btn"
+                onClick={() => handleSnooze(30)}
+              >
+                {t.challenge_snooze_30d || '30 Days'}
+              </button>
+            </div>
+            <button
+              type="button"
+              id="btn-snooze-not-now"
+              className="snooze-not-now-btn"
+              onClick={() => handleSnooze('not_now')}
+            >
+              {t.challenge_snooze_not_now || 'Not Now'}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

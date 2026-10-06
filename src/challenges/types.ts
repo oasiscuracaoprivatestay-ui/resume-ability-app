@@ -106,8 +106,17 @@ export interface ChallengeDefinition {
   authorityLevel?: 'product-directive';
 }
 
+export type SnoozeOptionDays = 1 | 3 | 7 | 14 | 30;
+
+export interface ChallengeInvitationState {
+  snoozeUntil: number | null; // absolute timestamp ms until which invitation is hidden
+  lastPromptAt: number | null; // timestamp ms when the invitation was surfaced or dismissed
+}
+
 export interface ChallengeStore {
   version: 1;
   activeChallenge: ChallengeInstance | null;
   history: ChallengeInstance[];
+  // Phase 41C: Challenge invitation & snooze state
+  invitation?: ChallengeInvitationState;
 }
