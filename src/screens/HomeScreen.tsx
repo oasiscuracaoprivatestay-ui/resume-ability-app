@@ -143,6 +143,9 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span>{t.home_structured_diet}</span>
           </button>
 
+          {/* ── Ability Challenges Entry / Active Hub (Phase 41D.5) ── */}
+          <ActiveChallengeCard onNavigate={onNavigate} />
+
           {/* ── SDA AI Coach Entry (Phase 33) ── */}
           <button
             id="btn-sda-coach"
@@ -156,9 +159,6 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             </div>
             <span className="home-btn-chevron" aria-hidden="true">→</span>
           </button>
-
-          {/* ── Ability Challenges Entry / Active Hub (Phase 37) ── */}
-          <ActiveChallengeCard onNavigate={onNavigate} />
 
           {/* ── My Commitments Hub & Shortcuts (Phase 7A) ── */}
           <button
@@ -284,15 +284,6 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
         >
           <span className="nav-icon" aria-hidden="true">🛡️</span>
           <span className="nav-label">{t.commit_label}</span>
-        </button>
-        <button
-          id="nav-challenges"
-          className="nav-link nav-link--challenges"
-          onClick={() => onNavigate('challenges')}
-          aria-label={t.nav_challenges}
-        >
-          <span className="nav-icon" aria-hidden="true">🏆</span>
-          <span className="nav-label">{t.nav_challenges}</span>
         </button>
         <button
           id="nav-reminders"

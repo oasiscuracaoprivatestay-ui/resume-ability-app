@@ -1615,6 +1615,9 @@ export interface Translations {
   challenge_home_entry_sub: string;
   challenge_btn_choose: string;
   challenge_btn_view: string;
+  challenge_btn_continue: string;
+  challenge_btn_start_challenge: string;
+  challenge_home_permanent_sub: string;
   challenge_btn_cancel: string;
   challenge_day_of_total: string;
   challenge_days_remaining: string;
