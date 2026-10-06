@@ -1,9 +1,27 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import webpush from 'web-push';
-import { getAllSubscriptions, removeSubscription } from '../_store';
+import { getAllActiveReminders, deletePushReminder, acquireSlotLock, releaseSlotLock } from '../_store';
+import { evaluateDueSlots } from '../_dueEngine';
+import { verifyQStashSignature } from '../_qstashAuth';
+
+// Safe, privacy-preserving notification copy by locale
+const NOTIFICATION_COPY: Record<string, { title: string; body: string }> = {
+  en: {
+    title: 'SDA Challenge Check-In',
+    body: 'Take a moment to check in with your Challenge.',
+  },
+  es: {
+    title: 'Check-in del Desafío SDA',
+    body: 'Tómate un momento para registrar tu Desafío.',
+  },
+  nl: {
+    title: 'SDA Challenge Check-In',
+    body: 'Neem een moment om in te checken bij je Challenge.',
+  },
+};
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // Support GET/POST for Vercel Cron triggers
+  // Support GET and POST for QStash triggers
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.statusCode = 405;
     res.setHeader('Content-Type', 'application/json');
@@ -11,18 +29,50 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
-  // Optional: Verify CRON_SECRET if configured
+  // Parse raw body for signature verification if present
+  let rawBody = '';
+  if (req.method === 'POST') {
+    rawBody = await new Promise<string>((resolve) => {
+      let data = '';
+      req.on('data', chunk => { data += chunk; });
+      req.on('end', () => resolve(data));
+      req.on('error', () => resolve(''));
+    });
+  }
+
+  // 1. Dual Security Layer: QStash Signature OR CRON_SECRET Bearer Token
+  const qstashSignature = req.headers['upstash-signature'];
+  const authHeader = req.headers['authorization'];
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = req.headers['authorization'];
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      res.statusCode = 401;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'UNAUTHORIZED_CRON' }));
-      return;
+
+  let isAuthorized = false;
+
+  // Path A: Upstash QStash HMAC-SHA256 signature verification
+  if (qstashSignature && typeof qstashSignature === 'string') {
+    const validQStash = await verifyQStashSignature({
+      signature: qstashSignature,
+      body: rawBody,
+    });
+    if (validQStash) {
+      isAuthorized = true;
     }
   }
 
+  // Path B: CRON_SECRET authorization for manual or administrative triggers
+  if (!isAuthorized && cronSecret && authHeader) {
+    if (authHeader === `Bearer ${cronSecret}`) {
+      isAuthorized = true;
+    }
+  }
+
+  if (!isAuthorized) {
+    res.statusCode = 401;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'UNAUTHORIZED' }));
+    return;
+  }
+
+  // 2. Resolve VAPID configuration
   const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
   const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@superdietability.com';
@@ -39,68 +89,77 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-  const subscriptions = getAllSubscriptions();
   const now = new Date();
+  const activeReminders = await getAllActiveReminders();
+
   let evaluated = 0;
-  let delivered = 0;
+  let dueCount = 0;
+  let sent = 0;
+  let skippedLocked = 0;
   let expired = 0;
+  let failed = 0;
 
-  for (const sub of subscriptions) {
+  for (const record of activeReminders) {
     evaluated++;
-    try {
-      // Determine local hour and minute for the user's timezone
-      const tz = sub.timezone || 'UTC';
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false,
-      });
 
-      const parts = formatter.formatToParts(now);
-      const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
-      const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
-      const currentMins = hour * 60 + minute;
+    // Evaluate due slots for this installation's timezone and schedule (15m window)
+    const dueSlots = evaluateDueSlots({
+      now,
+      timezone: record.timezone,
+      reminderTimes: record.reminderTimes,
+      challengeActive: record.challengeActive,
+      reminderEnabled: record.reminderEnabled,
+      challengeId: record.challengeId,
+      challengeEndsAt: record.challengeEndsAt,
+      windowMinutes: 15,
+    });
 
-      const activeStartMins = parseTime(sub.settings?.activeStart || '08:00');
-      const activeEndMins = parseTime(sub.settings?.activeEnd || '21:00');
+    for (const slot of dueSlots) {
+      dueCount++;
 
-      // Check if current user local time is within active hours
-      const isWithinActive = activeStartMins <= activeEndMins
-        ? currentMins >= activeStartMins && currentMins <= activeEndMins
-        : currentMins >= activeStartMins || currentMins <= activeEndMins;
-
-      if (!isWithinActive) {
+      // 3. Atomic deduplication: Acquire single-delivery claim for this slot
+      const lockAcquired = await acquireSlotLock(slot.claimKey, 86400);
+      if (!lockAcquired) {
+        skippedLocked++;
         continue;
       }
 
-      // Check due status (cooldown of at least 15 minutes between pushes)
-      const lastDelivered = sub.lastDeliveredAt || 0;
-      if (now.getTime() - lastDelivered < 15 * 60 * 1000) {
-        continue;
-      }
-
+      // 4. Build privacy-safe notification payload (generic, non-revealing)
+      const copy = NOTIFICATION_COPY[record.locale || 'en'] || NOTIFICATION_COPY.en;
       const payload = JSON.stringify({
-        title: 'Super Diet-Ability',
-        body: 'Take a moment to check in with your structure. Awareness is a win.',
-        targetScreen: 'check-in',
-        tag: `sda-scheduled-${now.toISOString().split('T')[0]}`,
+        title: copy.title,
+        body: copy.body,
+        targetScreen: 'challenges',
+        url: '/?screen=challenges',
+        tag: `sda-challenge-${slot.slotTime}`,
         icon: '/icons/icon-192.svg',
         badge: '/icons/icon-192.svg',
+        type: 'challenge-reminder',
       });
 
-      await webpush.sendNotification({
-        endpoint: sub.endpoint,
-        keys: sub.keys,
-      }, payload);
-
-      sub.lastDeliveredAt = now.getTime();
-      delivered++;
-    } catch (err: any) {
-      // If subscription expired or was cancelled by user (410 Gone / 404 Not Found), prune it
-      if (err.statusCode === 410 || err.statusCode === 404) {
-        removeSubscription(sub.endpoint);
-        expired++;
+      try {
+        await webpush.sendNotification({
+          endpoint: record.subscription.endpoint,
+          keys: {
+            p256dh: record.subscription.keys.p256dh,
+            auth: record.subscription.keys.auth,
+          },
+        }, payload);
+        sent++;
+      } catch (err: any) {
+        // 5. Cleanup expired or cancelled push subscriptions (HTTP 410 Gone / 404 Not Found)
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await deletePushReminder(record.installationId);
+          expired++;
+        } else {
+          // 6. On transient failure: release the lock so a scheduler retry can re-attempt
+          await releaseSlotLock(slot.claimKey);
+          failed++;
+          console.warn('Push delivery transient failure for installation', {
+            statusCode: err.statusCode,
+            message: err.message,
+          });
+        }
       }
     }
   }
@@ -110,13 +169,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   res.end(JSON.stringify({
     success: true,
     timestamp: now.toISOString(),
-    evaluated,
-    delivered,
+    processed: evaluated,
+    due: dueCount,
+    sent,
     expired,
+    failed,
+    skippedLocked,
   }));
-}
-
-function parseTime(timeStr: string): number {
-  const [h, m] = timeStr.split(':').map(n => parseInt(n, 10) || 0);
-  return h * 60 + m;
 }

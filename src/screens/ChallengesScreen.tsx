@@ -28,6 +28,14 @@ import {
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { playFeedback } from '../utils/feedback';
+import {
+  getPushDeliveryStatus,
+  subscribeToPush,
+  isPushSupported,
+  isIOS,
+  isStandalonePWA,
+  type PushDeliveryStatus,
+} from '../utils/pushNotifications';
 import './ChallengesScreen.css';
 
 interface ChallengesScreenProps {
@@ -50,6 +58,11 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
   const [reminderFrequency, setReminderFrequency] = useState<ChallengeReminderFrequency>('1x');
   const [reminderTimes, setReminderTimes] = useState<string[]>(['09:00']);
 
+  // Phase 41D: Push notification status and pre-permission modal state
+  const [pushStatus, setPushStatus] = useState<PushDeliveryStatus>(() => getPushDeliveryStatus());
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
+
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -57,6 +70,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
     const current = syncCurrentChallenge();
     setActiveChallenge(current);
     setHistory(getChallengeHistory());
+    setPushStatus(getPushDeliveryStatus());
   };
 
   useEffect(() => {
@@ -101,6 +115,17 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
     setReminderTimes(reminderTimes.filter((_, i) => i !== index));
   };
 
+  const handleEnablePush = async () => {
+    setIsEnablingPush(true);
+    try {
+      const res = await subscribeToPush();
+      setPushStatus(res.status);
+      setShowPermissionModal(false);
+    } finally {
+      setIsEnablingPush(false);
+    }
+  };
+
   const handleStartChallenge = () => {
     try {
       setErrorMessage(null);
@@ -122,6 +147,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
       );
       setActiveChallenge(newInstance);
       playFeedback('commit');
+
+      // Phase 41D: If reminders enabled, determine if explicit permission prompt is needed
+      if (remindersEnabled) {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default' && isPushSupported()) {
+          setShowPermissionModal(true);
+        } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          subscribeToPush().then(() => setPushStatus(getPushDeliveryStatus())).catch(() => {});
+        }
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to start challenge');
     }
@@ -259,6 +293,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                       </span>
                     </div>
                   )}
+                  {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
+                    <div
+                      className="challenge-hub-badge"
+                      style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#4ade80' }}
+                    >
+                      <span>✓</span>
+                      <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
+                    </div>
+                  )}
                 </div>
                 <h2 className="challenge-hub-title">
                   {t.challenge_day_of_total
@@ -271,6 +314,37 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                     ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
                     : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
                 </p>
+
+                {/* Phase 41D: Web Push Activation / Status Banner */}
+                {activeChallenge.reminderEnabled && pushStatus === 'available' && (
+                  <div className="challenge-push-banner" id="challenge-push-enable-banner">
+                    <span className="challenge-push-banner-text">
+                      🔔 {t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}
+                    </span>
+                    <button
+                      id="btn-challenge-enable-push"
+                      className="challenge-push-enable-btn"
+                      onClick={handleEnablePush}
+                      disabled={isEnablingPush}
+                    >
+                      {isEnablingPush ? '...' : (t.challenge_push_btn_enable || 'ENABLE NOTIFICATIONS')}
+                    </button>
+                  </div>
+                )}
+                {activeChallenge.reminderEnabled && pushStatus === 'denied' && (
+                  <div className="challenge-push-banner challenge-push-banner--denied" id="challenge-push-denied-banner">
+                    <span className="challenge-push-banner-text">
+                      ⚠️ {t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}
+                    </span>
+                  </div>
+                )}
+                {activeChallenge.reminderEnabled && isIOS() && !isStandalonePWA() && (
+                  <div className="challenge-push-banner" id="challenge-push-ios-banner">
+                    <span className="challenge-push-banner-text">
+                      📲 {t.challenge_push_ios_instruction || 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Progress bar */}
                 <div className="challenge-progress-bar-wrapper">
@@ -637,6 +711,38 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                 onClick={() => setShowCancelModal(false)}
               >
                 {t.challenge_keep_challenge || 'Keep Challenge Active'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Web Push Pre-Permission Modal (Phase 41D) ── */}
+      {showPermissionModal && (
+        <div className="challenge-push-modal-overlay" role="dialog" aria-modal="true">
+          <div className="challenge-push-modal">
+            <div className="challenge-push-modal-icon">🔔</div>
+            <h3 className="challenge-push-modal-title">
+              {t.challenge_push_modal_title || 'STAY CONNECTED TO YOUR STRUCTURE'}
+            </h3>
+            <p className="challenge-push-modal-body">
+              {t.challenge_push_modal_body || 'SDA can send gentle check-in reminders during your Challenge to help you pause, reconnect, and recommit.'}
+            </p>
+            <div className="challenge-push-modal-actions">
+              <button
+                id="btn-modal-enable-push"
+                className="challenge-push-modal-btn-confirm"
+                onClick={handleEnablePush}
+                disabled={isEnablingPush}
+              >
+                {isEnablingPush ? '...' : (t.challenge_push_btn_enable || 'ENABLE NOTIFICATIONS')}
+              </button>
+              <button
+                id="btn-modal-skip-push"
+                className="challenge-push-modal-btn-skip"
+                onClick={() => setShowPermissionModal(false)}
+              >
+                {t.challenge_push_modal_skip || 'SKIP FOR NOW'}
               </button>
             </div>
           </div>

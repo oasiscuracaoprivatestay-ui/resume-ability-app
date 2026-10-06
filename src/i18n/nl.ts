@@ -1795,6 +1795,16 @@ export const nl: Translations = {
   challenge_snooze_14d: '14 Dagen',
   challenge_snooze_30d: '30 Dagen',
   challenge_snooze_not_now: 'Nu niet',
+
+  // ── Phase 41D: Web Push Behavioral Triggers ──
+  challenge_push_status_enabled: 'Meldingen actief',
+  challenge_push_status_not_enabled: 'Herinneringen zijn geconfigureerd. Schakel meldingen in om ze te ontvangen wanneer SDA gesloten is.',
+  challenge_push_btn_enable: 'MELDINGEN INSCHAKELEN',
+  challenge_push_status_denied: 'Meldingen zijn geblokkeerd in je browserinstellingen. Sta meldingen toe voor deze site om herinneringen te ontvangen.',
+  challenge_push_ios_instruction: 'Om Challenge-herinneringen te ontvangen wanneer SDA gesloten is op iPhone, tik op Deel en selecteer "Zet op beginscherm".',
+  challenge_push_modal_title: 'BLIJF VERBONDEN MET JE STRUCTUUR',
+  challenge_push_modal_body: 'SDA kan vriendelijke check-in herinneringen sturen tijdens je Challenge om je te helpen pauzeren, herverbinden en hercommitteren.',
+  challenge_push_modal_skip: 'NU OVERSLAAN',
 };
 
 

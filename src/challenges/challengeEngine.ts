@@ -34,6 +34,7 @@ import {
   isEligibleSlipRecord,
 } from '../utils/dietVerificationStorage';
 import { loadSlips } from '../utils';
+import { syncChallengePushSchedule } from '../utils/pushNotifications';
 
 // ── Reminder Validation Helpers (Phase 41B) ───────────────────────────────────
 
@@ -271,6 +272,14 @@ export function deriveChallengeProgress(
 
     // Auto-archive completed challenge
     archiveChallenge(completedInstance);
+    try {
+      syncChallengePushSchedule({
+        challengeId: completedInstance.id,
+        challengeActive: false,
+        reminderEnabled: false,
+        reminderTimes: [],
+      }).catch(() => {});
+    } catch {}
     return completedInstance;
   }
 
@@ -386,6 +395,19 @@ export function startChallenge(
 
   const derived = deriveChallengeProgress(initialInstance, startDateKey);
   saveActiveChallenge(derived);
+  if (derived.reminderEnabled) {
+    try {
+      const [y, m, d] = derived.endDate.split('-').map(Number);
+      const endsAt = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+      syncChallengePushSchedule({
+        challengeId: derived.id,
+        challengeActive: true,
+        reminderEnabled: true,
+        reminderTimes: derived.reminderTimes || [],
+        challengeEndsAt: endsAt,
+      }).catch(() => {});
+    } catch {}
+  }
   return derived;
 }
 
@@ -418,5 +440,13 @@ export function cancelActiveChallenge(reason = 'User cancelled'): ChallengeInsta
   };
 
   archiveChallenge(cancelled);
+  try {
+    syncChallengePushSchedule({
+      challengeId: active.id,
+      challengeActive: false,
+      reminderEnabled: false,
+      reminderTimes: [],
+    }).catch(() => {});
+  } catch {}
   return cancelled;
 }

@@ -1809,6 +1809,16 @@ export const en: Translations = {
   challenge_snooze_14d: '14 Days',
   challenge_snooze_30d: '30 Days',
   challenge_snooze_not_now: 'Not Now',
+
+  // ── Phase 41D: Web Push Behavioral Triggers ──
+  challenge_push_status_enabled: 'Notifications Active',
+  challenge_push_status_not_enabled: 'Reminders are configured. Enable notifications to receive them when SDA is closed.',
+  challenge_push_btn_enable: 'ENABLE NOTIFICATIONS',
+  challenge_push_status_denied: 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.',
+  challenge_push_ios_instruction: 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".',
+  challenge_push_modal_title: 'STAY CONNECTED TO YOUR STRUCTURE',
+  challenge_push_modal_body: 'SDA can send gentle check-in reminders during your Challenge to help you pause, reconnect, and recommit.',
+  challenge_push_modal_skip: 'SKIP FOR NOW',
 };
 
 

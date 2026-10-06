@@ -124,6 +124,8 @@ export function getActiveChallenge(): ChallengeInstance | null {
   return store.activeChallenge;
 }
 
+export const loadActiveChallenge = getActiveChallenge;
+
 /**
  * Sets or clears the active challenge.
  */

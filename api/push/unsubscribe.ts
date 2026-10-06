@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { removeSubscription } from '../_store';
+import { disablePushReminder, getPushReminderByEndpoint } from '../_store';
 
 export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
   if (req.method !== 'POST') {
@@ -23,10 +23,15 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
       });
     }
 
-    const { endpoint } = body || {};
+    const { endpoint, installationId } = body || {};
 
-    if (endpoint) {
-      removeSubscription(endpoint);
+    if (installationId && typeof installationId === 'string') {
+      await disablePushReminder(installationId.trim());
+    } else if (endpoint && typeof endpoint === 'string') {
+      const rec = await getPushReminderByEndpoint(endpoint.trim());
+      if (rec) {
+        await disablePushReminder(rec.installationId);
+      }
     }
 
     res.statusCode = 200;

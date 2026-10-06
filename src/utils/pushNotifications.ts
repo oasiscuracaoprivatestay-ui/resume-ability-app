@@ -1,8 +1,9 @@
 /**
- * Web Push Notifications Engine — Phase 14
+ * Web Push Notifications Engine — Phase 41D.2
  *
  * Implements browser Push API support detection, subscription lifecycle,
- * VAPID key conversion, and backend synchronization.
+ * VAPID key conversion, persistent Upstash Redis synchronization,
+ * and privacy-safe installation identification.
  */
 
 import {
@@ -11,13 +12,22 @@ import {
   clearPushSubscriptionState,
 } from './pushSubscriptionStorage';
 import type { PushSubscriptionState } from './pushSubscriptionStorage';
-import { loadNotificationSettings } from './notificationSettingsStorage';
+import { getOrCreateInstallationId } from './installationStorage';
 
 export type PushDeliveryStatus =
   | 'enabled'
   | 'available'
   | 'denied'
   | 'unsupported';
+
+export interface ChallengePushSyncParams {
+  challengeId: string | null;
+  challengeActive: boolean;
+  reminderEnabled: boolean;
+  reminderTimes: string[];
+  challengeEndsAt?: number | null;
+  locale?: 'en' | 'es' | 'nl';
+}
 
 /**
  * Check if the browser environment supports Service Worker and PushManager.
@@ -28,6 +38,28 @@ export function isPushSupported(): boolean {
     'serviceWorker' in navigator &&
     'PushManager' in window &&
     'Notification' in window
+  );
+}
+
+/**
+ * Determine whether device is running iOS.
+ */
+export function isIOS(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
+/**
+ * Determine whether web app is running in installed standalone PWA mode.
+ */
+export function isStandalonePWA(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as any).standalone === true
   );
 }
 
@@ -98,6 +130,104 @@ export async function getOrRegisterServiceWorker(): Promise<ServiceWorkerRegistr
 }
 
 /**
+ * Synchronize current active Challenge reminder schedule to the persistent push backend.
+ */
+export async function syncChallengePushSchedule(
+  params?: Partial<ChallengePushSyncParams>,
+): Promise<boolean> {
+  if (!isPushSupported()) return false;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+    return false;
+  }
+
+  try {
+    const reg = await getOrRegisterServiceWorker();
+    if (!reg) return false;
+
+    const subscription = await reg.pushManager.getSubscription();
+    if (!subscription) return false;
+
+    const installationId = getOrCreateInstallationId();
+    const userTimezone =
+      typeof Intl !== 'undefined'
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone
+        : 'UTC';
+
+    let config: ChallengePushSyncParams;
+    if (params && params.challengeId !== undefined) {
+      config = {
+        challengeId: params.challengeId,
+        challengeActive: Boolean(params.challengeActive),
+        reminderEnabled: Boolean(params.reminderEnabled),
+        reminderTimes: Array.isArray(params.reminderTimes) ? params.reminderTimes : [],
+        challengeEndsAt: params.challengeEndsAt || null,
+        locale: params.locale || 'en',
+      };
+    } else {
+      const { loadActiveChallenge } = await import('../challenges/challengeStorage');
+      const active = loadActiveChallenge();
+      if (active && active.status === 'active') {
+        const [y, m, d] = active.endDate.split('-').map(Number);
+        const endsAt = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+        const savedLang = localStorage.getItem('resume-ability-language');
+        const locale = savedLang === 'es' || savedLang === 'nl' || savedLang === 'en' ? savedLang : 'en';
+
+        config = {
+          challengeId: active.id,
+          challengeActive: true,
+          reminderEnabled: Boolean(active.reminderEnabled),
+          reminderTimes: active.reminderTimes || [],
+          challengeEndsAt: endsAt,
+          locale,
+        };
+      } else {
+        config = {
+          challengeId: null,
+          challengeActive: false,
+          reminderEnabled: false,
+          reminderTimes: [],
+          challengeEndsAt: null,
+          locale: 'en',
+        };
+      }
+    }
+
+    const payload = {
+      installationId,
+      subscription: subscription.toJSON(),
+      timezone: userTimezone,
+      locale: config.locale || 'en',
+      challengeId: config.challengeId,
+      challengeActive: config.challengeActive,
+      reminderEnabled: config.reminderEnabled,
+      reminderTimes: config.reminderTimes,
+      challengeEndsAt: config.challengeEndsAt,
+    };
+
+    const res = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      const state = loadPushSubscriptionState();
+      savePushSubscriptionState({
+        ...state,
+        syncedToServer: true,
+        lastSyncedAt: Date.now(),
+        lastError: null,
+      });
+      return true;
+    }
+    return false;
+  } catch (err: any) {
+    console.warn('Challenge push sync failed:', err);
+    return false;
+  }
+}
+
+/**
  * Subscribe to Web Push notifications.
  * Never requests permission automatically on load — must be called upon explicit user tap.
  */
@@ -163,7 +293,7 @@ export async function subscribeToPush(
     return { success: false, status: 'available', error: 'NO_SUBSCRIPTION' };
   }
 
-  // 4. Extract subscription data
+  // 4. Extract subscription data and update local state
   const subJson = subscription.toJSON();
   const endpoint = subJson.endpoint || subscription.endpoint;
   const p256dh = subJson.keys?.p256dh || null;
@@ -182,39 +312,8 @@ export async function subscribeToPush(
 
   savePushSubscriptionState(pushState);
 
-  // 5. Sync subscription to backend (Level 1 / Level 2 support)
-  try {
-    const settings = loadNotificationSettings();
-    const userTimezone =
-      typeof Intl !== 'undefined'
-        ? Intl.DateTimeFormat().resolvedOptions().timeZone
-        : 'UTC';
-
-    const response = await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription: subJson,
-        settings: {
-          frequency: settings.frequency,
-          activeStart: settings.activeStart,
-          activeEnd: settings.activeEnd,
-          dailyTimes: settings.dailyTimes,
-          randomize: settings.randomize,
-          showWhy: settings.showWhy,
-        },
-        timezone: userTimezone,
-      }),
-    });
-
-    if (response.ok) {
-      pushState.syncedToServer = true;
-      pushState.lastSyncedAt = Date.now();
-      savePushSubscriptionState(pushState);
-    }
-  } catch {
-    // Backend may be offline or in local static dev mode — local push remains valid
-  }
+  // 5. Sync active challenge schedule to persistent backend
+  await syncChallengePushSchedule();
 
   return { success: true, status: 'enabled' };
 }
@@ -238,10 +337,11 @@ export async function unsubscribeFromPush(): Promise<{ success: boolean }> {
 
         // Notify backend of removal
         try {
+          const installationId = getOrCreateInstallationId();
           await fetch('/api/push/unsubscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint }),
+            body: JSON.stringify({ endpoint, installationId }),
           });
         } catch {
           // ignore
@@ -293,7 +393,7 @@ export async function sendTestPush(): Promise<{
         subscription: sub.toJSON(),
         title: 'Super Diet-Ability',
         body: 'Time for your Daily Check-In. Awareness is a win.',
-        targetScreen: 'check-in',
+        targetScreen: 'challenges',
       }),
     });
 

@@ -1702,6 +1702,16 @@ export interface Translations {
   challenge_snooze_14d: string;
   challenge_snooze_30d: string;
   challenge_snooze_not_now: string;
+
+  // ── Phase 41D: Web Push Behavioral Triggers ──
+  challenge_push_status_enabled: string;
+  challenge_push_status_not_enabled: string;
+  challenge_push_btn_enable: string;
+  challenge_push_status_denied: string;
+  challenge_push_ios_instruction: string;
+  challenge_push_modal_title: string;
+  challenge_push_modal_body: string;
+  challenge_push_modal_skip: string;
 }
 
 
