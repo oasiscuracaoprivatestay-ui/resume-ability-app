@@ -788,6 +788,7 @@ export interface Translations {
   notif_rem_why_body_general: string;
   notif_rem_why_body_custom: string;
   nav_reminders: string;
+  nav_challenges: string;
   commit_reminders_label: string;
   commit_reminders_desc: string;
   commit_reminders_btn: string;

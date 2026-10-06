@@ -878,6 +878,7 @@ export const es: Translations = {
   notif_rem_why_body_general: 'Reconecta con tu Porqué y elige tu siguiente paso intencional.',
   notif_rem_why_body_custom: 'Recuerda por qué empezaste: "{why}"',
   nav_reminders: 'Recordatorios',
+  nav_challenges: 'Desafíos',
   commit_reminders_label: 'Recordatorios Inteligentes',
   commit_reminders_desc: 'Configura avisos amables para registrarte y revisar tu estructura.',
   commit_reminders_btn: 'Configurar Recordatorios',

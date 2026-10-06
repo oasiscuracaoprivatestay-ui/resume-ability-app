@@ -286,6 +286,15 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
           <span className="nav-label">{t.commit_label}</span>
         </button>
         <button
+          id="nav-challenges"
+          className="nav-link nav-link--challenges"
+          onClick={() => onNavigate('challenges')}
+          aria-label={t.nav_challenges}
+        >
+          <span className="nav-icon" aria-hidden="true">🏆</span>
+          <span className="nav-label">{t.nav_challenges}</span>
+        </button>
+        <button
           id="nav-reminders"
           className="nav-link"
           onClick={() => onNavigate('notification-settings')}

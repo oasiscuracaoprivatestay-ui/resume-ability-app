@@ -892,6 +892,7 @@ export const en: Translations = {
   notif_rem_why_body_general: 'Reconnect with your Why and choose your next intentional step.',
   notif_rem_why_body_custom: 'Remember why you started: "{why}"',
   nav_reminders: 'Reminders',
+  nav_challenges: 'Challenges',
   commit_reminders_label: 'Smart Reminders',
   commit_reminders_desc: 'Set gentle prompts to check in and review your structure.',
   commit_reminders_btn: 'Configure Reminders',

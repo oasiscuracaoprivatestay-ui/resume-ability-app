@@ -878,6 +878,7 @@ export const nl: Translations = {
   notif_rem_why_body_general: 'Maak opnieuw verbinding met je Waarom en kies je volgende bewuste stap.',
   notif_rem_why_body_custom: 'Herinner je waarom je begon: "{why}"',
   nav_reminders: 'Herinneringen',
+  nav_challenges: 'Uitdagingen',
   commit_reminders_label: 'Slimme Herinneringen',
   commit_reminders_desc: 'Stel vriendelijke meldingen in om in te checken en je structuur te bekijken.',
   commit_reminders_btn: 'Herinneringen Instellen',

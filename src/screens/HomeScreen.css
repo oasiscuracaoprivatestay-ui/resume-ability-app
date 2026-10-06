@@ -904,11 +904,11 @@
   border: none;
   border-radius: var(--radius-sm, 6px);
   color: var(--text-dim);
-  font-size: clamp(0.44rem, 1.8vw, 0.62rem);
+  font-size: clamp(0.40rem, 1.6vw, 0.60rem);
   font-family: inherit;
   font-weight: 700;
   cursor: pointer;
-  padding: 0.35rem 0.08rem;
+  padding: 0.32rem 0.04rem;
   min-height: 48px;
   display: flex;
   flex-direction: column;
@@ -958,6 +958,10 @@
   color: var(--text-dim);
 }
 
+.nav-link--challenges {
+  color: var(--text-dim);
+}
+
 @media (max-width: 400px) {
   .home-screen {
     padding: 1rem 0.5rem 1.25rem;
@@ -966,9 +970,9 @@
     gap: 1px;
   }
   .nav-link {
-    font-size: clamp(0.41rem, 1.7vw, 0.49rem);
+    font-size: clamp(0.38rem, 1.5vw, 0.46rem);
     letter-spacing: -0.01em;
-    padding: 0.3rem 0.04rem;
+    padding: 0.25rem 0.02rem;
   }
 }
 
@@ -977,9 +981,9 @@
     padding: 0.75rem 0.35rem 1rem;
   }
   .nav-link {
-    font-size: 0.39rem;
+    font-size: 0.36rem;
     letter-spacing: -0.02em;
-    padding: 0.28rem 0.02rem;
+    padding: 0.22rem 0.01rem;
   }
   .nav-icon {
     font-size: 0.8rem;
