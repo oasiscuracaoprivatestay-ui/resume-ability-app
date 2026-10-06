@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { upsertPushReminder } from '../_store';
-import { isValidTimezone, normalizeReminderTimes } from '../_dueEngine';
+import { upsertPushReminder } from '../_store.js';
+import { isValidTimezone, normalizeReminderTimes } from '../_dueEngine.js';
 
 const MAX_PAYLOAD_BYTES = 32 * 1024; // 32KB limit to prevent abuse
 

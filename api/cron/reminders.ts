@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import webpush from 'web-push';
-import { getAllActiveReminders, deletePushReminder, acquireSlotLock, releaseSlotLock } from '../_store';
-import { evaluateDueSlots } from '../_dueEngine';
-import { verifyQStashSignature } from '../_qstashAuth';
+import { getAllActiveReminders, deletePushReminder, acquireSlotLock, releaseSlotLock } from '../_store.js';
+import { evaluateDueSlots } from '../_dueEngine.js';
+import { verifyQStashSignature } from '../_qstashAuth.js';
 
 // Safe, privacy-preserving notification copy by locale
 const NOTIFICATION_COPY: Record<string, { title: string; body: string }> = {

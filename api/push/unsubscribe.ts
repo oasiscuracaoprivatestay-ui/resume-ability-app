@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { disablePushReminder, getPushReminderByEndpoint } from '../_store';
+import { disablePushReminder, getPushReminderByEndpoint } from '../_store.js';
 
 export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
   if (req.method !== 'POST') {
