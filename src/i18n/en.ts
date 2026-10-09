@@ -1862,6 +1862,33 @@ export const en: Translations = {
   challenge_timeline_checked_in: 'Checked in',
   challenge_checkin_error_storage: 'Storage error: check-in could not be saved. Please try again.',
   challenge_checkin_error_inactive: 'This challenge has ended or is no longer active.',
+
+  // ── Phase 41G: Daily Challenge Control Center ──
+  challenge_control_center_title: 'Daily Challenge Control Center',
+  challenge_section_where_now: 'Where Am I Now?',
+  challenge_section_current_challenge: 'Current Challenge',
+  challenge_section_why: 'Why I Am Doing This',
+  challenge_section_nn: 'My Non-Negotiables',
+  challenge_section_diet: 'My Structured Diet',
+  challenge_btn_recommit_focus: 'Recommit Focus',
+  challenge_timeline_toggle: 'Daily Recovery Timeline',
+  challenge_why_empty: 'You haven\'t added your personal Why yet. Adding your reasons provides anchoring during moments of temptation.',
+  challenge_why_btn_review: 'Review & Edit My Why',
+  challenge_why_btn_add: 'Add My Why',
+  challenge_nn_empty: 'No Non-Negotiables defined yet. Set your personal boundaries to protect your structured eating.',
+  challenge_nn_btn_manage: 'Review & Manage Rules',
+  challenge_nn_reviewed_count: 'Reviewed {count} times',
+  challenge_nn_last_reviewed: 'Last reviewed: {date}',
+  challenge_nn_hold_to_recommit: 'HOLD TO RE-COMMIT',
+  challenge_nn_recommitted_badge: 'Re-commitment registered!',
+  challenge_diet_summary_title: 'Today\'s Structured Diet',
+  challenge_diet_no_blocks: 'No meal blocks scheduled for today.',
+  challenge_diet_blocks_verified: '{verified} of {total} blocks verified',
+  challenge_diet_status_on_track: 'On Track',
+  challenge_diet_status_flexible: '20% Off Track (Flexible)',
+  challenge_diet_status_slip: 'True Slip',
+  challenge_diet_status_pending: 'Pending',
+  challenge_diet_btn_open: 'Open Structured Diet',
 };
 
 

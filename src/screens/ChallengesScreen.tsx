@@ -31,7 +31,12 @@ import {
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
+import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
 import { playFeedback } from '../utils/feedback';
+import { loadPledge } from '../utils/pledgeStorage';
+import { saveRecommitEvent } from '../utils/recommitStorage';
+import { recordScoreEvent } from '../utils/scoringEngine';
+import { generateId } from '../utils';
 import {
   getPushDeliveryStatus,
   subscribeToPush,
@@ -73,19 +78,61 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   // Phase 41E: Challenge Check-In Modal state
   const [showCheckInModal, setShowCheckInModal] = useState(false);
 
+  // Phase 41G: Daily Challenge Control Center state
+  const [pledge, setPledge] = useState(() => loadPledge());
+  const [hasRecommitted, setHasRecommitted] = useState(false);
+  const [continueToast, setContinueToast] = useState<string | null>(null);
+
   const refreshState = () => {
     const current = syncCurrentChallenge();
     setActiveChallenge(current);
     setHistory(getChallengeHistory());
     setPushStatus(getPushDeliveryStatus());
+    setPledge(loadPledge());
   };
 
   useEffect(() => {
     refreshState();
     const handleUpdate = () => refreshState();
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
-    return () => window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
+
+  const handleHoldRecommit = () => {
+    if (!activeChallenge) return;
+    const recommitId = generateId();
+    saveRecommitEvent({
+      id: recommitId,
+      timestamp: Date.now(),
+    });
+    recordScoreEvent({
+      activityType: 'RECOMMIT',
+      sourceId: `recommit_${recommitId}`,
+      metadata: { challengeId: activeChallenge.id },
+    });
+    playFeedback('commit');
+    setHasRecommitted(true);
+    refreshState();
+  };
+
+  const handleContinueChallenge = () => {
+    playFeedback('win');
+    setContinueToast(t.challenge_checkin_win_desc || 'Consistency is your superpower! Keep going.');
+    setTimeout(() => {
+      setContinueToast(null);
+    }, 3500);
+  };
+
+  const handleScrollToRecommit = () => {
+    const el = document.getElementById('section-my-non-negotiables');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Phase 41E & 41F: Check for direct check-in trigger from Home card, push notification, or deep link
   useEffect(() => {
@@ -220,6 +267,13 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     ? calculateChallengePracticeStats(activeChallenge)
     : null;
 
+  const savedReasons = (pledge.reasons || []).filter(
+    (r) => typeof r === 'string' && r.trim().length > 0
+  );
+  const savedNonNegotiables = (pledge.nonNegotiables || []).filter(
+    (n) => typeof n === 'string' && n.trim().length > 0
+  );
+
   return (
     <div className="challenges-screen">
       {/* ── Header ── */}
@@ -232,7 +286,11 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
         >
           ← {t.common_back || 'Back'}
         </button>
-        <h1 className="challenges-title">{t.challenge_screen_title || 'Ability Challenges'}</h1>
+        <h1 className="challenges-title">
+          {activeChallenge && activeChallenge.status === 'active'
+            ? (t.challenge_control_center_title || 'Daily Challenge Control Center')
+            : (t.challenge_screen_title || 'Ability Challenges')}
+        </h1>
         <div className="challenges-tabs">
           <button
             id="tab-challenge-active"
@@ -275,7 +333,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
             <div className="challenges-history-list">
               {history.map((item) => {
                 const isCompleted = item.status === 'completed';
-                const rateText = item.relevantEventCounts?.resumeRate !== null
+                const rateText = (item.relevantEventCounts?.eligibleSlips || 0) > 0 && item.relevantEventCounts?.resumeRate !== null
                   ? `${item.relevantEventCounts.resumeRate}%`
                   : (t.challenge_no_slips_short || 'No slips');
 
@@ -321,253 +379,463 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       {viewTab === 'challenge' && (
         <>
           {activeChallenge && activeChallenge.status === 'active' ? (
-            /* ── ACTIVE CHALLENGE DETAIL VIEW ── */
-            <div className="challenges-active-view">
-              <div className="challenge-hub-hero">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <div className="challenge-hub-badge">
-                    <span>🏆</span>
-                    <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
-                  </div>
-                  {activeChallenge.reminderEnabled && (
-                    <div
-                      className="challenge-hub-badge"
-                      style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.35)', color: '#38bdf8' }}
-                    >
-                      <span>🔔</span>
-                      <span>
-                        {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
-                          ? activeChallenge.reminderTimes.join(', ')
-                          : activeChallenge.reminderFrequency || 'Reminders'}
+            /* ── ACTIVE CHALLENGE DETAIL VIEW: DAILY CHALLENGE CONTROL CENTER ── */
+            <div className="challenges-active-view control-center-hub">
+              {continueToast && (
+                <div className="challenge-continue-toast" role="status">
+                  <span>🏆 {continueToast}</span>
+                  <button className="challenge-toast-dismiss" onClick={() => setContinueToast(null)}>✕</button>
+                </div>
+              )}
+
+              {/* ── SECTION 1: WHERE AM I NOW? ── */}
+              <section className="control-center-section" id="section-where-am-i-now">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge">1</span>
+                  <h3 className="control-center-section-title">
+                    {t.challenge_section_where_now || 'Where Am I Now?'}
+                  </h3>
+                </div>
+
+                <div className="challenge-checkin-banner" id="challenge-checkin-banner">
+                  <div className="challenge-checkin-banner-content">
+                    <div className="challenge-checkin-status-row">
+                      <span className="challenge-checkin-badge">
+                        {practiceStats?.todayCheckedIn
+                          ? `✓ ${t.challenge_practice_status_done || 'Checked in today'}`
+                          : `🎯 ${t.challenge_practice_status_pending || 'Pending Check-In'}`}
                       </span>
+                      {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
+                        <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
+                          {practiceStats.todayLatestStatus === 'on-structure'
+                            ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
+                            : practiceStats.todayLatestStatus === 'near-slip'
+                            ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
+                            : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
-                    <div
-                      className="challenge-hub-badge"
-                      style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#4ade80' }}
-                    >
-                      <span>✓</span>
-                      <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
-                    </div>
-                  )}
-                </div>
-                <h2 className="challenge-hub-title">
-                  {t.challenge_day_of_total
-                    ?.replace('{current}', String(activeChallenge.currentDay))
-                    ?.replace('{total}', String(activeChallenge.durationDays)) ||
-                    `Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}`}
-                </h2>
-                <p className="challenge-hub-sub">
-                  {activeChallenge.daysRemaining === 0
-                    ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
-                    : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
-                </p>
-
-                {/* Phase 41D: Web Push Activation / Status Banner */}
-                {activeChallenge.reminderEnabled && pushStatus === 'available' && (
-                  <div className="challenge-push-banner" id="challenge-push-enable-banner">
-                    <span className="challenge-push-banner-text">
-                      🔔 {t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}
-                    </span>
-                    <button
-                      id="btn-challenge-enable-push"
-                      className="challenge-push-enable-btn"
-                      onClick={handleEnablePush}
-                      disabled={isEnablingPush}
-                    >
-                      {isEnablingPush ? '...' : (t.challenge_push_btn_enable || 'ENABLE NOTIFICATIONS')}
-                    </button>
-                  </div>
-                )}
-                {activeChallenge.reminderEnabled && pushStatus === 'denied' && (
-                  <div className="challenge-push-banner challenge-push-banner--denied" id="challenge-push-denied-banner">
-                    <span className="challenge-push-banner-text">
-                      ⚠️ {t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}
-                    </span>
-                  </div>
-                )}
-                {activeChallenge.reminderEnabled && isIOS() && !isStandalonePWA() && (
-                  <div className="challenge-push-banner" id="challenge-push-ios-banner">
-                    <span className="challenge-push-banner-text">
-                      📲 {t.challenge_push_ios_instruction || 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Progress bar */}
-                <div className="challenge-progress-bar-wrapper">
-                  <div
-                    className="challenge-progress-bar-fill"
-                    style={{ width: `${Math.round(activeChallenge.progress * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Phase 41E: Challenge Check-In Banner */}
-              <div className="challenge-checkin-banner" id="challenge-checkin-banner">
-                <div className="challenge-checkin-banner-content">
-                  <div className="challenge-checkin-status-row">
-                    <span className="challenge-checkin-badge">
+                    <p className="challenge-checkin-desc">
                       {practiceStats?.todayCheckedIn
-                        ? `✓ ${t.challenge_practice_status_done || 'Checked in today'}`
-                        : `🎯 ${t.challenge_practice_status_pending || 'Pending Check-In'}`}
+                        ? (t.challenge_checkin_day_badge?.replace('{current}', String(activeChallenge.currentDay)).replace('{total}', String(activeChallenge.durationDays)) + ' • ' + (t.challenge_practice_status_done || 'Checked in today'))
+                        : (t.challenge_checkin_prompt || 'Report your current structure status')}
+                    </p>
+                  </div>
+                  <button
+                    id="btn-active-challenge-checkin"
+                    className="challenge-checkin-cta-btn"
+                    onClick={() => setShowCheckInModal(true)}
+                  >
+                    <span>
+                      {practiceStats?.todayCheckedIn
+                        ? (t.challenge_btn_checkin_again || 'Check In Again')
+                        : (t.challenge_btn_checkin || 'Check In to Challenge')}
                     </span>
-                    {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
-                      <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
-                        {practiceStats.todayLatestStatus === 'on-structure'
-                          ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
-                          : practiceStats.todayLatestStatus === 'near-slip'
-                          ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
-                          : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
-                      </span>
+                    <span>→</span>
+                  </button>
+                </div>
+              </section>
+
+              {/* ── SECTION 2: CURRENT CHALLENGE ── */}
+              <section className="control-center-section" id="section-current-challenge">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge">2</span>
+                  <h3 className="control-center-section-title">
+                    {t.challenge_section_current_challenge || 'Current Challenge'}
+                  </h3>
+                </div>
+
+                <div className="challenge-hub-hero">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="challenge-hub-badge">
+                      <span>🏆</span>
+                      <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
+                    </div>
+                    {activeChallenge.reminderEnabled && (
+                      <div
+                        className="challenge-hub-badge"
+                        style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.35)', color: '#38bdf8' }}
+                      >
+                        <span>🔔</span>
+                        <span>
+                          {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
+                            ? activeChallenge.reminderTimes.join(', ')
+                            : activeChallenge.reminderFrequency || 'Reminders'}
+                        </span>
+                      </div>
+                    )}
+                    {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
+                      <div
+                        className="challenge-hub-badge"
+                        style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#4ade80' }}
+                      >
+                        <span>✓</span>
+                        <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
+                      </div>
                     )}
                   </div>
-                  <p className="challenge-checkin-desc">
-                    {practiceStats?.todayCheckedIn
-                      ? (t.challenge_checkin_day_badge?.replace('{current}', String(activeChallenge.currentDay)).replace('{total}', String(activeChallenge.durationDays)) + ' • ' + (t.challenge_practice_status_done || 'Checked in today'))
-                      : (t.challenge_checkin_prompt || 'Report your current structure status')}
+                  <h2 className="challenge-hub-title">
+                    {t.challenge_day_of_total
+                      ?.replace('{current}', String(activeChallenge.currentDay))
+                      ?.replace('{total}', String(activeChallenge.durationDays)) ||
+                      `Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}`}
+                  </h2>
+                  <p className="challenge-hub-sub">
+                    {activeChallenge.daysRemaining === 0
+                      ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
+                      : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
                   </p>
-                </div>
-                <button
-                  id="btn-active-challenge-checkin"
-                  className="challenge-checkin-cta-btn"
-                  onClick={() => setShowCheckInModal(true)}
-                >
-                  <span>
-                    {practiceStats?.todayCheckedIn
-                      ? (t.challenge_btn_checkin_again || 'Check In Again')
-                      : (t.challenge_btn_checkin || 'Check In to Challenge')}
-                  </span>
-                  <span>→</span>
-                </button>
-              </div>
 
-              {/* Phase 41E: Challenge Practice Progress (Strictly separated from slip recovery metrics) */}
-              <div className="challenge-practice-card" id="challenge-practice-card">
-                <h3 className="challenge-practice-title">
-                  {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
-                </h3>
-                <p className="challenge-practice-sub">
-                  {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
-                </p>
-                <div className="challenge-practice-grid">
-                  <div className="challenge-practice-box">
-                    <span className="practice-box-val">
-                      {practiceStats?.daysCheckedIn || 0}/{activeChallenge.durationDays}
-                    </span>
-                    <span className="practice-box-label">
-                      {t.challenge_practice_days_checked || 'Days Checked In'}
-                    </span>
-                  </div>
-                  <div className="challenge-practice-box">
-                    <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
-                    <span className="practice-box-label">
-                      {t.challenge_practice_total_checkins || 'Total Check-Ins'}
-                    </span>
-                  </div>
-                  <div className="challenge-practice-box">
-                    <span className="practice-box-val">
-                      {practiceStats?.todayCheckedIn
-                        ? (practiceStats.todayLatestStatus === 'on-structure'
-                            ? '✓'
-                            : practiceStats.todayLatestStatus === 'near-slip'
-                            ? '⚡'
-                            : '↻')
-                        : '—'}
-                    </span>
-                    <span className="practice-box-label">
-                      {t.challenge_practice_today_status || 'Today\'s Status'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                  {/* Phase 41D: Web Push Activation / Status Banner */}
+                  {activeChallenge.reminderEnabled && pushStatus === 'available' && (
+                    <div className="challenge-push-banner" id="challenge-push-enable-banner">
+                      <span className="challenge-push-banner-text">
+                        🔔 {t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}
+                      </span>
+                      <button
+                        id="btn-challenge-enable-push"
+                        className="challenge-push-enable-btn"
+                        onClick={handleEnablePush}
+                        disabled={isEnablingPush}
+                      >
+                        {isEnablingPush ? '...' : (t.challenge_push_btn_enable || 'ENABLE NOTIFICATIONS')}
+                      </button>
+                    </div>
+                  )}
+                  {activeChallenge.reminderEnabled && pushStatus === 'denied' && (
+                    <div className="challenge-push-banner challenge-push-banner--denied" id="challenge-push-denied-banner">
+                      <span className="challenge-push-banner-text">
+                        ⚠️ {t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}
+                      </span>
+                    </div>
+                  )}
+                  {activeChallenge.reminderEnabled && isIOS() && !isStandalonePWA() && (
+                    <div className="challenge-push-banner" id="challenge-push-ios-banner">
+                      <span className="challenge-push-banner-text">
+                        📲 {t.challenge_push_ios_instruction || 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".'}
+                      </span>
+                    </div>
+                  )}
 
-              {/* Factual Metrics Card */}
-              <div className="challenge-metrics-card">
-                <h3 className="challenge-metrics-title">{t.challenge_recovery_metrics || 'Recovery Practice Metrics'}</h3>
-                <div className="challenge-metrics-grid">
-                  <div className="challenge-metric-box">
-                    <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
-                    <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
-                  </div>
-                  <div className="challenge-metric-box">
-                    <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
-                    <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
-                  </div>
-                  <div className="challenge-metric-box">
-                    <span className="metric-box-val">
-                      {activeChallenge.relevantEventCounts.resumeRate !== null
-                        ? `${activeChallenge.relevantEventCounts.resumeRate}%`
-                        : '—'}
-                    </span>
-                    <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
+                  {/* Progress bar */}
+                  <div className="challenge-progress-bar-wrapper">
+                    <div
+                      className="challenge-progress-bar-fill"
+                      style={{ width: `${Math.round(activeChallenge.progress * 100)}%` }}
+                    />
                   </div>
                 </div>
 
-                <div className="challenge-philosophy-banner">
-                  <span className="philosophy-icon">💡</span>
-                  <p>
-                    {t.challenge_philosophy_quote ||
-                      'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
+                {/* Challenge Practice Progress */}
+                <div className="challenge-practice-card" id="challenge-practice-card">
+                  <h3 className="challenge-practice-title">
+                    {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
+                  </h3>
+                  <p className="challenge-practice-sub">
+                    {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
                   </p>
+                  <div className="challenge-practice-grid">
+                    <div className="challenge-practice-box">
+                      <span className="practice-box-val">
+                        {practiceStats?.daysCheckedIn || 0}/{activeChallenge.durationDays}
+                      </span>
+                      <span className="practice-box-label">
+                        {t.challenge_practice_days_checked || 'Days Checked In'}
+                      </span>
+                    </div>
+                    <div className="challenge-practice-box">
+                      <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
+                      <span className="practice-box-label">
+                        {t.challenge_practice_total_checkins || 'Total Check-Ins'}
+                      </span>
+                    </div>
+                    <div className="challenge-practice-box">
+                      <span className="practice-box-val">
+                        {practiceStats?.todayCheckedIn
+                          ? (practiceStats.todayLatestStatus === 'on-structure'
+                              ? '✓'
+                              : practiceStats.todayLatestStatus === 'near-slip'
+                              ? '⚡'
+                              : '↻')
+                          : '—'}
+                      </span>
+                      <span className="practice-box-label">
+                        {t.challenge_practice_today_status || 'Today\'s Status'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Day-by-day Recovery Timeline */}
-              <div className="challenge-timeline-card">
-                <h3 className="challenge-timeline-title">{t.challenge_timeline_title || 'Daily Recovery Timeline'}</h3>
-                <div className="challenge-timeline-list">
-                  {dayBreakdown.map((d) => {
-                    let icon = '○';
-                    let desc = t.challenge_day_upcoming || 'Upcoming';
-                    let rowClass = 'timeline-row timeline-row--upcoming';
+                {/* Factual Metrics Card (Strictly separated from practice consistency) */}
+                <div className="challenge-metrics-card">
+                  <h3 className="challenge-metrics-title">{t.challenge_recovery_metrics || 'Recovery Practice Metrics'}</h3>
+                  <div className="challenge-metrics-grid">
+                    <div className="challenge-metric-box">
+                      <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
+                      <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
+                    </div>
+                    <div className="challenge-metric-box">
+                      <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
+                      <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
+                    </div>
+                    <div className="challenge-metric-box">
+                      <span className="metric-box-val">
+                        {activeChallenge.relevantEventCounts.eligibleSlips > 0 && activeChallenge.relevantEventCounts.resumeRate !== null
+                          ? `${activeChallenge.relevantEventCounts.resumeRate}%`
+                          : (t.challenge_no_slips_short || 'No slips')}
+                      </span>
+                      <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
+                    </div>
+                  </div>
 
-                    if (d.isToday) {
-                      rowClass = 'timeline-row timeline-row--today';
-                      icon = '🎯';
-                      desc = d.hasResumeOpportunity
-                        ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
-                        : (t.challenge_day_today || 'Today (in progress)');
-                    } else if (d.isPast) {
-                      if (d.hasResumeOpportunity) {
-                        icon = d.resumedCount > 0 ? '🔄' : '⚠️';
-                        desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
-                        rowClass = d.resumedCount > 0
-                          ? 'timeline-row timeline-row--resumed'
-                          : 'timeline-row timeline-row--slip';
-                      } else {
-                        icon = '✓';
-                        desc = t.challenge_day_no_slips || 'Completed (on-track)';
-                        rowClass = 'timeline-row timeline-row--clean';
+                  {activeChallenge.relevantEventCounts.eligibleSlips === 0 && (
+                    <div className="challenge-no-slips-hint">
+                      <span>✓ {t.challenge_no_slips_yet || 'No Resume opportunities yet'}</span>
+                    </div>
+                  )}
+
+                  <div className="challenge-philosophy-banner">
+                    <span className="philosophy-icon">💡</span>
+                    <p>
+                      {t.challenge_philosophy_quote ||
+                        'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary Section 2 Actions: Continue / Recommit */}
+                <div className="challenge-control-actions-row">
+                  <button
+                    type="button"
+                    id="btn-challenge-continue"
+                    className="challenge-control-btn challenge-control-btn--primary"
+                    onClick={handleContinueChallenge}
+                  >
+                    <span>✓ {t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-challenge-recommit-focus"
+                    className="challenge-control-btn challenge-control-btn--secondary"
+                    onClick={handleScrollToRecommit}
+                  >
+                    <span>↻ {t.challenge_btn_recommit_focus || 'Recommit Focus'}</span>
+                  </button>
+                </div>
+
+                {/* Day-by-day Recovery Timeline (Collapsible for mobile layout) */}
+                <details className="challenge-timeline-collapsible" id="challenge-timeline-collapsible">
+                  <summary className="challenge-timeline-summary">
+                    <span>📅 {t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length} days)</span>
+                    <span className="timeline-summary-chevron">▼</span>
+                  </summary>
+                  <div className="challenge-timeline-list">
+                    {dayBreakdown.map((d) => {
+                      let icon = '○';
+                      let desc = t.challenge_day_upcoming || 'Upcoming';
+                      let rowClass = 'timeline-row timeline-row--upcoming';
+
+                      if (d.isToday) {
+                        rowClass = 'timeline-row timeline-row--today';
+                        icon = '🎯';
+                        desc = d.hasResumeOpportunity
+                          ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
+                          : (t.challenge_day_today || 'Today (in progress)');
+                      } else if (d.isPast) {
+                        if (d.hasResumeOpportunity) {
+                          icon = d.resumedCount > 0 ? '🔄' : '⚠️';
+                          desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
+                          rowClass = d.resumedCount > 0
+                            ? 'timeline-row timeline-row--resumed'
+                            : 'timeline-row timeline-row--slip';
+                        } else {
+                          icon = '✓';
+                          desc = t.challenge_day_no_slips || 'Completed (on-track)';
+                          rowClass = 'timeline-row timeline-row--clean';
+                        }
                       }
-                    }
 
-                    return (
-                      <div key={d.dayIndex} className={rowClass}>
-                        <div className="timeline-left">
-                          <span className="timeline-icon">{icon}</span>
-                          <span className="timeline-day-label">
-                            {t.challenge_day_label || 'Day'} {d.dayIndex}
-                          </span>
-                        </div>
-                        <div className="timeline-right">
-                          <div className="timeline-date-row">
-                            <span className="timeline-date">{d.dateKey}</span>
-                            {d.checkInsCount && d.checkInsCount > 0 ? (
-                              <span className="timeline-checkin-tag">
-                                ✓ {t.challenge_timeline_checked_in || 'Checked in'}
-                                {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
-                              </span>
-                            ) : null}
+                      return (
+                        <div key={d.dayIndex} className={rowClass}>
+                          <div className="timeline-left">
+                            <span className="timeline-icon">{icon}</span>
+                            <span className="timeline-day-label">
+                              {t.challenge_day_label || 'Day'} {d.dayIndex}
+                            </span>
                           </div>
-                          <span className="timeline-desc">{desc}</span>
+                          <div className="timeline-right">
+                            <div className="timeline-date-row">
+                              <span className="timeline-date">{d.dateKey}</span>
+                              {d.checkInsCount && d.checkInsCount > 0 ? (
+                                <span className="timeline-checkin-tag">
+                                  ✓ {t.challenge_timeline_checked_in || 'Checked in'}
+                                  {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
+                                </span>
+                              ) : null}
+                            </div>
+                            <span className="timeline-desc">{desc}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                </details>
+              </section>
+
+              {/* ── SECTION 3: WHY I AM DOING THIS ── */}
+              <section className="control-center-section" id="section-why-i-am-doing-this">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge">3</span>
+                  <h3 className="control-center-section-title">
+                    {t.challenge_section_why || 'Why I Am Doing This'}
+                  </h3>
                 </div>
-              </div>
+
+                <div className="challenge-why-card" id="challenge-why-card">
+                  {savedReasons.length > 0 ? (
+                    <div className="challenge-why-content">
+                      <div className="challenge-why-list">
+                        {savedReasons.map((reason, idx) => (
+                          <div key={idx} className="challenge-why-item">
+                            <span className="challenge-why-quote-mark">“</span>
+                            <p className="challenge-why-text">{reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="challenge-why-actions">
+                        <button
+                          type="button"
+                          id="btn-challenge-manage-why"
+                          className="challenge-section-link-btn"
+                          onClick={() => {
+                            sessionStorage.setItem('commitment_focus', 'why');
+                            onNavigate('commitment');
+                          }}
+                        >
+                          <span>{t.challenge_why_btn_review || 'Review & Edit My Why'}</span>
+                          <span>→</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="challenge-why-empty" id="challenge-why-empty">
+                      <span className="challenge-why-empty-icon">💡</span>
+                      <p className="challenge-why-empty-text">
+                        {t.challenge_why_empty || "You haven't added your personal Why yet. Adding your reasons provides anchoring during moments of temptation."}
+                      </p>
+                      <button
+                        type="button"
+                        id="btn-challenge-add-why"
+                        className="challenge-section-cta-btn"
+                        onClick={() => {
+                          sessionStorage.setItem('commitment_focus', 'why');
+                          onNavigate('commitment');
+                        }}
+                      >
+                        <span>{t.challenge_why_btn_add || 'Add My Why'}</span>
+                        <span>→</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* ── SECTION 4: MY NON-NEGOTIABLES ── */}
+              <section className="control-center-section" id="section-my-non-negotiables">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge">4</span>
+                  <h3 className="control-center-section-title">
+                    {t.challenge_section_nn || 'My Non-Negotiables'}
+                  </h3>
+                </div>
+
+                <div className="challenge-nn-card" id="challenge-nn-card">
+                  {savedNonNegotiables.length > 0 ? (
+                    <div className="challenge-nn-content">
+                      <div className="challenge-nn-meta-row">
+                        <span className="challenge-nn-count-tag">
+                          🛡️ {savedNonNegotiables.length} {savedNonNegotiables.length === 1 ? 'Rule' : 'Rules'}
+                        </span>
+                        <span className="challenge-nn-review-stat">
+                          {t.challenge_nn_reviewed_count?.replace('{count}', String(pledge.nonNegotiableReviewCount || 0)) ||
+                            `Reviewed ${pledge.nonNegotiableReviewCount || 0} times`}
+                        </span>
+                      </div>
+
+                      <div className="challenge-nn-list">
+                        {savedNonNegotiables.map((rule, idx) => (
+                          <div key={idx} className="challenge-nn-item">
+                            <span className="challenge-nn-bullet">🛡️</span>
+                            <span className="challenge-nn-rule-text">{rule}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="challenge-nn-actions-block">
+                        <div className="challenge-nn-recommit-wrap">
+                          {hasRecommitted ? (
+                            <div className="challenge-recommitted-badge" id="challenge-control-recommitted-badge">
+                              <span className="recommitted-check">✓</span>
+                              <span>{t.challenge_nn_recommitted_badge || 'Re-commitment registered!'}</span>
+                            </div>
+                          ) : (
+                            <HoldCommitButton
+                              id="btn-control-recommit-hold"
+                              variant="recommit"
+                              label={`→ ${t.challenge_nn_hold_to_recommit || 'HOLD TO RE-COMMIT'}`}
+                              onComplete={handleHoldRecommit}
+                            />
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          id="btn-challenge-manage-nn"
+                          className="challenge-section-link-btn"
+                          onClick={() => {
+                            sessionStorage.setItem('commitment_focus', 'nn');
+                            onNavigate('commitment');
+                          }}
+                        >
+                          <span>{t.challenge_nn_btn_manage || 'Review & Manage Rules'}</span>
+                          <span>→</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="challenge-nn-empty" id="challenge-nn-empty">
+                      <span className="challenge-nn-empty-icon">🛡️</span>
+                      <p className="challenge-nn-empty-text">
+                        {t.challenge_nn_empty || 'No Non-Negotiables defined yet. Set your personal boundaries to protect your structured eating.'}
+                      </p>
+                      <button
+                        type="button"
+                        id="btn-challenge-set-nn"
+                        className="challenge-section-cta-btn"
+                        onClick={() => {
+                          sessionStorage.setItem('commitment_focus', 'nn');
+                          onNavigate('commitment');
+                        }}
+                      >
+                        <span>{t.challenge_nn_btn_manage || 'Set Non-Negotiables'}</span>
+                        <span>→</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* ── SECTION 5: MY STRUCTURED DIET ── */}
+              <section className="control-center-section" id="section-my-structured-diet">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge">5</span>
+                  <h3 className="control-center-section-title">
+                    {t.challenge_section_diet || 'My Structured Diet'}
+                  </h3>
+                </div>
+
+                <ChallengeDietSummaryCard onNavigate={onNavigate} />
+              </section>
 
               {/* Cancel Challenge Option */}
               <div className="challenge-actions-row">

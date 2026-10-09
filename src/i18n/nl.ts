@@ -1848,6 +1848,33 @@ export const nl: Translations = {
   challenge_timeline_checked_in: 'Ingecheckt',
   challenge_checkin_error_storage: 'Opslagfout: check-in kon niet worden opgeslagen. Probeer het opnieuw.',
   challenge_checkin_error_inactive: 'Deze challenge is afgelopen of niet meer actief.',
+
+  // ── Phase 41G: Daily Challenge Control Center ──
+  challenge_control_center_title: 'Dagelijks Challenge Controlecentrum',
+  challenge_section_where_now: 'Waar Sta Ik Nu?',
+  challenge_section_current_challenge: 'Huidige Challenge',
+  challenge_section_why: 'Waarom Ik Dit Doe',
+  challenge_section_nn: 'Mijn Non-Negotiables',
+  challenge_section_diet: 'Mijn Gestructureerd Dieet',
+  challenge_btn_recommit_focus: 'Focus Herbevestigen',
+  challenge_timeline_toggle: 'Dagelijkse Hersteltijdlijn',
+  challenge_why_empty: 'Je hebt je persoonlijke Waarom nog niet toegevoegd. Je redenen vastleggen geeft houvast bij verleiding.',
+  challenge_why_btn_review: 'Mijn Waarom Bekijken & Bewerken',
+  challenge_why_btn_add: 'Mijn Waarom Toevoegen',
+  challenge_nn_empty: 'Nog geen Non-Negotiables ingesteld. Bepaal je persoonlijke grenzen om je gestructureerd eten te beschermen.',
+  challenge_nn_btn_manage: 'Regels Bekijken & Beheren',
+  challenge_nn_reviewed_count: '{count} keer bekeken',
+  challenge_nn_last_reviewed: 'Laatst bekeken: {date}',
+  challenge_nn_hold_to_recommit: 'VASTHOUDEN OM TE HERBEVESTIGEN',
+  challenge_nn_recommitted_badge: 'Herbevestiging geregistreerd!',
+  challenge_diet_summary_title: 'Gestructureerd Dieet Vandaag',
+  challenge_diet_no_blocks: 'Geen maaltijdblokken gepland voor vandaag.',
+  challenge_diet_blocks_verified: '{verified} van {total} blokken geverifieerd',
+  challenge_diet_status_on_track: 'Op Schema',
+  challenge_diet_status_flexible: '20% Afwijking (Flexibel)',
+  challenge_diet_status_slip: 'Echte Uitglijder',
+  challenge_diet_status_pending: 'In Afwachting',
+  challenge_diet_btn_open: 'Gestructureerd Dieet Openen',
 };
 
 

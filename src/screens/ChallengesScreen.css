@@ -1229,4 +1229,423 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   PHASE 41G: DAILY CHALLENGE CONTROL CENTER STYLES
+   ══════════════════════════════════════════════════════════════════ */
+
+.control-center-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.control-center-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-center-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.section-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8 0%, #10b981 100%);
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.control-center-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+
+/* Continue Challenge Toast */
+.challenge-continue-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: slideInDown 0.25s ease-out;
+}
+
+.challenge-toast-dismiss {
+  background: transparent;
+  border: none;
+  color: #a7f3d0;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+}
+
+/* Control Actions Row (Continue / Recommit) */
+.challenge-control-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .challenge-control-actions-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.challenge-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.challenge-control-btn--primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.challenge-control-btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.challenge-control-btn--secondary {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.challenge-control-btn--secondary:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+/* Collapsible Timeline */
+.challenge-timeline-collapsible {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.challenge-timeline-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  user-select: none;
+  list-style: none;
+}
+
+.challenge-timeline-summary::-webkit-details-marker {
+  display: none;
+}
+
+.challenge-timeline-summary:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.timeline-summary-chevron {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.challenge-timeline-collapsible[open] .timeline-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.challenge-timeline-collapsible .challenge-timeline-list {
+  padding: 0 14px 14px;
+}
+
+.challenge-no-slips-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  padding: 4px 10px;
+  border-radius: 999px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* ── Section 3: Why I Am Doing This ── */
+.challenge-why-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.challenge-why-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.challenge-why-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.challenge-why-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid #f6ad55;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.challenge-why-quote-mark {
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #f6ad55;
+  font-weight: 800;
+}
+
+.challenge-why-text {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  line-height: 1.45;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.challenge-why-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.challenge-why-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  gap: 10px;
+}
+
+.challenge-why-empty-icon {
+  font-size: 1.8rem;
+}
+
+.challenge-why-empty-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 380px;
+  line-height: 1.45;
+}
+
+/* ── Section 4: My Non-Negotiables ── */
+.challenge-nn-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.challenge-nn-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.challenge-nn-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.challenge-nn-count-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.challenge-nn-review-stat {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.challenge-nn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.challenge-nn-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.challenge-nn-bullet {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.challenge-nn-rule-text {
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.challenge-nn-actions-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.challenge-nn-recommit-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.challenge-recommitted-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 10px;
+  color: #34d399;
+  font-size: 0.88rem;
+  font-weight: 700;
+  width: 100%;
+}
+
+.challenge-recommitted-badge .recommitted-check {
+  font-size: 1.1rem;
+}
+
+.challenge-nn-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  gap: 10px;
+}
+
+.challenge-nn-empty-icon {
+  font-size: 1.8rem;
+}
+
+.challenge-nn-empty-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 380px;
+  line-height: 1.45;
+}
+
+/* Generic Section CTA & Link Buttons */
+.challenge-section-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.challenge-section-link-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.challenge-section-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  color: #38bdf8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.challenge-section-cta-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+
 

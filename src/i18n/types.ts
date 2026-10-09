@@ -1755,6 +1755,33 @@ export interface Translations {
   challenge_timeline_checked_in: string;
   challenge_checkin_error_storage: string;
   challenge_checkin_error_inactive: string;
+
+  // ── Phase 41G: Daily Challenge Control Center ──
+  challenge_control_center_title: string;
+  challenge_section_where_now: string;
+  challenge_section_current_challenge: string;
+  challenge_section_why: string;
+  challenge_section_nn: string;
+  challenge_section_diet: string;
+  challenge_btn_recommit_focus: string;
+  challenge_timeline_toggle: string;
+  challenge_why_empty: string;
+  challenge_why_btn_review: string;
+  challenge_why_btn_add: string;
+  challenge_nn_empty: string;
+  challenge_nn_btn_manage: string;
+  challenge_nn_reviewed_count: string;
+  challenge_nn_last_reviewed: string;
+  challenge_nn_hold_to_recommit: string;
+  challenge_nn_recommitted_badge: string;
+  challenge_diet_summary_title: string;
+  challenge_diet_no_blocks: string;
+  challenge_diet_blocks_verified: string;
+  challenge_diet_status_on_track: string;
+  challenge_diet_status_flexible: string;
+  challenge_diet_status_slip: string;
+  challenge_diet_status_pending: string;
+  challenge_diet_btn_open: string;
 }
 
 

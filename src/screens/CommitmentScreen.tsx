@@ -39,6 +39,14 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         }, 120);
+      } else if (focus === 'why') {
+        sessionStorage.removeItem('commitment_focus');
+        setTimeout(() => {
+          const el = document.getElementById('section-why');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 120);
       }
     } catch {
       // ignore

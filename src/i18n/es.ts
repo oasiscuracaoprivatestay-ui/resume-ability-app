@@ -1848,6 +1848,33 @@ export const es: Translations = {
   challenge_timeline_checked_in: 'Registrado',
   challenge_checkin_error_storage: 'Error de almacenamiento: no se pudo guardar el registro. Inténtalo de nuevo.',
   challenge_checkin_error_inactive: 'Este reto ha finalizado o ya no está activo.',
+
+  // ── Phase 41G: Daily Challenge Control Center ──
+  challenge_control_center_title: 'Centro de Control Diario del Desafío',
+  challenge_section_where_now: '¿Dónde Estoy Ahora?',
+  challenge_section_current_challenge: 'Desafío Actual',
+  challenge_section_why: 'Por Qué Hago Esto',
+  challenge_section_nn: 'Mis No Negociables',
+  challenge_section_diet: 'Mi Dieta Estructurada',
+  challenge_btn_recommit_focus: 'Reenfocar Compromiso',
+  challenge_timeline_toggle: 'Cronograma de Recuperación Diario',
+  challenge_why_empty: 'Aún no has añadido tu Por Qué personal. Añadir tus razones te brinda anclaje en momentos de tentación.',
+  challenge_why_btn_review: 'Revisar y Editar Mi Por Qué',
+  challenge_why_btn_add: 'Añadir Mi Por Qué',
+  challenge_nn_empty: 'Aún no hay No Negociables definidos. Establece tus límites personales para proteger tu alimentación estructurada.',
+  challenge_nn_btn_manage: 'Revisar y Gestionar Reglas',
+  challenge_nn_reviewed_count: 'Revisado {count} veces',
+  challenge_nn_last_reviewed: 'Última revisión: {date}',
+  challenge_nn_hold_to_recommit: 'MANTÉN PARA RECOMPROMETERTE',
+  challenge_nn_recommitted_badge: '¡Recompromiso registrado!',
+  challenge_diet_summary_title: 'Dieta Estructurada de Hoy',
+  challenge_diet_no_blocks: 'No hay bloques de comida programados para hoy.',
+  challenge_diet_blocks_verified: '{verified} de {total} bloques verificados',
+  challenge_diet_status_on_track: 'En Plan',
+  challenge_diet_status_flexible: '20% Desviación (Flexible)',
+  challenge_diet_status_slip: 'Desliz Real',
+  challenge_diet_status_pending: 'Pendiente',
+  challenge_diet_btn_open: 'Abrir Dieta Estructurada',
 };
 
 

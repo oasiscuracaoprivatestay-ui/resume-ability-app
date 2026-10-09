@@ -818,7 +818,7 @@ export function saveWeeklyDiet(diet: WeeklyStructuredDiet): void {
 
 /** Get the plan for a specific day from a WeeklyStructuredDiet. */
 export function getDayPlan(diet: WeeklyStructuredDiet, dayKey: DayKey): StructuredDietDay {
-  const day = diet.days.find(d => d.dayKey === dayKey);
+  const day = diet?.days?.find(d => d.dayKey === dayKey);
   if (day) return day;
   const idx = DAY_KEYS.indexOf(dayKey);
   return {
