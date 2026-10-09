@@ -37,6 +37,7 @@ import CoachScreen from './screens/CoachScreen';
 import { ChallengesScreen } from './screens/ChallengesScreen';
 import { SevenAbilitiesScreen } from './screens/SevenAbilitiesScreen';
 import { AbilityDetailScreen } from './screens/AbilityDetailScreen';
+import { ActivityLogScreen } from './screens/ActivityLogScreen';
 import { normalizeToCanonicalDietAbilityId, type CanonicalDietAbilityId } from './abilities';
 import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY } from './challenges';
 import InAppReminderBanner from './components/InAppReminderBanner';
@@ -893,6 +894,10 @@ export default function App() {
           }}
         />
       );
+      break;
+
+    case 'activity-log':
+      content = <ActivityLogScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     default:

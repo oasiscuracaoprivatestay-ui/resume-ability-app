@@ -53,6 +53,10 @@ import {
   isStandalonePWA,
   type PushDeliveryStatus,
 } from '../utils/pushNotifications';
+import {
+  getChallengeActivityCount,
+  ACTIVITIES_UPDATED_EVENT,
+} from '../activities';
 import './ChallengesScreen.css';
 
 interface ChallengesScreenProps {
@@ -150,6 +154,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     return milestoneEval.celebrated;
   }, [milestoneEval.celebrated]);
 
+  const [activityRefreshKey, setActivityRefreshKey] = useState<number>(0);
+
   const refreshState = () => {
     const current = syncCurrentChallenge();
     setActiveChallenge(current);
@@ -160,14 +166,25 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
   useEffect(() => {
     refreshState();
-    const handleUpdate = () => refreshState();
+    const handleUpdate = () => {
+      refreshState();
+      setActivityRefreshKey((k) => k + 1);
+    };
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
     window.addEventListener('storage', handleUpdate);
+    window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
     return () => {
       window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
       window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
     };
   }, []);
+
+  // Factual count of activities explicitly linked to active challenge (Phase 43.4)
+  const challengeActivityCount = useMemo(() => {
+    if (!activeChallenge) return 0;
+    return getChallengeActivityCount(activeChallenge.id);
+  }, [activeChallenge, activityRefreshKey]);
 
   const handleHoldRecommit = () => {
     if (!activeChallenge) return;
@@ -987,6 +1004,58 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 </div>
 
                 <ChallengeDietSummaryCard onNavigate={onNavigate} />
+              </section>
+
+              {/* ── SECTION: CHALLENGE MOVEMENT (OPTIONAL) (Phase 43.4) ── */}
+              <section className="control-center-section challenge-movement-section" id="section-challenge-movement">
+                <div className="control-center-section-header">
+                  <span className="section-number-badge section-number-badge--optional">🏃</span>
+                  <h3 className="control-center-section-title">
+                    {t.act_challenge_section_title}
+                  </h3>
+                </div>
+
+                <div className="challenge-movement-card" id="challenge-movement-card">
+                  <p className="challenge-movement-desc">
+                    {t.act_challenge_section_desc}
+                  </p>
+
+                  <div className="challenge-movement-count-row">
+                    <span className="challenge-movement-count-label">
+                      {t.act_challenge_linked_count}
+                    </span>
+                    <span className="challenge-movement-count-badge" id="challenge-activity-count">
+                      {challengeActivityCount}
+                    </span>
+                  </div>
+
+                  <div className="challenge-movement-actions">
+                    <button
+                      type="button"
+                      id="btn-challenge-view-activities"
+                      className="challenge-section-link-btn challenge-movement-btn-view"
+                      onClick={() => onNavigate('activity-log')}
+                    >
+                      <span>{t.act_challenge_btn_view}</span>
+                      <span>→</span>
+                    </button>
+                    <button
+                      type="button"
+                      id="btn-challenge-add-activity"
+                      className="challenge-section-cta-btn challenge-movement-btn-add"
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem('activity_log_open_modal', 'true');
+                        } catch {
+                          // ignore
+                        }
+                        onNavigate('activity-log');
+                      }}
+                    >
+                      <span>+ {t.act_btn_record}</span>
+                    </button>
+                  </div>
+                </div>
               </section>
 
               {/* Contextual Link to Seven Diet-Abilities (Phase 42.3) */}

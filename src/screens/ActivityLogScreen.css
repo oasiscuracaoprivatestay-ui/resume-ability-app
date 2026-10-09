@@ -1,0 +1,540 @@
+/**
+ * Activity Log Screen Styles — Super Diet-Ability
+ */
+
+.activity-log-screen {
+  background: #090d16;
+  min-height: 100vh;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-log-content {
+  flex: 1;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activity-screen-hero {
+  margin-bottom: 4px;
+}
+
+.activity-screen-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.activity-screen-subtitle {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Today's Movement Summary Card */
+.activity-today-summary-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 21, 39, 0.8) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.activity-today-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.activity-today-summary-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.activity-today-summary-date {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-today-summary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-today-stats-row {
+  display: flex;
+  gap: 12px;
+}
+
+.activity-today-stat-pill {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-today-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-today-stat-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.activity-today-stat-pill--time .activity-today-stat-value {
+  color: #38bdf8;
+}
+
+.activity-today-no-data {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 4px 0;
+}
+
+.activity-btn-record-cta {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-btn-record-cta:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
+.activity-btn-record-cta:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* History Group Section */
+.activity-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activity-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-date-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.activity-date-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.activity-date-total-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.activity-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Activity Item Card */
+.activity-item-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.activity-item-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.activity-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.activity-item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-item-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.activity-item-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item-category {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.activity-item-custom-name {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 2px 0 0;
+}
+
+.activity-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.activity-item-duration {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #10b981;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-item-time {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Badges */
+.activity-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.activity-intensity-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.activity-intensity-badge--light {
+  background: rgba(14, 165, 233, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.activity-intensity-badge--moderate {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.activity-intensity-badge--vigorous {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.activity-challenge-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.activity-item-notes {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* Actions */
+.activity-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.activity-card-action-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.activity-card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.activity-card-action-btn:focus-visible {
+  outline: 2px solid #10b981;
+}
+
+.activity-card-action-btn--delete:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Empty State */
+.activity-empty-state {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.activity-empty-icon {
+  font-size: 2.4rem;
+}
+
+.activity-empty-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.activity-empty-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 360px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.activity-empty-btn {
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #f8fafc;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.activity-empty-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+/* Delete Confirmation Modal */
+.activity-delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 15, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+.activity-delete-modal-box {
+  background: #0d1527;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 380px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.activity-delete-modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0;
+}
+
+.activity-delete-modal-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-delete-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+
+.activity-delete-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.activity-delete-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.activity-delete-btn--keep {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.activity-delete-btn--keep:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.activity-delete-btn--delete {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.activity-delete-btn--delete:hover {
+  background: #b91c1c;
+}
+
+/* Floating Toast */
+.activity-toast-notice {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  border: 1px solid #10b981;
+  color: #10b981;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1200;
+  animation: actToastFade 0.2s ease;
+}
+
+@keyframes actToastFade {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-item-card,
+  .activity-toast-notice {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .activity-log-content {
+    padding: 12px 12px 70px;
+    gap: 16px;
+  }
+  .activity-today-summary-card {
+    padding: 14px 16px;
+  }
+  .activity-today-stat-value {
+    font-size: 1.25rem;
+  }
+  .activity-item-card {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .activity-today-stats-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .activity-item-actions {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,359 @@
+/**
+ * Activity Modal Styles — Super Diet-Ability
+ */
+
+.activity-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 15, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: actOverlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.activity-modal-container {
+  background: #0d1527;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(16, 185, 129, 0.12);
+  display: flex;
+  flex-direction: column;
+  animation: actModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.activity-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.activity-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.activity-modal-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.activity-modal-close-btn:hover,
+.activity-modal-close-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+  outline: 2px solid #10b981;
+}
+
+.activity-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.activity-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.activity-form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.activity-form-group--half {
+  flex: 1;
+}
+
+.activity-form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 8-Category Grid */
+.activity-category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.activity-category-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  min-height: 64px;
+}
+
+.activity-category-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.activity-category-card:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 1px;
+}
+
+.activity-category-card--active {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.activity-category-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.activity-category-name {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.activity-category-card--active .activity-category-name {
+  color: #10b981;
+}
+
+/* Inputs & Textareas */
+.activity-input,
+.activity-textarea {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #f8fafc;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.activity-input:focus,
+.activity-textarea:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+.activity-textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+
+.activity-char-count {
+  font-size: 0.7rem;
+  color: #64748b;
+  align-self: flex-end;
+  margin-top: 2px;
+}
+
+/* Intensity Segmented Controls */
+.activity-intensity-group {
+  display: flex;
+  gap: 8px;
+}
+
+.activity-intensity-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.activity-intensity-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.activity-intensity-btn:focus-visible {
+  outline: 2px solid #10b981;
+}
+
+.activity-intensity-btn--active {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+/* Challenge Linking Card */
+.activity-challenge-linking-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.activity-challenge-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.activity-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+.activity-challenge-label-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-challenge-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.activity-challenge-sub {
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+.activity-no-challenge-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+/* Error message */
+.activity-form-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+/* Modal Actions */
+.activity-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.activity-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-btn--cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+}
+
+.activity-btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.activity-btn--save {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.activity-btn--save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.activity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Animations & Reduced Motion */
+@keyframes actOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes actModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-modal-overlay,
+  .activity-modal-container {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .activity-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .activity-form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

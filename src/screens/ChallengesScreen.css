@@ -2142,5 +2142,127 @@
   transform: translateY(-1px);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Phase 43.4: Challenge Movement (Optional) Section
+   ══════════════════════════════════════════════════════════════════ */
+.challenge-movement-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-number-badge--optional {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-size: 0.85rem;
+}
+
+.challenge-movement-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.15rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.challenge-movement-desc {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+}
+
+.challenge-movement-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.challenge-movement-count-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #cbd5e1);
+}
+
+.challenge-movement-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.challenge-movement-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.challenge-movement-btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary, #cbd5e1);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.challenge-movement-btn-view:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.challenge-movement-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.challenge-movement-btn-add:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.challenge-movement-btn-add:active {
+  transform: translateY(0);
+}
+
 
 

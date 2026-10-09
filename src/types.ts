@@ -35,7 +35,8 @@ export type Screen =
   | 'coach'
   | 'challenges'
   | 'seven-abilities'
-  | 'ability-detail';
+  | 'ability-detail'
+  | 'activity-log';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';

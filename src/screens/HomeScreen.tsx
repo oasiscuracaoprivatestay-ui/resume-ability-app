@@ -142,6 +142,22 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             <span className="home-btn-icon">🥗</span>
             <span>{t.home_structured_diet}</span>
           </button>
+          {/* ── Record Movement secondary action (Phase 43.4) ── */}
+          <button
+            id="btn-home-record-activity"
+            className="home-btn-activity"
+            onClick={() => {
+              try {
+                sessionStorage.setItem('activity_log_open_modal', 'true');
+              } catch {
+                // ignore
+              }
+              onNavigate('activity-log');
+            }}
+          >
+            <span className="home-btn-icon">🏃</span>
+            <span>{t.act_btn_record}</span>
+          </button>
 
           {/* ── Ability Challenges Entry / Active Hub (Phase 41D.5) ── */}
           <ActiveChallengeCard onNavigate={onNavigate} />

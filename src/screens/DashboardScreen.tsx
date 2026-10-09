@@ -28,6 +28,12 @@ import {
 import {
   getProgressionOverview,
 } from '../utils/progressionEngine';
+import {
+  getDailyActivitySummary,
+  listActivities,
+  ACTIVITIES_UPDATED_EVENT,
+  type ActivityCategory,
+} from '../activities';
 import LevelProgressBar from '../components/LevelProgressBar';
 import ResetStatsModal from '../components/ResetStatsModal';
 import { useTranslation } from '../i18n';
@@ -35,6 +41,31 @@ import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
 import './DashboardScreen.css';
 import type { Translations } from '../i18n';
+
+const ACTIVITY_CATEGORY_ICONS: Record<ActivityCategory, string> = {
+  walking: '🚶',
+  running: '🏃',
+  cycling: '🚴',
+  swimming: '🏊',
+  strength_training: '🏋️',
+  mobility_yoga: '🧘',
+  sports: '🎾',
+  other_movement: '✨',
+};
+
+function getActivityCategoryLabel(t: Translations, cat: ActivityCategory): string {
+  switch (cat) {
+    case 'walking': return t.act_cat_walking;
+    case 'running': return t.act_cat_running;
+    case 'cycling': return t.act_cat_cycling;
+    case 'swimming': return t.act_cat_swimming;
+    case 'strength_training': return t.act_cat_strength_training;
+    case 'mobility_yoga': return t.act_cat_mobility_yoga;
+    case 'sports': return t.act_cat_sports;
+    case 'other_movement': return t.act_cat_other_movement;
+    default: return cat;
+  }
+}
 
 function getContextLabel(t: Translations, ctx: string): string {
   const map: Partial<Record<string, string>> = {
@@ -92,11 +123,23 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     const handleReset = () => setRefreshKey((k) => k + 1);
     window.addEventListener(STATS_RESET_EVENT, handleReset);
     window.addEventListener(SCORE_UPDATED_EVENT, handleReset);
+    window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleReset);
     return () => {
       window.removeEventListener(STATS_RESET_EVENT, handleReset);
       window.removeEventListener(SCORE_UPDATED_EVENT, handleReset);
+      window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleReset);
     };
   }, []);
+
+  const todayDateKey = getLocalDateKey();
+  const activitySummary = useMemo(() => {
+    return getDailyActivitySummary(todayDateKey);
+  }, [todayDateKey, refreshKey]);
+
+  const recentActivity = useMemo(() => {
+    const all = listActivities();
+    return all.length > 0 ? all[0] : null;
+  }, [refreshKey]);
 
   const progressionOverview = useMemo(() => {
     return getProgressionOverview();
@@ -477,6 +520,88 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
 
         {/* ══ Check-In KPI section ══ */}
         <CheckInKPI t={t} refreshKey={refreshKey} />
+
+        {/* ══ Activity & Movement Summary Widget (Phase 43.4) ══ */}
+        <div id="widget-dashboard-activity" className="dash-activity-widget">
+          <div className="dash-activity-header">
+            <div className="dash-activity-title-group">
+              <span className="dash-activity-icon" aria-hidden="true">🏃</span>
+              <div>
+                <h3 className="dash-activity-title">{t.act_screen_title}</h3>
+                <p className="dash-activity-subtitle">{t.act_screen_subtitle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="btn-dashboard-add-activity"
+              className="dash-activity-btn-add"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('activity_log_open_modal', 'true');
+                } catch {
+                  // ignore
+                }
+                onNavigate('activity-log');
+              }}
+            >
+              + {t.act_btn_record}
+            </button>
+          </div>
+
+          <div className="dash-activity-stats-grid">
+            <div className="dash-activity-stat-card">
+              <span className="dash-activity-stat-value" id="dash-activity-count">
+                {activitySummary.count}
+              </span>
+              <span className="dash-activity-stat-label">
+                {t.act_today_summary_count}
+              </span>
+            </div>
+            <div className="dash-activity-stat-card">
+              <span className="dash-activity-stat-value" id="dash-activity-minutes">
+                {activitySummary.totalDurationMinutes}m
+              </span>
+              <span className="dash-activity-stat-label">
+                {t.act_today_summary_minutes}
+              </span>
+            </div>
+          </div>
+
+          {activitySummary.count === 0 ? (
+            <p className="dash-activity-empty-notice">
+              {t.act_today_no_movement}
+            </p>
+          ) : null}
+
+          {recentActivity && (
+            <div className="dash-activity-recent" id="dash-recent-activity">
+              <span className="dash-activity-recent-badge">{t.act_recent_label}</span>
+              <span className="dash-activity-recent-icon" aria-hidden="true">
+                {ACTIVITY_CATEGORY_ICONS[recentActivity.category] || '✨'}
+              </span>
+              <span className="dash-activity-recent-name">
+                {recentActivity.customName || getActivityCategoryLabel(t, recentActivity.category)}
+              </span>
+              <span className="dash-activity-recent-dur">
+                {recentActivity.durationMinutes}m
+              </span>
+              <span className="dash-activity-recent-date">
+                ({recentActivity.dateKey === todayDateKey ? t.act_date_today : recentActivity.dateKey})
+              </span>
+            </div>
+          )}
+
+          <div className="dash-activity-footer">
+            <button
+              type="button"
+              id="btn-dashboard-view-activities"
+              className="dash-activity-btn-history"
+              onClick={() => onNavigate('activity-log')}
+            >
+              {t.act_dashboard_btn_history} →
+            </button>
+          </div>
+        </div>
 
         {/* ══ DATA & STATISTICS RESET ══ */}
         <div className="dash-reset-section">

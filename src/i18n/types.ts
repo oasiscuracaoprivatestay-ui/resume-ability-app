@@ -1931,6 +1931,63 @@ export interface Translations {
   ability_detail_evidence_notice: string;
   ability_detail_relation_prefix: string;
   ability_detail_coach_banner_discard: string;
+
+  // ── Phase 43: Exercise & Activity Reporting ──
+  act_screen_title: string;
+  act_screen_subtitle: string;
+  act_btn_record: string;
+  act_btn_add: string;
+  act_today_summary_title: string;
+  act_today_summary_count: string;
+  act_today_summary_minutes: string;
+  act_today_no_movement: string;
+  act_empty_state_title: string;
+  act_empty_state_desc: string;
+  act_modal_title_new: string;
+  act_modal_title_edit: string;
+  act_field_category: string;
+  act_cat_walking: string;
+  act_cat_running: string;
+  act_cat_cycling: string;
+  act_cat_swimming: string;
+  act_cat_strength_training: string;
+  act_cat_mobility_yoga: string;
+  act_cat_sports: string;
+  act_cat_other_movement: string;
+  act_field_duration: string;
+  act_field_duration_placeholder: string;
+  act_field_custom_name: string;
+  act_field_custom_name_placeholder: string;
+  act_field_intensity: string;
+  act_int_light: string;
+  act_int_moderate: string;
+  act_int_vigorous: string;
+  act_field_notes: string;
+  act_field_notes_placeholder: string;
+  act_field_date: string;
+  act_field_time: string;
+  act_link_challenge: string;
+  act_link_challenge_active: string;
+  act_no_active_challenge: string;
+  act_linked_historical_challenge: string;
+  act_btn_save: string;
+  act_btn_cancel: string;
+  act_btn_edit: string;
+  act_btn_delete: string;
+  act_delete_confirm_title: string;
+  act_delete_confirm_desc: string;
+  act_delete_btn_keep: string;
+  act_delete_btn_delete: string;
+  act_feedback_saved: string;
+  act_feedback_deleted: string;
+  act_date_today: string;
+  act_date_yesterday: string;
+  act_recent_label: string;
+  act_dashboard_btn_history: string;
+  act_challenge_section_title: string;
+  act_challenge_section_desc: string;
+  act_challenge_linked_count: string;
+  act_challenge_btn_view: string;
 }
 
 

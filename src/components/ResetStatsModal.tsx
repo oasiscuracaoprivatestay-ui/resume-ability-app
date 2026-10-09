@@ -9,7 +9,7 @@ interface ResetStatsModalProps {
   onResetComplete?: () => void;
 }
 
-type ModalStep = 'choice' | 'lifetime_confirm' | 'success';
+type ModalStep = 'choice' | 'lifetime_confirm' | 'success' | 'error';
 
 export default function ResetStatsModal({
   isOpen,
@@ -19,6 +19,7 @@ export default function ResetStatsModal({
   const { t } = useTranslation();
   const [step, setStep] = useState<ModalStep>('choice');
   const [resetLifetimeConfirmed, setResetLifetimeConfirmed] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Reset internal state whenever modal opens or closes
@@ -26,6 +27,7 @@ export default function ResetStatsModal({
     if (isOpen) {
       setStep('choice');
       setResetLifetimeConfirmed(false);
+      setResetError(null);
     }
   }, [isOpen]);
 
@@ -49,8 +51,13 @@ export default function ResetStatsModal({
 
   const executeReset = (resetLifetime: boolean) => {
     setResetLifetimeConfirmed(resetLifetime);
-    resetAllStats({ resetLifetimeScore: resetLifetime });
-    setStep('success');
+    const result = resetAllStats({ resetLifetimeScore: resetLifetime });
+    if (!result.success) {
+      setResetError(result.error || 'Failed to reset statistics.');
+      setStep('error');
+    } else {
+      setStep('success');
+    }
   };
 
   const handleFinishSuccess = () => {
@@ -190,6 +197,43 @@ export default function ResetStatsModal({
             >
               {t.stats_done_btn}
             </button>
+          </div>
+        )}
+
+        {/* STEP 4: ERROR FEEDBACK (Fail-safe) */}
+        {step === 'error' && (
+          <div className="reset-modal-content">
+            <div className="reset-modal-icon-badge" aria-hidden="true" style={{ color: '#ef4444' }}>
+              ⚠️
+            </div>
+            <h2 id="reset-modal-title" className="reset-modal-title reset-modal-title--danger">
+              Reset Incomplete
+            </h2>
+            <p className="reset-modal-warning-text">
+              {resetError || 'An error occurred while resetting stored data.'}
+            </p>
+            <p className="reset-modal-desc" style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+              Any remaining activity records and settings have been safely preserved without corruption. You can retry the reset or dismiss.
+            </p>
+            <div className="reset-modal-actions reset-modal-actions--stacked">
+              <button
+                type="button"
+                id="btn-reset-error-retry"
+                className="reset-modal-btn reset-modal-btn--keep reset-modal-btn--full"
+                onClick={() => executeReset(resetLifetimeConfirmed)}
+                autoFocus
+              >
+                ↻ Retry Reset
+              </button>
+              <button
+                type="button"
+                id="btn-reset-error-close"
+                className="reset-modal-btn reset-modal-btn--cancel reset-modal-btn--full"
+                onClick={handleCancel}
+              >
+                {t.stats_modal_btn_cancel}
+              </button>
+            </div>
           </div>
         )}
       </div>

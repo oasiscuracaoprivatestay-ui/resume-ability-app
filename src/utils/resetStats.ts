@@ -23,11 +23,17 @@ import { clearNotificationDeliveryState } from './notificationSettingsStorage';
 import { resetScoreStore } from './scoringEngine';
 import { clearAllDailyReviews } from './dailyReviewStorage';
 import { CELEBRATED_LEVEL_KEY } from './progressionEngine';
+import { clearAllActivities } from '../activities';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
 export interface ResetStatsOptions {
   resetLifetimeScore?: boolean;
+}
+
+export interface ResetStatsResult {
+  success: boolean;
+  error?: string;
 }
 
 /**
@@ -38,7 +44,7 @@ export interface ResetStatsOptions {
  * unless options.resetLifetimeScore is explicitly set to true after user confirmation.
  * Emits a window event so active components can refresh state immediately.
  */
-export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore: false }): void {
+export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore: false }): ResetStatsResult {
   try {
     // 1. Check-Ins & Check-In Wins
     clearCheckIns();
@@ -71,7 +77,21 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
     // 10. Daily Reviews
     clearAllDailyReviews();
 
-    // 11. Scoring Engine Store & Level Progression — ONLY when explicitly confirmed!
+    // 11. Physical Exercise & Activity history (Phase 43.4)
+    const actResult = clearAllActivities();
+    if (!actResult.success) {
+      console.error('[ResetStats] Failed to clear activity records:', actResult.error);
+      // Dispatch reset event so domains that were cleared can refresh
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(STATS_RESET_EVENT));
+      }
+      return {
+        success: false,
+        error: actResult.error || 'Activity history could not be cleared completely. Remaining records were preserved.',
+      };
+    }
+
+    // 12. Scoring Engine Store & Level Progression — ONLY when explicitly confirmed!
     if (options.resetLifetimeScore === true) {
       resetScoreStore();
       try {
@@ -85,7 +105,10 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(STATS_RESET_EVENT));
     }
-  } catch (err) {
+
+    return { success: true };
+  } catch (err: any) {
     console.error('Error during stats reset:', err);
+    return { success: false, error: err?.message || 'Error during stats reset' };
   }
 }
