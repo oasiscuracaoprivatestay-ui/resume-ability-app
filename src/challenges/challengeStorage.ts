@@ -14,6 +14,8 @@ import type { ChallengeInstance, ChallengeStore, ChallengeInvitationState, Snooz
 
 export const CHALLENGE_STORAGE_KEY = 'resume-ability-challenges';
 export const CHALLENGE_UPDATED_EVENT = 'resume-ability:challenge-updated';
+export const OPEN_CHALLENGE_CHECKIN_EVENT = 'resume-ability:open-challenge-checkin';
+export const CHALLENGE_OPEN_CHECKIN_KEY = 'challenge_open_checkin';
 
 /** Default cooldown between invitation prompts: 24 hours (ms) */
 export const CHALLENGE_INVITATION_COOLDOWN_MS = 24 * 60 * 60 * 1000;

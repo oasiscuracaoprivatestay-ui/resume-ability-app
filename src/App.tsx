@@ -35,6 +35,7 @@ import { MyCommitmentsScreen } from './screens/MyCommitmentsScreen';
 import { MySlipperyZonesScreen } from './screens/MySlipperyZonesScreen';
 import CoachScreen from './screens/CoachScreen';
 import { ChallengesScreen } from './screens/ChallengesScreen';
+import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY } from './challenges';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
@@ -254,13 +255,24 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [goBack]);
 
-  // ── PWA Push Deep-linking & SW message listener (Phase 14) ──
+  // ── PWA Push Deep-linking & SW message listener (Phase 14 & Phase 41F) ──
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const targetParam = params.get('screen') as Screen | null;
+      const actionParam = params.get('action') || (params.get('checkin') === 'true' ? 'check-in' : null);
+
+      if (actionParam === 'check-in') {
+        try {
+          sessionStorage.setItem(CHALLENGE_OPEN_CHECKIN_KEY, '1');
+        } catch {}
+      }
+
       if (targetParam) {
         navigate(targetParam);
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (actionParam === 'check-in') {
+        navigate('challenges');
         window.history.replaceState({}, '', window.location.pathname);
       }
     } catch {
@@ -270,7 +282,19 @@ export default function App() {
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       const handleSwMessage = (event: MessageEvent) => {
         if (event.data?.type === 'NAVIGATE_SCREEN' && event.data.screen) {
-          navigate(event.data.screen as Screen);
+          const target = event.data.screen as Screen;
+          const action = event.data.action || (event.data.url && event.data.url.includes('action=check-in') ? 'check-in' : undefined);
+
+          if (target === 'challenges' && action === 'check-in') {
+            try {
+              sessionStorage.setItem(CHALLENGE_OPEN_CHECKIN_KEY, '1');
+            } catch {}
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent(OPEN_CHALLENGE_CHECKIN_EVENT));
+            }
+          }
+
+          navigate(target);
         }
       };
       navigator.serviceWorker.addEventListener('message', handleSwMessage);

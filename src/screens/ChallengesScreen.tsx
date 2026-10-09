@@ -20,6 +20,8 @@ import {
   getChallengeDayBreakdown,
   calculateChallengePracticeStats,
   CHALLENGE_UPDATED_EVENT,
+  OPEN_CHALLENGE_CHECKIN_EVENT,
+  CHALLENGE_OPEN_CHECKIN_KEY,
   ChallengeInstance,
   ChallengeDurationDays,
   ChallengeAbilityId,
@@ -85,20 +87,42 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     return () => window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
   }, []);
 
-  // Phase 41E: Check for direct check-in trigger from Home card or notification deep link
+  // Phase 41E & 41F: Check for direct check-in trigger from Home card, push notification, or deep link
   useEffect(() => {
-    try {
-      const openCheckIn = sessionStorage.getItem('challenge_open_checkin');
-      const params = new URLSearchParams(window.location.search);
-      const urlCheckIn = params.get('checkin') === 'true' || params.get('action') === 'check-in';
+    const handleCheckInTrigger = () => {
+      try {
+        const openCheckIn = sessionStorage.getItem(CHALLENGE_OPEN_CHECKIN_KEY) || sessionStorage.getItem('challenge_open_checkin');
+        const params = new URLSearchParams(window.location.search);
+        const urlCheckIn = params.get('checkin') === 'true' || params.get('action') === 'check-in';
 
-      if (openCheckIn === '1' || urlCheckIn) {
-        sessionStorage.removeItem('challenge_open_checkin');
+        if (openCheckIn === '1' || urlCheckIn) {
+          sessionStorage.removeItem(CHALLENGE_OPEN_CHECKIN_KEY);
+          sessionStorage.removeItem('challenge_open_checkin');
+          // Only open if the challenge is confirmed active
+          const current = activeChallenge || syncCurrentChallenge();
+          if (current && current.status === 'active') {
+            setShowCheckInModal(true);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    handleCheckInTrigger();
+
+    // Listen for push notification click events when already on this screen
+    const handleOpenEvent = () => {
+      const current = syncCurrentChallenge();
+      setActiveChallenge(current);
+      sessionStorage.removeItem('challenge_open_checkin');
+      if (current && current.status === 'active') {
         setShowCheckInModal(true);
       }
-    } catch {
-      // ignore
-    }
+    };
+
+    window.addEventListener(OPEN_CHALLENGE_CHECKIN_EVENT, handleOpenEvent);
+    return () => window.removeEventListener(OPEN_CHALLENGE_CHECKIN_EVENT, handleOpenEvent);
   }, [activeChallenge]);
 
   const handleFrequencyChange = (freq: ChallengeReminderFrequency) => {
@@ -862,7 +886,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       )}
 
       {/* ── Challenge Check-In Modal (Phase 41E) ── */}
-      {activeChallenge && (
+      {activeChallenge && activeChallenge.status === 'active' && (
         <ChallengeCheckInModal
           isOpen={showCheckInModal}
           challenge={activeChallenge}

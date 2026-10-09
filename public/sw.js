@@ -109,6 +109,9 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const action = payload.action || (payload.type === 'challenge-reminder' ? 'check-in' : undefined);
+  const targetUrl = payload.url || (action ? `/?screen=${payload.targetScreen || 'check-in'}&action=${action}` : `/?screen=${payload.targetScreen || 'check-in'}`);
+
   const notificationOptions = {
     body: payload.body,
     icon: payload.icon || '/icons/icon-192.svg',
@@ -117,7 +120,8 @@ self.addEventListener('push', (event) => {
     renotify: true,
     data: {
       targetScreen: payload.targetScreen || 'check-in',
-      url: payload.url || `/?screen=${payload.targetScreen || 'check-in'}`,
+      action: action,
+      url: targetUrl,
       timestamp: Date.now(),
     },
   };
@@ -133,7 +137,8 @@ self.addEventListener('notificationclick', (event) => {
 
   const notifData = event.notification.data || {};
   const targetScreen = notifData.targetScreen || 'check-in';
-  const targetUrl = notifData.url || `/?screen=${targetScreen}`;
+  const action = notifData.action || (notifData.url && notifData.url.includes('action=check-in') ? 'check-in' : undefined);
+  const targetUrl = notifData.url || (action ? `/?screen=${targetScreen}&action=${action}` : `/?screen=${targetScreen}`);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -144,6 +149,8 @@ self.addEventListener('notificationclick', (event) => {
           client.postMessage({
             type: 'NAVIGATE_SCREEN',
             screen: targetScreen,
+            action: action,
+            url: targetUrl,
           });
           return;
         }
