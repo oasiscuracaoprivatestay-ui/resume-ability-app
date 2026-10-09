@@ -18,6 +18,7 @@ import {
   cancelActiveChallenge,
   getChallengeHistory,
   getChallengeDayBreakdown,
+  calculateChallengePracticeStats,
   CHALLENGE_UPDATED_EVENT,
   ChallengeInstance,
   ChallengeDurationDays,
@@ -27,6 +28,7 @@ import {
   RESUME_ABILITY_CHALLENGE_DEFINITION,
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
+import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { playFeedback } from '../utils/feedback';
 import {
   getPushDeliveryStatus,
@@ -43,7 +45,7 @@ interface ChallengesScreenProps {
   onBack: () => void;
 }
 
-export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: _onNavigate, onBack }) => {
+export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, onBack }) => {
   const { t } = useTranslation();
   const [activeChallenge, setActiveChallenge] = useState<ChallengeInstance | null>(null);
   const [history, setHistory] = useState<ChallengeInstance[]>([]);
@@ -66,6 +68,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Phase 41E: Challenge Check-In Modal state
+  const [showCheckInModal, setShowCheckInModal] = useState(false);
+
   const refreshState = () => {
     const current = syncCurrentChallenge();
     setActiveChallenge(current);
@@ -79,6 +84,22 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
     return () => window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
   }, []);
+
+  // Phase 41E: Check for direct check-in trigger from Home card or notification deep link
+  useEffect(() => {
+    try {
+      const openCheckIn = sessionStorage.getItem('challenge_open_checkin');
+      const params = new URLSearchParams(window.location.search);
+      const urlCheckIn = params.get('checkin') === 'true' || params.get('action') === 'check-in';
+
+      if (openCheckIn === '1' || urlCheckIn) {
+        sessionStorage.removeItem('challenge_open_checkin');
+        setShowCheckInModal(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [activeChallenge]);
 
   const handleFrequencyChange = (freq: ChallengeReminderFrequency) => {
     setReminderFrequency(freq);
@@ -170,6 +191,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
   const dayBreakdown = activeChallenge && activeChallenge.status === 'active'
     ? getChallengeDayBreakdown(activeChallenge)
     : [];
+
+  const practiceStats = activeChallenge && activeChallenge.status === 'active'
+    ? calculateChallengePracticeStats(activeChallenge)
+    : null;
 
   return (
     <div className="challenges-screen">
@@ -355,6 +380,85 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                 </div>
               </div>
 
+              {/* Phase 41E: Challenge Check-In Banner */}
+              <div className="challenge-checkin-banner" id="challenge-checkin-banner">
+                <div className="challenge-checkin-banner-content">
+                  <div className="challenge-checkin-status-row">
+                    <span className="challenge-checkin-badge">
+                      {practiceStats?.todayCheckedIn
+                        ? `✓ ${t.challenge_practice_status_done || 'Checked in today'}`
+                        : `🎯 ${t.challenge_practice_status_pending || 'Pending Check-In'}`}
+                    </span>
+                    {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
+                      <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
+                        {practiceStats.todayLatestStatus === 'on-structure'
+                          ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
+                          : practiceStats.todayLatestStatus === 'near-slip'
+                          ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
+                          : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="challenge-checkin-desc">
+                    {practiceStats?.todayCheckedIn
+                      ? (t.challenge_checkin_day_badge?.replace('{current}', String(activeChallenge.currentDay)).replace('{total}', String(activeChallenge.durationDays)) + ' • ' + (t.challenge_practice_status_done || 'Checked in today'))
+                      : (t.challenge_checkin_prompt || 'Report your current structure status')}
+                  </p>
+                </div>
+                <button
+                  id="btn-active-challenge-checkin"
+                  className="challenge-checkin-cta-btn"
+                  onClick={() => setShowCheckInModal(true)}
+                >
+                  <span>
+                    {practiceStats?.todayCheckedIn
+                      ? (t.challenge_btn_checkin_again || 'Check In Again')
+                      : (t.challenge_btn_checkin || 'Check In to Challenge')}
+                  </span>
+                  <span>→</span>
+                </button>
+              </div>
+
+              {/* Phase 41E: Challenge Practice Progress (Strictly separated from slip recovery metrics) */}
+              <div className="challenge-practice-card" id="challenge-practice-card">
+                <h3 className="challenge-practice-title">
+                  {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
+                </h3>
+                <p className="challenge-practice-sub">
+                  {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
+                </p>
+                <div className="challenge-practice-grid">
+                  <div className="challenge-practice-box">
+                    <span className="practice-box-val">
+                      {practiceStats?.daysCheckedIn || 0}/{activeChallenge.durationDays}
+                    </span>
+                    <span className="practice-box-label">
+                      {t.challenge_practice_days_checked || 'Days Checked In'}
+                    </span>
+                  </div>
+                  <div className="challenge-practice-box">
+                    <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
+                    <span className="practice-box-label">
+                      {t.challenge_practice_total_checkins || 'Total Check-Ins'}
+                    </span>
+                  </div>
+                  <div className="challenge-practice-box">
+                    <span className="practice-box-val">
+                      {practiceStats?.todayCheckedIn
+                        ? (practiceStats.todayLatestStatus === 'on-structure'
+                            ? '✓'
+                            : practiceStats.todayLatestStatus === 'near-slip'
+                            ? '⚡'
+                            : '↻')
+                        : '—'}
+                    </span>
+                    <span className="practice-box-label">
+                      {t.challenge_practice_today_status || 'Today\'s Status'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Factual Metrics Card */}
               <div className="challenge-metrics-card">
                 <h3 className="challenge-metrics-title">{t.challenge_recovery_metrics || 'Recovery Practice Metrics'}</h3>
@@ -424,7 +528,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
                           </span>
                         </div>
                         <div className="timeline-right">
-                          <span className="timeline-date">{d.dateKey}</span>
+                          <div className="timeline-date-row">
+                            <span className="timeline-date">{d.dateKey}</span>
+                            {d.checkInsCount && d.checkInsCount > 0 ? (
+                              <span className="timeline-checkin-tag">
+                                ✓ {t.challenge_timeline_checked_in || 'Checked in'}
+                                {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
+                              </span>
+                            ) : null}
+                          </div>
                           <span className="timeline-desc">{desc}</span>
                         </div>
                       </div>
@@ -747,6 +859,17 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate: 
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Challenge Check-In Modal (Phase 41E) ── */}
+      {activeChallenge && (
+        <ChallengeCheckInModal
+          isOpen={showCheckInModal}
+          challenge={activeChallenge}
+          onClose={() => setShowCheckInModal(false)}
+          onNavigate={onNavigate}
+          onCheckInCompleted={refreshState}
+        />
       )}
     </div>
   );

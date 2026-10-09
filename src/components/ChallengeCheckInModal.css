@@ -1,0 +1,412 @@
+/**
+ * Challenge Check-In Modal Styling (Phase 41E)
+ *
+ * Rich dark theme styling aligned with SDA design system:
+ * - High-contrast accessible text
+ * - Touch-friendly options (min 48px height)
+ * - Smooth animated transitions
+ * - Mobile safe-area padding
+ */
+
+.challenge-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 7, 13, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.challenge-modal-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #131c2e 0%, #0d1422 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.challenge-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a0aec0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.challenge-modal-close:hover,
+.challenge-modal-close:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.challenge-modal-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.challenge-modal-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f6ad55;
+  background: rgba(246, 173, 85, 0.14);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+}
+
+.challenge-modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+.challenge-modal-sub {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Status Options Grid ── */
+
+.challenge-status-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.challenge-status-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: inherit;
+  width: 100%;
+  min-height: 64px;
+}
+
+.challenge-status-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.challenge-status-btn--selected {
+  background: rgba(246, 173, 85, 0.12) !important;
+  border-color: #f6ad55 !important;
+  box-shadow: 0 0 16px rgba(246, 173, 85, 0.18);
+}
+
+.status-btn-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.status-btn-icon-wrap--on-structure {
+  background: rgba(72, 187, 120, 0.18);
+  color: #48bb78;
+}
+
+.status-btn-icon-wrap--near-slip {
+  background: rgba(237, 137, 54, 0.18);
+  color: #ed8936;
+}
+
+.status-btn-icon-wrap--slip {
+  background: rgba(99, 179, 237, 0.18);
+  color: #63b3ed;
+}
+
+.status-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.status-btn-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.status-btn-desc {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  line-height: 1.3;
+}
+
+/* ── Diet reporting link ── */
+
+.challenge-diet-gateway {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.challenge-diet-link {
+  background: none;
+  border: none;
+  color: #90cdf4;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.challenge-diet-link:hover {
+  color: #bee3f8;
+}
+
+/* ── Primary Submit Button ── */
+
+.challenge-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.challenge-checkin-error-banner {
+  background: rgba(229, 62, 62, 0.15);
+  border: 1px solid rgba(229, 62, 62, 0.45);
+  color: #feb2b2;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.challenge-primary-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.85rem 1.25rem;
+  background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(221, 107, 32, 0.35);
+  transition: all 0.2s ease;
+}
+
+.challenge-primary-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(221, 107, 32, 0.45);
+}
+
+.challenge-primary-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Feedback Screen ── */
+
+.challenge-checkin-feedback {
+  text-align: center;
+}
+
+.feedback-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.feedback-icon-hero {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem;
+}
+
+.feedback-desc {
+  font-size: 0.9rem;
+  color: #cbd5e0;
+  line-height: 1.45;
+  margin: 0 0 1.25rem;
+  max-width: 380px;
+}
+
+.feedback-why-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.feedback-why-tag {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f6ad55;
+  margin-bottom: 0.3rem;
+}
+
+.feedback-why-text {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.challenge-recommit-ritual-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem 1rem;
+}
+
+.challenge-recommit-hint {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.challenge-recommitted-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(72, 187, 120, 0.15);
+  border: 1px solid #48bb78;
+  color: #9ae6b4;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.feedback-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.challenge-secondary-action-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.challenge-secondary-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* ── Mobile Viewports ── */
+
+@media (max-width: 480px) {
+  .challenge-modal-container {
+    padding: 1.5rem 1.15rem 1.25rem;
+    border-radius: 18px;
+  }
+
+  .challenge-modal-title {
+    font-size: 1.25rem;
+  }
+
+  .challenge-status-btn {
+    padding: 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .status-btn-icon-wrap {
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
+  }
+}

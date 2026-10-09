@@ -22,11 +22,15 @@ import type {
   ChallengeEventCounts,
   ChallengeInstance,
   ChallengeReminderConfig,
+  ChallengeCheckInEntry,
+  ChallengePracticeStats,
 } from './types';
 import {
   getActiveChallenge,
   saveActiveChallenge,
   archiveChallenge,
+  loadChallengeStore,
+  saveChallengeStore,
 } from './challengeStorage';
 import {
   getLocalDateKey,
@@ -35,6 +39,8 @@ import {
 } from '../utils/dietVerificationStorage';
 import { loadSlips } from '../utils';
 import { syncChallengePushSchedule } from '../utils/pushNotifications';
+import { saveCheckIn, type CheckInStatus } from '../utils/checkInStorage';
+import { recordScoreEvent, type AwardResult } from '../utils/scoringEngine';
 
 // ── Reminder Validation Helpers (Phase 41B) ───────────────────────────────────
 
@@ -324,6 +330,11 @@ export function getChallengeDayBreakdown(
       }
     }
 
+    // Phase 41E: Calculate check-ins for this day
+    const dayCheckIns = (instance.checkIns || []).filter((c) => c.dateKey === dKey);
+    const checkInsCount = dayCheckIns.length;
+    const latestCheckInStatus = checkInsCount > 0 ? dayCheckIns[dayCheckIns.length - 1].status : undefined;
+
     days.push({
       dayIndex: i,
       dateKey: dKey,
@@ -334,10 +345,35 @@ export function getChallengeDayBreakdown(
       slipsCount,
       resumedCount,
       hasResumeOpportunity,
+      checkInsCount,
+      latestCheckInStatus,
     });
   }
 
   return days;
+}
+
+/**
+ * Calculates challenge practice progress metrics (strictly separated from slip recovery stats).
+ */
+export function calculateChallengePracticeStats(
+  instance: ChallengeInstance,
+  referenceDateKey = getLocalDateKey()
+): ChallengePracticeStats {
+  const checkIns = instance.checkIns || [];
+  const totalCheckIns = checkIns.length;
+  const uniqueDates = new Set(checkIns.map((c) => c.dateKey));
+  const daysCheckedIn = uniqueDates.size;
+  const todayCheckIns = checkIns.filter((c) => c.dateKey === referenceDateKey);
+  const todayCheckedIn = todayCheckIns.length > 0;
+  const todayLatestStatus = todayCheckedIn ? todayCheckIns[todayCheckIns.length - 1].status : undefined;
+
+  return {
+    totalCheckIns,
+    daysCheckedIn,
+    todayCheckedIn,
+    todayLatestStatus,
+  };
 }
 
 // ── Public Engine Operations ──────────────────────────────────────────────────
@@ -391,6 +427,10 @@ export function startChallenge(
     reminderEnabled: normalizedReminders.reminderEnabled,
     reminderFrequency: normalizedReminders.reminderFrequency,
     reminderTimes: normalizedReminders.reminderTimes,
+    // Phase 41E: Practice check-in defaults
+    checkIns: [],
+    lastCheckInDateKey: undefined,
+    totalCheckInsCount: 0,
   };
 
   const derived = deriveChallengeProgress(initialInstance, startDateKey);
@@ -449,4 +489,186 @@ export function cancelActiveChallenge(reason = 'User cancelled'): ChallengeInsta
     }).catch(() => {});
   } catch {}
   return cancelled;
+}
+
+// ── Challenge Check-In Operations (Phase 41E) ────────────────────────────────
+
+export interface RecordChallengeCheckInParams {
+  challengeId?: string;
+  status: CheckInStatus;
+  actionId?: string;            // Deterministic stable identifier for deduplication
+  actionTaken?: 'continue' | 'recommit' | 'diet_review';
+  timestamp?: number;
+  dateKey?: string;
+}
+
+export interface ChallengeCheckInResult {
+  status: 'saved' | 'duplicate' | 'storage_failed' | 'challenge_not_active';
+  checkIn?: ChallengeCheckInEntry;
+  scoringAward?: AwardResult;
+  updatedChallenge?: ChallengeInstance;
+  reason?: string;
+}
+
+/**
+ * Records a Challenge Check-In with stable event deduplication and canonical scoring integration.
+ *
+ * Enforces:
+ * 1. ActionId idempotency across Challenge association, CheckIn storage, and Scoring events.
+ * 2. Does NOT create true slips or mark slips resumed.
+ * 3. Does NOT fail or reset challenge.
+ * 4. Honors daily scoring engine caps (e.g. 4/day max).
+ * 5. Handles partial-failure retries safely with zero duplicate XP.
+ * 6. Never claims success if required storage persistence fails.
+ * 7. Protects against stale challenge overwrites and expired/cancelled challenges.
+ */
+export function recordChallengeCheckIn(
+  params: RecordChallengeCheckInParams
+): ChallengeCheckInResult {
+  const dateKey = params.dateKey || getLocalDateKey();
+  const timestamp = params.timestamp || Date.now();
+
+  // 1. Synchronize challenge to reference date to ensure completion if duration elapsed (Scenario 8)
+  const synced = syncCurrentChallenge(dateKey);
+  if (!synced || synced.status !== 'active') {
+    return {
+      status: 'challenge_not_active',
+      reason: 'Challenge is no longer active or has completed',
+    };
+  }
+
+  if (params.challengeId && synced.id !== params.challengeId) {
+    return {
+      status: 'challenge_not_active',
+      reason: `Active challenge ID (${synced.id}) does not match requested challengeId (${params.challengeId})`,
+    };
+  }
+
+  // 2. Fetch fresh active challenge directly from store to avoid stale snapshot (Requirement: Avoid overwriting newer Challenge state with stale state)
+  const store = loadChallengeStore();
+  const active = store.activeChallenge;
+  if (!active || active.status !== 'active' || active.id !== synced.id) {
+    return {
+      status: 'challenge_not_active',
+      reason: 'Active challenge changed or is no longer active in store',
+    };
+  }
+
+  const daysSinceStart = getCalendarDaysDiff(active.startDate, dateKey);
+  const dayIndex = Math.min(active.durationDays, Math.max(1, daysSinceStart + 1));
+
+  // 3. Stable identifier shared across challenge checkIn and scoring event
+  const actionId =
+    params.actionId ||
+    `ch_ci_${active.id}_${dateKey}_${timestamp}_${Math.random().toString(36).slice(2, 7)}`;
+
+  // Deduplication check: check if this actionId already exists in this challenge
+  const existingCheckIns = active.checkIns || [];
+  const existingIndex = existingCheckIns.findIndex((c: ChallengeCheckInEntry) => c.id === actionId);
+
+  if (existingIndex !== -1) {
+    const existing = existingCheckIns[existingIndex];
+    // Idempotently ensure canonical record exists if it was somehow missing
+    try {
+      saveCheckIn(params.status, actionId);
+    } catch {}
+
+    return {
+      status: 'duplicate',
+      checkIn: existing,
+      scoringAward: {
+        status: 'duplicate',
+        pointsAwarded: 0,
+        reason: `Challenge check-in with actionId ${actionId} already recorded`,
+      },
+      updatedChallenge: active,
+    };
+  }
+
+  // 4. Idempotently save canonical check-in (Scenario 1 & 6)
+  try {
+    saveCheckIn(params.status, actionId);
+  } catch (err) {
+    return {
+      status: 'storage_failed',
+      reason: `Failed to save canonical check-in: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+
+  // 5. Record scoring event using the exact same stable identifier (Scenario 2 & 6)
+  let scoringAward: AwardResult;
+  try {
+    scoringAward = recordScoreEvent({
+      activityType: 'DAILY_CHECK_IN',
+      sourceId: actionId,
+      dateKey,
+      timestamp,
+      metadata: {
+        challengeId: active.id,
+        dayIndex,
+        status: params.status,
+      },
+    });
+  } catch (err) {
+    // Scoring engine failure fallback: 0 points awarded, does not block challenge recovery
+    scoringAward = {
+      status: 'duplicate',
+      pointsAwarded: 0,
+      reason: `Scoring failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+
+  // 6. Create ChallengeCheckInEntry
+  const checkInEntry: ChallengeCheckInEntry = {
+    id: actionId,
+    challengeId: active.id,
+    dayIndex,
+    dateKey,
+    status: params.status,
+    timestamp,
+    actionTaken: params.actionTaken || 'continue',
+  };
+
+  // Re-load fresh store before writing to prevent clobbering newer concurrent modifications
+  const freshStore = loadChallengeStore();
+  const freshActive = freshStore.activeChallenge;
+  if (!freshActive || freshActive.id !== active.id || freshActive.status !== 'active') {
+    return {
+      status: 'challenge_not_active',
+      checkIn: checkInEntry,
+      scoringAward,
+      reason: 'Active challenge was modified, completed, or cancelled during check-in processing',
+    };
+  }
+
+  // Filter out any potential duplicate entry with the same actionId
+  const freshCheckIns = (freshActive.checkIns || []).filter((c: ChallengeCheckInEntry) => c.id !== actionId);
+  freshCheckIns.push(checkInEntry);
+
+  const updatedChallenge: ChallengeInstance = {
+    ...freshActive,
+    checkIns: freshCheckIns,
+    lastCheckInDateKey: dateKey,
+    totalCheckInsCount: freshCheckIns.length,
+  };
+
+  freshStore.activeChallenge = updatedChallenge;
+  const persisted = saveChallengeStore(freshStore);
+
+  if (!persisted) {
+    return {
+      status: 'storage_failed',
+      checkIn: checkInEntry,
+      scoringAward,
+      updatedChallenge,
+      reason: 'Failed to persist challenge store to localStorage',
+    };
+  }
+
+  return {
+    status: 'saved',
+    checkIn: checkInEntry,
+    scoringAward,
+    updatedChallenge,
+  };
 }

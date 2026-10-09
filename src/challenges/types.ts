@@ -12,6 +12,8 @@
  *    never raw 24h ms math.
  */
 
+import type { CheckInStatus } from '../utils/checkInStorage';
+
 export type ChallengeAbilityId =
   | 'resume-ability'
   // Reserved for future abilities (not active in Phase 37):
@@ -40,6 +42,25 @@ export type ChallengeDayState =
   | 'resume_practiced'   // Slip occurred on this day and user resumed
   | 'no_opportunity';    // No eligible slip occurred on this day (on-track / flexibility)
 
+// Phase 41E: Challenge Check-In Entry model
+export interface ChallengeCheckInEntry {
+  id: string;             // deterministic actionId / checkIn ID
+  challengeId: string;
+  dayIndex: number;       // 1-indexed (1..durationDays)
+  dateKey: string;        // YYYY-MM-DD
+  status: CheckInStatus;  // 'on-structure' | 'near-slip' | 'slip'
+  timestamp: number;      // epoch ms
+  actionTaken?: 'continue' | 'recommit' | 'diet_review';
+}
+
+// Phase 41E: Challenge Practice Progress stats (strictly separated from true slip metrics)
+export interface ChallengePracticeStats {
+  totalCheckIns: number;
+  daysCheckedIn: number;
+  todayCheckedIn: boolean;
+  todayLatestStatus?: CheckInStatus;
+}
+
 export interface ChallengeDayProgress {
   dayIndex: number;      // 1-indexed (1..durationDays)
   dateKey: string;       // YYYY-MM-DD
@@ -50,6 +71,9 @@ export interface ChallengeDayProgress {
   slipsCount: number;
   resumedCount: number;
   hasResumeOpportunity: boolean;
+  // Phase 41E: Practice check-in status for this day
+  checkInsCount?: number;
+  latestCheckInStatus?: CheckInStatus;
 }
 
 export interface ChallengeEventCounts {
@@ -91,6 +115,10 @@ export interface ChallengeInstance {
   reminderEnabled?: boolean;
   reminderFrequency?: ChallengeReminderFrequency;
   reminderTimes?: string[];
+  // Phase 41E: Practice Check-Ins (backward-compatible optional fields)
+  checkIns?: ChallengeCheckInEntry[];
+  lastCheckInDateKey?: string;
+  totalCheckInsCount?: number;
 }
 
 export interface ChallengeDefinition {

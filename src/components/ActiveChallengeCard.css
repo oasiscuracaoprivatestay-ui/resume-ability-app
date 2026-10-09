@@ -297,3 +297,56 @@
   text-decoration: underline;
 }
 
+/* ── Phase 41E: Challenge Card Check-In Actions & Practice Status ── */
+.challenge-card-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.challenge-card-btn--checkin {
+  background: linear-gradient(135deg, rgba(246, 173, 85, 0.22) 0%, rgba(221, 107, 32, 0.28) 100%) !important;
+  border: 1px solid rgba(246, 173, 85, 0.45) !important;
+  color: #fed7aa !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(221, 107, 32, 0.18);
+}
+
+.challenge-card-btn--checkin:hover {
+  background: linear-gradient(135deg, rgba(246, 173, 85, 0.32) 0%, rgba(221, 107, 32, 0.4) 100%) !important;
+  border-color: #f6ad55 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.challenge-card-btn--secondary {
+  background: rgba(30, 41, 59, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.challenge-card-btn--secondary:hover {
+  background: rgba(51, 65, 85, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #cbd5e1 !important;
+}
+
+.challenge-card-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.challenge-card-stat-pill--checked {
+  color: #4ade80;
+}
+
+.challenge-card-stat-pill--pending {
+  color: #f6ad55;
+}
+
+

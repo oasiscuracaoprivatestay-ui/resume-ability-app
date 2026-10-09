@@ -85,21 +85,34 @@ export function getCheckIns(): CheckInRecord[] {
  * NOTE: Near Slip is NOT counted as Slip. Both increment the total
  * check-in count because completing any check-in is a win.
  * The status field keeps them separately measurable.
+ *
+ * Phase 41E: Supports optional customId for deterministic deduplication.
+ * If a record with customId already exists, it is returned without duplicate writes.
  */
-export function saveCheckIn(status: CheckInStatus): CheckInRecord {
+export function saveCheckIn(status: CheckInStatus, customId?: string): CheckInRecord {
+  const all = getCheckIns();
+  if (customId) {
+    const existing = all.find(r => r.id === customId);
+    if (existing) {
+      return existing;
+    }
+  }
+
   const current = getTotalCheckInCount();
   const record: CheckInRecord = {
-    id:        generateId(),
+    id:        customId || generateId(),
     status,
     timestamp: new Date().toISOString(),
     date:      localDateKey(),
   };
-  const all = getCheckIns();
   all.push(record);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-
-  // Increment total check-in count (all statuses count — every check-in is a win)
-  localStorage.setItem(CHECKIN_COUNT_KEY, String(current + 1));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    localStorage.setItem(CHECKIN_COUNT_KEY, String(current + 1));
+  } catch (err) {
+    console.error('Failed to persist check-in to localStorage:', err);
+    throw err;
+  }
 
   return record;
 }

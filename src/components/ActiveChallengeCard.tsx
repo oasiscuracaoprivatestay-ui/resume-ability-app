@@ -10,6 +10,7 @@ import { useTranslation } from '../i18n';
 import {
   syncCurrentChallenge,
   getChallengeDayBreakdown,
+  calculateChallengePracticeStats,
   canShowChallengeInvitation,
   setChallengeInvitationSnooze,
   markChallengeInvitationPrompted,
@@ -181,6 +182,7 @@ export const ActiveChallengeCard: React.FC<ActiveChallengeCardProps> = ({ onNavi
 
   // Active Challenge view
   const { currentDay, durationDays, daysRemaining, relevantEventCounts } = activeChallenge;
+  const practiceStats = calculateChallengePracticeStats(activeChallenge);
 
   return (
     <div
@@ -244,23 +246,54 @@ export const ActiveChallengeCard: React.FC<ActiveChallengeCardProps> = ({ onNavi
         {/* Quick stats banner */}
         <div className="challenge-card-stats-row">
           <span className="challenge-card-stat">
+            {practiceStats.todayCheckedIn ? (
+              <span className="challenge-card-stat-pill challenge-card-stat-pill--checked">
+                ✓ {t.challenge_practice_status_done || 'Checked in today'}
+              </span>
+            ) : (
+              <span className="challenge-card-stat-pill challenge-card-stat-pill--pending">
+                🎯 {t.challenge_practice_status_pending || 'Pending Check-In'}
+              </span>
+            )}
+          </span>
+          <span className="challenge-card-stat">
             {relevantEventCounts.eligibleSlips > 0
               ? `${relevantEventCounts.resumedSlips}/${relevantEventCounts.eligibleSlips} ${t.challenge_resumed_label || 'resumed'} (${relevantEventCounts.resumeRate}%)`
               : (t.challenge_no_slips_yet || 'No Resume opportunities yet')}
           </span>
         </div>
 
-        <button
-          id="btn-home-view-challenge"
-          className="challenge-card-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onNavigate('challenges');
-          }}
-        >
-          <span>{t.challenge_btn_continue || t.challenge_btn_view || 'Continue Challenge'}</span>
-          <span className="challenge-card-arrow">→</span>
-        </button>
+        <div className="challenge-card-actions-group">
+          <button
+            id="btn-home-challenge-checkin"
+            className="challenge-card-btn challenge-card-btn--checkin"
+            onClick={(e) => {
+              e.stopPropagation();
+              try {
+                sessionStorage.setItem('challenge_open_checkin', '1');
+              } catch {}
+              onNavigate('challenges');
+            }}
+          >
+            <span>
+              {practiceStats.todayCheckedIn
+                ? (t.challenge_btn_checkin_again || 'Check In Again')
+                : (t.challenge_btn_checkin || 'Check In to Challenge')}
+            </span>
+            <span className="challenge-card-arrow">✓</span>
+          </button>
+          <button
+            id="btn-home-view-challenge"
+            className="challenge-card-btn challenge-card-btn--secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate('challenges');
+            }}
+          >
+            <span>{t.challenge_btn_continue || t.challenge_btn_view || 'Continue Challenge'}</span>
+            <span className="challenge-card-arrow">→</span>
+          </button>
+        </div>
       </div>
     </div>
   );

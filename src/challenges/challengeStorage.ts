@@ -60,11 +60,23 @@ export function normalizeChallengeInstance(raw: any): ChallengeInstance {
     ? raw.reminderTimes.filter((t: any) => typeof t === 'string' && /^\d{2}:\d{2}$/.test(t))
     : [];
 
+  // Phase 41E: Normalize check-ins and practice progress
+  const checkIns = Array.isArray(raw.checkIns) ? raw.checkIns : [];
+  const totalCheckInsCount = typeof raw.totalCheckInsCount === 'number'
+    ? raw.totalCheckInsCount
+    : checkIns.length;
+  const lastCheckInDateKey = typeof raw.lastCheckInDateKey === 'string'
+    ? raw.lastCheckInDateKey
+    : undefined;
+
   return {
     ...raw,
     reminderEnabled,
     reminderFrequency,
     reminderTimes,
+    checkIns,
+    totalCheckInsCount,
+    lastCheckInDateKey,
   };
 }
 
@@ -102,17 +114,20 @@ export function loadChallengeStore(): ChallengeStore {
 
 /**
  * Persists the challenge store and dispatches update event.
+ * Returns true if saved successfully, false on storage quota or error.
  */
-export function saveChallengeStore(store: ChallengeStore): void {
-  if (typeof localStorage === 'undefined') return;
+export function saveChallengeStore(store: ChallengeStore): boolean {
+  if (typeof localStorage === 'undefined') return false;
 
   try {
     localStorage.setItem(CHALLENGE_STORAGE_KEY, JSON.stringify(store));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(CHALLENGE_UPDATED_EVENT));
     }
+    return true;
   } catch {
     // Fail gracefully on storage quota issues
+    return false;
   }
 }
 
@@ -128,11 +143,12 @@ export const loadActiveChallenge = getActiveChallenge;
 
 /**
  * Sets or clears the active challenge.
+ * Returns true if saved successfully, false on error.
  */
-export function saveActiveChallenge(challenge: ChallengeInstance | null): void {
+export function saveActiveChallenge(challenge: ChallengeInstance | null): boolean {
   const store = loadChallengeStore();
   store.activeChallenge = challenge;
-  saveChallengeStore(store);
+  return saveChallengeStore(store);
 }
 
 /**
@@ -145,15 +161,16 @@ export function getChallengeHistory(): ChallengeInstance[] {
 
 /**
  * Archives a challenge instance into history.
+ * Returns true if saved successfully, false on error.
  */
-export function archiveChallenge(challenge: ChallengeInstance): void {
+export function archiveChallenge(challenge: ChallengeInstance): boolean {
   const store = loadChallengeStore();
   // Filter out any existing instance with the same ID before prepending
   store.history = [challenge, ...store.history.filter(c => c.id !== challenge.id)];
   if (store.activeChallenge?.id === challenge.id) {
     store.activeChallenge = null;
   }
-  saveChallengeStore(store);
+  return saveChallengeStore(store);
 }
 
 /**

@@ -1047,3 +1047,186 @@
   cursor: pointer;
 }
 
+/* ── Phase 41E: Challenge Check-In Banner & Practice Progress ── */
+
+.challenge-checkin-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(246, 173, 85, 0.12) 0%, rgba(221, 107, 32, 0.16) 100%);
+  border: 1px solid rgba(246, 173, 85, 0.35);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.challenge-checkin-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.challenge-checkin-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.challenge-checkin-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fed7aa;
+}
+
+.challenge-checkin-latest-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.challenge-checkin-latest-pill--on-structure {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.challenge-checkin-latest-pill--near-slip {
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  color: #fb923c;
+}
+
+.challenge-checkin-latest-pill--slip {
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #60a5fa;
+}
+
+.challenge-checkin-desc {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.challenge-checkin-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  min-height: 44px;
+  background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(221, 107, 32, 0.35);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.challenge-checkin-cta-btn:hover {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(221, 107, 32, 0.45);
+}
+
+/* ── Practice Progress Card ── */
+
+.challenge-practice-card {
+  background: linear-gradient(135deg, rgba(26, 32, 44, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.challenge-practice-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 4px;
+}
+
+.challenge-practice-sub {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0 0 16px;
+}
+
+.challenge-practice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.challenge-practice-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.practice-box-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f6ad55;
+  margin-bottom: 2px;
+}
+
+.practice-box-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── Timeline Check-In Tag ── */
+
+.timeline-date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.timeline-checkin-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 540px) {
+  .challenge-checkin-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    gap: 12px;
+  }
+
+  .challenge-checkin-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+

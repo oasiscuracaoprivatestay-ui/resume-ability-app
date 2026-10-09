@@ -1716,6 +1716,45 @@ export interface Translations {
   challenge_push_modal_title: string;
   challenge_push_modal_body: string;
   challenge_push_modal_skip: string;
+
+  // ── Phase 41E: Challenge Check-In ──
+  challenge_btn_checkin: string;
+  challenge_btn_checkin_again: string;
+  challenge_btn_checked_in: string;
+  challenge_checkin_modal_title: string;
+  challenge_checkin_day_badge: string;
+  challenge_checkin_prompt: string;
+  challenge_checkin_status_on_structure: string;
+  challenge_checkin_status_on_structure_sub: string;
+  challenge_checkin_status_near_slip: string;
+  challenge_checkin_status_near_slip_sub: string;
+  challenge_checkin_status_slip: string;
+  challenge_checkin_status_slip_sub: string;
+  challenge_checkin_btn_continue: string;
+  challenge_checkin_btn_submit: string;
+  challenge_checkin_diet_link: string;
+  challenge_checkin_win_title: string;
+  challenge_checkin_win_desc: string;
+  challenge_checkin_near_title: string;
+  challenge_checkin_near_desc: string;
+  challenge_checkin_slip_title: string;
+  challenge_checkin_slip_desc: string;
+  challenge_checkin_recommit_hint: string;
+  challenge_checkin_recommitted_success: string;
+  challenge_checkin_action_why: string;
+  challenge_checkin_action_nn: string;
+  challenge_checkin_action_diet: string;
+  challenge_checkin_action_timer: string;
+  challenge_practice_progress_title: string;
+  challenge_practice_progress_sub: string;
+  challenge_practice_days_checked: string;
+  challenge_practice_total_checkins: string;
+  challenge_practice_today_status: string;
+  challenge_practice_status_pending: string;
+  challenge_practice_status_done: string;
+  challenge_timeline_checked_in: string;
+  challenge_checkin_error_storage: string;
+  challenge_checkin_error_inactive: string;
 }
 
 
