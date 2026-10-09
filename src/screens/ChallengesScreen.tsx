@@ -10,7 +10,7 @@
  * 5. Strictly non-shaming, recovery-oriented messaging.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import {
   syncCurrentChallenge,
@@ -19,6 +19,12 @@ import {
   getChallengeHistory,
   getChallengeDayBreakdown,
   calculateChallengePracticeStats,
+  evaluateChallengeMilestones,
+  markChallengeMilestoneCelebrated,
+  getDistinctPracticeDays,
+  isMilestoneEligible,
+  CHALLENGE_MILESTONE_DEFINITIONS,
+  getCanonicalAbilityName,
   CHALLENGE_UPDATED_EVENT,
   OPEN_CHALLENGE_CHECKIN_EVENT,
   CHALLENGE_OPEN_CHECKIN_KEY,
@@ -26,12 +32,14 @@ import {
   ChallengeDurationDays,
   ChallengeAbilityId,
   ChallengeReminderFrequency,
+  ChallengeMilestoneMetadata,
   CHALLENGE_DEFINITIONS,
   RESUME_ABILITY_CHALLENGE_DEFINITION,
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
+import { ChallengeMilestoneModal } from '../components/ChallengeMilestoneModal';
 import { playFeedback } from '../utils/feedback';
 import { loadPledge } from '../utils/pledgeStorage';
 import { saveRecommitEvent } from '../utils/recommitStorage';
@@ -82,6 +90,65 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [pledge, setPledge] = useState(() => loadPledge());
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [continueToast, setContinueToast] = useState<string | null>(null);
+
+  // Phase 41H.4: Completion view state
+  const [showingStartWizard, setShowingStartWizard] = useState(false);
+
+  const latestCompletedChallenge = useMemo(() => {
+    return history.find((c) => c.status === 'completed') || null;
+  }, [history]);
+
+  // Phase 41H: Challenge Milestones state & evaluation
+  const milestoneTargetChallenge = useMemo(() => {
+    if (activeChallenge && activeChallenge.status === 'active') return activeChallenge;
+    if (activeChallenge && activeChallenge.status === 'completed') return activeChallenge;
+    return latestCompletedChallenge;
+  }, [activeChallenge, latestCompletedChallenge]);
+
+  const completedChallengeToSummarize = useMemo(() => {
+    if (activeChallenge && activeChallenge.status === 'completed') {
+      return activeChallenge;
+    }
+    if (!activeChallenge && latestCompletedChallenge && !showingStartWizard) {
+      return latestCompletedChallenge;
+    }
+    return null;
+  }, [activeChallenge, latestCompletedChallenge, showingStartWizard]);
+
+  const milestoneEval = useMemo(() => {
+    return evaluateChallengeMilestones(milestoneTargetChallenge);
+  }, [milestoneTargetChallenge]);
+
+  const [activeModalMilestone, setActiveModalMilestone] = useState<ChallengeMilestoneMetadata | null>(null);
+
+  useEffect(() => {
+    if (milestoneEval.pendingModal && !showCheckInModal && !showCancelModal && !showPermissionModal) {
+      setActiveModalMilestone(milestoneEval.pendingModal);
+    }
+  }, [milestoneEval.pendingModal, showCheckInModal, showCancelModal, showPermissionModal]);
+
+  const handleDismissModalMilestone = useCallback(() => {
+    if (milestoneTargetChallenge && activeModalMilestone) {
+      markChallengeMilestoneCelebrated(milestoneTargetChallenge.id, activeModalMilestone.id);
+      setActiveModalMilestone(null);
+      refreshState();
+    }
+  }, [milestoneTargetChallenge, activeModalMilestone]);
+
+  const handleAcknowledgeInlineMilestone = useCallback((milestoneId: string) => {
+    if (milestoneTargetChallenge) {
+      markChallengeMilestoneCelebrated(milestoneTargetChallenge.id, milestoneId);
+      refreshState();
+    }
+  }, [milestoneTargetChallenge]);
+
+  const uncelebratedInlineMilestones = useMemo(() => {
+    return milestoneEval.uncelebrated.filter((m) => m.presentation === 'inline');
+  }, [milestoneEval.uncelebrated]);
+
+  const celebratedMilestonesList = useMemo(() => {
+    return milestoneEval.celebrated;
+  }, [milestoneEval.celebrated]);
 
   const refreshState = () => {
     const current = syncCurrentChallenge();
@@ -238,6 +305,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
             }
       );
       setActiveChallenge(newInstance);
+      setShowingStartWizard(false);
       playFeedback('commit');
 
       // Phase 41D: If reminders enabled, determine if explicit permission prompt is needed
@@ -256,6 +324,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const handleConfirmCancel = () => {
     cancelActiveChallenge('User requested cancellation');
     setShowCancelModal(false);
+    setShowingStartWizard(false);
     refreshState();
   };
 
@@ -333,40 +402,79 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
             <div className="challenges-history-list">
               {history.map((item) => {
                 const isCompleted = item.status === 'completed';
-                const rateText = (item.relevantEventCounts?.eligibleSlips || 0) > 0 && item.relevantEventCounts?.resumeRate !== null
-                  ? `${item.relevantEventCounts.resumeRate}%`
-                  : (t.challenge_no_slips_short || 'No slips');
+                const isCancelled = item.status === 'cancelled';
+                const abilityName = getCanonicalAbilityName(item.abilityId);
+                const distinctDays = getDistinctPracticeDays(item);
+                const totalCheckIns = item.totalCheckInsCount ?? (item.checkIns ? item.checkIns.length : 0);
+                const eligibleSlips = item.relevantEventCounts?.eligibleSlips || 0;
+                const resumedSlips = item.relevantEventCounts?.resumedSlips || 0;
+                const resumeRate = item.relevantEventCounts?.resumeRate;
+
+                // Factual recovery rate: strictly no percentage if no eligible slips
+                const rateText = eligibleSlips > 0 && resumeRate !== null
+                  ? `${resumedSlips} / ${eligibleSlips} (${resumeRate}%)`
+                  : (t.challenge_completion_no_slips || 'No eligible slips recorded');
+
+                // Earned milestone badges for completed challenges only
+                const earnedBadges = isCompleted
+                  ? CHALLENGE_MILESTONE_DEFINITIONS.filter((m) =>
+                      (item.celebratedMilestones && item.celebratedMilestones.includes(m.id)) ||
+                      isMilestoneEligible(m, item)
+                    )
+                  : [];
 
                 return (
-                  <div key={item.id} className={`challenge-history-card challenge-history-card--${item.status}`}>
+                  <div key={item.id} className={`challenge-history-card challenge-history-card--${item.status}`} id={`history-card-${item.id}`}>
                     <div className="challenge-history-header">
-                      <span className="challenge-history-title">
-                        {item.durationDays}-Day Resume-Ability
-                      </span>
+                      <div className="challenge-history-title-wrap">
+                        <span className="challenge-history-title">
+                          {item.durationDays}-Day {abilityName}
+                        </span>
+                      </div>
                       <span className={`challenge-status-badge challenge-status-badge--${item.status}`}>
                         {isCompleted ? (t.challenge_status_completed || 'Completed') : (t.challenge_status_cancelled || 'Cancelled')}
                       </span>
                     </div>
 
                     <div className="challenge-history-dates">
-                      <span>{item.startDate} → {item.endDate}</span>
-                      <span>{item.relevantEventCounts?.daysCompleted || 0}/{item.durationDays} days</span>
+                      <span className="history-date-range">📅 {item.startDate} → {item.endDate}</span>
+                      <span className="history-duration-tag">{item.relevantEventCounts?.daysCompleted || 0}/{item.durationDays} days</span>
                     </div>
 
                     <div className="challenge-history-stats">
                       <div className="challenge-history-stat-item">
-                        <span className="stat-label">{t.challenge_eligible_slips || 'True Slips'}</span>
-                        <span className="stat-val">{item.relevantEventCounts?.eligibleSlips || 0}</span>
+                        <span className="stat-label">{t.challenge_completion_practice_consistency || 'Practice Consistency'}</span>
+                        <span className="stat-val">{distinctDays}/{item.durationDays} days</span>
+                        <span className="stat-sub">{totalCheckIns} {t.challenge_practice_total_checkins || 'check-ins'}</span>
                       </div>
                       <div className="challenge-history-stat-item">
-                        <span className="stat-label">{t.challenge_resumed_slips || 'Resumed'}</span>
-                        <span className="stat-val">{item.relevantEventCounts?.resumedSlips || 0}</span>
-                      </div>
-                      <div className="challenge-history-stat-item">
-                        <span className="stat-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
+                        <span className="stat-label">{t.challenge_resumed_slips || 'Recovered Slips'}</span>
                         <span className="stat-val">{rateText}</span>
+                        <span className="stat-sub">{eligibleSlips > 0 ? `${resumedSlips} resumed` : (t.challenge_checkin_status_on_structure || 'On structure')}</span>
                       </div>
                     </div>
+
+                    {isCompleted && earnedBadges.length > 0 && (
+                      <div className="challenge-history-badges-section">
+                        <span className="history-badges-label">{t.challenge_history_badges_label || 'Earned Milestone Badges'}:</span>
+                        <div className="challenge-history-badges-list">
+                          {earnedBadges.map((badge) => (
+                            <span key={badge.id} className={`history-badge-pill history-badge-pill--${badge.category}`}>
+                              {badge.category === 'completion' ? '🏆' : badge.category === 'recovery' ? '🔄' : badge.category === 'first_checkin' ? '🎯' : '⭐'}{' '}
+                              {(t[badge.badgeKey as keyof typeof t] as string) || badge.id}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {isCancelled && (
+                      <div className="challenge-history-cancelled-wrap">
+                        <p className="challenge-history-cancelled-text">
+                          {t.challenge_history_cancelled_note || 'Ended early • Every day of practice counts toward your ability.'}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -526,6 +634,35 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                   </div>
                 </div>
 
+                {/* Phase 41H: Intermediate Inline Achievement Banner */}
+                {uncelebratedInlineMilestones.length > 0 && (
+                  <div className="challenge-inline-achievement" id="challenge-inline-achievement">
+                    <span className="inline-achievement-icon" aria-hidden="true">⭐</span>
+                    <div className="inline-achievement-content">
+                      <div className="inline-achievement-header">
+                        <span className="inline-achievement-badge">
+                          {(t[uncelebratedInlineMilestones[0].badgeKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
+                        </span>
+                        <h4 className="inline-achievement-title">
+                          {(t[uncelebratedInlineMilestones[0].titleKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
+                        </h4>
+                      </div>
+                      <p className="inline-achievement-desc">
+                        {(t[uncelebratedInlineMilestones[0].descKey as keyof typeof t] as string) || ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      id="btn-ack-inline-milestone"
+                      className="inline-achievement-ack-btn"
+                      onClick={() => handleAcknowledgeInlineMilestone(uncelebratedInlineMilestones[0].id)}
+                      aria-label="Acknowledge achievement"
+                    >
+                      ✓
+                    </button>
+                  </div>
+                )}
+
                 {/* Challenge Practice Progress */}
                 <div className="challenge-practice-card" id="challenge-practice-card">
                   <h3 className="challenge-practice-title">
@@ -564,6 +701,21 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                       </span>
                     </div>
                   </div>
+
+                  {/* Phase 41H: Celebrated Milestones Badges Row */}
+                  {celebratedMilestonesList.length > 0 && (
+                    <div className="challenge-milestones-row" id="challenge-celebrated-milestones-row">
+                      {celebratedMilestonesList.map((m) => (
+                        <span
+                          key={m.id}
+                          className="challenge-milestone-pill"
+                          title={(t[m.descKey as keyof typeof t] as string) || ''}
+                        >
+                          ✓ {(t[m.badgeKey as keyof typeof t] as string) || m.id}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Factual Metrics Card (Strictly separated from practice consistency) */}
@@ -848,9 +1000,100 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 </button>
               </div>
             </div>
+          ) : completedChallengeToSummarize ? (
+            /* ── CHALLENGE COMPLETION EXPERIENCE ── */
+            <div className="challenges-completion-view" id="challenges-completion-view">
+              <div className="challenge-completion-card">
+                <div className="completion-card-badge-row">
+                  <span className="completion-card-pill">🏆 {t.challenge_status_completed || 'Completed'}</span>
+                  <span className="completion-card-duration">{completedChallengeToSummarize.durationDays}-Day Challenge</span>
+                </div>
+
+                <h2 className="completion-card-title">
+                  {t.challenge_completion_summary_title || 'Challenge Completed!'}
+                </h2>
+
+                <p className="completion-card-ability">
+                  {getCanonicalAbilityName(completedChallengeToSummarize.abilityId)}
+                </p>
+
+                <div className="completion-card-dates">
+                  <span>📅 {completedChallengeToSummarize.startDate} → {completedChallengeToSummarize.endDate}</span>
+                </div>
+
+                <div className="completion-card-stats-grid">
+                  <div className="completion-stat-box">
+                    <span className="stat-label">{t.challenge_completion_practice_consistency || 'Practice Consistency'}</span>
+                    <span className="stat-val">
+                      {getDistinctPracticeDays(completedChallengeToSummarize)} / {completedChallengeToSummarize.durationDays}
+                    </span>
+                    <span className="stat-sub">{t.common_days || 'days checked in'}</span>
+                  </div>
+
+                  <div className="completion-stat-box">
+                    <span className="stat-label">{t.challenge_completion_total_checkins || 'Total Check-Ins'}</span>
+                    <span className="stat-val">
+                      {completedChallengeToSummarize.totalCheckInsCount ?? (completedChallengeToSummarize.checkIns ? completedChallengeToSummarize.checkIns.length : 0)}
+                    </span>
+                    <span className="stat-sub">{t.challenge_timeline_checked_in || 'check-ins recorded'}</span>
+                  </div>
+
+                  <div className="completion-stat-box">
+                    <span className="stat-label">{t.challenge_completion_verified_recoveries || 'Verified Recoveries'}</span>
+                    <span className="stat-val">
+                      {(completedChallengeToSummarize.relevantEventCounts?.eligibleSlips || 0) > 0
+                        ? `${completedChallengeToSummarize.relevantEventCounts?.resumedSlips || 0} / ${completedChallengeToSummarize.relevantEventCounts?.eligibleSlips || 0}`
+                        : '0'}
+                    </span>
+                    <span className="stat-sub">
+                      {(completedChallengeToSummarize.relevantEventCounts?.eligibleSlips || 0) > 0 && completedChallengeToSummarize.relevantEventCounts?.resumeRate !== null
+                        ? `${completedChallengeToSummarize.relevantEventCounts.resumeRate}% resume rate`
+                        : (t.challenge_completion_no_slips || 'No eligible slips recorded')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="completion-philosophy-notice">
+                  <span className="completion-notice-icon">🛡️</span>
+                  <p className="completion-notice-text">
+                    {t.challenge_completion_period_notice || 'You completed your Challenge duration! Completing a challenge is about practicing awareness and consistency — not about flawless perfection or fearing slips.'}
+                  </p>
+                </div>
+
+                <div className="completion-actions-row">
+                  <button
+                    id="btn-completion-review"
+                    type="button"
+                    className="completion-btn-secondary"
+                    onClick={() => setViewTab('history')}
+                  >
+                    <span>📜 {t.challenge_completion_btn_review || 'Review My Challenge'}</span>
+                  </button>
+
+                  <button
+                    id="btn-completion-start-new"
+                    type="button"
+                    className="completion-btn-primary"
+                    onClick={() => setShowingStartWizard(true)}
+                  >
+                    <span>🛡️ {t.challenge_completion_btn_start_new || 'Start a New Challenge'}</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             /* ── START CHALLENGE WIZARD ── */
             <div className="challenges-wizard-view">
+              {latestCompletedChallenge && (
+                <button
+                  type="button"
+                  className="wizard-back-completion-link"
+                  onClick={() => setShowingStartWizard(false)}
+                >
+                  {t.challenge_completion_back_summary || '← Back to Completion Summary'}
+                </button>
+              )}
               <div className="wizard-intro-card">
                 <span className="wizard-intro-icon">🛡️</span>
                 <h2 className="wizard-intro-title">
@@ -1161,6 +1404,19 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
           onClose={() => setShowCheckInModal(false)}
           onNavigate={onNavigate}
           onCheckInCompleted={refreshState}
+        />
+      )}
+
+      {/* ── Challenge Milestone Celebration Modal (Phase 41H) ── */}
+      {activeModalMilestone && milestoneTargetChallenge && (
+        <ChallengeMilestoneModal
+          milestone={activeModalMilestone}
+          challenge={milestoneTargetChallenge}
+          onDismiss={handleDismissModalMilestone}
+          onReviewChallenge={() => {
+            handleDismissModalMilestone();
+            setViewTab('history');
+          }}
         />
       )}
     </div>

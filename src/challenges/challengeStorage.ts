@@ -71,6 +71,17 @@ export function normalizeChallengeInstance(raw: any): ChallengeInstance {
     ? raw.lastCheckInDateKey
     : undefined;
 
+  // Phase 41H: Normalize celebrated milestones
+  // Phase 41H.5 Legacy Challenge Safeguard:
+  // Existing completed Challenges from before Phase 41H must not generate retroactive celebration modal spam.
+  // We use a backward-compatible isLegacyConcluded marker rather than falsely claiming milestones were celebrated.
+  const isLegacyConcluded = raw.isLegacyConcluded === true ||
+    (raw.status === 'completed' && raw.celebratedMilestones === undefined);
+
+  const celebratedMilestones = Array.isArray(raw.celebratedMilestones)
+    ? raw.celebratedMilestones.filter((m: any) => typeof m === 'string')
+    : [];
+
   return {
     ...raw,
     reminderEnabled,
@@ -79,6 +90,8 @@ export function normalizeChallengeInstance(raw: any): ChallengeInstance {
     checkIns,
     totalCheckInsCount,
     lastCheckInDateKey,
+    celebratedMilestones,
+    isLegacyConcluded,
   };
 }
 

@@ -1875,6 +1875,88 @@ export const nl: Translations = {
   challenge_diet_status_slip: 'Echte Uitglijder',
   challenge_diet_status_pending: 'In Afwachting',
   challenge_diet_btn_open: 'Gestructureerd Dieet Openen',
+
+  // ── Phase 41H: Challenge Milestones & Celebrations ──
+  challenge_milestone_first_checkin_title: 'Eerste Check-In Voltooid',
+  challenge_milestone_first_checkin_desc: 'Je bent officieel begonnen met het oefenen van je Uitdaging. Elke dag is een kans om je bewustzijn te versterken.',
+  challenge_milestone_first_checkin_badge: 'Oefening Begonnen',
+
+  challenge_milestone_first_resume_title: 'Resume-Ability in Actie',
+  challenge_milestone_first_resume_desc: 'Je hebt een uitglijder doorstaan en bent teruggekeerd naar je structuur. Terugkeren na een uitglijder is de kernvaardigheid van Resume-Ability.',
+  challenge_milestone_first_resume_badge: 'Geverifieerd Herstel',
+
+  challenge_milestone_practice_1d_title: 'Dag 1 Oefening Voltooid',
+  challenge_milestone_practice_1d_desc: 'Je hebt je check-in voor de 1-daagse uitdaging afgerond.',
+  challenge_milestone_practice_1d_badge: 'Dag 1 Geoefend',
+
+  challenge_milestone_practice_3d_2_title: '2 Dagen Geoefend',
+  challenge_milestone_practice_3d_2_desc: 'Je hebt ingecheckt op 2 verschillende dagen van je 3-daagse uitdaging.',
+  challenge_milestone_practice_3d_2_badge: '2 Dagen Geoefend',
+
+  challenge_milestone_practice_7d_3_title: '3 Dagen Geoefend',
+  challenge_milestone_practice_7d_3_desc: 'Je hebt ingecheckt op 3 verschillende dagen van je 7-daagse uitdaging.',
+  challenge_milestone_practice_7d_3_badge: '3 Dagen Geoefend',
+
+  challenge_milestone_practice_7d_5_title: '5 Dagen Geoefend',
+  challenge_milestone_practice_7d_5_desc: 'Je hebt ingecheckt op 5 verschillende dagen van je 7-daagse uitdaging.',
+  challenge_milestone_practice_7d_5_badge: '5 Dagen Geoefend',
+
+  challenge_milestone_practice_30d_7_title: '7 Dagen Geoefend',
+  challenge_milestone_practice_30d_7_desc: 'Je hebt ingecheckt op 7 verschillende dagen van je 30-daagse uitdaging.',
+  challenge_milestone_practice_30d_7_badge: '7 Dagen Geoefend',
+
+  challenge_milestone_practice_30d_15_title: '15 Dagen Geoefend',
+  challenge_milestone_practice_30d_15_desc: 'Je hebt ingecheckt op 15 verschillende dagen van je 30-daagse uitdaging.',
+  challenge_milestone_practice_30d_15_badge: '15 Dagen Geoefend',
+
+  challenge_milestone_practice_30d_21_title: '21 Dagen Geoefend',
+  challenge_milestone_practice_30d_21_desc: 'Je hebt ingecheckt op 21 verschillende dagen van je 30-daagse uitdaging.',
+  challenge_milestone_practice_30d_21_badge: '21 Dagen Geoefend',
+
+  challenge_milestone_practice_90d_7_title: '7 Dagen Geoefend',
+  challenge_milestone_practice_90d_7_desc: 'Je hebt ingecheckt op 7 verschillende dagen van je 90-daagse uitdaging.',
+  challenge_milestone_practice_90d_7_badge: '7 Dagen Geoefend',
+
+  challenge_milestone_practice_90d_30_title: '30 Dagen Geoefend',
+  challenge_milestone_practice_90d_30_desc: 'Je hebt ingecheckt op 30 verschillende dagen van je 90-daagse uitdaging.',
+  challenge_milestone_practice_90d_30_badge: '30 Dagen Geoefend',
+
+  challenge_milestone_practice_90d_60_title: '60 Dagen Geoefend',
+  challenge_milestone_practice_90d_60_desc: 'Je hebt ingecheckt op 60 verschillende dagen van je 90-daagse uitdaging.',
+  challenge_milestone_practice_90d_60_badge: '60 Dagen Geoefend',
+
+  challenge_milestone_completion_1d_title: '1-Daagse Uitdaging Voltooid',
+  challenge_milestone_completion_1d_desc: 'Je hebt de periode van je 1-daagse uitdaging voltooid.',
+  challenge_milestone_completion_1d_badge: 'Voltooid',
+
+  challenge_milestone_completion_3d_title: '3-Daagse Uitdaging Voltooid',
+  challenge_milestone_completion_3d_desc: 'Je hebt de periode van je 3-daagse uitdaging voltooid.',
+  challenge_milestone_completion_3d_badge: 'Voltooid',
+
+  challenge_milestone_completion_7d_title: '7-Daagse Uitdaging Voltooid',
+  challenge_milestone_completion_7d_desc: 'Je hebt de periode van je 7-daagse uitdaging voltooid.',
+  challenge_milestone_completion_7d_badge: 'Voltooid',
+
+  challenge_milestone_completion_30d_title: '30-Daagse Uitdaging Voltooid',
+  challenge_milestone_completion_30d_desc: 'Je hebt de periode van je 30-daagse uitdaging voltooid.',
+  challenge_milestone_completion_30d_badge: 'Voltooid',
+
+  challenge_milestone_completion_90d_title: '90-Daagse Uitdaging Voltooid',
+  challenge_milestone_completion_90d_desc: 'Je hebt de periode van je 90-daagse uitdaging voltooid.',
+  challenge_milestone_completion_90d_badge: 'Voltooid',
+
+  // ── Phase 41H.4: Challenge Completion Experience & History Polish ──
+  challenge_completion_summary_title: 'Uitdaging voltooid!',
+  challenge_completion_period_notice: 'Je hebt je uitdagingsduur voltooid! Een uitdaging voltooien draait om het oefenen van bewustzijn en consistentie — niet om vlekkeloze perfectie of angst voor uitglijders.',
+  challenge_completion_btn_review: 'Bekijk mijn uitdaging',
+  challenge_completion_btn_start_new: 'Start een nieuwe uitdaging',
+  challenge_completion_back_summary: '← Terug naar overzicht',
+  challenge_completion_practice_consistency: 'Oefenconsistentie',
+  challenge_completion_total_checkins: 'Totaal aantal check-ins',
+  challenge_completion_verified_recoveries: 'Geverifieerde herstellen',
+  challenge_completion_no_slips: 'Geen in aanmerking komende uitglijders geregistreerd',
+  challenge_history_badges_label: 'Behaalde mijlpaalbadges',
+  challenge_history_cancelled_note: 'Vroegtijdig beëindigd • Elke dag oefening telt voor je vaardigheid.',
 };
 
 

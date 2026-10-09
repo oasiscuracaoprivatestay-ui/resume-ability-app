@@ -119,7 +119,35 @@ export interface ChallengeInstance {
   checkIns?: ChallengeCheckInEntry[];
   lastCheckInDateKey?: string;
   totalCheckInsCount?: number;
+  // Phase 41H: Milestone celebration state
+  celebratedMilestones?: string[];
+  // Phase 41H.5: Legacy concluded marker (suppresses retroactive modal popups while keeping celebratedMilestones authentic)
+  isLegacyConcluded?: boolean;
 }
+
+// ── Phase 41H: Challenge Milestones ──────────────────────────────────────────
+
+export type ChallengeMilestoneCategory =
+  | 'first_checkin'
+  | 'practice_consistency'
+  | 'recovery'
+  | 'completion';
+
+export type ChallengeMilestonePresentation = 'modal' | 'inline';
+
+export interface ChallengeMilestoneMetadata {
+  id: string;
+  category: ChallengeMilestoneCategory;
+  presentation: ChallengeMilestonePresentation;
+  priority: number;
+  titleKey: string;
+  descKey: string;
+  badgeKey: string;
+  feedbackType?: 'win' | 'recovery' | 'commit' | 'neutral';
+  requiredDuration?: ChallengeDurationDays;
+  requiredPracticeDays?: number;
+}
+
 
 export interface ChallengeDefinition {
   id: string;

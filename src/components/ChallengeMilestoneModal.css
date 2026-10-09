@@ -1,0 +1,325 @@
+/* ── Challenge Milestone Modal Styles (Phase 41H) ── */
+
+.ch-milestone-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1.25rem;
+  animation: chMilestoneFadeIn 0.26s ease-out;
+}
+
+@keyframes chMilestoneFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ch-milestone-card {
+  position: relative;
+  width: 100%;
+  max-width: 370px;
+  background: radial-gradient(circle at 50% 12%, #132438 0%, #0a101d 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-lg, 20px);
+  padding: 2.25rem 1.6rem 1.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 0 45px rgba(0, 0, 0, 0.7), 0 20px 30px -5px rgba(0, 0, 0, 0.8);
+  animation: chMilestonePop 0.36s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chMilestonePop {
+  from {
+    transform: scale(0.88) translateY(18px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Close Button ── */
+.ch-milestone-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  z-index: 10;
+}
+
+.ch-milestone-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* ── Icon Ring Variations ── */
+.ch-milestone-icon-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-top: 0.25rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Category: First Check-In (Cyan / Teal) */
+.ch-milestone-card--first_checkin {
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 0 50px rgba(20, 184, 166, 0.22), 0 20px 30px -5px rgba(0, 0, 0, 0.8);
+}
+.ch-milestone-icon-ring--first_checkin {
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.35) 0%, rgba(20, 184, 166, 0.08) 70%);
+  border: 2px solid rgba(20, 184, 166, 0.75);
+  box-shadow: 0 0 25px rgba(20, 184, 166, 0.45);
+}
+
+/* Category: Recovery / Resume (Emerald / Jade) */
+.ch-milestone-card--recovery {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 50px rgba(16, 185, 129, 0.22), 0 20px 30px -5px rgba(0, 0, 0, 0.8);
+}
+.ch-milestone-icon-ring--recovery {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0.08) 70%);
+  border: 2px solid rgba(16, 185, 129, 0.75);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
+}
+
+/* Category: Completion (Gold / Amber) */
+.ch-milestone-card--completion {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 55px rgba(245, 158, 11, 0.28), 0 20px 30px -5px rgba(0, 0, 0, 0.8);
+}
+.ch-milestone-icon-ring--completion {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.1) 70%);
+  border: 2px solid rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.55);
+}
+
+/* ── Milestone Badge ── */
+.ch-milestone-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #38bdf8;
+}
+
+.ch-milestone-card--first_checkin .ch-milestone-badge {
+  color: #2dd4bf;
+  border-color: rgba(45, 212, 191, 0.3);
+}
+
+.ch-milestone-card--recovery .ch-milestone-badge {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.ch-milestone-card--completion .ch-milestone-badge {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* ── Title & Description ── */
+.ch-milestone-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.ch-milestone-detail-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.ch-milestone-detail-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ch-milestone-desc {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  margin: 0;
+  padding: 0 0.5rem;
+}
+
+/* ── Primary Continue Button ── */
+.ch-milestone-continue-btn {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border: none;
+  border-radius: var(--radius-md, 12px);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+  transition: all 0.2s ease;
+}
+
+.ch-milestone-card--recovery .ch-milestone-continue-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.ch-milestone-card--completion .ch-milestone-continue-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.ch-milestone-continue-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.ch-milestone-continue-btn:active {
+  transform: translateY(0);
+}
+
+.ch-milestone-continue-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* ── Dual Actions for Completion ── */
+.ch-milestone-actions-dual {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.ch-milestone-secondary-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-md, 12px);
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ch-milestone-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.ch-milestone-secondary-btn:active {
+  transform: translateY(1px);
+}
+
+/* ── Decorative Particles ── */
+.ch-milestone-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ch-milestone-particle {
+  position: absolute;
+  top: 15%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #38bdf8;
+  opacity: 0;
+  animation: chParticleFloat 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation-delay: var(--delay);
+}
+
+.ch-milestone-card--recovery .ch-milestone-particle {
+  background: #34d399;
+}
+
+.ch-milestone-card--completion .ch-milestone-particle {
+  background: #fbbf24;
+}
+
+@keyframes chParticleFloat {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-80px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* ── Reduced Motion Preference ── */
+@media (prefers-reduced-motion: reduce) {
+  .ch-milestone-backdrop,
+  .ch-milestone-card,
+  .ch-milestone-continue-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .ch-milestone-particles {
+    display: none !important;
+  }
+}

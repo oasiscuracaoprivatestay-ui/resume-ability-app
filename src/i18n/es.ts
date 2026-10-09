@@ -1875,6 +1875,88 @@ export const es: Translations = {
   challenge_diet_status_slip: 'Desliz Real',
   challenge_diet_status_pending: 'Pendiente',
   challenge_diet_btn_open: 'Abrir Dieta Estructurada',
+
+  // ── Phase 41H: Challenge Milestones & Celebrations ──
+  challenge_milestone_first_checkin_title: 'Primer Registro Completado',
+  challenge_milestone_first_checkin_desc: 'Has comenzado oficialmente a practicar tu Desafío. Cada día es una oportunidad para fortalecer tu consciencia.',
+  challenge_milestone_first_checkin_badge: 'Práctica Iniciada',
+
+  challenge_milestone_first_resume_title: 'Resume-Ability en Acción',
+  challenge_milestone_first_resume_desc: 'Gestionaste un desliz y regresaste a tu estructura. Regresar tras un desliz es la habilidad fundamental de Resume-Ability.',
+  challenge_milestone_first_resume_badge: 'Recuperación Verificada',
+
+  challenge_milestone_practice_1d_title: 'Práctica del Día 1 Completada',
+  challenge_milestone_practice_1d_desc: 'Completaste tu registro para el desafío de 1 día.',
+  challenge_milestone_practice_1d_badge: 'Día 1 Practicado',
+
+  challenge_milestone_practice_3d_2_title: '2 Días de Práctica',
+  challenge_milestone_practice_3d_2_desc: 'Te has registrado en 2 días distintos de tu desafío de 3 días.',
+  challenge_milestone_practice_3d_2_badge: '2 Días Practicados',
+
+  challenge_milestone_practice_7d_3_title: '3 Días de Práctica',
+  challenge_milestone_practice_7d_3_desc: 'Te has registrado en 3 días distintos de tu desafío de 7 días.',
+  challenge_milestone_practice_7d_3_badge: '3 Días Practicados',
+
+  challenge_milestone_practice_7d_5_title: '5 Días de Práctica',
+  challenge_milestone_practice_7d_5_desc: 'Te has registrado en 5 días distintos de tu desafío de 7 días.',
+  challenge_milestone_practice_7d_5_badge: '5 Días Practicados',
+
+  challenge_milestone_practice_30d_7_title: '7 Días de Práctica',
+  challenge_milestone_practice_30d_7_desc: 'Te has registrado en 7 días distintos de tu desafío de 30 días.',
+  challenge_milestone_practice_30d_7_badge: '7 Días Practicados',
+
+  challenge_milestone_practice_30d_15_title: '15 Días de Práctica',
+  challenge_milestone_practice_30d_15_desc: 'Te has registrado en 15 días distintos de tu desafío de 30 días.',
+  challenge_milestone_practice_30d_15_badge: '15 Días Practicados',
+
+  challenge_milestone_practice_30d_21_title: '21 Días de Práctica',
+  challenge_milestone_practice_30d_21_desc: 'Te has registrado en 21 días distintos de tu desafío de 30 días.',
+  challenge_milestone_practice_30d_21_badge: '21 Días Practicados',
+
+  challenge_milestone_practice_90d_7_title: '7 Días de Práctica',
+  challenge_milestone_practice_90d_7_desc: 'Te has registrado en 7 días distintos de tu desafío de 90 días.',
+  challenge_milestone_practice_90d_7_badge: '7 Días Practicados',
+
+  challenge_milestone_practice_90d_30_title: '30 Días de Práctica',
+  challenge_milestone_practice_90d_30_desc: 'Te has registrado en 30 días distintos de tu desafío de 90 días.',
+  challenge_milestone_practice_90d_30_badge: '30 Días Practicados',
+
+  challenge_milestone_practice_90d_60_title: '60 Días de Práctica',
+  challenge_milestone_practice_90d_60_desc: 'Te has registrado en 60 días distintos de tu desafío de 90 días.',
+  challenge_milestone_practice_90d_60_badge: '60 Días Practicados',
+
+  challenge_milestone_completion_1d_title: 'Desafío de 1 Día Completado',
+  challenge_milestone_completion_1d_desc: 'Has completado la ventana de tu desafío de 1 día.',
+  challenge_milestone_completion_1d_badge: 'Completado',
+
+  challenge_milestone_completion_3d_title: 'Desafío de 3 Días Completado',
+  challenge_milestone_completion_3d_desc: 'Has completado la ventana de tu desafío de 3 días.',
+  challenge_milestone_completion_3d_badge: 'Completado',
+
+  challenge_milestone_completion_7d_title: 'Desafío de 7 Días Completado',
+  challenge_milestone_completion_7d_desc: 'Has completado la ventana de tu desafío de 7 días.',
+  challenge_milestone_completion_7d_badge: 'Completado',
+
+  challenge_milestone_completion_30d_title: 'Desafío de 30 Días Completado',
+  challenge_milestone_completion_30d_desc: 'Has completado la ventana de tu desafío de 30 días.',
+  challenge_milestone_completion_30d_badge: 'Completado',
+
+  challenge_milestone_completion_90d_title: 'Desafío de 90 Días Completado',
+  challenge_milestone_completion_90d_desc: 'Has completado la ventana de tu desafío de 90 días.',
+  challenge_milestone_completion_90d_badge: 'Completado',
+
+  // ── Phase 41H.4: Challenge Completion Experience & History Polish ──
+  challenge_completion_summary_title: '¡Desafío completado!',
+  challenge_completion_period_notice: '¡Completaste la duración de tu desafío! Completar un desafío se trata de practicar consciencia y consistencia, no de una perfección impecable ni de temer a los tropiezos.',
+  challenge_completion_btn_review: 'Revisar mi desafío',
+  challenge_completion_btn_start_new: 'Comenzar un nuevo desafío',
+  challenge_completion_back_summary: '← Volver al resumen',
+  challenge_completion_practice_consistency: 'Consistencia de práctica',
+  challenge_completion_total_checkins: 'Check-ins totales',
+  challenge_completion_verified_recoveries: 'Recuperaciones verificadas',
+  challenge_completion_no_slips: 'Sin tropiezos elegibles registrados',
+  challenge_history_badges_label: 'Insignias de hitos obtenidas',
+  challenge_history_cancelled_note: 'Finalizado antes • Cada día de práctica cuenta para tu habilidad.',
 };
 
 

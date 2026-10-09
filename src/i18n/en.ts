@@ -1889,6 +1889,88 @@ export const en: Translations = {
   challenge_diet_status_slip: 'True Slip',
   challenge_diet_status_pending: 'Pending',
   challenge_diet_btn_open: 'Open Structured Diet',
+
+  // ── Phase 41H: Challenge Milestones & Celebrations ──
+  challenge_milestone_first_checkin_title: 'First Check-In Completed',
+  challenge_milestone_first_checkin_desc: "You've officially started practicing your Challenge. Each day is an opportunity to strengthen awareness.",
+  challenge_milestone_first_checkin_badge: 'Practice Begun',
+
+  challenge_milestone_first_resume_title: 'Resume-Ability in Action',
+  challenge_milestone_first_resume_desc: 'You navigated a slip and returned to your structure. Returning after a slip is the core skill of Resume-Ability.',
+  challenge_milestone_first_resume_badge: 'Verified Recovery',
+
+  challenge_milestone_practice_1d_title: 'Day 1 Practice Complete',
+  challenge_milestone_practice_1d_desc: 'You completed your check-in for the 1-day challenge.',
+  challenge_milestone_practice_1d_badge: 'Day 1 Practiced',
+
+  challenge_milestone_practice_3d_2_title: '2 Days of Practice',
+  challenge_milestone_practice_3d_2_desc: "You've checked in on 2 distinct days of your 3-day challenge.",
+  challenge_milestone_practice_3d_2_badge: '2 Days Practiced',
+
+  challenge_milestone_practice_7d_3_title: '3 Days of Practice',
+  challenge_milestone_practice_7d_3_desc: "You've checked in on 3 distinct days of your 7-day challenge.",
+  challenge_milestone_practice_7d_3_badge: '3 Days Practiced',
+
+  challenge_milestone_practice_7d_5_title: '5 Days of Practice',
+  challenge_milestone_practice_7d_5_desc: "You've checked in on 5 distinct days of your 7-day challenge.",
+  challenge_milestone_practice_7d_5_badge: '5 Days Practiced',
+
+  challenge_milestone_practice_30d_7_title: '7 Days of Practice',
+  challenge_milestone_practice_30d_7_desc: "You've checked in on 7 distinct days of your 30-day challenge.",
+  challenge_milestone_practice_30d_7_badge: '7 Days Practiced',
+
+  challenge_milestone_practice_30d_15_title: '15 Days of Practice',
+  challenge_milestone_practice_30d_15_desc: "You've checked in on 15 distinct days of your 30-day challenge.",
+  challenge_milestone_practice_30d_15_badge: '15 Days Practiced',
+
+  challenge_milestone_practice_30d_21_title: '21 Days of Practice',
+  challenge_milestone_practice_30d_21_desc: "You've checked in on 21 distinct days of your 30-day challenge.",
+  challenge_milestone_practice_30d_21_badge: '21 Days Practiced',
+
+  challenge_milestone_practice_90d_7_title: '7 Days of Practice',
+  challenge_milestone_practice_90d_7_desc: "You've checked in on 7 distinct days of your 90-day challenge.",
+  challenge_milestone_practice_90d_7_badge: '7 Days Practiced',
+
+  challenge_milestone_practice_90d_30_title: '30 Days of Practice',
+  challenge_milestone_practice_90d_30_desc: "You've checked in on 30 distinct days of your 90-day challenge.",
+  challenge_milestone_practice_90d_30_badge: '30 Days Practiced',
+
+  challenge_milestone_practice_90d_60_title: '60 Days of Practice',
+  challenge_milestone_practice_90d_60_desc: "You've checked in on 60 distinct days of your 90-day challenge.",
+  challenge_milestone_practice_90d_60_badge: '60 Days Practiced',
+
+  challenge_milestone_completion_1d_title: '1-Day Challenge Complete',
+  challenge_milestone_completion_1d_desc: "You've completed your 1-day challenge window.",
+  challenge_milestone_completion_1d_badge: 'Completed',
+
+  challenge_milestone_completion_3d_title: '3-Day Challenge Complete',
+  challenge_milestone_completion_3d_desc: "You've completed your 3-day challenge window.",
+  challenge_milestone_completion_3d_badge: 'Completed',
+
+  challenge_milestone_completion_7d_title: '7-Day Challenge Complete',
+  challenge_milestone_completion_7d_desc: "You've completed your 7-day challenge window.",
+  challenge_milestone_completion_7d_badge: 'Completed',
+
+  challenge_milestone_completion_30d_title: '30-Day Challenge Complete',
+  challenge_milestone_completion_30d_desc: "You've completed your 30-day challenge window.",
+  challenge_milestone_completion_30d_badge: 'Completed',
+
+  challenge_milestone_completion_90d_title: '90-Day Challenge Complete',
+  challenge_milestone_completion_90d_desc: "You've completed your 90-day challenge window.",
+  challenge_milestone_completion_90d_badge: 'Completed',
+
+  // ── Phase 41H.4: Challenge Completion Experience & History Polish ──
+  challenge_completion_summary_title: 'Challenge Completed!',
+  challenge_completion_period_notice: 'You completed your Challenge duration! Completing a challenge is about practicing awareness and consistency — not about flawless perfection or fearing slips.',
+  challenge_completion_btn_review: 'Review My Challenge',
+  challenge_completion_btn_start_new: 'Start a New Challenge',
+  challenge_completion_back_summary: '← Back to Completion Summary',
+  challenge_completion_practice_consistency: 'Practice Consistency',
+  challenge_completion_total_checkins: 'Total Check-Ins',
+  challenge_completion_verified_recoveries: 'Verified Recoveries',
+  challenge_completion_no_slips: 'No eligible slips recorded',
+  challenge_history_badges_label: 'Earned Milestone Badges',
+  challenge_history_cancelled_note: 'Ended early • Every day of practice counts toward your ability.',
 };
 
 

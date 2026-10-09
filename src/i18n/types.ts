@@ -1782,6 +1782,88 @@ export interface Translations {
   challenge_diet_status_slip: string;
   challenge_diet_status_pending: string;
   challenge_diet_btn_open: string;
+
+  // ── Phase 41H: Challenge Milestones & Celebrations ──
+  challenge_milestone_first_checkin_title: string;
+  challenge_milestone_first_checkin_desc: string;
+  challenge_milestone_first_checkin_badge: string;
+
+  challenge_milestone_first_resume_title: string;
+  challenge_milestone_first_resume_desc: string;
+  challenge_milestone_first_resume_badge: string;
+
+  challenge_milestone_practice_1d_title: string;
+  challenge_milestone_practice_1d_desc: string;
+  challenge_milestone_practice_1d_badge: string;
+
+  challenge_milestone_practice_3d_2_title: string;
+  challenge_milestone_practice_3d_2_desc: string;
+  challenge_milestone_practice_3d_2_badge: string;
+
+  challenge_milestone_practice_7d_3_title: string;
+  challenge_milestone_practice_7d_3_desc: string;
+  challenge_milestone_practice_7d_3_badge: string;
+
+  challenge_milestone_practice_7d_5_title: string;
+  challenge_milestone_practice_7d_5_desc: string;
+  challenge_milestone_practice_7d_5_badge: string;
+
+  challenge_milestone_practice_30d_7_title: string;
+  challenge_milestone_practice_30d_7_desc: string;
+  challenge_milestone_practice_30d_7_badge: string;
+
+  challenge_milestone_practice_30d_15_title: string;
+  challenge_milestone_practice_30d_15_desc: string;
+  challenge_milestone_practice_30d_15_badge: string;
+
+  challenge_milestone_practice_30d_21_title: string;
+  challenge_milestone_practice_30d_21_desc: string;
+  challenge_milestone_practice_30d_21_badge: string;
+
+  challenge_milestone_practice_90d_7_title: string;
+  challenge_milestone_practice_90d_7_desc: string;
+  challenge_milestone_practice_90d_7_badge: string;
+
+  challenge_milestone_practice_90d_30_title: string;
+  challenge_milestone_practice_90d_30_desc: string;
+  challenge_milestone_practice_90d_30_badge: string;
+
+  challenge_milestone_practice_90d_60_title: string;
+  challenge_milestone_practice_90d_60_desc: string;
+  challenge_milestone_practice_90d_60_badge: string;
+
+  challenge_milestone_completion_1d_title: string;
+  challenge_milestone_completion_1d_desc: string;
+  challenge_milestone_completion_1d_badge: string;
+
+  challenge_milestone_completion_3d_title: string;
+  challenge_milestone_completion_3d_desc: string;
+  challenge_milestone_completion_3d_badge: string;
+
+  challenge_milestone_completion_7d_title: string;
+  challenge_milestone_completion_7d_desc: string;
+  challenge_milestone_completion_7d_badge: string;
+
+  challenge_milestone_completion_30d_title: string;
+  challenge_milestone_completion_30d_desc: string;
+  challenge_milestone_completion_30d_badge: string;
+
+  challenge_milestone_completion_90d_title: string;
+  challenge_milestone_completion_90d_desc: string;
+  challenge_milestone_completion_90d_badge: string;
+
+  // ── Phase 41H.4: Challenge Completion Experience & History Polish ──
+  challenge_completion_summary_title: string;
+  challenge_completion_period_notice: string;
+  challenge_completion_btn_review: string;
+  challenge_completion_btn_start_new: string;
+  challenge_completion_back_summary: string;
+  challenge_completion_practice_consistency: string;
+  challenge_completion_total_checkins: string;
+  challenge_completion_verified_recoveries: string;
+  challenge_completion_no_slips: string;
+  challenge_history_badges_label: string;
+  challenge_history_cancelled_note: string;
 }
 
 
