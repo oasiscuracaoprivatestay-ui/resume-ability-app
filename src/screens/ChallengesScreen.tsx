@@ -989,6 +989,18 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 <ChallengeDietSummaryCard onNavigate={onNavigate} />
               </section>
 
+              {/* Contextual Link to Seven Diet-Abilities (Phase 42.3) */}
+              <div className="challenge-seven-abilities-link-wrap">
+                <button
+                  type="button"
+                  id="btn-challenges-seven-abilities-link"
+                  className="challenge-seven-abilities-link-btn"
+                  onClick={() => onNavigate('seven-abilities')}
+                >
+                  <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
+                </button>
+              </div>
+
               {/* Cancel Challenge Option */}
               <div className="challenge-actions-row">
                 <button
@@ -1144,6 +1156,17 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                       </button>
                     );
                   })}
+                </div>
+
+                <div className="wizard-seven-abilities-link-wrap">
+                  <button
+                    type="button"
+                    id="btn-wizard-seven-abilities-link"
+                    className="wizard-seven-abilities-link-btn"
+                    onClick={() => onNavigate('seven-abilities')}
+                  >
+                    <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
+                  </button>
                 </div>
               </div>
 

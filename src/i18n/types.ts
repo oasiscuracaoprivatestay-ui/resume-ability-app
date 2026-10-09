@@ -1864,6 +1864,73 @@ export interface Translations {
   challenge_completion_no_slips: string;
   challenge_history_badges_label: string;
   challenge_history_cancelled_note: string;
+
+  // ── Phase 42.3: Seven Diet-Abilities Overview UI ──
+  seven_abilities_title: string;
+  seven_abilities_subtitle: string;
+  seven_abilities_progression_notice: string;
+  seven_abilities_nav_home: string;
+  seven_abilities_nav_home_sub: string;
+  seven_abilities_dash_entry_title: string;
+  seven_abilities_dash_entry_sub: string;
+  seven_abilities_challenge_link: string;
+  seven_abilities_seq_toggle_label: string;
+  seven_abilities_seq_recovery: string;
+  seven_abilities_seq_recovery_desc: string;
+  seven_abilities_seq_breakdown: string;
+  seven_abilities_seq_breakdown_desc: string;
+  seven_abilities_book_badge: string;
+  seven_abilities_status_active: string;
+  seven_abilities_status_coming_soon: string;
+  seven_abilities_stat_checkins: string;
+  seven_abilities_stat_practice_days: string;
+  seven_abilities_stat_completed: string;
+  seven_abilities_stat_recoveries: string;
+  seven_abilities_stat_resume_rate: string;
+  seven_abilities_stat_no_slips: string;
+  seven_abilities_btn_control_center: string;
+  seven_abilities_btn_preview: string;
+  seven_abilities_btn_close_preview: string;
+  seven_abilities_preview_paradigm: string;
+  seven_abilities_preview_techniques: string;
+  seven_abilities_preview_non_negotiables: string;
+  seven_abilities_preview_notice: string;
+  seven_abilities_active_badge: string;
+
+  // ── Phase 42.4: Ability Detail & Doctrine Experience ──
+  ability_detail_screen_title: string;
+  ability_detail_btn_view_details: string;
+  ability_detail_book_badge: string;
+  ability_detail_section_definition: string;
+  ability_detail_section_paradigm: string;
+  ability_detail_section_techniques: string;
+  ability_detail_section_non_negotiables: string;
+  ability_detail_section_system_relationship: string;
+  ability_detail_section_availability: string;
+  ability_detail_status_active_desc: string;
+  ability_detail_status_coming_soon_desc: string;
+  ability_detail_btn_open_challenges: string;
+  ability_detail_btn_coach_discuss: string;
+  ability_detail_btn_acknowledge: string;
+  ability_detail_acknowledged_badge: string;
+  ability_detail_acknowledged_date: string;
+  ability_detail_acknowledged_notice: string;
+  ability_detail_acknowledge_error: string;
+  ability_detail_coach_prompt_resume: string;
+  ability_detail_coach_prompt_loss: string;
+  ability_detail_coach_prompt_appetite: string;
+  ability_detail_coach_prompt_insulin: string;
+  ability_detail_coach_prompt_keto: string;
+  ability_detail_coach_prompt_circadian: string;
+  ability_detail_coach_prompt_micro: string;
+  ability_detail_coach_banner_title: string;
+  ability_detail_coach_banner_subtitle: string;
+  ability_detail_coach_banner_action: string;
+  ability_detail_coming_soon_notice: string;
+  ability_detail_evidence_title: string;
+  ability_detail_evidence_notice: string;
+  ability_detail_relation_prefix: string;
+  ability_detail_coach_banner_discard: string;
 }
 
 

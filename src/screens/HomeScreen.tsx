@@ -239,6 +239,13 @@ export default function HomeScreen({ onNavigate, onStartTimer, onInControl }: Ho
             {t.sda_terms_link} →
           </button>
           <button
+            id="btn-seven-abilities-link"
+            className="home-learn-link home-seven-abilities-link"
+            onClick={() => onNavigate('seven-abilities')}
+          >
+            {t.seven_abilities_nav_home || 'Seven Diet-Abilities'} →
+          </button>
+          <button
             id="btn-quiz-entry"
             className="home-learn-link home-quiz-link"
             onClick={() => onNavigate('quiz')}

@@ -1,0 +1,593 @@
+/**
+ * Super Diet-Ability — Seven Diet-Abilities Screen Styles (Phase 42.3)
+ */
+
+.seven-abilities-screen {
+  background: radial-gradient(circle at 50% 0%, #0d1e38 0%, #070d18 100%);
+  min-height: 100vh;
+  color: #f1f5f9;
+  padding-bottom: 90px;
+}
+
+.seven-abilities-content {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header */
+.seven-abilities-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seven-abilities-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.seven-abilities-subtitle {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Progression Separation Notice */
+.seven-abilities-notice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.seven-abilities-notice-card .notice-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.seven-abilities-notice-card .notice-text {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Sequence Toggle Card */
+.sequence-toggle-card {
+  background: #0d1a2d;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sequence-toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sequence-toggle-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.sequence-pill-buttons {
+  display: flex;
+  gap: 6px;
+  background: #070d18;
+  padding: 4px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.sequence-pill-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sequence-pill-btn:hover {
+  color: #f1f5f9;
+}
+
+.sequence-pill-btn--active {
+  background: #1e293b;
+  color: #38bdf8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sequence-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Ability Cards List */
+.abilities-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ability-overview-card {
+  background: #0d1a2d;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ability-overview-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.ability-overview-card--active {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(180deg, #0d2238 0%, #0d1a2d 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.08);
+}
+
+.ability-card-top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ability-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ability-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.ability-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ability-book-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+}
+
+.ability-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.ability-status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.ability-status-badge--active {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.ability-status-badge--coming-soon {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.ability-subtitle {
+  font-size: 0.86rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Evidence Section */
+.ability-evidence-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.active-challenge-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  flex-shrink: 0;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.evidence-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.evidence-stat-box {
+  background: #070e1b;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.evidence-stat-box .stat-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.evidence-stat-box .stat-val {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #38bdf8;
+  line-height: 1.2;
+}
+
+.evidence-stat-box .stat-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.ability-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+@media (min-width: 480px) {
+  .ability-action-row {
+    flex-direction: row;
+  }
+}
+
+.ability-btn-secondary {
+  flex: 1;
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ability-btn-secondary:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.ability-btn-secondary:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.ability-btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ability-btn-primary:hover {
+  background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.4);
+}
+
+/* Inactive Abilities Doctrine Section */
+.ability-doctrine-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doctrine-actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.doctrine-actions-row .ability-btn-preview {
+  flex: 1;
+}
+
+.ability-btn-detail {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.ability-btn-detail:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.ability-btn-detail:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.ability-btn-preview {
+  background: #070e1b;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ability-btn-preview:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #f8fafc;
+}
+
+.preview-chevron {
+  font-size: 0.68rem;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.preview-chevron--open {
+  transform: rotate(180deg);
+}
+
+.ability-doctrine-preview {
+  background: #070e1b;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-block-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+  margin: 0;
+}
+
+.preview-block-text {
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.preview-techniques-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.preview-techniques-list li {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.preview-honest-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+
+.preview-honest-notice span {
+  font-size: 0.88rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.preview-honest-notice p {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.preview-deep-dive-btn {
+  width: 100%;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.preview-deep-dive-btn:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+}
+
+.preview-deep-dive-btn:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+  .ability-doctrine-preview {
+    animation: none;
+  }
+  .ability-btn-primary,
+  .ability-btn-preview {
+    transition: none;
+  }
+}
+
+/* Mobile Responsiveness down to 320px */
+@media (max-width: 480px) {
+  .seven-abilities-content {
+    padding: 12px 14px 40px;
+    gap: 16px;
+  }
+  .seven-abilities-title {
+    font-size: 1.35rem;
+  }
+  .ability-overview-card {
+    padding: 14px 14px;
+  }
+  .evidence-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .ability-identity {
+    gap: 10px;
+  }
+  .ability-icon {
+    font-size: 1.4rem;
+  }
+  .sequence-toggle-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sequence-pill-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .sequence-pill-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

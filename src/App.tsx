@@ -35,6 +35,9 @@ import { MyCommitmentsScreen } from './screens/MyCommitmentsScreen';
 import { MySlipperyZonesScreen } from './screens/MySlipperyZonesScreen';
 import CoachScreen from './screens/CoachScreen';
 import { ChallengesScreen } from './screens/ChallengesScreen';
+import { SevenAbilitiesScreen } from './screens/SevenAbilitiesScreen';
+import { AbilityDetailScreen } from './screens/AbilityDetailScreen';
+import { normalizeToCanonicalDietAbilityId, type CanonicalDietAbilityId } from './abilities';
 import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY } from './challenges';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
@@ -99,6 +102,19 @@ export default function App() {
   // Phase 29C: Daily milestone reward celebration
   const [dailyMilestoneToShow, setDailyMilestoneToShow] = useState<DailyMilestoneTier | null>(null);
 
+  // Phase 42: Seven Diet-Abilities and Detail Navigation (with session restoration)
+  const [selectedDietAbilityId, setSelectedDietAbilityId] = useState<CanonicalDietAbilityId>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const saved = window.sessionStorage.getItem('sda_selected_ability_id');
+      if (saved && normalizeToCanonicalDietAbilityId(saved)) {
+        return normalizeToCanonicalDietAbilityId(saved)!;
+      }
+    }
+    return 'resume_ability';
+  });
+  const [coachInitialPrompt, setCoachInitialPrompt] = useState<string | null>(null);
+  const [coachInitialAbilityId, setCoachInitialAbilityId] = useState<CanonicalDietAbilityId | null>(null);
+
   // Initialize day start score and initialize acknowledged level on first run
   useEffect(() => {
     ensureDayStartScore();
@@ -150,10 +166,16 @@ export default function App() {
       const prevScreen = stack[stack.length - 1] || 'home';
       screenRef.current = prevScreen;
       setScreen(prevScreen);
+      if (prevScreen !== 'coach') {
+        setCoachInitialPrompt(null);
+        setCoachInitialAbilityId(null);
+      }
     } else {
       historyStackRef.current = ['home'];
       screenRef.current = 'home';
       setScreen('home');
+      setCoachInitialPrompt(null);
+      setCoachInitialAbilityId(null);
     }
   }, []);
 
@@ -174,6 +196,11 @@ export default function App() {
       }
     }
 
+    if (target !== 'coach') {
+      setCoachInitialPrompt(null);
+      setCoachInitialAbilityId(null);
+    }
+
     if (target === 'home') {
       setSession(null);
       setPendingContext(null);
@@ -181,6 +208,8 @@ export default function App() {
       setSlipId(null);
       setCurrentReportedSlip(null);
       setActiveInControlId(null);
+      setCoachInitialPrompt(null);
+      setCoachInitialAbilityId(null);
       historyStackRef.current = ['home'];
     } else if (target === 'slip-type') {
       setSession(null);
@@ -819,11 +848,51 @@ export default function App() {
       break;
 
     case 'coach':
-      content = <CoachScreen onNavigate={navigate} onBack={goBack} />;
+      content = (
+        <CoachScreen
+          onNavigate={navigate}
+          onBack={goBack}
+          initialPrompt={coachInitialPrompt || undefined}
+          initialAbilityId={coachInitialAbilityId || undefined}
+        />
+      );
       break;
 
     case 'challenges':
       content = <ChallengesScreen onNavigate={navigate} onBack={goBack} />;
+      break;
+
+    case 'seven-abilities':
+      content = (
+        <SevenAbilitiesScreen
+          onNavigate={navigate}
+          onBack={goBack}
+          onSelectAbility={(abilityId: CanonicalDietAbilityId) => {
+            setSelectedDietAbilityId(abilityId);
+            try {
+              sessionStorage.setItem('sda_selected_ability_id', abilityId);
+            } catch {
+              // ignore
+            }
+            navigate('ability-detail');
+          }}
+        />
+      );
+      break;
+
+    case 'ability-detail':
+      content = (
+        <AbilityDetailScreen
+          abilityId={selectedDietAbilityId}
+          onNavigate={navigate}
+          onBack={goBack}
+          onDiscussWithCoach={(abilityId: CanonicalDietAbilityId, prompt: string) => {
+            setCoachInitialAbilityId(abilityId);
+            setCoachInitialPrompt(prompt);
+            navigate('coach');
+          }}
+        />
+      );
       break;
 
     default:

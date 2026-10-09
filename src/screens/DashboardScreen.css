@@ -914,4 +914,20 @@
   color: rgba(148, 163, 184, 0.4);
 }
 
+/* Phase 42.3: Seven Diet-Abilities Card */
+.dash-card--seven-abilities {
+  margin-top: 14px;
+  border-left-color: #38bdf8;
+}
+
+.dash-card--seven-abilities:hover {
+  border-left-color: #0ea5e9;
+}
+
+.dash-card-sub-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
 

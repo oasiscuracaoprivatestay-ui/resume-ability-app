@@ -29,17 +29,36 @@ import {
   type VoiceSessionState,
   executeActionProposal,
 } from '../coach';
+import type { CanonicalDietAbilityId } from '../abilities';
+import { CANONICAL_SEVEN_DIET_ABILITIES } from '../coach/knowledge/abilities/sevenDietAbilities';
 import './CoachScreen.css';
 
 interface CoachScreenProps {
   onNavigate: (target: Screen) => void;
   onBack: () => void;
+  initialPrompt?: string;
+  initialAbilityId?: CanonicalDietAbilityId;
 }
 
-export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachScreenProps) {
+export default function CoachScreen({
+  onNavigate: _onNavigate,
+  onBack,
+  initialPrompt,
+  initialAbilityId,
+}: CoachScreenProps) {
   const { t, lang } = useTranslation();
   const [messages, setMessages] = useState<CoachMessage[]>(() => loadCoachConversation().messages);
-  const [inputText, setInputText] = useState('');
+  // User's unsent draft preservation: do NOT overwrite if the user already has a pending draft
+  const [inputText, setInputText] = useState(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const draft = window.sessionStorage.getItem('coach_unsent_draft');
+      if (draft && draft.trim().length > 0) {
+        return draft;
+      }
+    }
+    return initialPrompt || '';
+  });
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
@@ -92,10 +111,35 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
   ];
 
   const handleBack = () => {
+    // If the input was only the auto-suggested question and never edited, clean it up
+    if (initialPrompt && inputText === initialPrompt) {
+      setInputText('');
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('coach_unsent_draft');
+      }
+    }
     if (onBack) {
       onBack();
     } else {
       _onNavigate('home');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setInputText(val);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem('coach_unsent_draft', val);
+    }
+  };
+
+  const handleDiscardBanner = () => {
+    setIsBannerDismissed(true);
+    if (inputText === initialPrompt) {
+      setInputText('');
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('coach_unsent_draft');
+      }
     }
   };
 
@@ -105,6 +149,9 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
 
     if (!textToSend) {
       setInputText('');
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('coach_unsent_draft');
+      }
     }
 
     setIsThinking(true);
@@ -631,6 +678,53 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
         </div>
       )}
 
+      {/* ── Focus Ability Context Banner (Phase 42.4) ── */}
+      {initialAbilityId && !isBannerDismissed && (
+        <div className="coach-ability-focus-banner" id="coach-ability-focus-banner">
+          <div className="coach-focus-banner-left">
+            <span className="coach-focus-banner-icon" aria-hidden="true">🎯</span>
+            <div className="coach-focus-banner-texts">
+              <span className="coach-focus-banner-title">
+                {(t.ability_detail_coach_banner_title || 'Focusing on {title}').replace(
+                  '{title}',
+                  CANONICAL_SEVEN_DIET_ABILITIES[initialAbilityId]?.officialTitle || initialAbilityId
+                )}
+              </span>
+              <span className="coach-focus-banner-sub">
+                {t.ability_detail_coach_banner_subtitle || 'Ask Coach about this ability'}
+              </span>
+            </div>
+          </div>
+          <div className="coach-focus-banner-actions">
+            {initialPrompt && inputText !== initialPrompt && (
+              <button
+                type="button"
+                id="btn-coach-insert-prompt"
+                className="coach-focus-banner-btn"
+                onClick={() => {
+                  setInputText(initialPrompt);
+                  if (typeof window !== 'undefined' && window.sessionStorage) {
+                    window.sessionStorage.setItem('coach_unsent_draft', initialPrompt);
+                  }
+                }}
+              >
+                {t.ability_detail_coach_banner_action || 'Insert Question'}
+              </button>
+            )}
+            <button
+              type="button"
+              id="btn-coach-discard-banner"
+              className="coach-focus-banner-discard-btn"
+              onClick={handleDiscardBanner}
+              aria-label={t.ability_detail_coach_banner_discard || 'Discard'}
+              title={t.ability_detail_coach_banner_discard || 'Discard'}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Composer with Voice Input (Phase 38A) ── */}
       <footer className="coach-composer-container">
         {(voiceState.inputState === 'listening' || voiceState.inputState === 'transcribing') && (
@@ -677,7 +771,7 @@ export default function CoachScreen({ onNavigate: _onNavigate, onBack }: CoachSc
             className="coach-textarea"
             placeholder={t.coach_composer_placeholder}
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             rows={1}
             disabled={isThinking}

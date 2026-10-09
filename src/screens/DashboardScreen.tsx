@@ -378,6 +378,32 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
               </div>
             )}
           </div>
+
+          {/* Primary Seven Abilities Overview Entry (Phase 42.3) */}
+          <div
+            className="dash-card dash-card--interactive dash-card--seven-abilities"
+            id="dash-card-seven-abilities"
+            onClick={() => onNavigate('seven-abilities')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate('seven-abilities');
+              }
+            }}
+          >
+            <div className="dash-card-header-row">
+              <span className="dash-card-label">{t.seven_abilities_dash_entry_title || 'Seven Diet-Abilities'}</span>
+              <span className="dash-card-action-hint">→</span>
+            </div>
+            <div className="dash-card-row">
+              <span className="dash-card-sub-text">
+                {t.seven_abilities_dash_entry_sub || 'Explore the 7 abilities and track your evidence-based practice.'}
+              </span>
+              <span className="dash-card-icon">🛡️</span>
+            </div>
+          </div>
         </section>
 
         {/* ── Daily Resume-Ability Score Hero Section ── */}

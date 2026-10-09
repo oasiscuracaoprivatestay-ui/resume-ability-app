@@ -33,7 +33,9 @@ export type Screen =
   | 'my-commitments'
   | 'my-slippery-zones'
   | 'coach'
-  | 'challenges';
+  | 'challenges'
+  | 'seven-abilities'
+  | 'ability-detail';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';
