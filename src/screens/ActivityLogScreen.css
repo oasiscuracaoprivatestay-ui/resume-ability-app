@@ -1,16 +1,35 @@
 /**
- * Activity Log Screen Styles — Super Diet-Ability
+ * Activity Log Screen Styles — Super Diet-Ability (Phase 9D Emerald Upgrade)
  */
 
 .activity-log-screen {
-  background: #090d16;
+  background: var(--sda-bg-surface, #040b09);
   min-height: 100vh;
+  min-height: 100dvh;
   color: #f8fafc;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.activity-log-screen::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(13, 148, 136, 0.05) 50%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .activity-log-content {
+  position: relative;
+  z-index: 1;
   flex: 1;
   max-width: 680px;
   width: 100%;
@@ -19,37 +38,25 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 .activity-screen-hero {
-  margin-bottom: 4px;
-}
-
-.activity-screen-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #f8fafc;
-  margin: 0 0 4px;
-  letter-spacing: -0.02em;
-}
-
-.activity-screen-subtitle {
-  font-size: 0.88rem;
-  color: #94a3b8;
-  margin: 0;
-  line-height: 1.4;
+  display: none; /* Managed by PremiumScreenHeader */
 }
 
 /* Today's Movement Summary Card */
 .activity-today-summary-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 21, 39, 0.8) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.25) 0%, rgba(4, 30, 24, 0.5) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 20px;
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .activity-today-summary-header {
@@ -59,9 +66,9 @@
 }
 
 .activity-today-summary-title {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: #10b981;
+  color: #34d399;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -85,18 +92,18 @@
 
 .activity-today-stat-pill {
   flex: 1;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 14px;
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
 }
 
 .activity-today-stat-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #34d399;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -108,7 +115,7 @@
 }
 
 .activity-today-stat-pill--time .activity-today-stat-value {
-  color: #38bdf8;
+  color: #34d399;
 }
 
 .activity-today-no-data {
@@ -119,27 +126,28 @@
 
 .activity-btn-record-cta {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
+  color: #041310;
   border: none;
   border-radius: 12px;
   padding: 12px 18px;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
   transition: all 0.18s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
 }
 
 .activity-btn-record-cta:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
 }
 
 .activity-btn-record-cta:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #34d399;
   outline-offset: 2px;
 }
 
@@ -173,9 +181,9 @@
 .activity-date-total-pill {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: 20px;
   padding: 2px 10px;
 }
@@ -188,18 +196,22 @@
 
 /* Activity Item Card */
 .activity-item-card {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.2) 0%, rgba(4, 30, 24, 0.45) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 16px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .activity-item-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 15px rgba(16, 185, 129, 0.12);
 }
 
 .activity-item-top {
@@ -244,15 +256,15 @@
 }
 
 .activity-item-duration {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #10b981;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #34d399;
   font-variant-numeric: tabular-nums;
 }
 
 .activity-item-time {
   font-size: 0.72rem;
-  color: #64748b;
+  color: #94a3b8;
   font-variant-numeric: tabular-nums;
 }
 
@@ -273,29 +285,29 @@
 }
 
 .activity-intensity-badge--light {
-  background: rgba(14, 165, 233, 0.14);
-  color: #38bdf8;
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .activity-intensity-badge--moderate {
-  background: rgba(16, 185, 129, 0.14);
+  background: rgba(16, 185, 129, 0.2);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .activity-intensity-badge--vigorous {
-  background: rgba(245, 158, 11, 0.14);
+  background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
 .activity-challenge-badge {
   font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(168, 85, 247, 0.14);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -303,7 +315,8 @@
 .activity-item-notes {
   font-size: 0.82rem;
   color: #cbd5e1;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.12);
   border-radius: 8px;
   padding: 6px 10px;
   margin: 0;
@@ -320,23 +333,28 @@
 
 .activity-card-action-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
   color: #94a3b8;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .activity-card-action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
   color: #f8fafc;
 }
 
 .activity-card-action-btn:focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid #34d399;
 }
 
 .activity-card-action-btn--delete:hover {
@@ -347,9 +365,9 @@
 
 /* Empty State */
 .activity-empty-state {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.15) 0%, rgba(4, 30, 24, 0.35) 100%);
+  border: 1px dashed rgba(16, 185, 129, 0.25);
+  border-radius: 20px;
   padding: 36px 20px;
   display: flex;
   flex-direction: column;
@@ -379,21 +397,21 @@
 
 .activity-empty-btn {
   margin-top: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-  color: #f8fafc;
-  padding: 10px 18px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  color: #34d399;
+  padding: 10px 20px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .activity-empty-btn:hover {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #34d399;
 }
 
 /* Delete Confirmation Modal */
@@ -401,8 +419,8 @@
   position: fixed;
   inset: 0;
   background: rgba(4, 7, 15, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,16 +429,18 @@
 }
 
 .activity-delete-modal-box {
-  background: #0d1527;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.3) 0%, #06110f 100%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 20px;
   width: 100%;
   max-width: 380px;
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .activity-delete-modal-title {
@@ -455,12 +475,13 @@
 .activity-delete-btn {
   flex: 1;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .activity-delete-btn--keep {
@@ -488,14 +509,14 @@
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: #0f172a;
+  background: #041a14;
   border: 1px solid #10b981;
-  color: #10b981;
+  color: #34d399;
   padding: 10px 20px;
   border-radius: 20px;
   font-size: 0.88rem;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(16, 185, 129, 0.2);
   z-index: 1200;
   animation: actToastFade 0.2s ease;
 }

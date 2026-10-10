@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './QuizScreen.css';
 
 interface QuizScreenProps {
@@ -98,9 +98,23 @@ export default function QuizScreen({ onNavigate }: QuizScreenProps) {
   if (step === 'start') {
     return (
       <div className="screen quiz-screen">
-        <ScreenHeader
+        <PremiumScreenHeader
+          backId="btn-header-back"
           onBack={() => onNavigate('home')}
-          onHome={() => onNavigate('home')}
+          title={t.quiz_start_heading}
+          eyebrow="SELF-ASSESSMENT"
+          showScoreBadge
+          onNavigate={onNavigate}
+          rightAction={
+            <button
+              id="btn-header-home"
+              className="sda-premium-header__home-btn"
+              onClick={() => onNavigate('home')}
+              aria-label="Go home"
+            >
+              ⌂
+            </button>
+          }
         />
         <div className="quiz-start-content">
           <span className="section-label">{t.quiz_start_label}</span>
@@ -130,7 +144,8 @@ export default function QuizScreen({ onNavigate }: QuizScreenProps) {
     const currentQ = questions[qIndex];
     return (
       <div className="screen quiz-screen">
-        <ScreenHeader
+        <PremiumScreenHeader
+          backId="btn-header-back"
           onBack={() => {
             if (qIndex === 0) {
               setStep('start');
@@ -140,7 +155,20 @@ export default function QuizScreen({ onNavigate }: QuizScreenProps) {
               setSelected(null);
             }
           }}
-          onHome={() => onNavigate('home')}
+          title={`${t.quiz_q_label} ${qIndex + 1} / ${totalQuestions}`}
+          eyebrow="QUESTION"
+          showScoreBadge
+          onNavigate={onNavigate}
+          rightAction={
+            <button
+              id="btn-header-home"
+              className="sda-premium-header__home-btn"
+              onClick={() => onNavigate('home')}
+              aria-label="Go home"
+            >
+              ⌂
+            </button>
+          }
         />
 
         {/* Progress bar */}
@@ -189,9 +217,23 @@ export default function QuizScreen({ onNavigate }: QuizScreenProps) {
   // ── RESULT ──
   return (
     <div className="screen quiz-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={() => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        title={t.quiz_result_heading}
+        eyebrow="RESULT"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="quiz-result-content">

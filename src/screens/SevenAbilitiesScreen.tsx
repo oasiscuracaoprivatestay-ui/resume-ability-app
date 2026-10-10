@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import {
   getSevenDietAbilitiesOverview,
   type CanonicalDietAbilityId,
@@ -61,14 +61,19 @@ export const SevenAbilitiesScreen: React.FC<SevenAbilitiesScreenProps> = ({
 
   return (
     <div className="screen seven-abilities-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        title={t.seven_abilities_title || 'The Seven Diet-Abilities'}
+        subtitle={t.seven_abilities_subtitle || 'Mastery through recovery, consistency, and awareness.'}
+        eyebrow="SUPER DIET-ABILITY"
         onBack={handleBack}
-        onHome={() => onNavigate('home')}
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       <div className="seven-abilities-content">
-        {/* Screen Header */}
-        <header className="seven-abilities-header">
+        {/* Screen Header hidden via CSS for PremiumScreenHeader */}
+        <header className="seven-abilities-header" style={{ display: 'none' }}>
           <span className="section-label">SUPER DIET-ABILITY</span>
           <h1 className="seven-abilities-title" id="seven-abilities-heading">
             {t.seven_abilities_title || 'The Seven Diet-Abilities'}

@@ -28,6 +28,7 @@ interface ChallengeCheckInModalProps {
   onClose: () => void;
   onNavigate: (screen: any) => void;
   onCheckInCompleted?: () => void;
+  onRecommitCompleted?: () => void;
 }
 
 export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
@@ -36,6 +37,7 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   onClose,
   onNavigate,
   onCheckInCompleted,
+  onRecommitCompleted,
 }) => {
   const { t } = useTranslation();
   const [selectedStatus, setSelectedStatus] = useState<CheckInStatus | null>(null);
@@ -192,6 +194,11 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
     });
     playFeedback('commit');
     setHasRecommitted(true);
+    if (onRecommitCompleted) {
+      setTimeout(() => {
+        onRecommitCompleted();
+      }, 500);
+    }
   };
 
   const handleContinueChallenge = () => {

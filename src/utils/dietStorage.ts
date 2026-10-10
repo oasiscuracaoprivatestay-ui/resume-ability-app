@@ -347,6 +347,32 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
   }));
 }
 
+/**
+ * Clone a list of blocks while preserving stable block IDs.
+ * Use this when loading date plans, saving overrides, or modifying blocks
+ * so that verification records and schedule references remain attached.
+ */
+export function cloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBlock[] {
+  return blocks.map(b => ({
+    id: b.id,
+    startTime: b.startTime,
+    endTime: b.endTime,
+    type: b.type,
+    items: Array.isArray(b.items) ? [...b.items] : [],
+    customText: typeof b.customText === 'string' ? b.customText : '',
+    mealType: b.mealType,
+    foodCategories: Array.isArray(b.foodCategories)
+      ? [...b.foodCategories]
+      : mapLegacyItemsToCategories(Array.isArray(b.items) ? b.items : []),
+    foodSelections: b.foodSelections ? JSON.parse(JSON.stringify(b.foodSelections)) : undefined,
+    customFoods: b.customFoods ? JSON.parse(JSON.stringify(b.customFoods)) : undefined,
+    foodQuantities: b.foodQuantities ? JSON.parse(JSON.stringify(b.foodQuantities)) : undefined,
+    soupPortion: b.soupPortion,
+    foodPhoto: b.foodPhoto ? { ...b.foodPhoto } : undefined,
+    foodPhotos: b.foodPhotos ? b.foodPhotos.map(p => ({ ...p })) : undefined,
+  }));
+}
+
 export function createDefaultWeeklyDiet(planName = DEFAULT_PLAN_NAME): WeeklyStructuredDiet {
   return {
     version: 2,
@@ -1166,7 +1192,7 @@ export function getDayPlanForDate(diet: WeeklyStructuredDiet, dateKey: string): 
     const override = diet.dateOverrides[dateKey];
     return {
       ...override,
-      blocks: deepCloneBlocks(override.blocks),
+      blocks: cloneBlocks(override.blocks),
     };
   }
 
@@ -1179,7 +1205,7 @@ export function getDayPlanForDate(diet: WeeklyStructuredDiet, dateKey: string): 
       const snap = diet.historySnapshots[dateKey];
       return {
         ...snap,
-        blocks: deepCloneBlocks(snap.blocks),
+        blocks: cloneBlocks(snap.blocks),
       };
     }
   }
@@ -1188,7 +1214,7 @@ export function getDayPlanForDate(diet: WeeklyStructuredDiet, dateKey: string): 
   const templateDay = getDayPlan(diet, dayKey);
   return {
     ...templateDay,
-    blocks: deepCloneBlocks(templateDay.blocks),
+    blocks: cloneBlocks(templateDay.blocks),
   };
 }
 
@@ -1246,7 +1272,7 @@ export function setDateOverride(
     ...(diet.dateOverrides || {}),
     [dateKey]: {
       ...dayPlan,
-      blocks: deepCloneBlocks(dayPlan.blocks),
+      blocks: cloneBlocks(dayPlan.blocks),
     },
   };
   return { ...diet, dateOverrides: nextOverrides };
@@ -1266,6 +1292,37 @@ export function clearDateOverride(
 }
 
 /**
+ * Phase 8B: Update a specific calendar date's plan (date override).
+ * If no date override exists for dateKey, clones the effective weekday template
+ * into that date's override before applying the updater.
+ * If applyToRecurring is true, also updates the recurring weekday template (diet.days).
+ */
+export function updateDatePlan(
+  diet: WeeklyStructuredDiet,
+  dateKey: string,
+  updater: (day: StructuredDietDay) => StructuredDietDay,
+  options?: { applyToRecurring?: boolean; dayKey?: DayKey }
+): WeeklyStructuredDiet {
+  const effectiveDayKey = options?.dayKey || dateKeyToDayKey(dateKey);
+  const baseDay = (diet.dateOverrides && diet.dateOverrides[dateKey])
+    ? diet.dateOverrides[dateKey]
+    : getDayPlan(diet, effectiveDayKey);
+
+  const updatedDateDay = updater({
+    ...baseDay,
+    blocks: cloneBlocks(baseDay.blocks),
+  });
+
+  let nextDiet = setDateOverride(diet, dateKey, updatedDateDay);
+
+  if (options?.applyToRecurring) {
+    nextDiet = updateDayPlan(nextDiet, effectiveDayKey, updater);
+  }
+
+  return nextDiet;
+}
+
+/**
  * Freeze a historical date's plan so future template updates cannot alter it.
  */
 export function snapshotHistoryDate(
@@ -1281,7 +1338,7 @@ export function snapshotHistoryDate(
     ...(diet.historySnapshots || {}),
     [dateKey]: {
       ...planToFreeze,
-      blocks: deepCloneBlocks(planToFreeze.blocks),
+      blocks: cloneBlocks(planToFreeze.blocks),
     },
   };
   return { ...diet, historySnapshots: nextSnapshots };

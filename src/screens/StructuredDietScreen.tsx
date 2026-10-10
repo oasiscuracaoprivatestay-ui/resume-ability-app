@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import TermHelp from '../components/TermHelp';
 import {
   saveWeeklyDiet,
@@ -15,6 +15,7 @@ import {
   getGoalDisplayDescription,
   getDayPlan,
   updateDayPlan,
+  updateDatePlan,
   setDayMode,
   copyDayPlan,
   getLocalTodayKey,
@@ -283,13 +284,15 @@ interface BlockEditorProps {
   initial: StructuredDietBlock | null; // null = new block
   initialOutcome?: DetailedBlockOutcome | 'none';
   isToday?: boolean;
-  onSave: (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none') => void;
+  selectedDayName?: string;
+  onSave: (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none', applyToRecurring?: boolean) => void;
   onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuantities, onCancel, t }: BlockEditorProps) {
+function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave, onAutosaveQuantities, onCancel, t }: BlockEditorProps) {
+  const [applyToRecurring, setApplyToRecurring] = useState(false);
   const getDefaultTimes = () => {
     const now = new Date();
     const h = now.getHours();
@@ -736,7 +739,7 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
     };
-    onSave(sanitiseBlock(block), selectedOutcome);
+    onSave(sanitiseBlock(block), selectedOutcome, applyToRecurring);
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -1403,6 +1406,28 @@ function BlockEditor({ initial, initialOutcome, isToday, onSave, onAutosaveQuant
               </p>
             )}
           </div>
+
+          {isToday && (
+            <div className="sdb-field sdb-recurring-toggle-field" id="sdb-recurring-toggle-field">
+              <label className="sdb-recurring-toggle-label" htmlFor="toggle-recurring-day-change">
+                <input
+                  type="checkbox"
+                  id="toggle-recurring-day-change"
+                  className="sdb-recurring-toggle-checkbox"
+                  checked={applyToRecurring}
+                  onChange={(e) => setApplyToRecurring(e.target.checked)}
+                />
+                <div className="sdb-recurring-toggle-content">
+                  <span className="sdb-recurring-toggle-title">
+                    {t.sdb_apply_recurring_title.replace('{day}', selectedDayName || '')}
+                  </span>
+                  <span className="sdb-recurring-toggle-desc">
+                    {t.sdb_apply_recurring_desc}
+                  </span>
+                </div>
+              </label>
+            </div>
+          )}
 
           {error && <p className="sdb-error" role="alert">{error}</p>}
         </div>
@@ -5503,16 +5528,34 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     newBlocks: StructuredDietBlock[],
     mode: 'add' | 'replace'
   ) => {
-    updateWeekly(w =>
-      updateDayPlan(w, selectedDayKey, day => {
-        const combined = mode === 'add' ? [...day.blocks, ...newBlocks] : [...newBlocks];
-        return {
-          ...day,
-          mode: 'structured',
-          blocks: sortBlocks(combined),
-        };
-      })
-    );
+    if (activeView === 'daily' && isToday) {
+      updateWeekly(w =>
+        updateDatePlan(
+          w,
+          todayDateKey,
+          day => {
+            const combined = mode === 'add' ? [...day.blocks, ...newBlocks] : [...newBlocks];
+            return {
+              ...day,
+              mode: 'structured',
+              blocks: sortBlocks(combined),
+            };
+          },
+          { dayKey: selectedDayKey }
+        )
+      );
+    } else {
+      updateWeekly(w =>
+        updateDayPlan(w, selectedDayKey, day => {
+          const combined = mode === 'add' ? [...day.blocks, ...newBlocks] : [...newBlocks];
+          return {
+            ...day,
+            mode: 'structured',
+            blocks: sortBlocks(combined),
+          };
+        })
+      );
+    }
     setShowQuickBuildModal(false);
     setCopyFeedback(t.sdb_qb_success);
     setTimeout(() => {
@@ -5561,16 +5604,38 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   };
 
   // ── Block CRUD for current day ─────────────────────────────────────────────
-  const handleSaveBlock = (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none') => {
-    updateWeekly(w =>
-      updateDayPlan(w, selectedDayKey, day => {
-        const existing = day.blocks.findIndex(b => b.id === block.id);
-        const blocks = existing >= 0
-          ? day.blocks.map((b, i) => (i === existing ? block : b))
-          : [...day.blocks, block];
-        return { ...day, blocks: sortBlocks(blocks) };
-      })
-    );
+  const handleSaveBlock = (
+    block: StructuredDietBlock,
+    outcome?: DetailedBlockOutcome | 'none',
+    applyToRecurring = false
+  ) => {
+    if (activeView === 'daily' && isToday) {
+      updateWeekly(w =>
+        updateDatePlan(
+          w,
+          todayDateKey,
+          day => {
+            const existing = day.blocks.findIndex(b => b.id === block.id);
+            const blocks = existing >= 0
+              ? day.blocks.map((b, i) => (i === existing ? block : b))
+              : [...day.blocks, block];
+            return { ...day, blocks: sortBlocks(blocks) };
+          },
+          { applyToRecurring, dayKey: selectedDayKey }
+        )
+      );
+    } else {
+      updateWeekly(w =>
+        updateDayPlan(w, selectedDayKey, day => {
+          const existing = day.blocks.findIndex(b => b.id === block.id);
+          const blocks = existing >= 0
+            ? day.blocks.map((b, i) => (i === existing ? block : b))
+            : [...day.blocks, block];
+          return { ...day, blocks: sortBlocks(blocks) };
+        })
+      );
+    }
+
     if (isToday) {
       const existingEntry = todayVerification?.entries.find(e => e.plannedBlockId === block.id);
       if (existingEntry) {
@@ -5596,16 +5661,30 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     setEditingBlock(null);
   };
 
-  const handleDeleteBlock = (id: string) => {
+  const handleDeleteBlock = (id: string, applyToRecurring = false) => {
     const blockToDelete = currentDay.blocks.find(b => b.id === id);
     const photosToClean = blockToDelete ? getBlockPhotos(blockToDelete) : [];
 
-    updateWeekly(w =>
-      updateDayPlan(w, selectedDayKey, day => ({
-        ...day,
-        blocks: day.blocks.filter(b => b.id !== id),
-      }))
-    );
+    if (activeView === 'daily' && isToday) {
+      updateWeekly(w =>
+        updateDatePlan(
+          w,
+          todayDateKey,
+          day => ({
+            ...day,
+            blocks: day.blocks.filter(b => b.id !== id),
+          }),
+          { applyToRecurring, dayKey: selectedDayKey }
+        )
+      );
+    } else {
+      updateWeekly(w =>
+        updateDayPlan(w, selectedDayKey, day => ({
+          ...day,
+          blocks: day.blocks.filter(b => b.id !== id),
+        }))
+      );
+    }
 
     if (photosToClean.length > 0) {
       setTimeout(() => {
@@ -5631,6 +5710,29 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       if (!nextWeekly.historySnapshots || !nextWeekly.historySnapshots[yesterdayKey]) {
         nextWeekly = snapshotHistoryDate(nextWeekly, yesterdayKey);
       }
+      if (activeView === 'daily' && isToday) {
+        return updateDatePlan(
+          nextWeekly,
+          todayDateKey,
+          day => {
+            const nextBlocks = day.blocks.map(b => {
+              if (b.id !== blockId) return b;
+              const existingPhotos = getBlockPhotos(b);
+              const nextPhotos = [...existingPhotos, photo];
+              return {
+                ...b,
+                foodPhotos: nextPhotos,
+                foodPhoto: nextPhotos[0],
+              };
+            });
+            return {
+              ...day,
+              blocks: sortBlocks(nextBlocks),
+            };
+          },
+          { dayKey: selectedDayKey }
+        );
+      }
       return updateDayPlan(nextWeekly, selectedDayKey, day => {
         const nextBlocks = day.blocks.map(b => {
           if (b.id !== blockId) return b;
@@ -5652,7 +5754,11 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   };
 
   // ── Quick Edit block action ────────────────────────────────────────────────
-  const handleQuickUpdateBlock = (blockId: string, updates: Partial<StructuredDietBlock>) => {
+  const handleQuickUpdateBlock = (
+    blockId: string,
+    updates: Partial<StructuredDietBlock>,
+    options?: { applyToRecurring?: boolean }
+  ) => {
     // 1. Snapshot yesterday / past date if needed to guarantee history immutability
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
@@ -5662,6 +5768,26 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       let nextWeekly = prevWeekly;
       if (!nextWeekly.historySnapshots || !nextWeekly.historySnapshots[yesterdayKey]) {
         nextWeekly = snapshotHistoryDate(nextWeekly, yesterdayKey);
+      }
+      if (activeView === 'daily' && isToday) {
+        return updateDatePlan(
+          nextWeekly,
+          todayDateKey,
+          day => {
+            const nextBlocks = day.blocks.map(b => {
+              if (b.id !== blockId) return b;
+              return {
+                ...b,
+                ...updates,
+              };
+            });
+            return {
+              ...day,
+              blocks: sortBlocks(nextBlocks),
+            };
+          },
+          { applyToRecurring: options?.applyToRecurring, dayKey: selectedDayKey }
+        );
       }
       return updateDayPlan(nextWeekly, selectedDayKey, day => {
         const nextBlocks = day.blocks.map(b => {
@@ -6240,9 +6366,15 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   return (
     <div className="screen sdb-screen">
       <div className="sdb-inner">
-        <ScreenHeader
+        <PremiumScreenHeader
+          title={t.sdb_heading}
+          eyebrow={t.sdb_label}
           onBack={handleHeaderBack}
-          onHome={() => onNavigate('home')}
+          backId="btn-header-back"
+          backAriaLabel={t.global_back || 'Go back'}
+          backText={t.global_back || 'Back'}
+          showScoreBadge={true}
+          onNavigate={onNavigate}
         />
 
         <div className="sdb-content">
@@ -6264,6 +6396,10 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
               <div className="sdb-settings-heading">
                 <h2 className="sdb-settings-title">{t.sdb_structure_settings}</h2>
                 <p className="sdb-settings-desc">{t.sdb_settings_desc}</p>
+                <div className="sdb-settings-template-notice" id="sdb-settings-template-notice">
+                  <span className="sdb-settings-notice-icon" aria-hidden="true">ℹ️</span>
+                  <span className="sdb-settings-notice-text">{t.sdb_settings_template_notice}</span>
+                </div>
               </div>
 
               {/* ── Structure Goal / Master Profile Card (Phase 26) ── */}
@@ -6498,6 +6634,11 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 <h2 className="sdb-day-name">{currentDayFullName}</h2>
                 {isToday && (
                   <span className="sdb-today-badge">{t.sdb_today}</span>
+                )}
+                {isToday && Boolean(weekly.dateOverrides?.[todayDateKey]) && (
+                  <span className="sdb-override-badge" id="sdb-today-override-badge" title={t.sdb_daily_override_badge}>
+                    ✨ {t.sdb_daily_override_badge}
+                  </span>
                 )}
               </div>
 
@@ -7000,6 +7141,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
               : undefined
           }
           isToday={isToday}
+          selectedDayName={currentDayFullName}
           onSave={handleSaveBlock}
           onAutosaveQuantities={
             editingBlock !== 'new'

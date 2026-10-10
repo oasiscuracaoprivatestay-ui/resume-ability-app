@@ -1,16 +1,18 @@
 /* ══════════════════════════════════════════════
-   Resume Ability — Global Design System
-   Premium dark UI · Calm & minimal · Teal glow
+   Super Diet-Ability — Global Design System
+   Premium dark emerald UI · Calm & minimal · Turquoise glow
+   (Phase 2 premium redesign: base tokens retuned from neutral
+   charcoal to emerald charcoal; all existing token names preserved.)
    ══════════════════════════════════════════════ */
 
 :root {
-  /* ── Background layers ── */
-  --bg:            #060609;
-  --bg-subtle:     #0b0b12;
-  --surface:       #111118;
-  --surface-hover: #17171f;
-  --border:        #1a1a24;
-  --border-hover:  #252534;
+  /* ── Background layers (emerald charcoal) ── */
+  --bg:            #06100d;
+  --bg-subtle:     #0a1612;
+  --surface:       #0e1b17;
+  --surface-hover: #13241f;
+  --border:        #18302a;
+  --border-hover:  #22423a;
 
   /* ── Accent: teal / green glow ── */
   --accent:        #2dd4bf;
@@ -37,6 +39,90 @@
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-xl: 24px;
+
+  /* ══ Premium design layer (Phase 2) ══════════════════════════════════ */
+  /* Surfaces */
+  --sda-bg-deep:          #040b09;
+  --sda-surface:          rgba(16, 34, 29, 0.72);
+  --sda-surface-solid:    #0f201b;
+  --sda-surface-raised:   #142a24;
+  --sda-surface-hover:    #183330;
+  --sda-glass-border:     rgba(110, 231, 183, 0.12);
+  --sda-glass-border-strong: rgba(94, 234, 212, 0.32);
+  --sda-blur:             blur(14px);
+
+  /* Accents */
+  --sda-emerald:          #34d399;
+  --sda-emerald-deep:     #10b981;
+  --sda-turquoise:        #2dd4bf;
+  --sda-turquoise-soft:   #5eead4;
+  --sda-on-accent:        #04201a;
+  --sda-gradient-cta:     linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #34d399 100%);
+  --sda-gradient-card:    linear-gradient(160deg, rgba(23, 51, 44, 0.85) 0%, rgba(11, 25, 21, 0.92) 100%);
+  --sda-gradient-hero-overlay: linear-gradient(180deg, rgba(4, 11, 9, 0.15) 0%, rgba(4, 11, 9, 0.35) 45%, rgba(4, 11, 9, 0.92) 100%);
+  --sda-glow:             0 0 0 1px rgba(45, 212, 191, 0.18), 0 10px 32px rgba(45, 212, 191, 0.18);
+  --sda-glow-strong:      0 8px 30px rgba(45, 212, 191, 0.35);
+  --sda-shadow-card:      0 12px 32px rgba(0, 0, 0, 0.35);
+  --sda-ring-track:       rgba(94, 234, 212, 0.14);
+
+  /* Status (recovery semantics: slips are blue, never red) */
+  --sda-status-on:        #34d399;
+  --sda-status-near:      #fbbf24;
+  --sda-status-slip:      #38bdf8;
+
+  /* Text on premium surfaces */
+  --sda-text:             #ecfdf5;
+  --sda-text-2:           #b8d8cf;
+  --sda-text-3:           #88aba1;
+  --sda-text-muted:       #8fb3a9;
+
+  /* Typography */
+  --sda-font-script:      'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive;
+  --sda-fs-display:       1.65rem;
+  --sda-fs-title:         1.15rem;
+  --sda-fs-body:          0.95rem;
+  --sda-fs-small:         0.8rem;
+  --sda-fs-micro:         0.7rem;
+  --sda-tracking-eyebrow: 0.18em;
+
+  /* Spacing scale */
+  --sda-space-1: 4px;
+  --sda-space-2: 8px;
+  --sda-space-3: 12px;
+  --sda-space-4: 16px;
+  --sda-space-5: 20px;
+  --sda-space-6: 24px;
+  --sda-space-8: 32px;
+
+  /* Radii */
+  --sda-radius-sm: 12px;
+  --sda-radius-md: 16px;
+  --sda-radius-lg: 20px;
+  --sda-radius-xl: 28px;
+  --sda-radius-pill: 999px;
+
+  /* Motion */
+  --sda-ease:        cubic-bezier(0.22, 1, 0.36, 1);
+  --sda-dur-fast:    160ms;
+  --sda-dur-med:     280ms;
+  --sda-dur-slow:    900ms;
+
+  /* Layering */
+  --sda-z-nav:    50;
+  --sda-z-sheet:  1000;
+
+  /* Layout */
+  --sda-bottom-nav-h: 68px;
+}
+
+/* Respect reduced-motion preferences for all premium animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Reset ── */
@@ -72,6 +158,13 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   isolation: isolate;
+}
+
+/* Phase 2: only the premium Home screen may use a wider, responsive canvas.
+   All other screens keep the original 430px mobile column. Browsers without
+   :has() support simply keep the mobile layout. */
+#root:has(.home-premium) {
+  max-width: 1120px;
 }
 
 /* Shell wraps {screen} + floating-buttons-stack in a flex column.
@@ -400,7 +493,7 @@ body {
 */
 .floating-buttons-stack {
   position: sticky;
-  bottom: 1.5rem;
+  bottom: var(--sda-nav-reserve, 1.5rem);
   z-index: 100;
   align-self: flex-end;
   margin-top: auto;

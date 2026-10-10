@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import type {
   NotificationSettings,
   ReminderFrequency,
@@ -180,15 +180,27 @@ export default function NotificationSettingsScreen({
 
   return (
     <div className="screen notification-settings-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={onBack ? onBack : () => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        title={t.notif_screen_title}
+        eyebrow="PREFERENCES"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="notif-settings-content">
         <div className="notif-settings-heading">
-          <span className="section-label">{t.notif_screen_title}</span>
-          <h1 className="notif-heading">{t.notif_screen_title}</h1>
           <p className="notif-subtitle">{t.notif_screen_subtitle}</p>
         </div>
 

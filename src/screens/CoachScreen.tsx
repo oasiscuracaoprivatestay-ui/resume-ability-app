@@ -31,6 +31,7 @@ import {
 } from '../coach';
 import type { CanonicalDietAbilityId } from '../abilities';
 import { CANONICAL_SEVEN_DIET_ABILITIES } from '../coach/knowledge/abilities/sevenDietAbilities';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './CoachScreen.css';
 
 interface CoachScreenProps {
@@ -388,40 +389,38 @@ export default function CoachScreen({
   return (
     <div className="coach-screen" id="coach-screen">
       {/* ── Header ── */}
-      <header className="coach-header">
-        <button
-          id="btn-coach-back"
-          className="coach-header-back"
-          onClick={handleBack}
-          aria-label={t.btn_return_to_main || 'Go back'}
-          title={t.btn_return_to_main || 'Go back'}
-        >
-          ←
-        </button>
-
-        <div className="coach-header-titles">
-          <div className="coach-title-row">
+      <PremiumScreenHeader
+        title={
+          <span className="coach-title-wrap">
             <span className="coach-header-icon" aria-hidden="true">🤖</span>
-            <h1 className="coach-header-title">{t.coach_screen_title}</h1>
-          </div>
+            <span>{t.coach_screen_title}</span>
+          </span>
+        }
+        subtitle={
           <span className={`coach-header-status ${isThinking ? 'coach-header-status--thinking' : ''}`}>
             <span className="coach-status-dot" aria-hidden="true" />
             {isThinking ? t.coach_status_thinking : t.coach_status_ready}
           </span>
-        </div>
-
-        {messages.length > 0 && (
-          <button
-            id="btn-clear-conversation"
-            className="coach-header-clear-btn"
-            onClick={() => setShowClearConfirm(true)}
-            aria-label={t.coach_clear_conversation}
-            title={t.coach_clear_conversation}
-          >
-            🗑️
-          </button>
-        )}
-      </header>
+        }
+        onBack={handleBack}
+        backId="btn-coach-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        rightAction={
+          messages.length > 0 ? (
+            <button
+              id="btn-clear-conversation"
+              type="button"
+              className="coach-header-clear-btn"
+              onClick={() => setShowClearConfirm(true)}
+              aria-label={t.coach_clear_conversation}
+              title={t.coach_clear_conversation}
+            >
+              🗑️
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* ── Clear Confirmation Modal ── */}
       {showClearConfirm && (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import {
   loadFeedbackSettings,
   saveFeedbackSettings,
@@ -80,15 +80,27 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
   return (
     <div className="screen sound-haptics-screen">
       <div className="sound-haptics-inner">
-        <ScreenHeader
+        <PremiumScreenHeader
+          backId="btn-header-back"
           onBack={onBack ? onBack : () => onNavigate('settings')}
-          onHome={() => onNavigate('home')}
+          title={t.settings_sound_screen_title}
+          eyebrow="PREFERENCES"
+          showScoreBadge
+          onNavigate={onNavigate}
+          rightAction={
+            <button
+              id="btn-header-home"
+              className="sda-premium-header__home-btn"
+              onClick={() => onNavigate('home')}
+              aria-label="Go home"
+            >
+              ⌂
+            </button>
+          }
         />
 
         <div className="sound-haptics-content">
           <div className="sound-haptics-heading">
-            <span className="section-label">{t.settings_sec_experience}</span>
-            <h1 className="sound-haptics-title">{t.settings_sound_screen_title}</h1>
             <p className="sound-haptics-subtitle">{t.settings_sound_screen_subtitle}</p>
           </div>
 

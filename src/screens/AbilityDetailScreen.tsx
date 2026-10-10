@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation, type Translations } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import {
   getDietAbilityProgress,
   markDoctrineExplored,
@@ -108,13 +108,18 @@ export const AbilityDetailScreen: React.FC<AbilityDetailScreenProps> = ({
 
   return (
     <div className="screen ability-detail-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        title={definition.officialTitle}
+        subtitle={definition.subtitle}
+        eyebrow={`SUPER DIET-ABILITY • ${bookBadgeText}`}
         onBack={handleBack}
-        onHome={() => onNavigate('home')}
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       <div className="ability-detail-content">
-        {/* Ability Header Section */}
+        {/* Ability Header Section (status bar and icon card) */}
         <header className="ability-detail-header" id="ability-detail-header">
           <div className="ability-detail-hero">
             <span className="ability-detail-icon" aria-hidden="true">{icon}</span>

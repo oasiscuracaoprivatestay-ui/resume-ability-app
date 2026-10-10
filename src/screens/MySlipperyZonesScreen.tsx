@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import ScreenHeader from '../components/ScreenHeader';
+import React, { useState, useMemo, useCallback } from 'react';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { playFeedback } from '../utils/feedback';
@@ -41,7 +41,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
   // Load user's Why reason and Non-Negotiables directly from pledge storage
   const pledge = useMemo(() => loadPledge(), []);
   const firstReason = useMemo(() => {
-    return pledge.reasons.find((r) => r.trim().length > 0) ?? null;
+    return pledge.reasons.find((r: string) => r.trim().length > 0) ?? null;
   }, [pledge.reasons]);
 
   const nonNegotiables = pledge.nonNegotiables;
@@ -50,7 +50,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
 
   const toggleCheckItem = useCallback((idx: number) => {
-    setCheckedItems((prev) => ({
+    setCheckedItems((prev: Record<number, boolean>) => ({
       ...prev,
       [idx]: !prev[idx],
     }));
@@ -58,12 +58,12 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
 
   // Gating condition: All displayed non-negotiables must be checked before final review
   const checkedCount = useMemo(() => {
-    return nonNegotiables.filter((_, idx) => !!checkedItems[idx]).length;
+    return nonNegotiables.filter((_: string, idx: number) => !!checkedItems[idx]).length;
   }, [nonNegotiables, checkedItems]);
 
   const allChecked = useMemo(() => {
     if (nonNegotiables.length === 0) return true;
-    return nonNegotiables.every((_, idx) => !!checkedItems[idx]);
+    return nonNegotiables.every((_: string, idx: number) => !!checkedItems[idx]);
   }, [nonNegotiables, checkedItems]);
 
   // Complete Review Confirmation
@@ -138,9 +138,14 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
 
   return (
     <div className="screen my-slippery-zones-screen" id="my-slippery-zones-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        title={t.sz_screen_title}
+        eyebrow="AWARENESS & TRIGGERS"
         onBack={() => onNavigate('my-commitments')}
-        onHome={() => onNavigate('home')}
+        backId="btn-header-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        showScoreBadge={true}
         onNavigate={onNavigate}
       />
 
@@ -229,7 +234,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               role="group"
               aria-label={t.review_nn_section_title || 'Non-Negotiables'}
             >
-              {nonNegotiables.map((nn, idx) => (
+              {nonNegotiables.map((nn: string, idx: number) => (
                 <CheckableCommitmentItem
                   key={idx}
                   id={`nn-review-item-${idx}`}
@@ -275,7 +280,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               </button>
             </div>
           ) : (
-            data.zones.map((zone, index) => (
+            data.zones.map((zone: PersonalSlipperyZone, index: number) => (
               <div key={zone.id} className="sz-zone-card" id={`sz-zone-card-${zone.id}`}>
                 <div className="sz-zone-num" aria-hidden="true">
                   {index + 1}

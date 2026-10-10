@@ -1,7 +1,7 @@
 import type { Screen, SlipStatus } from '../types';
 import { formatDuration } from '../utils';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './ResultScreen.css';
 
 interface ResultScreenProps {
@@ -27,9 +27,23 @@ export default function ResultScreen({
 
   return (
     <div className="screen result-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={() => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        title={status === 'relapsed' ? t.result_slip_recorded : 'Recovery Result'}
+        eyebrow="TIMER COMPLETE"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="result-content">

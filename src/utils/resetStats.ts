@@ -24,6 +24,9 @@ import { resetScoreStore } from './scoringEngine';
 import { clearAllDailyReviews } from './dailyReviewStorage';
 import { CELEBRATED_LEVEL_KEY } from './progressionEngine';
 import { clearAllActivities } from '../activities';
+import { clearProgressVictories } from './progressVictoriesStorage';
+import { cleanupOrphanPhotos } from './photoStorage';
+import { loadDietStore } from './dietStorage';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
@@ -91,7 +94,52 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
       };
     }
 
-    // 12. Scoring Engine Store & Level Progression — ONLY when explicitly confirmed!
+    // 12. Progress & Victories records (Phase 4)
+    clearProgressVictories();
+
+    // 13. Safe background cleanup of orphaned photos (e.g. progress photos, cleared verification photos)
+    try {
+      const dietStore = loadDietStore();
+      const activePhotoIds = new Set<string>();
+      if (dietStore?.profiles) {
+        for (const profile of dietStore.profiles) {
+          const dayList = Array.isArray(profile.diet?.days)
+            ? profile.diet.days
+            : profile.diet?.days
+            ? Object.values(profile.diet.days)
+            : [];
+          for (const day of dayList) {
+            for (const b of (day as any)?.blocks || []) {
+              if (b.foodPhoto?.id) activePhotoIds.add(b.foodPhoto.id);
+              if (b.foodPhotos) {
+                for (const p of b.foodPhotos) {
+                  if (p?.id) activePhotoIds.add(p.id);
+                }
+              }
+            }
+          }
+          if (profile.diet?.historySnapshots) {
+            for (const snap of Object.values(profile.diet.historySnapshots)) {
+              for (const b of (snap as any)?.blocks || []) {
+                if (b.foodPhoto?.id) activePhotoIds.add(b.foodPhoto.id);
+                if (b.foodPhotos) {
+                  for (const p of b.foodPhotos) {
+                    if (p?.id) activePhotoIds.add(p.id);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      cleanupOrphanPhotos(activePhotoIds).catch(err => {
+        console.warn('[ResetStats] Photo cleanup error (non-fatal):', err);
+      });
+    } catch {
+      // Photo cleanup failure is non-fatal
+    }
+
+    // 14. Scoring Engine Store & Level Progression — ONLY when explicitly confirmed!
     if (options.resetLifetimeScore === true) {
       resetScoreStore();
       try {

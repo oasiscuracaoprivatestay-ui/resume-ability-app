@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import TermHelp from '../components/TermHelp';
 import {
   loadPledge,
@@ -181,9 +181,15 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
   return (
     <div className="screen commit-screen">
       <div className="commit-inner">
-        <ScreenHeader
+        <PremiumScreenHeader
+          title={t.commit_heading}
+          eyebrow={t.commit_label}
           onBack={handleBack}
-          onHome={() => onNavigate('home')}
+          backId="btn-header-back"
+          backAriaLabel={t.global_back || 'Go back'}
+          backText={t.global_back || 'Back'}
+          showScoreBadge={true}
+          onNavigate={onNavigate}
         />
 
         <div className="commit-content">

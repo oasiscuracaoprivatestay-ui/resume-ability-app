@@ -37,7 +37,7 @@ import {
 import LevelProgressBar from '../components/LevelProgressBar';
 import ResetStatsModal from '../components/ResetStatsModal';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import TermHelp from '../components/TermHelp';
 import './DashboardScreen.css';
 import type { Translations } from '../i18n';
@@ -228,9 +228,13 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
 
   return (
     <div className="screen dashboard-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        title={t.dash_heading}
+        eyebrow={t.dash_label || 'ANALYTICS & METRICS'}
         onBack={onBack ? onBack : () => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        backId="btn-header-back"
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       <div className="dashboard-content">

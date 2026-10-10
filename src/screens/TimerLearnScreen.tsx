@@ -1,6 +1,6 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './TimerLearnScreen.css';
 
 interface TimerLearnScreenProps {
@@ -21,9 +21,23 @@ export default function TimerLearnScreen({ onNavigate, onBack }: TimerLearnScree
 
   return (
     <div className="screen tl-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={onBack ? onBack : () => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        title={t.tl_heading}
+        eyebrow={t.tl_label}
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="tl-content">

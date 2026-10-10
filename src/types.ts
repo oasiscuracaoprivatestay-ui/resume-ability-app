@@ -36,7 +36,8 @@ export type Screen =
   | 'challenges'
   | 'seven-abilities'
   | 'ability-detail'
-  | 'activity-log';
+  | 'activity-log'
+  | 'progress-victories';
 
 // ── Timer mode ──
 export type TimerMode = 'single' | 'loop' | 'extended-fast';
