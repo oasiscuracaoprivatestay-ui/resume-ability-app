@@ -62,7 +62,13 @@ export type AppIconName =
   | 'scale'
   | 'activity'
   | 'award'
-  | 'heart';
+  | 'heart'
+  | 'walking'
+  | 'running'
+  | 'cycling'
+  | 'swimming'
+  | 'dumbbell'
+  | 'yoga';
 
 const PATHS: Record<AppIconName, ReactNode> = {
   'chevron-left': <path d="m15 18-6-6 6-6" />,
@@ -338,6 +344,61 @@ const PATHS: Record<AppIconName, ReactNode> = {
   ),
   heart: (
     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+  ),
+  walking: (
+    <>
+      <circle cx="12" cy="4" r="2" />
+      <path d="m9 20 3-6 3 2v4" />
+      <path d="m6 16 3-4 3 1" />
+      <path d="m14 10 3 3-2 3" />
+      <path d="m11 11-2 2-3-1" />
+    </>
+  ),
+  running: (
+    <>
+      <circle cx="17" cy="4" r="2" />
+      <path d="m15 8-4 3 2 4-3 5" />
+      <path d="m8 11 3 3" />
+      <path d="m15 8 3 2 3-1" />
+      <path d="m12 16-3-2-3 2" />
+    </>
+  ),
+  cycling: (
+    <>
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="15" cy="5" r="1" />
+      <path d="M12 17.5V14l-3-3 4-3 2 3h2" />
+    </>
+  ),
+  swimming: (
+    <>
+      <circle cx="18" cy="5" r="2" />
+      <path d="m4 10 6-2 3 3" />
+      <path d="m10 16 4-2 3 2" />
+      <path d="M2 19c2 1 4 1 6 0 2-1 4-1 6 0 2 1 4 1 6 0" />
+      <path d="M2 15c2 1 4 1 6 0 2-1 4-1 6 0 2 1 4 1 6 0" />
+    </>
+  ),
+  dumbbell: (
+    <>
+      <path d="m6.5 6.5 11 11" />
+      <path d="m21 21-1-1" />
+      <path d="m3 3 1 1" />
+      <path d="m18 22 4-4" />
+      <path d="m2 6 4-4" />
+      <path d="m3 10 7-7" />
+      <path d="m14 21 7-7" />
+    </>
+  ),
+  yoga: (
+    <>
+      <circle cx="12" cy="4" r="2" />
+      <path d="M4 17a4 4 0 0 1 4-3h8a4 4 0 0 1 4 3" />
+      <path d="m7 10 5 3 5-3" />
+      <path d="M12 13v7" />
+      <path d="M8 20h8" />
+    </>
   ),
 };
 

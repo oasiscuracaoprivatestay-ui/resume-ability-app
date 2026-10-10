@@ -13,6 +13,7 @@ import {
 import { getLocalDateKey } from '../utils/dietStorage';
 import { getActiveChallenge } from '../challenges/challengeStorage';
 import { playFeedback } from '../utils/feedback';
+import { AppIcon, type AppIconName } from './icons/AppIcon';
 import './ActivityModal.css';
 
 export interface ActivityModalProps {
@@ -23,15 +24,15 @@ export interface ActivityModalProps {
   defaultDateKey?: string;
 }
 
-const CATEGORY_ICONS: Record<ActivityCategory, string> = {
-  walking: '🚶',
-  running: '🏃',
-  cycling: '🚴',
-  swimming: '🏊',
-  strength_training: '🏋️',
-  mobility_yoga: '🧘',
-  sports: '🎾',
-  other_movement: '✨',
+const CATEGORY_APP_ICONS: Record<ActivityCategory, AppIconName> = {
+  walking: 'walking',
+  running: 'running',
+  cycling: 'cycling',
+  swimming: 'swimming',
+  strength_training: 'dumbbell',
+  mobility_yoga: 'yoga',
+  sports: 'trophy',
+  other_movement: 'sparkles',
 };
 
 export const ActivityModal: React.FC<ActivityModalProps> = ({
@@ -96,8 +97,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       previousFocusRef.current = document.activeElement as HTMLElement | null;
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('sda-modal-open');
       return () => {
         document.body.style.overflow = originalOverflow;
+        document.body.classList.remove('sda-modal-open');
         if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
           previousFocusRef.current.focus();
         }
@@ -292,7 +295,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                     onClick={() => handleCategorySelect(cat)}
                   >
                     <span className="activity-category-icon" aria-hidden="true">
-                      {CATEGORY_ICONS[cat]}
+                      <AppIcon name={CATEGORY_APP_ICONS[cat]} size={22} />
                     </span>
                     <span className="activity-category-name">{label}</span>
                   </button>

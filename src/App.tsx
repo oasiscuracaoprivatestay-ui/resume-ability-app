@@ -982,10 +982,12 @@ export default function App() {
           onClose={() => setDailyMilestoneToShow(null)}
         />
       )}
-      <div className="floating-buttons-stack">
-        <FloatingProgramButton currentScreen={screen} />
-        <FloatingTimerButton currentScreen={screen} onNavigate={navigate} onStartTimer={handleStartTimer} />
-      </div>
+      {levelUpToShow === null && dailyMilestoneToShow === null && !moreOpen && (
+        <div className="floating-buttons-stack">
+          <FloatingProgramButton currentScreen={screen} />
+          <FloatingTimerButton currentScreen={screen} onNavigate={navigate} onStartTimer={handleStartTimer} />
+        </div>
+      )}
     </div>
   );
 }

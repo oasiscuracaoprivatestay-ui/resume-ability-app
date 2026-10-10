@@ -823,7 +823,7 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
                     <p className="pv-card-subtitle">{t.pv_sec_waist_sub}</p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="pv-card-header-actions">
                   <div className="pv-unit-toggle" role="group" aria-label="Waist unit selector">
                     <button
                       type="button"
@@ -1015,7 +1015,7 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
                     <p className="pv-card-subtitle">{t.pv_sec_weight_sub}</p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="pv-card-header-actions">
                   <div className="pv-unit-toggle" role="group" aria-label="Weight unit selector">
                     <button
                       type="button"

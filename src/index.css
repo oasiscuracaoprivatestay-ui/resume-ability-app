@@ -505,6 +505,27 @@ body {
   pointer-events: auto;
 }
 
+/* ── Universal Modal Suppression for Floating Controls ── */
+body.sda-modal-open .floating-buttons-stack,
+body:has([role="dialog"][aria-modal="true"]:not([hidden])) .floating-buttons-stack,
+body:has([role="alertdialog"][aria-modal="true"]:not([hidden])) .floating-buttons-stack,
+body:has(.activity-modal-overlay) .floating-buttons-stack,
+body:has(.activity-delete-modal-overlay) .floating-buttons-stack,
+body:has(.sda-sheet-root--open) .floating-buttons-stack,
+body:has(.modal-backdrop) .floating-buttons-stack,
+body:has(.modal-overlay) .floating-buttons-stack,
+body:has(.pv-modal-overlay) .floating-buttons-stack,
+body:has(.pv-modal-backdrop) .floating-buttons-stack,
+body:has(.reset-modal-overlay) .floating-buttons-stack,
+body:has(.sdb-dialog-overlay) .floating-buttons-stack,
+body:has(.sdb-overlay) .floating-buttons-stack,
+body:has(.next-action-overlay) .floating-buttons-stack {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* ── Universal Re-Commit & Exit Navigation Buttons (Phase 29B) ── */
 .recommit-cancel-wrap {
   margin-top: 1rem;

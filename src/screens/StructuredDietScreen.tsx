@@ -6365,18 +6365,17 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
 
   return (
     <div className="screen sdb-screen">
+      <PremiumScreenHeader
+        title={t.sdb_heading}
+        eyebrow={t.sdb_label}
+        onBack={handleHeaderBack}
+        backId="btn-header-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        showScoreBadge={true}
+        onNavigate={onNavigate}
+      />
       <div className="sdb-inner">
-        <PremiumScreenHeader
-          title={t.sdb_heading}
-          eyebrow={t.sdb_label}
-          onBack={handleHeaderBack}
-          backId="btn-header-back"
-          backAriaLabel={t.global_back || 'Go back'}
-          backText={t.global_back || 'Back'}
-          showScoreBadge={true}
-          onNavigate={onNavigate}
-        />
-
         <div className="sdb-content">
           {activeView === 'settings' ? (
             /* ── SETTINGS VIEW (Phase 7B) ── */
