@@ -4,6 +4,7 @@ import type { Screen } from '../types';
 import type { CheckInStatus } from '../utils/checkInStorage';
 import { getCheckIns } from '../utils/checkInStorage';
 import { getPostCheckInQuoteItem } from '../data/motivationalTexts';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './MotivationalQuoteScreen.css';
 
 interface MotivationalQuoteScreenProps {
@@ -34,6 +35,24 @@ export default function MotivationalQuoteScreen({ onNavigate, status }: Motivati
 
   return (
     <div className="screen quote-screen">
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        onBack={handleReturnHome}
+        title={t.quote_screen_label || 'Inspiration'}
+        eyebrow="POST CHECK-IN"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={handleReturnHome}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
+      />
       <div className="quote-container">
         {/* Background ambient glow effects */}
         <div className="quote-glow-top" aria-hidden="true" />

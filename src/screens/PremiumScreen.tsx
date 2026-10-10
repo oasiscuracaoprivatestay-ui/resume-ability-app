@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import type { Translations } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './PremiumScreen.css';
 
 import { PROGRAM_URL } from '../config';
@@ -27,9 +27,10 @@ const FEATURES: Feature[] = [
 
 interface PremiumScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
+export default function PremiumScreen({ onNavigate, onBack }: PremiumScreenProps) {
   const { t } = useTranslation();
 
   const handleUpgrade = useCallback(() => {
@@ -38,9 +39,23 @@ export default function PremiumScreen({ onNavigate }: PremiumScreenProps) {
 
   return (
     <div className="screen premium-screen">
-      <ScreenHeader
-        onBack={() => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        onBack={onBack ? onBack : () => onNavigate('home')}
+        title={t.prem_title}
+        eyebrow="MEMBERSHIP"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="premium-content">

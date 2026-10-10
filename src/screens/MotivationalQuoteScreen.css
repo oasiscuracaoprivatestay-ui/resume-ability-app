@@ -1,69 +1,71 @@
 /* ══════════════════════════════════════════════════════════════════════════════
-   MotivationalQuoteScreen.css — Phase 7F
-   Calm, modern, atmospheric visual styling for post-check-in motivational quote
+   MotivationalQuoteScreen.css — Phase 9E Premium Emerald Redesign
+   Post-check-in atmospheric motivational quote presentation
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .quote-screen {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: var(--space-6) var(--space-4);
-  background: radial-gradient(circle at 50% 25%, rgba(45, 55, 72, 0.4) 0%, rgba(10, 14, 23, 0.95) 75%), var(--color-bg);
+  padding: 0 1.25rem 2.5rem;
+  background: radial-gradient(circle at 50% 25%, rgba(6, 78, 59, 0.25) 0%, rgba(4, 11, 9, 0.96) 75%), var(--sda-bg-surface, #040b09);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
 .quote-container {
+  flex: 1;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   margin: 0 auto;
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   z-index: 1;
+  padding: 1.5rem 0 2rem;
+  box-sizing: border-box;
 }
 
 /* Ambient glow accents */
 .quote-glow-top {
   position: absolute;
-  top: -60px;
+  top: -40px;
   left: 50%;
   transform: translateX(-50%);
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0) 70%);
-  pointer-events: none;
-  filter: blur(40px);
-  z-index: -1;
-}
-
-.quote-glow-bottom {
-  position: absolute;
-  bottom: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0) 70%);
   pointer-events: none;
   filter: blur(50px);
   z-index: -1;
 }
 
-/* Elegant card */
+.quote-glow-bottom {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(5, 150, 105, 0.18) 0%, rgba(5, 150, 105, 0) 70%);
+  pointer-events: none;
+  filter: blur(50px);
+  z-index: -1;
+}
+
+/* Elegant emerald glass card */
 .quote-card {
   width: 100%;
-  background: rgba(18, 22, 34, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-2xl, 24px);
-  padding: var(--space-8) var(--space-6);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.28) 0%, rgba(4, 28, 22, 0.5) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--sda-radius-2xl, 24px);
+  padding: 2.25rem 1.75rem;
   box-shadow:
-    0 12px 36px -8px rgba(0, 0, 0, 0.65),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    0 16px 40px -10px rgba(0, 0, 0, 0.7),
+    0 0 24px rgba(16, 185, 129, 0.12);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -74,67 +76,72 @@
   animation: quoteFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes quoteFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* Badge */
 .quote-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2, 8px);
+  gap: 8px;
   padding: 6px 14px;
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  border-radius: 9999px;
-  margin-bottom: var(--space-8, 32px);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.32);
+  border-radius: var(--sda-radius-pill, 999px);
+  margin-bottom: 1.75rem;
 }
 
 .quote-badge-dot {
   font-size: 0.75rem;
-  color: #818cf8;
+  color: #34d399;
   line-height: 1;
 }
 
 .quote-badge-text {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c7d2fe;
+  color: #a7f3d0;
 }
 
 /* Quote presentation */
 .quote-text-wrap {
   position: relative;
   width: 100%;
-  margin-bottom: var(--space-10, 40px);
-  padding: 0 var(--space-2);
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
   box-sizing: border-box;
 }
 
 .quote-mark {
   font-family: Georgia, serif;
-  font-size: 2.75rem;
+  font-size: 3rem;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.15);
+  color: rgba(52, 211, 153, 0.3);
   display: block;
   user-select: none;
 }
 
 .quote-mark-start {
   text-align: left;
-  margin-bottom: -16px;
+  margin-bottom: -18px;
 }
 
 .quote-mark-end {
   text-align: right;
-  margin-top: -12px;
+  margin-top: -14px;
 }
 
 .quote-text {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
-  font-size: 1.3125rem;
-  line-height: 1.55;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.35rem;
+  line-height: 1.6;
   font-weight: 500;
-  color: #f1f5f9;
+  color: #f8fafc;
   letter-spacing: -0.01em;
   font-style: italic;
   word-break: break-word;
@@ -145,76 +152,42 @@
   width: 100%;
 }
 
-.quote-home-btn {
+#btn-quote-home {
   width: 100%;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 16px 24px;
-  font-size: 0.9375rem;
-  border-radius: var(--radius-xl, 16px);
-  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  min-height: 48px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #041310;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: var(--sda-radius-pill, 999px);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
   cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
 }
 
-.quote-home-btn:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+#btn-quote-home:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
   transform: translateY(-1px);
 }
 
-.quote-home-btn:active {
-  transform: translateY(0);
-  filter: brightness(0.95);
+#btn-quote-home:active {
+  transform: translateY(0) scale(0.98);
 }
 
-/* Responsive adjustments */
-@media (max-width: 390px) {
+@media (max-width: 380px) {
   .quote-screen {
-    padding: var(--space-4) var(--space-3);
+    padding: 0 0.85rem 2rem;
   }
-
   .quote-card {
-    padding: var(--space-6) var(--space-4);
+    padding: 1.75rem 1.25rem;
   }
-
   .quote-text {
-    font-size: 1.1875rem;
-    line-height: 1.5;
-  }
-
-  .quote-badge {
-    margin-bottom: var(--space-6, 24px);
-  }
-
-  .quote-text-wrap {
-    margin-bottom: var(--space-8, 32px);
-  }
-}
-
-/* Entrance animation */
-@keyframes quoteFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .quote-card {
-    animation: none;
-  }
-  .quote-home-btn {
-    transition: none;
+    font-size: 1.18rem;
   }
 }

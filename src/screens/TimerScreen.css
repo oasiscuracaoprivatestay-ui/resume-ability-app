@@ -1,8 +1,15 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   TimerScreen.css — Phase 9E Premium Emerald Redesign
+   Urge Timer, progress rings, control surfaces, and audio playback
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 .timer-screen {
   min-height: 100dvh;
-  padding: 1rem 1.5rem 2.5rem;
+  padding: 0 1.25rem 2.5rem;
   display: flex;
   flex-direction: column;
+  background: radial-gradient(circle at 50% 15%, rgba(6, 78, 59, 0.22) 0%, rgba(4, 11, 9, 0.95) 75%), var(--sda-bg-surface, #040b09);
+  box-sizing: border-box;
 }
 
 .timer-content {
@@ -11,36 +18,40 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.25rem;
+  padding: 0.75rem 0 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* ── Block indicator (loop mode) ── */
 
 .timer-block-indicator {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #34d399;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background: rgba(45, 212, 191, 0.1);
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-sm);
+  letter-spacing: 0.12em;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--sda-radius-pill, 999px);
   animation: block-pulse 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes block-pulse {
   0% {
     opacity: 0;
-    transform: scale(0.85);
-    box-shadow: 0 0 0 rgba(45, 212, 191, 0);
+    transform: scale(0.88);
   }
   50% {
-    box-shadow: 0 0 18px rgba(45, 212, 191, 0.35);
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
   }
   100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 0 rgba(45, 212, 191, 0);
   }
 }
 
@@ -48,8 +59,8 @@
 
 .timer-block-toast {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: #a7f3d0;
   letter-spacing: 0.04em;
   animation: toast-fade 2s ease forwards;
 }
@@ -61,42 +72,45 @@
   100% { opacity: 0; }
 }
 
-/* ── Message — improved contrast ── */
+/* ── Message ── */
 
 .timer-message {
   font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 500;
+  color: #a7f3d0;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-align: center;
+  margin: 0;
 }
 
 /* Subtle info link below timer message */
 .timer-learn-link {
   background: none;
   border: none;
-  color: var(--text-dim);
-  font-family: var(--font);
-  font-size: 0.65rem;
-  font-weight: 500;
+  color: #6ee7b7;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.03em;
   cursor: pointer;
-  padding: 0.15rem 0;
-  opacity: 0.45;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  padding: 0.25rem 0.5rem;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  margin-top: -0.5rem; /* tighten up with timer-message */
+  margin-top: -0.65rem;
 }
 
 .timer-learn-link:hover {
-  opacity: 0.75;
-  color: var(--accent);
+  opacity: 1;
+  color: #34d399;
+  transform: translateX(2px);
 }
 
 .timer-loop-done {
   font-size: 0.9rem;
-  color: var(--accent);
-  font-weight: 600;
+  color: #34d399;
+  font-weight: 700;
   letter-spacing: 0.04em;
   animation: fade-in 0.5s ease;
 }
@@ -106,52 +120,47 @@
 .timer-program-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
-
-  padding: 0.75rem 1.6rem;
-  border-radius: 999px;
-
-  font-family: var(--font);
-  font-size: 0.88rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: var(--sda-radius-pill, 999px);
+  font-family: inherit;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.035em;
-  color: var(--accent);
-
-  background: rgba(45, 212, 191, 0.06);
-  border: 1.5px solid rgba(45, 212, 191, 0.45);
-  box-shadow: 0 0 14px var(--accent-glow);
-
+  letter-spacing: 0.04em;
+  color: #a7f3d0;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.28) 0%, rgba(4, 30, 24, 0.4) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
   cursor: pointer;
   transition: all 0.22s ease;
   -webkit-tap-highlight-color: transparent;
-
   animation: cta-breathe 3.5s ease-in-out infinite;
 }
 
 .timer-program-cta:hover {
-  background: rgba(45, 212, 191, 0.13);
-  border-color: var(--accent);
-  box-shadow: 0 0 22px var(--accent-glow-strong);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.45) 0%, rgba(4, 30, 24, 0.55) 100%);
+  border-color: #34d399;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
   transform: translateY(-2px);
+  color: #ffffff;
 }
 
 .timer-program-cta:active {
-  transform: translateY(0) scale(0.96);
+  transform: translateY(0) scale(0.97);
 }
 
 .timer-program-cta-icon {
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
-/* Very subtle breathing glow — draws the eye without being aggressive */
 @keyframes cta-breathe {
-  0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
-  50%       { box-shadow: 0 0 22px var(--accent-glow-strong); }
+  0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.15); }
+  50%       { box-shadow: 0 0 22px rgba(16, 185, 129, 0.35); }
 }
 
 /* ── Timer controls: +15 / Pause / Reset ── */
-
 
 .timer-controls {
   display: flex;
@@ -159,13 +168,13 @@
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
-  max-width: 320px;
-  /* Elevated card — signals primary command surface */
-  background: rgba(45, 212, 191, 0.04);
-  border: 1px solid rgba(45, 212, 191, 0.2);
-  border-radius: var(--radius-md);
-  padding: 0.6rem;
-  box-shadow: 0 0 18px rgba(45, 212, 191, 0.08), 0 2px 8px rgba(0,0,0,0.2);
+  max-width: 340px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.2) 0%, rgba(4, 28, 22, 0.4) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: var(--sda-radius-lg, 16px);
+  padding: 0.65rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 18px rgba(16, 185, 129, 0.08);
+  box-sizing: border-box;
 }
 
 .timer-ctrl-btn {
@@ -174,104 +183,106 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  min-height: 54px;
+  gap: 0.25rem;
+  min-height: 52px;
+  min-width: 44px;
   padding: 0.55rem 0.4rem;
-  border-radius: var(--radius-md);
-  font-family: var(--font);
+  border-radius: var(--sda-radius-md, 10px);
+  font-family: inherit;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary); /* white — always readable */
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  background: rgba(16, 34, 29, 0.6);
+  color: #f1f5f9;
 }
 
 .timer-ctrl-btn:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.38);
   color: #ffffff;
 }
 
 .timer-ctrl-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.95);
 }
 
 /* +15 button */
 .timer-ctrl-btn--add {
-  border-color: rgba(45, 212, 191, 0.45);
-  color: var(--accent);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
   font-size: 0.82rem;
   font-weight: 700;
-  background: rgba(45, 212, 191, 0.05);
+  background: rgba(6, 78, 59, 0.25);
 }
 
 .timer-ctrl-btn--add:hover {
-  border-color: var(--accent);
-  background: rgba(45, 212, 191, 0.12);
-  color: var(--accent-hover);
-  box-shadow: 0 0 10px rgba(45, 212, 191, 0.15);
+  border-color: #34d399;
+  background: rgba(16, 185, 129, 0.2);
+  color: #ecfdf5;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
 }
 
 /* Pause / Resume button (primary) */
 .timer-ctrl-btn--primary {
   flex: 1.35;
-  min-height: 58px;
-  border-color: var(--accent);
-  background: rgba(45, 212, 191, 0.1);
-  color: var(--accent);
-  font-size: 1rem;
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.18);
+  min-height: 56px;
+  border-color: rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.28) 100%);
+  color: #34d399;
+  font-size: 1.05rem;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.22);
 }
 
 .timer-ctrl-btn--primary:hover {
-  background: rgba(45, 212, 191, 0.18);
-  border-color: var(--accent-hover);
-  color: var(--accent-hover);
-  box-shadow: 0 0 20px rgba(45, 212, 191, 0.28);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.38) 100%);
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.35);
 }
 
-/* When paused, pulse the border slightly */
+/* When paused, pulse border */
 .timer-ctrl-btn--paused {
-  border-color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
-  animation: paused-pulse 2s ease-in-out infinite;
+  border-color: #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+  animation: paused-emerald-pulse 2s ease-in-out infinite;
 }
 
-@keyframes paused-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
-  50%       { box-shadow: 0 0 20px var(--accent-glow-strong); }
+@keyframes paused-emerald-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.25); }
+  50%       { box-shadow: 0 0 24px rgba(16, 185, 129, 0.5); }
 }
 
 .timer-ctrl-label {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.8;
+  opacity: 0.9;
   line-height: 1;
 }
 
 /* Reset button */
 .timer-ctrl-btn--reset {
-  color: var(--text-dim);
+  color: #94a3b8;
 }
 
 .timer-ctrl-btn--reset:hover {
-  color: var(--text-secondary);
+  color: #e2e8f0;
 }
 
 /* Paused indicator label */
 .timer-paused-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 0.15em;
-  opacity: 0.8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: 0.16em;
+  opacity: 0.9;
   animation: paused-blink 1.4s ease-in-out infinite;
+  margin: -0.25rem 0;
 }
 
 @keyframes paused-blink {
@@ -282,20 +293,20 @@
 /* ── Control section headers ── */
 
 .ctrl-section-label {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.9;
+  color: #6ee7b7;
+  opacity: 0.95;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   text-align: left;
-  padding-left: 0.1rem;
-  margin-bottom: -0.4rem;
+  padding-left: 0.2rem;
+  margin-bottom: -0.45rem;
 }
 
-/* ── Audio section — secondary / supporting layer (Phase 7H & 18) ── */
+/* ── Audio section ── */
 
 .timer-audio-section-container {
   display: flex;
@@ -303,7 +314,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   box-sizing: border-box;
 }
 
@@ -312,7 +323,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0 2px;
+  padding: 0 4px;
   box-sizing: border-box;
 }
 
@@ -323,16 +334,16 @@
 }
 
 .timer-audio-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .timer-audio-status-dot--on {
-  background: var(--accent, #2dd4bf);
-  box-shadow: 0 0 6px var(--accent, #2dd4bf);
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
 }
 
 .timer-audio-status-dot--off {
@@ -342,52 +353,54 @@
 .timer-audio-status-label {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary, #94a3b8);
+  color: #a7f3d0;
 }
 
 .timer-audio-segmented-toggle {
   display: flex;
   align-items: center;
-  background: var(--surface, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-sm, 8px);
-  padding: 2px;
-  gap: 2px;
+  background: rgba(4, 25, 20, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--sda-radius-pill, 999px);
+  padding: 3px;
+  gap: 3px;
 }
 
 .timer-audio-toggle-btn {
   background: transparent;
   border: none;
-  color: var(--text-dim, #94a3b8);
+  color: #94a3b8;
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  min-height: 32px;
+  border-radius: var(--sda-radius-pill, 999px);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   transition: all 0.2s ease;
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .timer-audio-toggle-btn:hover {
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
 }
 
 .timer-audio-toggle-btn--active {
-  background: rgba(45, 212, 191, 0.18);
-  border: 1px solid rgba(45, 212, 191, 0.35);
-  color: var(--accent, #2dd4bf);
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
   font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 .timer-audio-toggle-icon {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   line-height: 1;
 }
 
@@ -395,15 +408,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   width: 100%;
-  max-width: 320px;
-  /* Flat muted container — visually subordinate to timer */
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-md);
-  padding: 0.55rem 0.6rem;
-  opacity: 0.95;
+  max-width: 340px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.16) 0%, rgba(4, 28, 22, 0.35) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: var(--sda-radius-lg, 16px);
+  padding: 0.75rem 0.85rem;
   box-sizing: border-box;
 }
 
@@ -412,11 +423,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  padding: 0.9rem 1rem;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
+  gap: 0.65rem;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.12) 0%, rgba(4, 25, 20, 0.35) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: var(--sda-radius-lg, 16px);
   box-sizing: border-box;
 }
 
@@ -429,15 +440,15 @@
 }
 
 .audio-disabled-icon {
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1;
-  color: var(--text-dim, #64748b);
+  color: #94a3b8;
   flex-shrink: 0;
 }
 
 .audio-disabled-text {
-  font-size: 0.8125rem;
-  color: var(--text-secondary, #94a3b8);
+  font-size: 0.82rem;
+  color: #cbd5e1;
   font-weight: 500;
   letter-spacing: 0.01em;
   line-height: 1.35;
@@ -447,13 +458,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   width: 100%;
-  padding: 8px 14px;
-  border-radius: var(--radius-md, 10px);
-  background: rgba(45, 212, 191, 0.12);
-  border: 1px solid var(--accent, #2dd4bf);
-  color: var(--accent, #2dd4bf);
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: var(--sda-radius-pill, 999px);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
@@ -465,18 +477,18 @@
 }
 
 .btn-turn-on-motivational-audio:hover {
-  background: rgba(45, 212, 191, 0.22);
-  box-shadow: 0 0 14px rgba(45, 212, 191, 0.28);
-  color: var(--accent-hover, #5eead4);
-  border-color: var(--accent-hover, #5eead4);
+  background: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  color: #ffffff;
+  border-color: #34d399;
 }
 
 .btn-turn-on-motivational-audio:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .btn-turn-on-icon {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
@@ -485,37 +497,44 @@
 .audio-mode-selector {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  gap: 0.3rem;
+  background: rgba(4, 25, 20, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--sda-radius-pill, 999px);
   padding: 3px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .audio-mode-pill {
+  flex: 1;
   background: transparent;
-  border: none;
-  color: var(--text-dim);
+  border: 1px solid transparent;
+  color: #94a3b8;
   font-family: inherit;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.5rem;
+  min-height: 34px;
+  border-radius: var(--sda-radius-pill, 999px);
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+  text-align: center;
 }
 
 .audio-mode-pill:hover {
-  color: var(--text-muted);
+  color: #f1f5f9;
 }
 
-/* Active pill — softer teal, less prominent than timer */
 .audio-mode-pill--active {
-  background: rgba(45, 212, 191, 0.08);
-  color: rgba(45, 212, 191, 0.75);
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 /* ── Audio playback controls ── */
@@ -523,21 +542,25 @@
 .audio-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 0.25rem 0;
 }
 
 .audio-btn {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text-primary); /* white */
-  width: 58px;
-  height: 58px;
+  background: rgba(16, 34, 29, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+  width: 54px;
+  height: 54px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.15rem;
   cursor: pointer;
   transition: all 0.25s ease;
   font-family: inherit;
@@ -546,44 +569,45 @@
 }
 
 .audio-btn-icon {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   line-height: 1;
+  color: #34d399;
 }
 
 .audio-btn-label {
-  font-size: 0.4rem;
+  font-size: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #a7f3d0;
   white-space: nowrap;
   line-height: 1;
 }
 
-
 .audio-btn:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.18);
-  color: #ffffff;
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #34d399;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
 }
 
 .audio-btn:active:not(:disabled) {
-  transform: scale(0.92);
+  transform: scale(0.93);
 }
 
 .audio-btn--disabled,
 .audio-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 /* ── Audio error message ── */
 
 .audio-error {
-  font-size: 0.65rem;
-  color: var(--text-dim);
+  font-size: 0.7rem;
+  color: #fca5a5;
   font-weight: 500;
   letter-spacing: 0.02em;
+  margin: 0;
 }
 
 /* ── Mini playlist ── */
@@ -591,66 +615,61 @@
 .playlist-panel {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   width: 100%;
-  max-width: 260px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--radius-sm);
+  background: rgba(4, 25, 20, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: var(--sda-radius-md, 10px);
   overflow: hidden;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
+  box-sizing: border-box;
 }
 
 .playlist-track {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.85rem;
+  min-height: 44px;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: #cbd5e1;
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 .playlist-track:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(16, 185, 129, 0.08);
+  color: #ffffff;
 }
 
 .playlist-track--active {
-  color: var(--accent);
-  background: rgba(45, 212, 191, 0.1);
-  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  font-weight: 700;
 }
 
 .playlist-track--locked {
-  opacity: 0.55;
-  cursor: default;
+  opacity: 0.6;
+  cursor: pointer;
 }
 
 .playlist-track--locked:hover {
-  background: transparent;
+  background: rgba(251, 191, 36, 0.08);
 }
 
-/* Long guided sessions — stronger visual signal */
 .playlist-track--session {
-  opacity: 0.65;
-  border-left: 2px solid rgba(45, 212, 191, 0.5);
-  padding-left: calc(0.75rem - 2px); /* compensate for border */
-  background: rgba(45, 212, 191, 0.03);
+  border-left: 3px solid rgba(16, 185, 129, 0.6);
+  padding-left: calc(0.85rem - 3px);
+  background: rgba(16, 185, 129, 0.04);
 }
 
-.playlist-track--session:hover {
-  background: rgba(45, 212, 191, 0.06);
-  border-left-color: var(--accent);
-}
-
-/* Track info: name + optional subtitle stacked */
 .playlist-track-info {
   display: flex;
   flex-direction: column;
@@ -661,12 +680,12 @@
 }
 
 .playlist-track-sub {
-  font-size: 0.55rem;
-  font-weight: 600;
-  color: var(--accent);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #34d399;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.75;
+  opacity: 0.85;
   white-space: nowrap;
 }
 
@@ -677,17 +696,17 @@
 }
 
 .playlist-lock {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fbbf24;
   letter-spacing: 0.04em;
   flex-shrink: 0;
   margin-left: 0.5rem;
 }
 
 .playlist-playing {
-  font-size: 0.65rem;
-  color: var(--accent);
+  font-size: 0.72rem;
+  color: #34d399;
   flex-shrink: 0;
   margin-left: 0.5rem;
   animation: pulse-note 1.5s ease-in-out infinite;
@@ -698,41 +717,86 @@
   50% { opacity: 1; }
 }
 
-/* ── Premium toast ── */
-
-.premium-toast {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgba(45, 212, 191, 0.08);
-  border: 1px solid rgba(45, 212, 191, 0.15);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.04em;
-  animation: toast-pop 2s ease forwards;
-}
-
-@keyframes toast-pop {
-  0% { opacity: 0; transform: translateY(4px); }
-  15% { opacity: 1; transform: translateY(0); }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
 /* ── Actions ── */
 
 .timer-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.65rem;
   width: 100%;
-  max-width: 300px;
+  max-width: 340px;
+}
+
+#btn-recovered {
+  width: 100%;
+  min-height: 48px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #041310;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: var(--sda-radius-pill, 999px);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#btn-recovered:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+#btn-recovered:active {
+  transform: translateY(0) scale(0.98);
+}
+
+#btn-extend {
+  width: 100%;
+  min-height: 44px;
+  background: rgba(16, 34, 29, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border-radius: var(--sda-radius-pill, 999px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#btn-extend:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #34d399;
+  color: #ffffff;
 }
 
 .timer-actions .btn-text {
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s ease;
+}
+
+.timer-actions .btn-text:hover {
+  color: #cbd5e1;
+}
+
+@media (max-width: 380px) {
+  .timer-screen {
+    padding: 0 0.75rem 2rem;
+  }
+  .timer-content {
+    gap: 1rem;
+  }
 }

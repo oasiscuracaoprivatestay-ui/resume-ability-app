@@ -1,0 +1,397 @@
+/* ══════════════════════════════════════════════
+   Premium Challenge Hero (Phase 2 — refinement pass)
+   - Bright, warm photographic treatment with targeted scrims
+     (top-left for the title, bottom for controls) so text keeps
+     WCAG contrast without dimming the whole image.
+   - Compact mobile layout: smaller ring, tighter rhythm.
+   ══════════════════════════════════════════════ */
+
+.sda-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--sda-radius-xl);
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  background: var(--sda-bg-deep);
+  box-shadow: var(--sda-shadow-card), 0 0 0 1px rgba(45, 212, 191, 0.05) inset, 0 18px 50px rgba(8, 60, 50, 0.35);
+  isolation: isolate;
+  animation: sda-rise 0.5s var(--sda-ease) both;
+}
+
+.sda-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* CSS-only fallback if the decorative image is unavailable */
+  background:
+    radial-gradient(120% 70% at 30% 35%, rgba(251, 191, 120, 0.35) 0%, transparent 55%),
+    radial-gradient(120% 70% at 85% 10%, rgba(45, 212, 191, 0.28) 0%, transparent 55%),
+    linear-gradient(180deg, #0f3b36 0%, #071a15 100%);
+}
+
+.sda-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 66% 55%;
+  display: block;
+  filter: saturate(1.08) contrast(1.02);
+}
+
+/* Targeted scrims: legible text, luminous image */
+.sda-hero-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(3, 14, 12, 0.72) 0%, rgba(3, 14, 12, 0.42) 42%, rgba(3, 14, 12, 0) 72%),
+    linear-gradient(180deg, rgba(3, 14, 12, 0.5) 0%, rgba(3, 14, 12, 0.12) 34%, rgba(3, 14, 12, 0.18) 58%, rgba(3, 14, 12, 0.86) 100%);
+}
+
+/* Soft emerald tint at the edges to keep the palette cohesive */
+.sda-hero-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(140% 90% at 70% 40%, transparent 55%, rgba(6, 40, 34, 0.45) 100%);
+}
+
+.sda-hero--invite .sda-hero-media::after {
+  background:
+    linear-gradient(100deg, rgba(3, 14, 12, 0.88) 0%, rgba(3, 14, 12, 0.58) 50%, rgba(3, 14, 12, 0.15) 82%),
+    linear-gradient(180deg, rgba(3, 14, 12, 0.42) 0%, rgba(3, 14, 12, 0.3) 35%, rgba(3, 14, 12, 0.92) 100%);
+}
+
+.sda-hero-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sda-space-3);
+  padding: var(--sda-space-4);
+}
+
+.sda-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sda-space-3);
+}
+
+.sda-hero-eyebrow {
+  display: inline-block;
+  font-size: var(--sda-fs-micro);
+  font-weight: 700;
+  letter-spacing: var(--sda-tracking-eyebrow);
+  text-transform: uppercase;
+  color: #bbf7d0;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.sda-hero-title {
+  font-size: clamp(1.4rem, 5.6vw, var(--sda-fs-display));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.sda-hero-ability {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d5efe8;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+}
+
+.sda-hero-copy {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #e3f5f0;
+  max-width: 36ch;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Invite: just enough headroom to let the photograph breathe */
+.sda-hero--invite .sda-hero-body {
+  padding-top: var(--sda-space-6);
+}
+
+.sda-hero--invite.sda-hero--compact .sda-hero-body {
+  padding-top: var(--sda-space-4);
+}
+
+.sda-hero-mid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sda-space-3);
+}
+
+.sda-hero-mid-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sda-hero-remaining {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e3f5f0;
+  background: rgba(3, 14, 12, 0.62);
+  border: 1px solid var(--sda-glass-border);
+  padding: 5px 11px;
+  border-radius: var(--sda-radius-pill);
+  backdrop-filter: var(--sda-blur);
+  -webkit-backdrop-filter: var(--sda-blur);
+  white-space: nowrap;
+}
+
+/* Ring: compact on phones, scales up on wide layouts (SVG uses viewBox) */
+.sda-hero .sda-ring {
+  width: 104px !important;
+  height: 104px !important;
+  background: radial-gradient(circle at 50% 50%, rgba(3, 14, 12, 0.82) 0%, rgba(3, 14, 12, 0.7) 62%, transparent 64%);
+}
+
+.sda-hero .sda-ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sda-ring-kicker {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sda-text-2);
+}
+
+.sda-ring-number {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 2px 0 1px;
+  color: var(--sda-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sda-ring-total {
+  font-size: 0.72rem;
+  color: var(--sda-text-2);
+}
+
+/* "I Am on Track" — elegant script label on a clearly interactive button */
+.sda-hero-ontrack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 5px 6px 5px 16px;
+  border-radius: var(--sda-radius-pill);
+  border: 1px solid rgba(94, 234, 212, 0.55);
+  background:
+    linear-gradient(135deg, rgba(45, 212, 191, 0.24) 0%, rgba(16, 185, 129, 0.12) 100%),
+    rgba(3, 14, 12, 0.6);
+  color: var(--sda-text);
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 18px rgba(45, 212, 191, 0.18);
+  backdrop-filter: var(--sda-blur);
+  -webkit-backdrop-filter: var(--sda-blur);
+  transition: transform var(--sda-dur-fast) var(--sda-ease), box-shadow var(--sda-dur-med) var(--sda-ease),
+    border-color var(--sda-dur-med) var(--sda-ease), background var(--sda-dur-med) var(--sda-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-hero-ontrack:hover {
+  border-color: var(--sda-turquoise-soft);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4), var(--sda-glow);
+  transform: translateY(-1px);
+}
+
+.sda-hero-ontrack:active {
+  transform: scale(0.97);
+}
+
+.sda-hero-ontrack:focus-visible {
+  outline: 2px solid #ecfdf5;
+  outline-offset: 3px;
+}
+
+.sda-hero-ontrack-script {
+  font-family: var(--sda-font-script);
+  font-size: 1.55rem;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(94, 234, 212, 0.5), 0 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.sda-hero-ontrack-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--sda-gradient-cta);
+  color: var(--sda-on-accent);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.55);
+  flex-shrink: 0;
+}
+
+.sda-hero-ontrack-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Day strip — real Challenge days only */
+.sda-hero-days {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--sda-radius-md);
+  background: rgba(3, 14, 12, 0.94);
+  border: 1px solid var(--sda-glass-border);
+  backdrop-filter: var(--sda-blur);
+  -webkit-backdrop-filter: var(--sda-blur);
+}
+
+.sda-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.sda-day-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(184, 216, 207, 0.45);
+  color: var(--sda-on-accent);
+  transition: background var(--sda-dur-med) var(--sda-ease);
+}
+
+.sda-day--checked .sda-day-dot {
+  border-color: transparent;
+  background: var(--sda-gradient-cta);
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.45);
+}
+
+.sda-day--today .sda-day-dot {
+  outline: 2px solid var(--sda-turquoise-soft);
+  outline-offset: 2px;
+}
+
+.sda-day--future .sda-day-dot {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.sda-day-letter {
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #ecfdf5;
+  text-transform: uppercase;
+}
+
+.sda-day--today .sda-day-letter {
+  color: #a7f3d0;
+  font-weight: 700;
+}
+
+/* Invite actions */
+.sda-hero-invite-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sda-space-2);
+  margin-top: var(--sda-space-1);
+}
+
+.sda-hero-invite-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sda-space-4);
+}
+
+.sda-hero-invite-links .sda-link-btn {
+  min-height: 40px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.sda-hero-invite-links .sda-link-btn--muted {
+  color: var(--sda-text-2);
+  font-weight: 500;
+}
+
+.sda-hero-snooze {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sda-space-2);
+  padding: var(--sda-space-3);
+  border-radius: var(--sda-radius-md);
+  background: rgba(3, 14, 12, 0.7);
+  border: 1px solid var(--sda-glass-border);
+}
+
+.sda-hero-snooze-label {
+  font-size: var(--sda-fs-small);
+  color: var(--sda-text-2);
+  font-weight: 600;
+}
+
+.sda-hero-snooze-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sda-space-2);
+}
+
+@keyframes sda-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 360px) {
+  .sda-hero-body { padding: var(--sda-space-3) var(--sda-space-3) var(--sda-space-4); }
+  .sda-hero-ontrack-script { font-size: 1.35rem; }
+  .sda-hero .sda-ring { width: 96px !important; height: 96px !important; }
+  .sda-day-dot { width: 22px; height: 22px; }
+}
+
+/* Wide layouts: roomier hero */
+@media (min-width: 900px) {
+  .sda-hero-body {
+    padding: var(--sda-space-5);
+    gap: var(--sda-space-4);
+  }
+  .sda-hero .sda-ring {
+    width: 128px !important;
+    height: 128px !important;
+  }
+  .sda-ring-number { font-size: 2.6rem; }
+  .sda-hero-ontrack-script { font-size: 1.7rem; }
+  .sda-hero--invite .sda-hero-body { padding-top: 96px; }
+}

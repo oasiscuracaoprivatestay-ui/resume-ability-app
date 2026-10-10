@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Screen, TimerMode } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './ModeScreen.css';
 
 interface ModeScreenProps {
@@ -41,9 +41,23 @@ export default function ModeScreen({ onSelect, onNavigate, backTo }: ModeScreenP
 
   return (
     <div className="screen mode-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={() => onNavigate(backTo)}
-        onHome={() => onNavigate('home')}
+        title={t.mode_question}
+        eyebrow={t.mode_label}
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="mode-content">

@@ -24,6 +24,17 @@ const HIDDEN_ON: Screen[] = [
   'structured-diet',
   'notification-settings',
   'coach',
+  'my-commitments',
+  'commitment',
+  'my-slippery-zones',
+  'dashboard',
+  'daily-review',
+  'activity-log',
+  'seven-abilities',
+  'ability-detail',
+  'daily-audio',
+  'timer-learn',
+  'quiz',
 ];
 
 interface FloatingProgramButtonProps {

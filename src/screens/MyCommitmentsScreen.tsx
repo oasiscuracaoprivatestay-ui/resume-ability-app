@@ -1,5 +1,4 @@
-import React from 'react';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import './MyCommitmentsScreen.css';
@@ -27,9 +26,14 @@ export const MyCommitmentsScreen: React.FC<MyCommitmentsScreenProps> = ({ onNavi
 
   return (
     <div className="screen my-commitments-screen" id="my-commitments-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        title={t.my_commitments_title}
+        eyebrow="COMMITMENTS & AWARENESS"
         onBack={() => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        backId="btn-header-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        showScoreBadge={true}
         onNavigate={onNavigate}
       />
 

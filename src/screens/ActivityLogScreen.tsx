@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import {
   listActivities,
   deleteActivity,
@@ -198,14 +198,18 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
 
   return (
     <div className="screen activity-log-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        title={t.act_screen_title}
+        subtitle={t.act_screen_subtitle}
+        eyebrow="MOVEMENT & ACTIVITY"
         onBack={onBack}
-        onHome={() => onNavigate('home')}
+        showScoreBadge
         onNavigate={onNavigate}
       />
 
       <div className="activity-log-content">
-        <div className="activity-screen-hero">
+        <div className="activity-screen-hero" style={{ display: 'none' }}>
           <h1 className="activity-screen-title">{t.act_screen_title}</h1>
           <p className="activity-screen-subtitle">{t.act_screen_subtitle}</p>
         </div>

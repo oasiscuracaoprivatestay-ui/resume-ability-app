@@ -1,48 +1,49 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   SDA Terms Screen — Educational Glossary (Phase 9F: Premium Emerald Redesign)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 .sda-terms-screen {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: var(--bg-primary, #0f172a);
-  color: var(--text-primary, #f8fafc);
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 50% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(5, 150, 105, 0.08) 0%, transparent 55%),
+    #030706;
+  color: #f0fdf4;
 }
 
 .sda-terms-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 520px;
+  max-width: 600px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 16px 32px;
+  padding: 0 16px calc(var(--sda-bottom-nav-h, 64px) + 2rem);
   box-sizing: border-box;
 }
 
 .sda-terms-header {
   margin-bottom: 20px;
-}
-
-.sda-terms-title {
-  margin: 6px 0 4px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #ffffff;
+  padding-top: 0.25rem;
 }
 
 .sda-terms-slogan {
   margin: 4px 0 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--accent, #34d399);
-  line-height: 1.35;
+  color: #34d399;
+  line-height: 1.4;
   letter-spacing: 0.01em;
 }
 
 .sda-terms-subtitle {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary, #94a3b8);
-  line-height: 1.4;
+  font-size: 0.88rem;
+  color: #a7f3d0;
+  opacity: 0.85;
+  line-height: 1.5;
 }
 
 .sda-terms-list {
@@ -52,16 +53,20 @@
 }
 
 .sda-term-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.22) 0%, rgba(3, 20, 15, 0.5) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 16px;
   padding: 16px;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
 
 .sda-term-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(52, 211, 153, 0.38);
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.3) 0%, rgba(3, 20, 15, 0.6) 100%);
+  transform: translateY(-1px);
 }
 
 .sda-term-top {
@@ -76,25 +81,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.3);
 }
 
 .sda-term-name {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 700;
+  color: #f0fdf4;
 }
 
 .sda-term-def {
   margin: 0;
   font-size: 0.88rem;
-  line-height: 1.5;
-  color: #cbd5e1;
+  line-height: 1.55;
+  color: #a7f3d0;
+  opacity: 0.9;
 }
 
 .sda-terms-footer {
@@ -106,4 +112,17 @@
 .sda-terms-home-btn {
   width: 100%;
   max-width: 280px;
+  background: linear-gradient(135deg, #34d399, #059669);
+  color: #03140e;
+  font-weight: 700;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sda-terms-home-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
 }

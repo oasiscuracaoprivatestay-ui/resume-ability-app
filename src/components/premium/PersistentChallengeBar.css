@@ -1,0 +1,259 @@
+/* ══════════════════════════════════════════════
+   Persistent Minimizable Challenge Status Bar (Phase 7)
+   Adheres strictly to the premium dark emerald/turquoise design system.
+   ══════════════════════════════════════════════ */
+
+.sda-persistent-bar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  pointer-events: auto;
+  transition: all var(--sda-dur-fast, 160ms) var(--sda-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* Wide canvas on desktop for responsive shell if expanded */
+#root:has(.home-premium) .sda-persistent-bar-wrapper {
+  max-width: 1120px;
+}
+
+.sda-persistent-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: linear-gradient(135deg, rgba(6, 28, 22, 0.94) 0%, rgba(4, 20, 16, 0.96) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(45, 212, 191, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 10px rgba(45, 212, 191, 0.06);
+  padding: 0 12px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+/* ── Expanded State ── */
+.sda-persistent-bar--expanded {
+  height: 44px;
+  position: relative;
+}
+
+.sda-persistent-bar--expanded .sda-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-persistent-bar--expanded .sda-bar-main:focus-visible {
+  outline: 2px solid var(--sda-turquoise, #2dd4bf);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.sda-bar-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--sda-turquoise, #2dd4bf);
+  flex-shrink: 0;
+}
+
+.sda-bar-meta-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sda-bar-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.sda-bar-day-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--sda-turquoise, #2dd4bf);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.sda-bar-separator {
+  color: var(--text-dim, #6e6e88);
+  font-size: 0.7rem;
+}
+
+.sda-bar-ability-name {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-secondary, #c8c8d8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sda-bar-nav-hint {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--sda-emerald, #34d399);
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: opacity var(--sda-dur-fast, 160ms) ease;
+}
+
+.sda-persistent-bar--expanded .sda-bar-main:hover .sda-bar-nav-hint {
+  opacity: 1;
+  color: var(--sda-turquoise-soft, #5eead4);
+}
+
+/* Subtle progress bar at the very bottom edge of expanded bar */
+.sda-bar-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(45, 212, 191, 0.15);
+  overflow: hidden;
+}
+
+.sda-bar-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #2dd4bf 100%);
+  box-shadow: 0 0 6px rgba(45, 212, 191, 0.4);
+  transition: width 0.3s ease;
+}
+
+/* ── Minimized State ── */
+.sda-persistent-bar--minimized {
+  height: 28px;
+  padding: 0 10px;
+  background: linear-gradient(135deg, rgba(6, 24, 19, 0.95) 0%, rgba(4, 18, 14, 0.97) 100%);
+  border-bottom: 1px solid rgba(45, 212, 191, 0.18);
+}
+
+.sda-persistent-bar--minimized .sda-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-persistent-bar--minimized .sda-bar-main:focus-visible {
+  outline: 2px solid var(--sda-turquoise, #2dd4bf);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.sda-bar-min-icon {
+  color: var(--sda-turquoise, #2dd4bf);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sda-bar-min-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sda-turquoise, #2dd4bf);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.sda-bar-min-pct {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--sda-radius-pill, 999px);
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--sda-emerald, #34d399);
+  white-space: nowrap;
+}
+
+/* ── Toggle Button (Minimize / Expand) ── */
+.sda-bar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  background: rgba(16, 34, 29, 0.6);
+  color: var(--text-muted, #8e8ea8);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all var(--sda-dur-fast, 160ms) ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-bar-toggle-btn:hover {
+  background: rgba(45, 212, 191, 0.18);
+  color: var(--sda-turquoise, #2dd4bf);
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.sda-bar-toggle-btn:focus-visible {
+  outline: 2px solid var(--sda-turquoise, #2dd4bf);
+  outline-offset: 1px;
+}
+
+.sda-persistent-bar--minimized .sda-bar-toggle-btn {
+  width: 22px;
+  height: 20px;
+}
+
+/* ── Mobile responsiveness down to 320px ── */
+@media (max-width: 360px) {
+  .sda-bar-nav-hint {
+    display: none;
+  }
+  .sda-bar-day-badge {
+    font-size: 0.70rem;
+  }
+  .sda-bar-ability-name {
+    font-size: 0.70rem;
+  }
+}

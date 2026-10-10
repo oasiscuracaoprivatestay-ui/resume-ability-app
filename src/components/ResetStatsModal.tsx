@@ -101,7 +101,7 @@ export default function ResetStatsModal({
                 <span className="reset-modal-shield" aria-hidden="true">🛡️</span>
                 <div>
                   <p>{t.stats_modal_desc_2}</p>
-                  <p style={{ marginTop: '0.45rem', color: '#38bdf8', fontWeight: 600 }}>
+                  <p style={{ marginTop: '0.45rem', color: 'var(--sda-emerald-soft, #a7f3d0)', fontWeight: 600 }}>
                     {t.stats_lifetime_preserved_note}
                   </p>
                 </div>

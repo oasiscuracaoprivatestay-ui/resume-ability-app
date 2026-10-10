@@ -2,8 +2,9 @@ import { useState, useMemo, useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import HoldCommitButton from '../components/HoldCommitButton';
+import NextActionModal from '../components/premium/NextActionModal';
 import './RecommitScreen.css';
 
 interface RecommitScreenProps {
@@ -19,6 +20,7 @@ export default function RecommitScreen({
 }: RecommitScreenProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<RecommitStep>('hold');
+  const [showNextAction, setShowNextAction] = useState(false);
 
   // Load user's saved Why reason directly from pledge storage
   const firstReason = useMemo(() => {
@@ -29,13 +31,19 @@ export default function RecommitScreen({
   const handleHoldComplete = useCallback(() => {
     onComplete();
     setStep('success');
+    setShowNextAction(true);
   }, [onComplete]);
 
   return (
     <div className="screen recommit-screen">
-      <ScreenHeader
-        onBack={() => onNavigate('help')}
-        onHome={() => onNavigate('home')}
+      <PremiumScreenHeader
+        title={t.recommit_title}
+        eyebrow={t.recommit_label || 'RECOVERY & FOCUS'}
+        subtitle={step === 'hold' ? t.recommit_subtitle : undefined}
+        onBack={() => onNavigate(step === 'hold' ? 'help' : 'home')}
+        backId="btn-header-back"
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       {step === 'hold' ? (
@@ -106,6 +114,20 @@ export default function RecommitScreen({
           <p className="recommit-success-body">{t.recommit_success_body}</p>
 
           <button
+            id="btn-recommit-next-action"
+            className="recommit-btn-home"
+            style={{
+              marginTop: '0.75rem',
+              background: 'linear-gradient(135deg, #10b981 0%, #0d9488 100%)',
+              color: '#041310',
+              fontWeight: 800,
+            }}
+            onClick={() => setShowNextAction(true)}
+          >
+            {t.next_action_modal_title || 'Choose Your Next Step'} →
+          </button>
+
+          <button
             id="btn-recommit-home"
             className="recommit-btn-home"
             onClick={() => onNavigate('home')}
@@ -114,6 +136,14 @@ export default function RecommitScreen({
           </button>
         </div>
       )}
+
+      {/* ── Premium Next Action After Recommit (Phase 5) ── */}
+      <NextActionModal
+        isOpen={showNextAction}
+        onClose={() => setShowNextAction(false)}
+        onNavigate={onNavigate}
+        currentScreen="recommit"
+      />
     </div>
   );
 }

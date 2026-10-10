@@ -1,6 +1,6 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './SdaTermsScreen.css';
 
 interface SdaTermsScreenProps {
@@ -52,15 +52,27 @@ export default function SdaTermsScreen({ onNavigate, onBack }: SdaTermsScreenPro
 
   return (
     <div className="screen sda-terms-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={onBack ? onBack : () => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        title={t.sda_terms_title}
+        eyebrow="GLOSSARY"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="sda-terms-content">
         <div className="sda-terms-header">
-          <span className="section-label">SDA</span>
-          <h1 className="sda-terms-title">{t.sda_terms_title}</h1>
           <p className="sda-terms-slogan">{t.sda_slogan}</p>
           <p className="sda-terms-subtitle">{t.sda_terms_subtitle}</p>
         </div>

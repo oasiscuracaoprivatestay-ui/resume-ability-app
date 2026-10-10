@@ -1,0 +1,105 @@
+/* ══════════════════════════════════════════════
+   Premium Bottom Navigation (Phase 2)
+   Fixed to the viewport bottom, constrained to the app column.
+   Hosts must reserve padding-bottom: var(--sda-nav-reserve).
+   ══════════════════════════════════════════════ */
+
+:root {
+  --sda-nav-reserve: calc(var(--sda-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+.sda-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100%, 430px);
+  z-index: var(--sda-z-nav);
+  padding: 0 10px env(safe-area-inset-bottom, 0px);
+  background: linear-gradient(180deg, rgba(6, 16, 13, 0) 0%, rgba(6, 16, 13, 0.92) 30%, rgba(6, 16, 13, 0.98) 100%);
+}
+
+.sda-bottom-nav-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: var(--sda-bottom-nav-h);
+  align-items: center;
+  border-radius: var(--sda-radius-lg) var(--sda-radius-lg) 0 0;
+  border: 1px solid var(--sda-glass-border);
+  border-bottom: none;
+  background: rgba(12, 26, 22, 0.88);
+  backdrop-filter: var(--sda-blur);
+  -webkit-backdrop-filter: var(--sda-blur);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sda-nav-item {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--sda-text-muted);
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--sda-radius-sm);
+  transition: color var(--sda-dur-fast) var(--sda-ease), background var(--sda-dur-fast) var(--sda-ease);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.sda-nav-item:hover {
+  color: var(--sda-text);
+}
+
+.sda-nav-item:focus-visible {
+  outline: 2px solid var(--sda-turquoise-soft);
+  outline-offset: -2px;
+}
+
+.sda-nav-item--active {
+  color: var(--sda-turquoise-soft);
+}
+
+.sda-nav-item--active::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 22px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--sda-gradient-cta);
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.6);
+}
+
+.sda-nav-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+@media (min-width: 900px) {
+  .sda-bottom-nav {
+    width: min(100%, 560px);
+    bottom: 12px;
+    padding-bottom: 0;
+    background: none;
+  }
+  .sda-bottom-nav-list {
+    border-radius: var(--sda-radius-pill);
+    border-bottom: 1px solid var(--sda-glass-border);
+  }
+  :root {
+    --sda-nav-reserve: calc(var(--sda-bottom-nav-h) + 40px);
+  }
+}

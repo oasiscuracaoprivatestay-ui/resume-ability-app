@@ -38,6 +38,7 @@ import { ChallengesScreen } from './screens/ChallengesScreen';
 import { SevenAbilitiesScreen } from './screens/SevenAbilitiesScreen';
 import { AbilityDetailScreen } from './screens/AbilityDetailScreen';
 import { ActivityLogScreen } from './screens/ActivityLogScreen';
+import ProgressVictoriesScreen from './screens/ProgressVictoriesScreen';
 import { normalizeToCanonicalDietAbilityId, type CanonicalDietAbilityId } from './abilities';
 import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY } from './challenges';
 import InAppReminderBanner from './components/InAppReminderBanner';
@@ -66,11 +67,24 @@ import {
   recordReminderDismissed,
 } from './utils/notificationSettingsStorage';
 import { useTranslation } from './i18n';
+import { PersistentChallengeBar } from './components/premium/PersistentChallengeBar';
+import { BottomNav } from './components/premium/BottomNav';
+import { GlobalMoreSheet } from './components/premium/GlobalMoreSheet';
+
+const ROOT_SCREENS = new Set<Screen>(['home', 'challenges', 'structured-diet', 'progress-victories']);
 
 const TIMER_DURATION = 900; // 15 minutes in seconds
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const s = params.get('screen');
+      if (s) return s as Screen;
+    }
+    return 'home';
+  });
+  const [moreOpen, setMoreOpen] = useState(false);
   const [pendingContext, setPendingContext] = useState<SlipContext | null>(null);
   const [currentReportedSlip, setCurrentReportedSlip] = useState<TargetSlipInfo | null>(null);
   const [session, setSession] = useState<ActiveSession | null>(null);
@@ -161,6 +175,7 @@ export default function App() {
   const historyStackRef = useRef<Screen[]>(['home']);
 
   const goBack = useCallback(() => {
+    setMoreOpen(false);
     const stack = historyStackRef.current;
     if (stack.length > 1) {
       stack.pop(); // Pop current screen
@@ -182,6 +197,7 @@ export default function App() {
 
   // ── Navigation ──
   const navigate = useCallback((target: Screen) => {
+    setMoreOpen(false);
     if (target === 'motivation-choice') {
       // Record origin based on where the user navigated from
       if (screenRef.current === 'check-in') {
@@ -614,6 +630,8 @@ export default function App() {
           onNavigate={navigate}
           onStartTimer={handleStartTimer}
           onInControl={handleInControl}
+          onOpenMore={() => setMoreOpen(true)}
+          moreOpen={moreOpen}
         />
       );
       break;
@@ -734,6 +752,10 @@ export default function App() {
       content = <DashboardScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
+    case 'progress-victories':
+      content = <ProgressVictoriesScreen onNavigate={navigate} onBack={goBack} />;
+      break;
+
     case 'history':
       content = <HistoryScreen onNavigate={navigate} onBack={goBack} />;
       break;
@@ -782,7 +804,7 @@ export default function App() {
       break;
 
     case 'premium':
-      content = <PremiumScreen onNavigate={navigate} />;
+      content = <PremiumScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'timer-learn':
@@ -906,6 +928,8 @@ export default function App() {
           onNavigate={navigate}
           onStartTimer={handleStartTimer}
           onInControl={handleInControl}
+          onOpenMore={() => setMoreOpen(true)}
+          moreOpen={moreOpen}
         />
       );
   }
@@ -919,7 +943,33 @@ export default function App() {
           onDismiss={handleDismissReminder}
         />
       )}
+      <PersistentChallengeBar currentScreen={screen} onNavigate={navigate} />
       {content}
+      {ROOT_SCREENS.has(screen) && (
+        <>
+          <BottomNav
+            current={screen}
+            onNavigate={(target) => {
+              setMoreOpen(false);
+              navigate(target);
+            }}
+            onOpenMore={() => setMoreOpen(true)}
+            moreOpen={moreOpen}
+          />
+          <GlobalMoreSheet
+            open={moreOpen}
+            onClose={() => setMoreOpen(false)}
+            onNavigate={(target) => {
+              setMoreOpen(false);
+              navigate(target);
+            }}
+            onStartTimer={() => {
+              setMoreOpen(false);
+              handleStartTimer();
+            }}
+          />
+        </>
+      )}
       {levelUpToShow !== null && (
         <LevelUpModal
           level={levelUpToShow}

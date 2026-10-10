@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import { playFeedback } from '../utils/feedback';
 import { getLocalDateKey } from '../utils/dietStorage';
 import {
@@ -241,9 +241,14 @@ export default function DailyReviewScreen({
   return (
     <div className="screen dr-screen">
       <div className="dr-inner">
-        <ScreenHeader
+        <PremiumScreenHeader
+          title={t.dr_screen_title || 'Daily Review'}
+          eyebrow="DAILY REFLECTION"
+          subtitle={t.dr_screen_subtitle}
           onBack={handleHeaderBack}
-          onHome={() => onNavigate('home')}
+          backId="btn-header-back"
+          showScoreBadge
+          onNavigate={onNavigate}
         />
 
         <div className="dr-content">

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import HoldCommitButton from '../components/HoldCommitButton';
 import './CommitScreen.css';
 
@@ -34,9 +34,14 @@ export default function CommitScreen({
 
   return (
     <div className="screen commit-screen">
-      <ScreenHeader
-        onBack={() => onNavigate('control')}
-        onHome={() => onNavigate('home')}
+      <PremiumScreenHeader
+        title={t.commit_title}
+        eyebrow={t.commit_badge}
+        subtitle={step === 'hold' ? t.commit_subtitle : undefined}
+        onBack={() => onNavigate(step === 'hold' ? 'control' : 'home')}
+        backId="btn-header-back"
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       {step === 'hold' ? (

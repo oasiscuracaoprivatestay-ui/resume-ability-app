@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import HoldCommitButton from '../components/HoldCommitButton';
 import { generateId } from '../utils';
 import { saveCommitEvent } from '../utils/inControlStorage';
@@ -39,9 +39,14 @@ export default function ControlScreen({ onNavigate, onCommitSuccess }: ControlSc
 
   return (
     <div className="screen control-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        title={t.control_win_title}
+        eyebrow={t.control_badge}
+        subtitle={step === 'control' ? t.control_win_subtitle : undefined}
         onBack={() => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        backId="btn-header-back"
+        showScoreBadge
+        onNavigate={onNavigate}
       />
 
       {step === 'control' ? (

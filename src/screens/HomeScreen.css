@@ -1,1091 +1,381 @@
-.home-screen {
+/* ══════════════════════════════════════════════
+   Super Diet-Ability — Premium Home (Phase 2)
+   Mobile-first; two columns from 900px (Home only — see #root:has(.home-premium)).
+   ══════════════════════════════════════════════ */
+
+.home-premium {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 100dvh;
-  padding: 1.25rem 1.5rem 1.75rem;
+  gap: var(--sda-space-4);
+  padding: max(12px, env(safe-area-inset-top, 0px)) var(--sda-space-4) var(--sda-nav-reserve);
+  background:
+    radial-gradient(120% 40% at 50% 0%, rgba(20, 70, 60, 0.35) 0%, transparent 60%),
+    radial-gradient(80% 50% at 100% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 70%),
+    var(--bg);
+  color: var(--sda-text);
 }
 
 /* ── Top bar ── */
-
 .home-top-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  row-gap: 0.45rem;
-  column-gap: 0.5rem;
+  justify-content: space-between;
+  gap: var(--sda-space-3);
+  min-height: 48px;
+}
+
+.home-brand-h1 {
+  margin: 0;
+  font: inherit;
+  flex-shrink: 0;
 }
 
 .home-brand-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0;
+  gap: 1px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.25rem 0;
-  transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  padding: 4px 2px;
+  border-radius: 8px;
   line-height: 1;
-  min-width: 0;
-  flex-shrink: 1;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.home-brand-btn:active {
-  transform: scale(0.97);
+.home-brand-btn:focus-visible {
+  outline: 2px solid var(--sda-turquoise-soft);
+  outline-offset: 2px;
+}
+
+.home-brand-kicker {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  color: var(--sda-text-2);
 }
 
 .home-brand-title {
-  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
+  font-size: 1.08rem;
   font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
-  font-family: var(--font);
-  white-space: nowrap;
-}
-
-.home-brand-sub {
-  font-size: clamp(0.5rem, 1.6vw, 0.6rem);
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font);
-  white-space: nowrap;
+  letter-spacing: 0.06em;
+  color: var(--sda-text);
 }
 
 .home-top-right {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  margin-left: auto;
+  gap: 8px;
+  min-width: 0;
 }
 
-@media (max-width: 440px) {
-  .home-top-bar {
-    row-gap: 0.4rem;
-    column-gap: 0.35rem;
-  }
-  .home-top-right {
-    gap: 0.25rem;
-  }
+.home-top-right #btn-home-menu {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
 }
 
-@media (max-width: 360px) {
-  .home-top-bar {
-    row-gap: 0.35rem;
-    column-gap: 0.25rem;
-  }
-  .home-top-right {
-    gap: 0.18rem;
-  }
+/* Compact score badge — Home header only (shared GlobalScoreBadge styles untouched) */
+.home-top-right .global-score-badge {
+  height: 42px;
+  padding: 0 12px 0 10px;
+  gap: 8px;
+  border-radius: var(--sda-radius-pill);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.12) 0%, rgba(6, 24, 20, 0.85) 100%);
+  border: 1px solid var(--sda-glass-border-strong);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
-.home-reminders-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  color: var(--text-dim);
+.home-top-right .global-score-badge:hover {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(6, 24, 20, 0.9) 100%);
+  border-color: var(--sda-turquoise);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32), 0 0 16px rgba(45, 212, 191, 0.18);
+}
+
+.home-top-right .global-score-badge:focus-visible {
+  outline: 2px solid #ecfdf5;
+  outline-offset: 3px;
+}
+
+.home-top-right .gsb-icon {
+  /* Replace the emoji glyph with a crisp SVG bolt (Lucide "zap", ISC) */
+  font-size: 0;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
+  background: linear-gradient(180deg, #fde68a 0%, #fbbf24 100%);
+  filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.45));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-.home-reminders-btn:hover {
-  border-color: rgba(52, 211, 153, 0.4);
-  background: rgba(52, 211, 153, 0.08);
-  color: var(--accent);
-  transform: scale(1.05);
+.home-top-right .gsb-val--today {
+  font-size: 1rem;
+  color: var(--sda-emerald);
 }
 
-.home-settings-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  color: var(--text-dim);
-  flex-shrink: 0;
+.home-top-right .gsb-val--lifetime {
+  font-size: 0.88rem;
 }
 
-.home-settings-btn:hover {
-  border-color: rgba(52, 211, 153, 0.4);
-  background: rgba(52, 211, 153, 0.08);
-  color: var(--accent);
-  transform: scale(1.05);
+.home-top-right .gsb-lbl {
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  color: var(--sda-text-3);
+  margin-top: 2px;
 }
 
-@media (max-width: 440px) {
-  .home-reminders-btn,
-  .home-settings-btn {
-    width: 25px;
-    height: 25px;
-    font-size: 0.78rem;
-  }
+.home-top-right .gsb-divider {
+  height: 18px;
+  background: rgba(94, 234, 212, 0.18);
 }
 
-@media (max-width: 360px) {
-  .home-reminders-btn,
-  .home-settings-btn {
-    width: 22px;
-    height: 22px;
-    font-size: 0.72rem;
-  }
+.home-top-right .gsb-level-pill:not(.gsb-level-pill--max) {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(94, 234, 212, 0.35);
+  border-radius: var(--sda-radius-pill);
+  padding: 3px 8px;
 }
 
-/* ── Exit button (top-right, next to language selector) ── */
-
-.home-exit-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.3rem 0.55rem;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-dim);
-  font-family: var(--font);
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-  white-space: nowrap;
+.home-top-right .gsb-level-pill:not(.gsb-level-pill--max) .gsb-level-tag {
+  font-size: 0.56rem;
+  color: var(--sda-text-2);
 }
 
-.home-exit-btn:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-muted);
+.home-top-right .gsb-level-pill:not(.gsb-level-pill--max) .gsb-level-num {
+  font-size: 0.8rem;
+  color: var(--sda-turquoise-soft);
 }
 
-.home-exit-btn:active {
-  transform: scale(0.95);
+/* ── Layout ── */
+.home-premium-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sda-space-4);
 }
 
-.home-exit-icon {
-  font-size: 0.7rem;
-  line-height: 1;
-}
-
-.home-exit-label {
-  line-height: 1;
-}
-
-@media (max-width: 440px) {
-  .home-exit-btn {
-    padding: 0.22rem 0.42rem;
-    font-size: 0.62rem;
-    gap: 0.2rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .home-exit-btn {
-    padding: 0.18rem 0.32rem;
-    font-size: 0.56rem;
-    gap: 0.15rem;
-  }
-}
-
-/* ── Question block ── */
-
-.home-content {
-  flex: 1;
+.home-col {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1.25rem;
+  gap: var(--sda-space-4);
+  min-width: 0;
 }
 
-/* ── Global SDA Brand & Slogan Hero (Phase 26H) ── */
+/* ── Daily Check-In ── */
+.home-checkin-block {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
 
+.home-checkin-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-checkin-label {
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.home-checkin-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.home-slip-chip {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--sda-radius-pill);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  background: rgba(56, 189, 248, 0.08);
+  color: #bae6fd;
+  font-family: inherit;
+  font-size: var(--sda-fs-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--sda-dur-fast) var(--sda-ease), border-color var(--sda-dur-fast) var(--sda-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-slip-chip:hover {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.home-slip-chip:focus-visible {
+  outline: 2px solid #bae6fd;
+  outline-offset: 3px;
+}
+
+/* ── Quick Actions ── */
+.home-section-title {
+  font-size: var(--sda-fs-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--sda-text);
+  margin-bottom: var(--sda-space-3);
+}
+
+.home-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-quick-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px;
+  border-radius: var(--sda-radius-lg);
+  border: 1px solid var(--sda-glass-border);
+  background: var(--sda-gradient-card);
+  color: var(--sda-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transition: transform var(--sda-dur-fast) var(--sda-ease), border-color var(--sda-dur-med) var(--sda-ease),
+    box-shadow var(--sda-dur-med) var(--sda-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-quick-tile:hover {
+  border-color: var(--sda-glass-border-strong);
+  box-shadow: var(--sda-glow);
+  transform: translateY(-1px);
+}
+
+.home-quick-tile:active {
+  transform: scale(0.98);
+}
+
+.home-quick-tile:focus-visible {
+  outline: 2px solid var(--sda-turquoise-soft);
+  outline-offset: 2px;
+}
+
+.home-quick-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--sda-turquoise-soft);
+  flex-shrink: 0;
+}
+
+.home-quick-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── Record Movement entry (Phase 43.4) — now lives in the More sheet ── */
+.home-btn-activity {
+  color: var(--sda-text);
+}
+
+.home-btn-activity:hover {
+  background: rgba(45, 212, 191, 0.07);
+}
+
+.home-btn-activity:active {
+  background: rgba(45, 212, 191, 0.12);
+}
+
+/* ── Discreet brand slogan (Phase 26H) ── */
 .home-brand-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 6px;
+  padding: var(--sda-space-2) var(--sda-space-4) 0;
   text-align: center;
-  max-width: 340px;
-  width: 100%;
-  padding: 0 0.5rem;
+  opacity: 0.85;
 }
 
 .home-brand-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.25);
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.1);
+  letter-spacing: 0.3em;
+  color: var(--sda-turquoise-soft);
+  padding: 3px 10px;
+  border-radius: var(--sda-radius-pill);
+  border: 1px solid var(--sda-glass-border-strong);
 }
 
 .home-brand-hero-slogan {
-  font-size: clamp(0.78rem, 2.4vw, 0.88rem);
-  font-weight: 500;
-  color: var(--text-secondary);
-  line-height: 1.35;
-  margin: 0;
-  text-wrap: balance;
-}
-
-.home-question-block {
-  text-align: center;
-}
-
-.home-question {
-  font-size: clamp(1.6rem, 4.5vw, 2.2rem);
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.25rem;
-}
-
-.accent-text {
-  color: var(--accent);
-}
-
-.home-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 260px;
-  margin: 0 auto;
-}
-
-/* ── Action cards ── */
-
-.home-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 340px;
-}
-
-/* ── Daily Check-In entry button ── PRIMARY HERO ACTION ── */
-
-.home-btn-checkin {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 1.4rem 1.35rem 1.4rem 1.5rem;
-  /* Green hero gradient */
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  border: none;
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  font-family: var(--font);
-  -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow 0.25s ease, transform 0.15s ease;
-  /* Strong green glow */
-  box-shadow:
-    0 4px 28px rgba(34, 197, 94, 0.45),
-    0 0 60px rgba(34, 197, 94, 0.18);
-}
-
-/* Shimmer highlight */
-.home-btn-checkin::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 55%; height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0.12) 0%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.home-btn-checkin:hover {
-  box-shadow:
-    0 6px 36px rgba(34, 197, 94, 0.55),
-    0 0 80px rgba(34, 197, 94, 0.25);
-  transform: translateY(-2px);
-}
-
-.home-btn-checkin:active {
-  transform: translateY(0) scale(0.99);
-  box-shadow:
-    0 2px 16px rgba(34, 197, 94, 0.4),
-    0 0 40px rgba(34, 197, 94, 0.15);
-}
-
-.home-btn-checkin-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-/* Small eyebrow label above title */
-.home-btn-checkin-eyebrow {
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1;
-  margin-bottom: 0.1rem;
-}
-
-.home-btn-checkin-label {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-}
-
-.home-btn-checkin-sub {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.3;
-  margin-top: 0.15rem;
-}
-
-.home-btn-checkin-arrow {
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.8);
-  flex-shrink: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  line-height: 1;
-}
-
-.home-btn-checkin:hover .home-btn-checkin-arrow {
-  opacity: 1;
-  transform: translateX(3px);
-}
-
-/* ── Slip button ── ORANGE SOLID ── */
-
-.home-btn-slip {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  /* Solid orange — clearly secondary, never competes with green */
-  background: #f97316;
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 18px rgba(249, 115, 22, 0.35);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-slip:hover {
-  background: #ea6c0a;
-  box-shadow: 0 6px 28px rgba(249, 115, 22, 0.45);
-  transform: translateY(-1px);
-}
-
-.home-btn-slip:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.3);
-}
-
-/* ── Motivation button ── BLUE SOLID ── */
-
-.home-btn-motivation {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  /* Solid blue — never competes with green primary */
-  background: #3b82f6;
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 18px rgba(59, 130, 246, 0.35);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-motivation:hover {
-  background: #2563eb;
-  box-shadow: 0 6px 28px rgba(59, 130, 246, 0.45);
-  transform: translateY(-1px);
-}
-
-.home-btn-motivation:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-}
-
-/* ── I Am in Control button ── WHITE BORDER / TRANSPARENT ── */
-
-.home-btn-control {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  background: transparent;
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: 1.5px solid rgba(255, 255, 255, 0.55);
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-control:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
-}
-
-.home-btn-control:active {
-  transform: translateY(0);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-/* ── Timer & Airtime Lock Entry (Phase 29A) ── */
-
-.home-btn-timer {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  background: rgba(56, 189, 248, 0.08);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: 1.5px solid rgba(56, 189, 248, 0.4);
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.12);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-timer:hover {
-  background: rgba(56, 189, 248, 0.16);
-  border-color: #38bdf8;
-  box-shadow: 0 6px 26px rgba(56, 189, 248, 0.25);
-  transform: translateY(-1px);
-}
-
-.home-btn-timer:active {
-  transform: translateY(0);
-  background: rgba(56, 189, 248, 0.1);
-  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.15);
-}
-
-/* ── Structured Diet button ── TEAL ACCENT ── */
-
-.home-btn-diet {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  background: rgba(45, 212, 191, 0.08);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: 1.5px solid rgba(45, 212, 191, 0.38);
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 18px rgba(45, 212, 191, 0.12);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-diet:hover {
-  background: rgba(45, 212, 191, 0.15);
-  border-color: var(--accent);
-  box-shadow: 0 6px 26px rgba(45, 212, 191, 0.25);
-  transform: translateY(-1px);
-}
-
-.home-btn-diet:active {
-  transform: translateY(0);
-  background: rgba(45, 212, 191, 0.1);
-  box-shadow: 0 2px 10px rgba(45, 212, 191, 0.15);
-}
-
-/* ── Record Movement button (Phase 43.4) ── EMERALD ACCENT ── */
-.home-btn-activity {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.15rem 1.5rem;
-  background: rgba(16, 185, 129, 0.08);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  border: 1.5px solid rgba(16, 185, 129, 0.38);
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.12);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-activity:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: #10b981;
-  box-shadow: 0 6px 26px rgba(16, 185, 129, 0.25);
-  transform: translateY(-1px);
-}
-
-.home-btn-activity:active {
-  transform: translateY(0);
-  background: rgba(16, 185, 129, 0.1);
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
-}
-
-/* ── Main Menu Commitment & Non-Negotiables action buttons ── */
-.home-btn-action {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 1.05rem 1.5rem;
-  color: #fff;
-  font-family: var(--font);
-  font-size: 1.02rem;
-  font-weight: 700;
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: 0.01em;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-btn-action--commitment {
-  background: rgba(168, 85, 247, 0.1);
-  border: 1.5px solid rgba(168, 85, 247, 0.38);
-  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.15);
-}
-
-.home-btn-action--commitment:hover {
-  background: rgba(168, 85, 247, 0.18);
-  border-color: #a855f7;
-  box-shadow: 0 6px 26px rgba(168, 85, 247, 0.28);
-  transform: translateY(-1px);
-}
-
-.home-btn-action--commitment:active {
-  transform: translateY(0);
-}
-
-.home-btn-action--nn {
-  background: rgba(234, 179, 8, 0.09);
-  border: 1.5px solid rgba(234, 179, 8, 0.38);
-  box-shadow: 0 4px 18px rgba(234, 179, 8, 0.15);
-}
-
-.home-btn-action--nn:hover {
-  background: rgba(234, 179, 8, 0.18);
-  border-color: #eab308;
-  box-shadow: 0 6px 26px rgba(234, 179, 8, 0.28);
-  transform: translateY(-1px);
-}
-
-.home-btn-action--nn:active {
-  transform: translateY(0);
-}
-
-/* ── Phase 7A: My Commitments Card on Home ── */
-.home-btn-action--my-commitments {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(168, 85, 247, 0.14));
-  border: 1.5px solid rgba(99, 102, 241, 0.45);
-  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  padding: 1.1rem 1.4rem;
-  gap: 0.9rem;
-}
-
-.home-btn-action--my-commitments:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.22));
-  border-color: #818cf8;
-  box-shadow: 0 6px 26px rgba(99, 102, 241, 0.3);
-  transform: translateY(-1px);
-}
-
-.home-btn-action--my-commitments:active {
-  transform: translateY(0);
-}
-
-/* ── Phase 33: SDA AI Coach Card on Home ── */
-.home-btn-action--coach {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(56, 189, 248, 0.14));
-  border: 1.5px solid rgba(52, 211, 153, 0.45);
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  padding: 1.1rem 1.4rem;
-  gap: 0.9rem;
-}
-
-.home-btn-action--coach:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(56, 189, 248, 0.22));
-  border-color: #34d399;
-  box-shadow: 0 6px 26px rgba(16, 185, 129, 0.3);
-  transform: translateY(-1px);
-}
-
-.home-btn-action--coach:active {
-  transform: translateY(0);
-}
-
-.home-btn-action--coach:hover .home-btn-chevron {
-  color: #34d399;
-  transform: translateX(4px);
-}
-
-/* ── Phase 41D.5: Ability Challenges Permanent Card on Home ── */
-.home-btn-action--challenges {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.14));
-  border: 1.5px solid rgba(245, 158, 11, 0.45);
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  padding: 1.1rem 1.4rem;
-  gap: 0.9rem;
-}
-
-.home-btn-action--challenges:hover {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.22));
-  border-color: #f59e0b;
-  box-shadow: 0 6px 26px rgba(245, 158, 11, 0.3);
-  transform: translateY(-1px);
-}
-
-.home-btn-action--challenges:active {
-  transform: translateY(0);
-}
-
-.home-btn-action--challenges:hover .home-btn-chevron {
-  color: #f59e0b;
-  transform: translateX(4px);
-}
-
-.home-btn-text-col {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.home-btn-primary-text {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.25;
-}
-
-.home-btn-sub-text {
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: #cbd5e1;
-  margin-top: 2px;
-  line-height: 1.3;
-}
-
-.home-btn-chevron {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.5);
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.home-btn-action--my-commitments:hover .home-btn-chevron {
-  transform: translateX(3px);
-  color: #fff;
-}
-
-/* ── Shortcuts Row (Slippery Zones & Non-Negotiables) ── */
-.home-commitments-shortcuts-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  width: 100%;
-}
-
-.home-btn-shortcut {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-lg, 14px);
-  font-family: var(--font);
-  font-size: 0.86rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  color: #fff;
-}
-
-.home-btn-shortcut--sz {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-.home-btn-shortcut--sz:hover {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: #f59e0b;
-  transform: translateY(-1px);
-}
-
-.home-btn-shortcut--nn {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-}
-
-.home-btn-shortcut--nn:hover {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
-  transform: translateY(-1px);
-}
-
-.home-btn-shortcut-icon {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.home-btn-shortcut-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.home-btn-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-/* ── Secondary CTA row (inline on Home — replaces floating buttons) ── */
-
-.home-secondary-row {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 340px;
-  flex-wrap: nowrap; /* both buttons must fit side-by-side at 375px */
-}
-
-.home-secondary-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-height: 46px;
-  padding: 0.6rem 0.75rem;
-  border-radius: 999px;
-  font-family: var(--font);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* "Get the Full System" — teal accent pill */
-.home-secondary-btn--program {
-  background: rgba(45, 212, 191, 0.06);
-  border: 1.5px solid rgba(45, 212, 191, 0.4);
-  color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
-}
-
-.home-secondary-btn--program:hover {
-  background: rgba(45, 212, 191, 0.12);
-  border-color: var(--accent);
-  box-shadow: 0 0 18px var(--accent-glow-strong);
-  transform: translateY(-1px);
-}
-
-/* "Start Timer" — surface pill */
-.home-secondary-btn--timer {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-
-.home-secondary-btn--timer:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-  transform: translateY(-1px);
-}
-
-.home-secondary-btn:active {
-  transform: translateY(0) scale(0.96);
-}
-
-/* ── "How the Timer Works" secondary link ── */
-
-.home-learn-link {
-  background: rgba(45, 212, 191, 0.06);
-  border: 1px solid rgba(45, 212, 191, 0.18);
-  border-radius: 999px;
-  color: rgba(45, 212, 191, 0.85);   /* accent at 85% — clearly teal */
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  padding: 0.45rem 1rem;
-  margin-top: 0.5rem;                /* clear separation from buttons above */
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: rgba(45, 212, 191, 0.3);
-  transition: background 0.2s ease, border-color 0.2s ease,
-              color 0.2s ease, text-decoration-color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-learn-link:hover {
-  background: rgba(45, 212, 191, 0.1);
-  border-color: rgba(45, 212, 191, 0.35);
-  color: var(--accent);
-  text-decoration-color: rgba(45, 212, 191, 0.6);
-}
-
-.home-learn-link:active {
-  transform: scale(0.97);
-}
-
-/* Quiz entry link — slightly more prominent, accent-adjacent */
-.home-quiz-link {
-  color: rgba(45, 212, 191, 0.75);
-}
-
-/* ── Bottom nav ───────────────────────────────────────── */
-.home-nav {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 2px;
-  padding-top: 1rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Hide legacy dot separators */
-.nav-dot {
-  display: none;
-}
-
-.nav-link {
-  flex: 1 1 0;
-  min-width: 0;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm, 6px);
-  color: var(--text-dim);
-  font-size: clamp(0.44rem, 1.8vw, 0.62rem);
-  font-family: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.35rem 0.08rem;
-  min-height: 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: normal;
-  hyphens: none;
-  line-height: 1.15;
-  transition: color 0.2s ease, background-color 0.2s ease;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: border-box;
-}
-
-.nav-link:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.nav-icon {
-  font-size: 0.95rem;
-  line-height: 1;
-  margin-bottom: 0.2rem;
-  display: block;
-}
-
-.nav-label {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: normal;
-  overflow-wrap: normal;
-  hyphens: none;
-  text-align: center;
-}
-
-.nav-link--commitment {
-  color: var(--text-dim);
+  font-size: var(--sda-fs-small);
+  color: var(--sda-text-muted);
+  line-height: 1.4;
+  max-width: 36ch;
+}
+
+/* ── Phones: keep the header uncluttered (no horizontal overflow) ── */
+@media (max-width: 520px) {
+  .home-top-lang {
+    display: none; /* Language remains available in the More sheet */
+  }
 }
 
 @media (max-width: 400px) {
-  .home-screen {
-    padding: 1rem 0.5rem 1.25rem;
+  .home-top-bar {
+    gap: 8px;
   }
-  .home-nav {
-    gap: 1px;
+  .home-top-right {
+    gap: 6px;
   }
-  .nav-link {
-    font-size: clamp(0.41rem, 1.7vw, 0.49rem);
-    letter-spacing: -0.01em;
-    padding: 0.3rem 0.04rem;
+  .home-top-right .global-score-badge {
+    padding: 0 9px 0 8px;
+    gap: 6px;
   }
-}
-
-@media (max-width: 340px) {
-  .home-screen {
-    padding: 0.75rem 0.35rem 1rem;
-  }
-  .nav-link {
-    font-size: 0.39rem;
-    letter-spacing: -0.02em;
-    padding: 0.28rem 0.02rem;
-  }
-  .nav-icon {
-    font-size: 0.8rem;
+  /* Lifetime score stays visible on the Dashboard; the header keeps Today + Level. */
+  .home-top-right .gsb-section--lifetime,
+  .home-top-right .gsb-divider:has(+ .gsb-section--lifetime) {
+    display: none;
   }
 }
 
-/* ── Feedback button ─────────────────────────────────── */
-
-.home-feedback-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  background: none;
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--text-dim);
-  font-family: var(--font);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  /* top padding creates breathing room after the nav tabs */
-  padding: 0.85rem 1rem 1.25rem;
-  width: 100%;
-  margin-top: 0.5rem;
-  opacity: 0.65;
-  transition: opacity 0.2s ease, color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+@media (max-width: 380px) {
+  .home-quick-tile {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 
-.home-feedback-btn:hover {
-  opacity: 1;
-  color: var(--text-secondary);
-}
-
-.home-feedback-btn:active {
-  transform: scale(0.98);
-}
-
-.home-feedback-icon {
-  font-size: 0.85rem;
-  line-height: 1;
+/* ── Desktop / tablet: two-column Home ── */
+@media (min-width: 900px) {
+  .home-premium {
+    padding-left: var(--sda-space-6);
+    padding-right: var(--sda-space-6);
+  }
+  .home-premium-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--sda-space-6);
+    align-items: start;
+  }
+  .sda-hero {
+    min-height: 420px;
+  }
 }

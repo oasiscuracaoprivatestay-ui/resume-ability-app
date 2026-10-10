@@ -4,7 +4,7 @@ import { useAudio } from '../hooks/useAudio';
 import { useTranslation } from '../i18n';
 import { localizeAudioPath } from '../utils/audioPath';
 import type { Translations } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import PremiumInfoModal from '../components/PremiumInfoModal';
 import { hasPremiumAccess } from '../utils/entitlements';
 import {
@@ -227,9 +227,23 @@ export default function DailyAudioScreen({ onNavigate, onBack }: DailyAudioScree
 
   return (
     <div className="screen daily-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={handleBack}
-        onHome={() => handleNavigate('home')}
+        title={t.daily_heading}
+        eyebrow={t.daily_label}
+        showScoreBadge
+        onNavigate={handleNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => handleNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="daily-content">

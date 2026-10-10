@@ -4,7 +4,7 @@ import { useAudio } from '../hooks/useAudio';
 import { useTranslation } from '../i18n';
 import { localizeAudioPath } from '../utils/audioPath';
 import { PROGRAM_URL } from '../config';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import TimerRing from '../components/TimerRing';
 import './TimerScreen.css';
 
@@ -354,9 +354,23 @@ export default function TimerScreen({
 
   return (
     <div className="screen timer-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={() => handleNavigate('mode')}
-        onHome={() => handleNavigate('home')}
+        title="Urge Timer"
+        eyebrow={session.mode === 'extended-fast' ? 'COUNT-UP' : session.mode === 'loop' ? 'LOOP MODE' : 'URGE DELAY'}
+        showScoreBadge
+        onNavigate={handleNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => handleNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="timer-content">

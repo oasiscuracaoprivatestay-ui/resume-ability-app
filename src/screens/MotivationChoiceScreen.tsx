@@ -1,6 +1,6 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import './MotivationChoiceScreen.css';
 
 interface MotivationChoiceScreenProps {
@@ -20,9 +20,23 @@ export default function MotivationChoiceScreen({
 
   return (
     <div className="screen motivation-choice-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={onBack}
-        onHome={() => onNavigate('home')}
+        title={t.motivation_choice_heading}
+        eyebrow={t.motivation_choice_label}
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="motivation-choice-content">

@@ -28,6 +28,7 @@ import {
   CHALLENGE_UPDATED_EVENT,
   OPEN_CHALLENGE_CHECKIN_EVENT,
   CHALLENGE_OPEN_CHECKIN_KEY,
+  CHALLENGE_PRESELECT_DURATION_KEY,
   ChallengeInstance,
   ChallengeDurationDays,
   ChallengeAbilityId,
@@ -40,6 +41,7 @@ import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
 import { ChallengeMilestoneModal } from '../components/ChallengeMilestoneModal';
+import { NextActionModal } from '../components/premium/NextActionModal';
 import { playFeedback } from '../utils/feedback';
 import { loadPledge } from '../utils/pledgeStorage';
 import { saveRecommitEvent } from '../utils/recommitStorage';
@@ -57,6 +59,8 @@ import {
   getChallengeActivityCount,
   ACTIVITIES_UPDATED_EVENT,
 } from '../activities';
+import { AppIcon } from '../components/icons/AppIcon';
+import { ProgressRing } from '../components/premium/ProgressRing';
 import './ChallengesScreen.css';
 
 interface ChallengesScreenProps {
@@ -72,7 +76,24 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
   // Start wizard state
   const [selectedAbility, setSelectedAbility] = useState<ChallengeAbilityId>('resume-ability');
-  const [selectedDuration, setSelectedDuration] = useState<ChallengeDurationDays>(7);
+  // Phase 2: one-shot preselect hint set by the Home flagship 90-Day invite.
+  // Consumed once on mount; when absent/invalid, existing defaults are unchanged.
+  const [preselectedDuration] = useState<ChallengeDurationDays | null>(() => {
+    try {
+      const hint = sessionStorage.getItem(CHALLENGE_PRESELECT_DURATION_KEY);
+      if (hint) {
+        sessionStorage.removeItem(CHALLENGE_PRESELECT_DURATION_KEY);
+        const n = Number(hint);
+        if (RESUME_ABILITY_CHALLENGE_DEFINITION.supportedDurations.includes(n as ChallengeDurationDays)) {
+          return n as ChallengeDurationDays;
+        }
+      }
+    } catch {
+      // ignore storage access issues
+    }
+    return null;
+  });
+  const [selectedDuration, setSelectedDuration] = useState<ChallengeDurationDays>(preselectedDuration ?? 7);
 
   // Phase 41B: Reminder preferences state
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
@@ -94,9 +115,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [pledge, setPledge] = useState(() => loadPledge());
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [continueToast, setContinueToast] = useState<string | null>(null);
+  const [showNextActionModal, setShowNextActionModal] = useState(false);
 
   // Phase 41H.4: Completion view state
-  const [showingStartWizard, setShowingStartWizard] = useState(false);
+  const [showingStartWizard, setShowingStartWizard] = useState(preselectedDuration !== null);
 
   const latestCompletedChallenge = useMemo(() => {
     return history.find((c) => c.status === 'completed') || null;
@@ -201,6 +223,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     playFeedback('commit');
     setHasRecommitted(true);
     refreshState();
+    setShowNextActionModal(true);
   };
 
   const handleContinueChallenge = () => {
@@ -370,7 +393,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
           onClick={onBack}
           aria-label={t.common_back || 'Back'}
         >
-          ← {t.common_back || 'Back'}
+          <AppIcon name="arrow-left" size={16} />
+          <span>{t.common_back || 'Back'}</span>
         </button>
         <h1 className="challenges-title">
           {activeChallenge && activeChallenge.status === 'active'
@@ -526,9 +550,12 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                   <div className="challenge-checkin-banner-content">
                     <div className="challenge-checkin-status-row">
                       <span className="challenge-checkin-badge">
-                        {practiceStats?.todayCheckedIn
-                          ? `✓ ${t.challenge_practice_status_done || 'Checked in today'}`
-                          : `🎯 ${t.challenge_practice_status_pending || 'Pending Check-In'}`}
+                        <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'target'} size={15} />
+                        <span>
+                          {practiceStats?.todayCheckedIn
+                            ? (t.challenge_practice_status_done || 'Checked in today')
+                            : (t.challenge_practice_status_pending || 'Pending Check-In')}
+                        </span>
                       </span>
                       {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
                         <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
@@ -556,7 +583,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                         ? (t.challenge_btn_checkin_again || 'Check In Again')
                         : (t.challenge_btn_checkin || 'Check In to Challenge')}
                     </span>
-                    <span>→</span>
+                    <AppIcon name="chevron-right" size={16} />
                   </button>
                 </div>
               </section>
@@ -571,51 +598,69 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 </div>
 
                 <div className="challenge-hub-hero">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <div className="challenge-hub-badge">
-                      <span>🏆</span>
-                      <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
+                  <div className="challenge-hub-hero-inner">
+                    <div className="challenge-hub-hero-content">
+                      <div className="challenge-hub-badges-row">
+                        <div className="challenge-hub-badge challenge-hub-badge--ability">
+                          <AppIcon name="trophy" size={13} />
+                          <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
+                        </div>
+                        <div className="challenge-hub-badge challenge-hub-badge--duration">
+                          <span>{activeChallenge.durationDays} {activeChallenge.durationDays === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')}</span>
+                        </div>
+                        {activeChallenge.reminderEnabled && (
+                          <div className="challenge-hub-badge challenge-hub-badge--reminders">
+                            <AppIcon name="bell" size={13} />
+                            <span>
+                              {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
+                                ? activeChallenge.reminderTimes.join(', ')
+                                : activeChallenge.reminderFrequency || 'Reminders'}
+                            </span>
+                          </div>
+                        )}
+                        {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
+                          <div className="challenge-hub-badge challenge-hub-badge--push">
+                            <AppIcon name="check" size={13} />
+                            <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <h2 className="challenge-hub-title">
+                        {t.challenge_day_of_total
+                          ?.replace('{current}', String(activeChallenge.currentDay))
+                          ?.replace('{total}', String(activeChallenge.durationDays)) ||
+                          `Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}`}
+                      </h2>
+
+                      <p className="challenge-hub-sub">
+                        {activeChallenge.daysRemaining === 0
+                          ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
+                          : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
+                      </p>
                     </div>
-                    {activeChallenge.reminderEnabled && (
-                      <div
-                        className="challenge-hub-badge"
-                        style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.35)', color: '#38bdf8' }}
+
+                    <div className="challenge-hub-hero-ring-wrap">
+                      <ProgressRing
+                        value={activeChallenge.progress}
+                        size={116}
+                        strokeWidth={10}
+                        ariaLabel={`Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}, ${Math.round(activeChallenge.progress * 100)}% complete`}
                       >
-                        <span>🔔</span>
-                        <span>
-                          {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
-                            ? activeChallenge.reminderTimes.join(', ')
-                            : activeChallenge.reminderFrequency || 'Reminders'}
-                        </span>
-                      </div>
-                    )}
-                    {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
-                      <div
-                        className="challenge-hub-badge"
-                        style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#4ade80' }}
-                      >
-                        <span>✓</span>
-                        <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
-                      </div>
-                    )}
+                        <div className="challenge-hub-ring-label">
+                          <span className="ring-day-number">{activeChallenge.currentDay}</span>
+                          <span className="ring-day-total">/{activeChallenge.durationDays}d</span>
+                        </div>
+                      </ProgressRing>
+                    </div>
                   </div>
-                  <h2 className="challenge-hub-title">
-                    {t.challenge_day_of_total
-                      ?.replace('{current}', String(activeChallenge.currentDay))
-                      ?.replace('{total}', String(activeChallenge.durationDays)) ||
-                      `Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}`}
-                  </h2>
-                  <p className="challenge-hub-sub">
-                    {activeChallenge.daysRemaining === 0
-                      ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
-                      : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
-                  </p>
 
                   {/* Phase 41D: Web Push Activation / Status Banner */}
                   {activeChallenge.reminderEnabled && pushStatus === 'available' && (
                     <div className="challenge-push-banner" id="challenge-push-enable-banner">
                       <span className="challenge-push-banner-text">
-                        🔔 {t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}
+                        <AppIcon name="bell" size={16} />
+                        <span>{t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}</span>
                       </span>
                       <button
                         id="btn-challenge-enable-push"
@@ -630,7 +675,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                   {activeChallenge.reminderEnabled && pushStatus === 'denied' && (
                     <div className="challenge-push-banner challenge-push-banner--denied" id="challenge-push-denied-banner">
                       <span className="challenge-push-banner-text">
-                        ⚠️ {t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}
+                        <AppIcon name="alert-triangle" size={16} />
+                        <span>{t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}</span>
                       </span>
                     </div>
                   )}
@@ -795,7 +841,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 {/* Day-by-day Recovery Timeline (Collapsible for mobile layout) */}
                 <details className="challenge-timeline-collapsible" id="challenge-timeline-collapsible">
                   <summary className="challenge-timeline-summary">
-                    <span>📅 {t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length} days)</span>
+                    <span className="timeline-summary-title">
+                      <AppIcon name="calendar" size={15} />
+                      <span>{t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length} days)</span>
+                    </span>
                     <span className="timeline-summary-chevron">▼</span>
                   </summary>
                   <div className="challenge-timeline-list">
@@ -882,7 +931,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                           }}
                         >
                           <span>{t.challenge_why_btn_review || 'Review & Edit My Why'}</span>
-                          <span>→</span>
+                          <AppIcon name="chevron-right" size={15} />
                         </button>
                       </div>
                     </div>
@@ -902,7 +951,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                         }}
                       >
                         <span>{t.challenge_why_btn_add || 'Add My Why'}</span>
-                        <span>→</span>
+                        <AppIcon name="chevron-right" size={15} />
                       </button>
                     </div>
                   )}
@@ -923,7 +972,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     <div className="challenge-nn-content">
                       <div className="challenge-nn-meta-row">
                         <span className="challenge-nn-count-tag">
-                          🛡️ {savedNonNegotiables.length} {savedNonNegotiables.length === 1 ? 'Rule' : 'Rules'}
+                          <AppIcon name="shield" size={14} />
+                          <span>{savedNonNegotiables.length} {savedNonNegotiables.length === 1 ? 'Rule' : 'Rules'}</span>
                         </span>
                         <span className="challenge-nn-review-stat">
                           {t.challenge_nn_reviewed_count?.replace('{count}', String(pledge.nonNegotiableReviewCount || 0)) ||
@@ -967,7 +1017,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                           }}
                         >
                           <span>{t.challenge_nn_btn_manage || 'Review & Manage Rules'}</span>
-                          <span>→</span>
+                          <AppIcon name="chevron-right" size={15} />
                         </button>
                       </div>
                     </div>
@@ -987,7 +1037,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                         }}
                       >
                         <span>{t.challenge_nn_btn_manage || 'Set Non-Negotiables'}</span>
-                        <span>→</span>
+                        <AppIcon name="chevron-right" size={15} />
                       </button>
                     </div>
                   )}
@@ -1009,7 +1059,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
               {/* ── SECTION: CHALLENGE MOVEMENT (OPTIONAL) (Phase 43.4) ── */}
               <section className="control-center-section challenge-movement-section" id="section-challenge-movement">
                 <div className="control-center-section-header">
-                  <span className="section-number-badge section-number-badge--optional">🏃</span>
+                  <span className="section-number-badge section-number-badge--optional">
+                    <AppIcon name="footprints" size={13} />
+                  </span>
                   <h3 className="control-center-section-title">
                     {t.act_challenge_section_title}
                   </h3>
@@ -1037,7 +1089,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                       onClick={() => onNavigate('activity-log')}
                     >
                       <span>{t.act_challenge_btn_view}</span>
-                      <span>→</span>
+                      <AppIcon name="chevron-right" size={15} />
                     </button>
                     <button
                       type="button"
@@ -1066,7 +1118,21 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                   className="challenge-seven-abilities-link-btn"
                   onClick={() => onNavigate('seven-abilities')}
                 >
+                  <AppIcon name="layers" size={16} />
                   <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
+                </button>
+              </div>
+
+              {/* Contextual Link to My Progress & Victories (Phase 4) */}
+              <div className="challenge-seven-abilities-link-wrap" style={{ marginTop: '0px' }}>
+                <button
+                  type="button"
+                  id="btn-challenge-view-victories"
+                  className="challenge-seven-abilities-link-btn"
+                  onClick={() => onNavigate('progress-victories')}
+                >
+                  <AppIcon name="award" size={16} />
+                  <span>{t.challenge_btn_view_victories || 'My Progress & Victories →'}</span>
                 </button>
               </div>
 
@@ -1234,6 +1300,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     className="wizard-seven-abilities-link-btn"
                     onClick={() => onNavigate('seven-abilities')}
                   >
+                    <AppIcon name="layers" size={16} />
                     <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
                   </button>
                 </div>
@@ -1496,8 +1563,21 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
           onClose={() => setShowCheckInModal(false)}
           onNavigate={onNavigate}
           onCheckInCompleted={refreshState}
+          onRecommitCompleted={() => {
+            setShowCheckInModal(false);
+            refreshState();
+            setShowNextActionModal(true);
+          }}
         />
       )}
+
+      {/* ── Premium Next Action After Recommit (Phase 5) ── */}
+      <NextActionModal
+        isOpen={showNextActionModal}
+        onClose={() => setShowNextActionModal(false)}
+        onNavigate={onNavigate}
+        currentScreen="challenges"
+      />
 
       {/* ── Challenge Milestone Celebration Modal (Phase 41H) ── */}
       {activeModalMilestone && milestoneTargetChallenge && (

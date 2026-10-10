@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import type { Screen } from '../types';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import PremiumInfoModal from '../components/PremiumInfoModal';
 import { hasPremiumAccess } from '../utils/entitlements';
 import {
@@ -106,9 +106,23 @@ export default function MotivationalTextScreen({
 
   return (
     <div className="screen motivational-text-screen">
-      <ScreenHeader
+      <PremiumScreenHeader
+        backId="btn-header-back"
         onBack={onBack}
-        onHome={() => onNavigate('home')}
+        title={t.motivational_text_label}
+        eyebrow="MINDSET RESET"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
       />
 
       <div className="motivational-text-content">

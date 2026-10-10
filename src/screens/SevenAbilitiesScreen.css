@@ -1,44 +1,46 @@
 /**
- * Super Diet-Ability — Seven Diet-Abilities Screen Styles (Phase 42.3)
+ * Super Diet-Ability — Seven Diet-Abilities Screen Styles (Phase 9D Emerald Upgrade)
  */
 
 .seven-abilities-screen {
-  background: radial-gradient(circle at 50% 0%, #0d1e38 0%, #070d18 100%);
+  background: var(--sda-bg-surface, #040b09);
   min-height: 100vh;
+  min-height: 100dvh;
   color: #f1f5f9;
   padding-bottom: 90px;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.seven-abilities-screen::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(13, 148, 136, 0.05) 50%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .seven-abilities-content {
+  position: relative;
+  z-index: 1;
   max-width: 680px;
   margin: 0 auto;
   padding: 16px 20px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
 }
 
-/* Header */
+/* Header managed by PremiumScreenHeader */
 .seven-abilities-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.seven-abilities-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #f8fafc;
-  line-height: 1.25;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.seven-abilities-subtitle {
-  font-size: 0.92rem;
-  color: #94a3b8;
-  margin: 0;
-  line-height: 1.45;
+  display: none;
 }
 
 /* Progression Separation Notice */
@@ -46,11 +48,13 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 12px;
-  padding: 14px 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.22) 0%, rgba(4, 30, 24, 0.45) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .seven-abilities-notice-card .notice-icon {
@@ -68,13 +72,16 @@
 
 /* Sequence Toggle Card */
 .sequence-toggle-card {
-  background: #0d1a2d;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 14px;
-  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.22) 0%, rgba(4, 30, 24, 0.45) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 18px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .sequence-toggle-header {
@@ -90,16 +97,16 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .sequence-pill-buttons {
   display: flex;
   gap: 6px;
-  background: #070d18;
+  background: rgba(0, 0, 0, 0.35);
   padding: 4px;
   border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.15);
 }
 
 .sequence-pill-btn {
@@ -108,10 +115,14 @@
   color: #94a3b8;
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sequence-pill-btn:hover {
@@ -119,9 +130,10 @@
 }
 
 .sequence-pill-btn--active {
-  background: #1e293b;
-  color: #38bdf8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  background: rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
 }
 
 .sequence-desc {
@@ -139,24 +151,27 @@
 }
 
 .ability-overview-card {
-  background: #0d1a2d;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 16px;
-  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.22) 0%, rgba(4, 30, 24, 0.45) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 20px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ability-overview-card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15);
 }
 
 .ability-overview-card--active {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: linear-gradient(180deg, #0d2238 0%, #0d1a2d 100%);
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.08);
+  border-left: 4px solid #10b981;
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
 .ability-card-top-bar {
@@ -170,11 +185,11 @@
 .ability-identity {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .ability-icon {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   line-height: 1;
 }
 
@@ -189,11 +204,16 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #38bdf8;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  align-self: flex-start;
 }
 
 .ability-title {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #f8fafc;
   margin: 0;
@@ -203,14 +223,14 @@
 .ability-status-badge {
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 12px;
   white-space: nowrap;
 }
 
 .ability-status-badge--active {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.45);
   color: #34d399;
 }
 
@@ -221,9 +241,9 @@
 }
 
 .ability-subtitle {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: #cbd5e1;
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -234,18 +254,18 @@
   gap: 14px;
   margin-top: 4px;
   padding-top: 14px;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-top: 1px solid rgba(16, 185, 129, 0.15);
 }
 
 .active-challenge-notice {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
   padding: 8px 12px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #34d399;
   font-weight: 600;
 }
@@ -272,10 +292,10 @@
 }
 
 .evidence-stat-box {
-  background: #070e1b;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 10px;
-  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -290,22 +310,22 @@
 }
 
 .evidence-stat-box .stat-val {
-  font-size: 1.18rem;
+  font-size: 1.25rem;
   font-weight: 800;
-  color: #38bdf8;
+  color: #34d399;
   line-height: 1.2;
 }
 
 .evidence-stat-box .stat-sub {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #94a3b8;
   margin-top: 2px;
 }
 
 .ability-action-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-top: 4px;
 }
 
@@ -317,9 +337,9 @@
 
 .ability-btn-secondary {
   flex: 1;
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 0.88rem;
@@ -330,40 +350,42 @@
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .ability-btn-secondary:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38bdf8;
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #34d399;
 }
 
 .ability-btn-secondary:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #34d399;
   outline-offset: 2px;
 }
 
 .ability-btn-primary {
   flex: 1;
-  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #041310;
   border: none;
   border-radius: 12px;
   padding: 12px 18px;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
   transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .ability-btn-primary:hover {
-  background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
 }
 
 /* Inactive Abilities Doctrine Section */
@@ -383,9 +405,9 @@
 }
 
 .ability-btn-detail {
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 0.84rem;
@@ -397,21 +419,22 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .ability-btn-detail:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38bdf8;
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #34d399;
 }
 
 .ability-btn-detail:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #34d399;
   outline-offset: 2px;
 }
 
 .ability-btn-preview {
-  background: #070e1b;
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   color: #cbd5e1;
   border-radius: 10px;
   padding: 10px 14px;
@@ -422,16 +445,17 @@
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .ability-btn-preview:hover {
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: rgba(16, 185, 129, 0.4);
   color: #f8fafc;
 }
 
 .preview-chevron {
   font-size: 0.68rem;
-  color: #64748b;
+  color: #94a3b8;
   transition: transform 0.2s ease;
 }
 
@@ -440,9 +464,9 @@
 }
 
 .ability-doctrine-preview {
-  background: #070e1b;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -466,7 +490,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #38bdf8;
+  color: #34d399;
   margin: 0;
 }
 
@@ -496,9 +520,10 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(6, 78, 59, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   margin-top: 4px;
 }
 
@@ -510,16 +535,16 @@
 
 .preview-honest-notice p {
   font-size: 0.74rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   line-height: 1.4;
   margin: 0;
 }
 
 .preview-deep-dive-btn {
   width: 100%;
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 0.86rem;
@@ -530,15 +555,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 4px;
+  min-height: 44px;
 }
 
 .preview-deep-dive-btn:hover {
-  background: rgba(56, 189, 248, 0.22);
-  border-color: #38bdf8;
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #34d399;
 }
 
 .preview-deep-dive-btn:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #34d399;
   outline-offset: 2px;
 }
 

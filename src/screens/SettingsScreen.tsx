@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import type { Language } from '../i18n/types';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import ResetStatsModal from '../components/ResetStatsModal';
 import './SettingsScreen.css';
 
@@ -49,16 +49,28 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
   return (
     <div className="screen settings-screen">
       <div className="settings-inner">
-        <ScreenHeader
+        <PremiumScreenHeader
+          backId="btn-header-back"
           onBack={onBack ? onBack : () => onNavigate('home')}
-          onHome={() => onNavigate('home')}
+          title={t.settings_title}
+          eyebrow="PREFERENCES"
+          showScoreBadge
+          onNavigate={onNavigate}
+          rightAction={
+            <button
+              id="btn-header-home"
+              className="sda-premium-header__home-btn"
+              onClick={() => onNavigate('home')}
+              aria-label="Go home"
+            >
+              ⌂
+            </button>
+          }
         />
 
         <div className="settings-content">
           {/* Heading */}
           <div className="settings-heading">
-            <span className="section-label">{t.settings_title}</span>
-            <h1 className="settings-title">{t.settings_title}</h1>
             <p className="settings-subtitle">{t.settings_subtitle}</p>
           </div>
 
@@ -255,6 +267,24 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
               {t.settings_sec_support}
             </h2>
             <div className="settings-card-group">
+              {/* Premium Membership Info */}
+              <button
+                id="btn-settings-premium"
+                type="button"
+                className="settings-row-btn"
+                onClick={() => onNavigate('premium')}
+              >
+                <div className="settings-row-icon" aria-hidden="true">⭐</div>
+                <div className="settings-row-main">
+                  <span className="settings-row-label">{t.prem_badge || 'Premium'}</span>
+                  <span className="settings-row-desc">{t.prem_btn_explore || 'Explore Premium features'}</span>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-pill settings-pill--accent">PRO</span>
+                  <span className="settings-chevron" aria-hidden="true">›</span>
+                </div>
+              </button>
+
               {/* SDA Terms & Help */}
               <button
                 id="btn-settings-terms"
