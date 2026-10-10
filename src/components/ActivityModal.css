@@ -108,23 +108,27 @@
 }
 
 .activity-category-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  border-radius: 12px;
+  background: rgba(6, 28, 22, 0.45);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 14px;
   padding: 10px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.18s ease;
-  min-height: 64px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 68px;
+  color: var(--sda-text-muted, #94a3b8);
+  backdrop-filter: blur(8px);
 }
 
 .activity-category-card:hover {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #ecfdf5;
+  transform: translateY(-1px);
 }
 
 .activity-category-card:focus-visible {
@@ -133,14 +137,24 @@
 }
 
 .activity-category-card--active {
-  background: rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.2) 100%);
   border-color: #10b981;
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+  color: #5eead4;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.35), inset 0 0 12px rgba(16, 185, 129, 0.15);
 }
 
 .activity-category-icon {
-  font-size: 1.4rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #34d399;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.activity-category-card--active .activity-category-icon {
+  color: #5eead4;
+  filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.6));
+  transform: scale(1.08);
 }
 
 .activity-category-name {

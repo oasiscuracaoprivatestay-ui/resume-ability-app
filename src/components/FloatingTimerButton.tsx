@@ -25,6 +25,18 @@ const HIDDEN_ON: Screen[] = [
   'structured-diet',
   'notification-settings',
   'coach',
+  'activity-log',
+  'progress-victories',
+  'dashboard',
+  'daily-review',
+  'settings',
+  'my-commitments',
+  'commitment',
+  'my-slippery-zones',
+  'seven-abilities',
+  'ability-detail',
+  'quiz',
+  'timer-learn',
 ];
 
 interface FloatingTimerButtonProps {
