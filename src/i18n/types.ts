@@ -865,6 +865,8 @@ export interface Translations {
   ci_nn_add_btn: string;
 
   // ── Structured Diet Quick Build (Task 4) ──
+  sdb_quick_entry: string;
+  sdb_unstructured_guidance_text: string;
   sdb_quick_build: string;
   sdb_qb_title: string;
   sdb_qb_sub: string;

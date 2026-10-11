@@ -958,6 +958,8 @@ export const es: Translations = {
   ci_nn_add_btn: 'Añadir No Negociables',
 
   // ── Structured Diet Quick Build (Task 4) ──
+  sdb_quick_entry: 'Entrada rápida',
+  sdb_unstructured_guidance_text: 'Un día más flexible. Todavía puedes registrar lo que comes, pero no hay una estructura planificada.',
   sdb_quick_build: 'Creación Rápida',
   sdb_qb_title: 'Creación Rápida',
   sdb_qb_sub: 'Genera tu horario diario automáticamente con una hora de inicio e intervalo.',

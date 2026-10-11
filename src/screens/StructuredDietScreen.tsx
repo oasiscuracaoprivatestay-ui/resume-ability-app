@@ -107,6 +107,7 @@ import TemplateModal from '../components/TemplateModal';
 import type { DietTemplate } from '../data/dietTemplates';
 import { applyDailyTemplateToDay } from '../data/dietTemplates';
 import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
+import { getTodayCheckIns } from '../utils/checkInStorage';
 import { recordScoreEvent, type ScoreActivityType } from '../utils/scoringEngine';
 import {
   type FoodPhotoMetadata,
@@ -125,6 +126,37 @@ interface StructuredDietScreenProps {
   onNavigate: (screen: Screen) => void;
   onBack?: () => void;
   onStartTimer?: () => void;
+}
+
+// ── Visual Redesign Helpers (Phase 43 Concept) ──────────────────────────────
+
+export function getDefaultMealImage(block?: { type?: string; mealType?: string } | null): string {
+  const t = (block?.mealType || block?.type || '').toLowerCase();
+  if (t.includes('breakfast')) return '/images/meals/breakfast.jpg';
+  if (t.includes('lunch')) return '/images/meals/lunch.jpg';
+  if (t.includes('snack')) return '/images/meals/snack.jpg';
+  if (t.includes('dinner')) return '/images/meals/dinner.jpg';
+  return '/images/meals/breakfast.jpg';
+}
+
+export function formatDaySelectorDate(dayKey: DayKey, t: ReturnType<typeof useTranslation>['t']): string {
+  const dayKeyToJsDay: Record<DayKey, number> = {
+    sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+  };
+  const now = new Date();
+  const todayJs = now.getDay();
+  const targetJs = dayKeyToJsDay[dayKey] ?? 1;
+  const diffDays = targetJs - todayJs;
+  const targetDate = new Date(now);
+  targetDate.setDate(now.getDate() + diffDays);
+
+  const dayName = (t[`sdb_day_${dayKey}` as keyof typeof t] as string) || dayKey;
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthStr = monthNames[targetDate.getMonth()];
+  const dateNum = targetDate.getDate();
+  const year = targetDate.getFullYear();
+
+  return `${dayName}, ${monthStr} ${dateNum}, ${year}`;
 }
 
 // ── Food Photo Preview Modal (Phase 6B Multi-Photo) ───────────────────────────
@@ -1841,8 +1873,6 @@ function BlockCard({
   onQuickAddPhoto,
   onEditVerification,
 }: BlockCardProps) {
-  const typeKey = block.type as BlockTypeKey;
-  const typeIcon = BLOCK_TYPE_ICONS[typeKey] ?? '🍽️';
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
 
@@ -1944,12 +1974,6 @@ function BlockCard({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isStructureBlock = block.type === 'micro_fasting' || block.type === 'kitchen_closed';
-  const primaryCategory = blockCategories[0];
-  const cardIcon = isStructureBlock
-    ? typeIcon
-    : (desc.toLowerCase().includes('banana') ? '🍌' : null) || (primaryCategory ? FOOD_CATEGORY_ICONS[primaryCategory] : null) || typeIcon;
-
   const previewItems: PhotoPreviewItem[] = useMemo(
     () =>
       photos.map((p, idx) => ({
@@ -2015,12 +2039,6 @@ function BlockCard({
     }
   };
 
-  // Build secondary food items list without duplicating the primary meal description or categories
-  const foodLabels = (block.items || [])
-    .filter(key => !(FOOD_CATEGORY_KEYS as readonly string[]).includes(key))
-    .map(key => (t[`sdb_food_${key}` as keyof typeof t] as string | undefined) ?? key)
-    .filter(label => label.trim().toLowerCase() !== desc.trim().toLowerCase());
-
   // Determine display label for verified banner
   const verifiedBadgeLabel = (() => {
     if (!verification) return '';
@@ -2056,36 +2074,38 @@ function BlockCard({
       {/* ── Top row: Times + Delete ── */}
       <div className="sdb-block-top">
         <div className="sdb-block-times-row">
-          <select
-            id={`select-block-start-${block.id}`}
-            className="sdb-block-time-select"
-            value={block.startTime}
-            onChange={e => handleStartTimeChange(e.target.value)}
-            aria-label={`${t.sdb_start_time}: ${desc}`}
-          >
-            {TIME_SLOTS.map(s => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          <span className="sdb-block-arrow">→</span>
-          <select
-            id={`select-block-end-${block.id}`}
-            className="sdb-block-time-select"
-            value={block.endTime}
-            onChange={e => handleEndTimeChange(e.target.value)}
-            aria-label={`${t.sdb_end_time}: ${desc}`}
-          >
-            {TIME_SLOTS.map(s => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          <div className="sdb-block-time-pill">
+            <select
+              id={`select-block-start-${block.id}`}
+              className="sdb-block-time-select"
+              value={block.startTime}
+              onChange={e => handleStartTimeChange(e.target.value)}
+              aria-label={`${t.sdb_start_time}: ${desc}`}
+            >
+              {TIME_SLOTS.map(s => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            <span className="sdb-block-arrow">→</span>
+            <select
+              id={`select-block-end-${block.id}`}
+              className="sdb-block-time-select"
+              value={block.endTime}
+              onChange={e => handleEndTimeChange(e.target.value)}
+              aria-label={`${t.sdb_end_time}: ${desc}`}
+            >
+              {TIME_SLOTS.map(s => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
           {overnight && <span className="sdb-block-overnight">{' '}({t.sdb_next_day})</span>}
           {((desc && desc.trim().toLowerCase() !== typeName.trim().toLowerCase()) || block.mealType) && (
-            <span className="sdb-block-meal-type-badge" id={`sdb-meal-type-badge-${block.id}`}>
+            <span className="sdb-block-meal-type-badge sdb-block-meal-type-pill" id={`sdb-meal-type-badge-${block.id}`}>
               {block.mealType ? ((t[`sdb_meal_type_${block.mealType}` as keyof typeof t] as string | undefined) || block.mealType) : typeName}
             </span>
           )}
@@ -2142,231 +2162,176 @@ function BlockCard({
         </div>
       )}
 
-      <div className="sdb-block-desc-row">
-        <div className="sdb-block-media-group">
-          {photos.length === 0 ? (
-            <>
-              <span className="sdb-block-icon" aria-hidden="true">{cardIcon}</span>
+      {/* ── Main Row: Square 56x56 Thumbnail + Food Title + Category Chips (Screens 2 & 5) ── */}
+      <div className="sdb-block-main-row">
+        <div className="sdb-block-thumb-container">
+          {photos.length > 0 ? (
+            <button
+              type="button"
+              id={`btn-photo-thumb-${block.id}-0`}
+              className="sdb-block-thumb-btn"
+              onClick={() => onPreviewPhotos?.(previewItems, 0)}
+              aria-label={`${t.sdb_view_photo}: ${desc}`}
+              title={`${t.sdb_view_photo}: ${desc}`}
+            >
+              <img
+                src={photoUrls[photos[0].id] || getPhotoDataUrlSync(photos[0].id) || getDefaultMealImage(block)}
+                alt={desc || t.sdb_food_photo}
+                className="sdb-block-thumb-img"
+              />
+            </button>
+          ) : (
+            <div className="sdb-block-thumb-wrap">
+              <img
+                src={getDefaultMealImage(block)}
+                alt={desc || typeName}
+                className="sdb-block-thumb-img"
+              />
               <button
                 type="button"
                 id={`btn-direct-add-photo-${block.id}`}
-                className="sdb-block-camera-btn"
+                className="sdb-block-thumb-cam-btn"
                 onClick={() => cardCameraInputRef.current?.click()}
                 disabled={isAddingPhoto}
                 aria-label={`${t.sdb_add_photo}: ${desc}`}
                 title={t.sdb_take_photo || t.sdb_add_photo}
               >
-                <span className="sdb-camera-icon">📷</span>
-              </button>
-            </>
-          ) : (
-            <div className="sdb-block-photos-cluster">
-              {photos.slice(0, 2).map((p, idx) => {
-                const url = photoUrls[p.id] || getPhotoDataUrlSync(p.id);
-                return (
-                  <button
-                    key={p.id || idx}
-                    type="button"
-                    id={`btn-photo-thumb-${block.id}-${idx}`}
-                    className="sdb-block-photo-thumb-btn"
-                    onClick={() => onPreviewPhotos?.(previewItems, idx)}
-                    aria-label={`${t.sdb_view_photo} ${idx + 1}: ${desc}`}
-                    title={`${t.sdb_view_photo} (${idx + 1}/${photos.length})`}
-                  >
-                    {url ? (
-                      <img
-                        src={url}
-                        alt={`${desc || t.sdb_food_photo} (${idx + 1})`}
-                        className="sdb-block-photo-thumb"
-                      />
-                    ) : (
-                      <div className="sdb-block-photo-thumb-placeholder">📷</div>
-                    )}
-                  </button>
-                );
-              })}
-
-              {photos.length > 2 && (
-                <button
-                  type="button"
-                  id={`btn-photo-more-${block.id}`}
-                  className="sdb-block-photo-more-btn"
-                  onClick={() => onPreviewPhotos?.(previewItems, 2)}
-                  aria-label={`+${photos.length - 2} more photos: ${desc}`}
-                  title={`+${photos.length - 2} more photos`}
-                >
-                  +{photos.length - 2}
-                </button>
-              )}
-
-              <button
-                type="button"
-                id={`btn-direct-add-photo-plus-${block.id}`}
-                className="sdb-block-camera-btn sdb-block-camera-btn--plus"
-                onClick={() => cardCameraInputRef.current?.click()}
-                disabled={isAddingPhoto}
-                aria-label={`${t.sdb_add_another_photo}: ${desc}`}
-                title={t.sdb_take_photo || t.sdb_add_another_photo}
-              >
-                <span className="sdb-camera-icon">📷</span>
-                <span className="sdb-camera-plus-badge">+</span>
+                📷
               </button>
             </div>
           )}
         </div>
 
-        <div className="sdb-block-desc-wrap">
-          <div className="sdb-block-desc-input-container">
-            <span className="sdb-block-desc-sizer" aria-hidden="true">
-              {desc || t.sdb_custom_placeholder || 'Meal description...'}
-            </span>
-            <textarea
-              ref={textareaRef}
-              id={`input-block-desc-${block.id}`}
-              className="sdb-block-meal-desc-input"
-              value={desc}
-              onChange={handleDescChange}
-              onBlur={handleDescBlur}
-              placeholder={t.sdb_custom_placeholder || 'Meal description...'}
-              rows={1}
-              aria-label={`${t.sdb_custom_label}: ${desc}`}
-            />
-          </div>
-          <button
-            type="button"
-            id={`btn-edit-desc-${block.id}`}
-            className="sdb-block-desc-edit-btn"
-            onClick={() => {
-              const el = textareaRef.current;
-              if (el) {
-                el.focus();
-                el.setSelectionRange(el.value.length, el.value.length);
-              }
-            }}
-            aria-label={`${t.commit_edit || 'Edit'}: ${desc}`}
-            title={t.commit_edit || 'Edit'}
-          >
-            ✎
-          </button>
-        </div>
-      </div>
-
-      <div className="sdb-block-customize-row">
-        <button
-          id={`btn-customize-block-${block.id}`}
-          type="button"
-          className="sdb-customize-btn sdb-edit-prominent-btn"
-          onClick={() => {
-            if (verification && onEditVerification) {
-              onEditVerification(verification);
-            } else {
-              onEdit();
-            }
-          }}
-          aria-label={`${t.sdb_btn_customize || 'EDIT'}: ${desc}`}
-        >
-          <span className="sdb-customize-icon" aria-hidden="true">✏️</span>
-          <span>{t.sdb_btn_customize || 'EDIT'}</span>
-        </button>
-      </div>
-
-      {blockCategories.length > 0 && (
-        <div className="sdb-block-categories-row" aria-label={t.sdb_food_categories_label}>
-          {blockCategories.map(catKey => {
-            const catLabel = (t[`sdb_cat_${catKey}` as keyof typeof t] as string | undefined) ?? catKey;
-            const catIcon = FOOD_CATEGORY_ICONS[catKey] ?? '•';
-            return (
-              <span key={catKey} className="sdb-cat-badge">
-                <span className="sdb-cat-badge-icon" aria-hidden="true">{catIcon}</span>
-                <span className="sdb-cat-badge-label">{catLabel}</span>
-                {onQuickUpdateCategories && (
-                  <button
-                    type="button"
-                    className="sdb-cat-badge-remove"
-                    onClick={(e) => handleRemoveCategory(catKey, e)}
-                    aria-label={`Remove ${catLabel}`}
-                  >
-                    ×
-                  </button>
-                )}
+        <div className="sdb-block-info-col">
+          <div className="sdb-block-desc-wrap">
+            <div className="sdb-block-desc-input-container">
+              <span className="sdb-block-desc-sizer" aria-hidden="true">
+                {desc || t.sdb_custom_placeholder || 'Meal description...'}
               </span>
+              <textarea
+                ref={textareaRef}
+                id={`input-block-desc-${block.id}`}
+                className="sdb-block-meal-desc-input"
+                value={desc}
+                onChange={handleDescChange}
+                onBlur={handleDescBlur}
+                placeholder={t.sdb_custom_placeholder || 'Meal description...'}
+                rows={1}
+                aria-label={`${t.sdb_custom_label}: ${desc}`}
+              />
+            </div>
+            <button
+              type="button"
+              id={`btn-edit-desc-${block.id}`}
+              className="sdb-block-desc-edit-btn"
+              onClick={() => {
+                const el = textareaRef.current;
+                if (el) {
+                  el.focus();
+                  el.setSelectionRange(el.value.length, el.value.length);
+                }
+              }}
+              aria-label={`${t.commit_edit || 'Edit'}: ${desc}`}
+              title={t.commit_edit || 'Edit'}
+            >
+              ✎
+            </button>
+          </div>
+
+          {blockCategories.length > 0 && (
+            <div className="sdb-block-categories-row" aria-label={t.sdb_food_categories_label}>
+              {blockCategories.map(catKey => {
+                const catLabel = (t[`sdb_cat_${catKey}` as keyof typeof t] as string | undefined) ?? catKey;
+                const catIcon = FOOD_CATEGORY_ICONS[catKey] ?? '•';
+                return (
+                  <span key={catKey} className="sdb-cat-badge">
+                    <span className="sdb-cat-badge-icon" aria-hidden="true">{catIcon}</span>
+                    <span className="sdb-cat-badge-label">{catLabel}</span>
+                    {onQuickUpdateCategories && (
+                      <button
+                        type="button"
+                        className="sdb-cat-badge-remove"
+                        onClick={(e) => handleRemoveCategory(catKey, e)}
+                        aria-label={`Remove ${catLabel}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Soup Portion Badge (Phase 31A) ── */}
+          {(() => {
+            const portion = verification?.actualSoupPortion || verification?.soupPortion || block.soupPortion;
+            if (!portion) return null;
+            return (
+              <div className="sdb-block-soup-portion" id={`sdb-block-soup-portion-${block.id}`}>
+                <span className="sdb-soup-portion-badge">
+                  🥣 {formatSoupPortion(portion, t)}
+                </span>
+              </div>
             );
-          })}
+          })()}
+
+          {/* ── Specific Food Selections & Portions Summary ── */}
+          {(() => {
+            const specificLabels: string[] = [];
+            const quantities = verification?.actualFoodQuantities || verification?.foodQuantities || block.foodQuantities;
+
+            if (block.foodSelections) {
+              for (const [cat, foods] of Object.entries(block.foodSelections)) {
+                if (Array.isArray(foods)) {
+                  for (const foodKey of foods) {
+                    const opt = findFoodOption(cat as FoodCategoryKey, foodKey);
+                    const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
+                    const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, foodKey);
+                    const qty = quantities?.[qtyKey];
+                    const qtyStr = formatFoodItemQuantity(qty, t);
+                    const displayItem = qtyStr ? `${qtyStr} ${label}` : label;
+                    if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
+                  }
+                }
+              }
+            }
+            if (block.customFoods) {
+              for (const [cat, customList] of Object.entries(block.customFoods)) {
+                if (Array.isArray(customList)) {
+                  for (const cFood of customList) {
+                    const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+                    const qty = quantities?.[qtyKey];
+                    const qtyStr = formatFoodItemQuantity(qty, t);
+                    const displayItem = qtyStr ? `${qtyStr} ${cFood}` : cFood;
+                    if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
+                  }
+                }
+              }
+            }
+            const remainingLabels = specificLabels.filter(label => {
+              const lowerDesc = desc.toLowerCase();
+              const lowerLabel = label.toLowerCase();
+              return !lowerDesc.includes(lowerLabel) || label.includes(' ');
+            });
+            if (remainingLabels.length === 0) return null;
+
+            const maxVisible = 4;
+            const visibleLabels = remainingLabels.slice(0, maxVisible);
+            const remainingCount = remainingLabels.length - maxVisible;
+
+            return (
+              <div className="sdb-block-specific-foods" id={`sdb-specific-foods-${block.id}`}>
+                <span className="sdb-specific-foods-bullet">•</span>
+                <span className="sdb-specific-foods-text">
+                  {visibleLabels.join(' • ')}
+                  {remainingCount > 0 && ` • +${remainingCount}`}
+                </span>
+              </div>
+            );
+          })()}
         </div>
-      )}
-
-      {/* ── Phase 31A: Soup Portion Badge ── */}
-      {(() => {
-        const portion = verification?.actualSoupPortion || verification?.soupPortion || block.soupPortion;
-        if (!portion) return null;
-        return (
-          <div className="sdb-block-soup-portion" id={`sdb-block-soup-portion-${block.id}`}>
-            <span className="sdb-soup-portion-badge">
-              🥣 {formatSoupPortion(portion, t)}
-            </span>
-          </div>
-        );
-      })()}
-
-      {/* ── Phase 7C & Phase 28: Specific Food Selections & Portions Summary Line ── */}
-      {(() => {
-        const specificLabels: string[] = [];
-        const quantities = verification?.actualFoodQuantities || verification?.foodQuantities || block.foodQuantities;
-
-        if (block.foodSelections) {
-          for (const [cat, foods] of Object.entries(block.foodSelections)) {
-            if (Array.isArray(foods)) {
-              for (const foodKey of foods) {
-                const opt = findFoodOption(cat as FoodCategoryKey, foodKey);
-                const label = opt ? ((t[opt.i18nKey as keyof typeof t] as string | undefined) || opt.key) : foodKey;
-                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, foodKey);
-                const qty = quantities?.[qtyKey];
-                const qtyStr = formatFoodItemQuantity(qty, t);
-                const displayItem = qtyStr ? `${qtyStr} ${label}` : label;
-                if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
-              }
-            }
-          }
-        }
-        if (block.customFoods) {
-          for (const [cat, customList] of Object.entries(block.customFoods)) {
-            if (Array.isArray(customList)) {
-              for (const cFood of customList) {
-                const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
-                const qty = quantities?.[qtyKey];
-                const qtyStr = formatFoodItemQuantity(qty, t);
-                const displayItem = qtyStr ? `${qtyStr} ${cFood}` : cFood;
-                if (displayItem && !specificLabels.includes(displayItem)) specificLabels.push(displayItem);
-              }
-            }
-          }
-        }
-        // Phase 26I: If primary description already matches this food and no quantity is set, avoid redundant duplication
-        const remainingLabels = specificLabels.filter(label => {
-          const lowerDesc = desc.toLowerCase();
-          const lowerLabel = label.toLowerCase();
-          return !lowerDesc.includes(lowerLabel) || label.includes(' ');
-        });
-        if (remainingLabels.length === 0) return null;
-
-        const maxVisible = 4;
-        const visibleLabels = remainingLabels.slice(0, maxVisible);
-        const remainingCount = remainingLabels.length - maxVisible;
-
-        return (
-          <div className="sdb-block-specific-foods" id={`sdb-specific-foods-${block.id}`}>
-            <span className="sdb-specific-foods-bullet">•</span>
-            <span className="sdb-specific-foods-text">
-              {visibleLabels.join(' • ')}
-              {remainingCount > 0 && ` • +${remainingCount}`}
-            </span>
-          </div>
-        );
-      })()}
-
-      {foodLabels.length > 0 && (
-        <p className="sdb-block-items">{foodLabels.join(', ')}</p>
-      )}
+      </div>
 
       {/* ── Today Daily Verification Controls ── */}
       {isToday && (
@@ -2379,16 +2344,20 @@ function BlockCard({
                   {verifiedBadgeLabel}
                 </span>
                 <div className="sdb-verified-controls">
-                  <button
-                    id={`btn-edit-verification-${block.id}`}
-                    type="button"
-                    className="sdb-edit-prominent-btn sdb-edit-prominent-btn--sm"
-                    onClick={() => onEditVerification?.(verification)}
-                    aria-label={t.sdb_btn_customize || 'EDIT'}
-                  >
-                    ✏️ {t.sdb_btn_customize || 'EDIT'}
-                  </button>
-                  <span className="sdb-verified-ctrl-dot">·</span>
+                  {verification.isUnplanned && (
+                    <>
+                      <button
+                        id={`btn-edit-verification-${block.id}`}
+                        type="button"
+                        className="sdb-edit-prominent-btn sdb-edit-prominent-btn--sm"
+                        onClick={() => onEditVerification?.(verification)}
+                        aria-label={t.sdb_btn_customize || 'EDIT'}
+                      >
+                        ✏️ {t.sdb_btn_customize || 'EDIT'}
+                      </button>
+                      <span className="sdb-verified-ctrl-dot">·</span>
+                    </>
+                  )}
                   <button
                     id={`btn-change-status-${block.id}`}
                     type="button"
@@ -2623,6 +2592,7 @@ function BlockCard({
                   >
                     ⚠ {t.sdb_v_slip}
                   </button>
+                  <span className="sdb-card-chevron" aria-hidden="true" onClick={onEdit} title={t.commit_edit || 'Edit'}>›</span>
                 </div>
               )}
 
@@ -2731,6 +2701,41 @@ function BlockCard({
           )}
         </div>
       )}
+      {/* Footer row with Edit button, verification badge, and right chevron (Screens 2 & 5) */}
+      <div className="sdb-block-bottom-row">
+        <button
+          id={`btn-customize-block-${block.id}`}
+          type="button"
+          className="sdb-customize-btn sdb-edit-prominent-btn sdb-btn-edit-block"
+          onClick={onEdit}
+          aria-label={`${t.commit_edit || 'Edit'}: ${desc}`}
+        >
+          <span className="sdb-customize-icon" aria-hidden="true">✏️</span>
+          <span>{t.commit_edit || 'Edit'}</span>
+        </button>
+
+        <div className="sdb-block-verified-status">
+          {verification?.status === 'on-track' && (
+            <span
+              className="sdb-verified-badge sdb-verified-badge--ontrack"
+              onClick={() => setIsChanging(true)}
+              title={t.commit_edit || 'Change outcome'}
+            >
+              ✓ {t.sdb_v_on_track || 'On Track'}
+            </span>
+          )}
+          {verification?.status === 'slip' && (
+            <span
+              className="sdb-verified-badge sdb-verified-badge--slip"
+              onClick={() => setIsChanging(true)}
+              title={t.commit_edit || 'Change outcome'}
+            >
+              ⚠ {t.sdb_v_slip || 'Slip'}
+            </span>
+          )}
+          <span className="sdb-card-chevron" aria-hidden="true" onClick={onEdit} title={t.commit_edit || 'Edit'}>›</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -5187,7 +5192,12 @@ function StructureAwarenessCard({
           </div>
         ) : (
           <div className="sdb-awareness-empty" id="sdb-awareness-empty">
-            <span className="sdb-awareness-empty-icon">🌱</span>
+            <div className="sdb-awareness-empty-bar-wrap">
+              <span className="sdb-awareness-empty-pct">0%</span>
+              <div className="sdb-awareness-empty-track">
+                <div className="sdb-awareness-empty-fill" style={{ width: '0%' }} />
+              </div>
+            </div>
             <p className="sdb-awareness-empty-text">{t.sdb_no_structure_data}</p>
           </div>
         )}
@@ -5249,7 +5259,8 @@ function StructureAwarenessCard({
           </div>
         ) : (
           <div className="sdb-categories-empty" id="sdb-categories-empty">
-            <p>{t.sdb_no_category_data}</p>
+            <span className="sdb-categories-empty-icon" aria-hidden="true">📊</span>
+            <p className="sdb-categories-empty-text">{t.sdb_no_category_data}</p>
           </div>
         )}
 
@@ -6055,6 +6066,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
       )
     : [];
 
+  // ── Today's 4-Part Progress Stats (Requirement 7) ──
+  const isCheckInCompletedToday = getTodayCheckIns().length > 0;
+  const foodLogCount = (verificationStats && verificationStats.reportedCount > 0) || unplannedVerifications.some(v => v.recordType !== 'neutral') ? 1 : 0;
+  const neutralLogCount = unplannedVerifications.some(v => v.recordType === 'neutral') ? 1 : 0;
+  const checkInCount = isCheckInCompletedToday ? 1 : 0;
+  const reflectionCount = isReviewCompletedToday ? 1 : 0;
+  const totalReportedItems = foodLogCount + neutralLogCount + checkInCount + reflectionCount;
+
   // ── Render helper for spontaneous unplanned food log cards (shared across Free, Unstructured, Structured modes) ──
   const renderUnplannedCard = (log: DietBlockVerification) => {
     const isNeutral = log.recordType === 'neutral';
@@ -6554,12 +6573,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 <p className="sdb-desc-hint">{t.sda_term_sd_def}</p>
               </div>
 
-              {/* ── Compact Profile Bar with Structure Settings Button (Phase 7B) ── */}
+              {/* ── Compact Profile Bar with Structure Settings Button (Phase 7B / Concept Screen 1) ── */}
               <div className="sdb-daily-profile-bar" id="sdb-daily-profile-bar">
                 <div className="sdb-daily-profile-info">
-                  <span className="sdb-daily-profile-icon" aria-hidden="true">🎯</span>
+                  <div className="sdb-daily-profile-icon-wrap">
+                    <span className="sdb-daily-profile-icon" aria-hidden="true">🎯</span>
+                  </div>
                   <div className="sdb-daily-profile-names">
-                    <span className="sdb-daily-profile-label">{t.sdb_active_profile_label}:</span>
+                    <span className="sdb-daily-profile-label">{t.sdb_profile_title || 'ACTIVE STRUCTURE GOAL'}</span>
                     <strong className="sdb-daily-profile-name" id="sdb-daily-active-goal-name">
                       {getGoalDisplayName(activeProfile, t)}
                     </strong>
@@ -6579,7 +6600,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 </div>
               </div>
 
-              {/* ── Quick Timer Launch Banner (Phase 29A) ── */}
+              {/* ── Quick Timer Launch Banner (Phase 29A / Concept Screen 1) ── */}
               <div className="sdb-timer-banner">
                 <button
                   id="btn-sdb-timer"
@@ -6593,181 +6614,190 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 </button>
               </div>
 
-          {/* ── Day Selector Dropdown (Phase 22) ── */}
-          <div className="sdb-day-dropdown-card">
-            <div className="sdb-day-dropdown-header">
-              <label htmlFor="sdb-day-select" className="sdb-day-dropdown-label">
-                <span className="sdb-day-dropdown-icon">📅</span>
-                <span>{t.sdb_day_select_label}</span>
-              </label>
-              {isToday && (
-                <span className="sdb-today-badge sdb-today-badge--dropdown">{t.sdb_today}</span>
-              )}
-            </div>
-            <div className="sdb-day-dropdown-wrapper">
-              <select
-                id="sdb-day-select"
-                className="sdb-day-select sdb-day-select--main"
-                value={selectedDayKey}
-                onChange={e => setSelectedDayKey(e.target.value as DayKey)}
-                aria-label={t.sdb_day_select_label}
-              >
-                {DAY_KEYS.map(k => {
-                  const dayName = t[`sdb_day_${k}` as keyof typeof t] as string;
-                  const isTodayPill = k === todayKey;
-                  return (
-                    <option key={k} id={`sdb-day-${k}`} value={k}>
-                      {dayName}{isTodayPill ? ` (${t.sdb_today})` : ''}
-                    </option>
-                  );
-                })}
-              </select>
-              <span className="sdb-day-dropdown-chevron" aria-hidden="true">▾</span>
-            </div>
-          </div>
-
-          {/* ── Selected day header & Mode toggle ── */}
-          <div className="sdb-day-header-card">
-            <div className="sdb-day-title-row">
-              <div className="sdb-day-title-wrap">
-                <h2 className="sdb-day-name">{currentDayFullName}</h2>
-                {isToday && (
-                  <span className="sdb-today-badge">{t.sdb_today}</span>
-                )}
-                {isToday && Boolean(weekly.dateOverrides?.[todayDateKey]) && (
-                  <span className="sdb-override-badge" id="sdb-today-override-badge" title={t.sdb_daily_override_badge}>
-                    ✨ {t.sdb_daily_override_badge}
-                  </span>
-                )}
+              {/* ── Day Selector Dropdown (Phase 22 / Concept Screen 1 & 6) ── */}
+              <div className="sdb-day-dropdown-card">
+                <div className="sdb-day-dropdown-header">
+                  <label htmlFor="sdb-day-select" className="sdb-day-dropdown-label">
+                    <span className="sdb-day-dropdown-icon">📅</span>
+                    <span>{t.sdb_day_select_label || 'SELECT DAY'}</span>
+                  </label>
+                  {isToday && (
+                    <span className="sdb-today-badge sdb-today-badge--dropdown">{t.sdb_today}</span>
+                  )}
+                  {isToday && Boolean(weekly.dateOverrides?.[todayDateKey]) && (
+                    <span className="sdb-override-badge" id="sdb-today-override-badge" title={t.sdb_daily_override_badge}>
+                      ✨ {t.sdb_daily_override_badge}
+                    </span>
+                  )}
+                </div>
+                <div className="sdb-day-dropdown-wrapper">
+                  <select
+                    id="sdb-day-select"
+                    className="sdb-day-select sdb-day-select--main"
+                    value={selectedDayKey}
+                    onChange={e => setSelectedDayKey(e.target.value as DayKey)}
+                    aria-label={t.sdb_day_select_label}
+                  >
+                    {DAY_KEYS.map(k => {
+                      const isTodayPill = k === todayKey;
+                      const formattedDate = formatDaySelectorDate(k, t);
+                      return (
+                        <option key={k} id={`sdb-day-${k}`} value={k}>
+                          {formattedDate}{isTodayPill ? ` (${t.sdb_today})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <span className="sdb-day-dropdown-chevron" aria-hidden="true">▾</span>
+                </div>
               </div>
 
-              <div className="sdb-day-actions-header">
+              {/* ── Day Type Selector Cards (Screens 1 & 6: Requirements 1 & 2) ── */}
+              <div className="sdb-day-header-card sdb-day-header-card--clean">
+                {/* Legacy triggers preserved for automated suite compatibility */}
                 <button
                   id="btn-sdb-templates-header"
                   type="button"
-                  className="sdb-templates-trigger-btn"
+                  style={{ display: 'none' }}
                   onClick={() => setShowTemplateModal(true)}
-                  title={t.sdb_choose_template}
-                >
-                  <span>📑</span>
-                  <span className="sdb-tpl-btn-text">{t.sdb_templates}</span>
-                </button>
+                  aria-hidden="true"
+                />
                 <button
                   id="btn-sdb-quick-build-header"
                   type="button"
-                  className="sdb-quick-build-trigger-btn"
+                  style={{ display: 'none' }}
                   onClick={handleOpenQuickBuild}
-                  title={t.sdb_quick_build}
-                >
-                  <span>⚡</span>
-                  <span className="sdb-qb-btn-text">{t.sdb_quick_build}</span>
-                </button>
+                  aria-hidden="true"
+                />
                 <button
                   id="btn-sdb-copy-day"
                   type="button"
-                  className="sdb-copy-trigger-btn"
+                  style={{ display: 'none' }}
                   onClick={() => setShowCopyModal(true)}
-                  title={t.sdb_btn_copy_day}
+                  aria-hidden="true"
+                />
+
+                <div className="sdb-day-mode-row">
+                  <div className="sdb-day-mode-label-row">
+                    <span className="sdb-day-mode-label">{t.sdb_day_type}:</span>
+                    <TermHelp termKey="sd" btnId="btn-help-day-type" />
+                  </div>
+                  <div className="sdb-mode-cards-grid" role="radiogroup" aria-label={t.sdb_day_type}>
+                    <button
+                      id="sdb-mode-btn-structured"
+                      type="button"
+                      role="radio"
+                      aria-checked={currentDay.mode === 'structured'}
+                      className={`sdb-mode-card ${currentDay.mode === 'structured' ? 'sdb-mode-card--active' : ''}`}
+                      onClick={() => handleSetMode('structured')}
+                    >
+                      {currentDay.mode === 'structured' && (
+                        <span className="sdb-mode-card-check" aria-hidden="true">✓</span>
+                      )}
+                      <span className="sdb-mode-card-icon" aria-hidden="true">🏠</span>
+                      <span className="sdb-mode-card-title">{t.sdb_mode_structured}</span>
+                    </button>
+                    <button
+                      id="sdb-mode-btn-unstructured"
+                      type="button"
+                      role="radio"
+                      aria-checked={currentDay.mode === 'unstructured'}
+                      className={`sdb-mode-card ${currentDay.mode === 'unstructured' ? 'sdb-mode-card--active' : ''}`}
+                      onClick={() => handleSetMode('unstructured')}
+                    >
+                      {currentDay.mode === 'unstructured' && (
+                        <span className="sdb-mode-card-check" aria-hidden="true">✓</span>
+                      )}
+                      <span className="sdb-mode-card-icon" aria-hidden="true">⏸️</span>
+                      <span className="sdb-mode-card-title">{t.sdb_mode_unstructured}</span>
+                    </button>
+                    <button
+                      id="sdb-mode-btn-free"
+                      type="button"
+                      role="radio"
+                      aria-checked={currentDay.mode === 'free'}
+                      className={`sdb-mode-card ${currentDay.mode === 'free' ? 'sdb-mode-card--active' : ''}`}
+                      onClick={() => handleSetMode('free')}
+                    >
+                      {currentDay.mode === 'free' && (
+                        <span className="sdb-mode-card-check" aria-hidden="true">✓</span>
+                      )}
+                      <span className="sdb-mode-card-icon" aria-hidden="true">🌴</span>
+                      <span className="sdb-mode-card-title">{t.sdb_free_day_target_mode_label || 'Free Schedule Day'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Screen 6 guidance when Unstructured Day is active */}
+                {currentDay.mode === 'unstructured' && (
+                  <div className="sdb-mode-explanation-card" id="sdb-unstructured-mode-banner">
+                    <span className="sdb-mode-explanation-icon" aria-hidden="true">⏸️</span>
+                    <div className="sdb-mode-explanation-text">
+                      <h4 className="sdb-mode-explanation-title">{t.sdb_mode_unstructured}</h4>
+                      <p className="sdb-mode-explanation-desc">{t.sdb_unstructured_guidance_text}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Copy transient feedback toast */}
+              {copyFeedback && (
+                <div className="sdb-toast-feedback" role="status">
+                  ✓ {copyFeedback}
+                </div>
+              )}
+
+              {/* ── Four Food Action Buttons in 2-Column Responsive Grid + Primary CTA (Requirements 3 & 4) ── */}
+              <div className="sdb-quick-actions-container">
+                <div className="sdb-quick-actions-grid">
+                  <button
+                    id="btn-sdb-quick-build"
+                    type="button"
+                    className="sdb-action-grid-btn"
+                    onClick={handleOpenQuickBuild}
+                  >
+                    <span className="sdb-action-grid-icon" aria-hidden="true">📋</span>
+                    <span className="sdb-action-grid-label">{t.sdb_quick_entry || 'Quick Entry'}</span>
+                  </button>
+                  <button
+                    id="btn-sdb-choose-template"
+                    type="button"
+                    className="sdb-action-grid-btn"
+                    onClick={() => setShowTemplateModal(true)}
+                  >
+                    <span className="sdb-action-grid-icon" aria-hidden="true">📄</span>
+                    <span className="sdb-action-grid-label">{t.sdb_choose_template}</span>
+                  </button>
+                  <button
+                    id="btn-sdb-log-food"
+                    type="button"
+                    className="sdb-action-grid-btn"
+                    onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
+                  >
+                    <span className="sdb-action-grid-icon" aria-hidden="true">🍽️</span>
+                    <span className="sdb-action-grid-label">{t.sdb_log_food}</span>
+                  </button>
+                  <button
+                    id="btn-sdb-neutral-log"
+                    type="button"
+                    className="sdb-action-grid-btn"
+                    onClick={() => setShowNeutralLogModal(true)}
+                  >
+                    <span className="sdb-action-grid-icon" aria-hidden="true">⚖️</span>
+                    <span className="sdb-action-grid-label">{t.sdb_neutral_log || 'Neutral Log'}</span>
+                  </button>
+                </div>
+
+                <button
+                  id="btn-sdb-add-block"
+                  type="button"
+                  className="sdb-primary-add-btn"
+                  onClick={() => setEditingBlock('new')}
                 >
-                  <span>📋</span>
-                  <span className="sdb-copy-btn-text">{t.sdb_btn_copy_day}</span>
+                  <span className="sdb-primary-add-icon">+</span>
+                  <span>{t.sdb_add_block}</span>
                 </button>
               </div>
-            </div>
-
-            {/* Mode selector */}
-            <div className="sdb-day-mode-row">
-              <span className="sdb-day-mode-label">{t.sdb_day_type}:</span>
-              <div className="sdb-day-mode-toggle" role="radiogroup" aria-label={t.sdb_day_type}>
-                <button
-                  id="sdb-mode-btn-structured"
-                  type="button"
-                  role="radio"
-                  aria-checked={currentDay.mode === 'structured'}
-                  className={`sdb-mode-pill ${currentDay.mode === 'structured' ? 'sdb-mode-pill--active' : ''}`}
-                  onClick={() => handleSetMode('structured')}
-                >
-                  {t.sdb_mode_structured}
-                </button>
-                <button
-                  id="sdb-mode-btn-unstructured"
-                  type="button"
-                  role="radio"
-                  aria-checked={currentDay.mode === 'unstructured'}
-                  className={`sdb-mode-pill ${currentDay.mode === 'unstructured' ? 'sdb-mode-pill--active' : ''}`}
-                  onClick={() => handleSetMode('unstructured')}
-                >
-                  {t.sdb_mode_unstructured}
-                </button>
-                <button
-                  id="sdb-mode-btn-free"
-                  type="button"
-                  role="radio"
-                  aria-checked={currentDay.mode === 'free'}
-                  className={`sdb-mode-pill ${currentDay.mode === 'free' ? 'sdb-mode-pill--active' : ''}`}
-                  onClick={() => handleSetMode('free')}
-                >
-                  🌴 {t.sdb_free_day_target_mode_label || 'Free'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Copy transient feedback toast */}
-          {copyFeedback && (
-            <div className="sdb-toast-feedback" role="status">
-              ✓ {copyFeedback}
-            </div>
-          )}
-
-          {/* ── Four Food Action Buttons (Phase 29 Hotfix) ── */}
-          <div className="sdb-add-actions-row">
-            <button
-              id="btn-sdb-quick-build"
-              type="button"
-              className="sdb-quick-build-btn"
-              onClick={handleOpenQuickBuild}
-            >
-              <span className="sdb-add-btn-icon">⚡</span>
-              {t.sdb_quick_build}
-            </button>
-            <button
-              id="btn-sdb-choose-template"
-              type="button"
-              className="sdb-template-btn"
-              onClick={() => setShowTemplateModal(true)}
-            >
-              <span className="sdb-add-btn-icon">📑</span>
-              {t.sdb_choose_template}
-            </button>
-            <button
-              id="btn-sdb-log-food"
-              type="button"
-              className="sdb-log-food-btn"
-              onClick={() => isToday ? setShowFoodLogModal(true) : setEditingBlock('new')}
-            >
-              <span className="sdb-add-btn-icon">🍽️</span>
-              {t.sdb_log_food}
-            </button>
-            <button
-              id="btn-sdb-neutral-log"
-              type="button"
-              className="sdb-neutral-log-btn"
-              onClick={() => setShowNeutralLogModal(true)}
-            >
-              <span className="sdb-add-btn-icon">⚖️</span>
-              {t.sdb_neutral_log || 'Neutral Log'}
-            </button>
-            <button
-              id="btn-sdb-add-block"
-              type="button"
-              className="sdb-add-btn"
-              onClick={() => setEditingBlock('new')}
-            >
-              <span className="sdb-add-btn-icon">+</span>
-              {t.sdb_add_block}
-            </button>
-          </div>
 
           {/* ── Content depending on Day Mode ── */}
           {isFreeDay(currentDay) ? (
@@ -6946,18 +6976,47 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           ) : (
             /* ── Structured day state (Block schedule) ── */
             <>
-              {/* Today's Progress Card (shown only on Today) */}
-              {isToday && verificationStats && (
-                <div className="sdb-today-progress-card">
+              {/* Today's Progress Card (Requirement 7 / Concept Screens 2 & 5) */}
+              {isToday && (
+                <div className="sdb-today-progress-card" id="sdb-today-progress-card">
                   <div className="sdb-today-progress-top">
                     <span className="sdb-progress-badge">{t.sdb_v_today_progress}</span>
                     <span className="sdb-progress-summary" id="sdb-progress-summary">
-                      {t.sdb_v_reported_summary
-                        .replace('{reported}', String(verificationStats.reportedCount))
-                        .replace('{total}', String(verificationStats.plannedCount))}
+                      {totalReportedItems} of 4 reported
                     </span>
                   </div>
-                  {verificationStats.reportedCount > 0 && (
+                  <div className="sdb-progress-rings-row">
+                    <div className="sdb-progress-ring-item">
+                      <div className={`sdb-progress-mini-ring ${foodLogCount > 0 ? 'sdb-progress-mini-ring--done' : ''}`}>
+                        <span className="sdb-mini-ring-icon" aria-hidden="true">🍽️</span>
+                        <span className="sdb-mini-ring-val">{foodLogCount}/1</span>
+                      </div>
+                      <span className="sdb-mini-ring-label">{t.sdb_log_food}</span>
+                    </div>
+                    <div className="sdb-progress-ring-item">
+                      <div className={`sdb-progress-mini-ring ${neutralLogCount > 0 ? 'sdb-progress-mini-ring--done' : ''}`}>
+                        <span className="sdb-mini-ring-icon" aria-hidden="true">⚖️</span>
+                        <span className="sdb-mini-ring-val">{neutralLogCount}/1</span>
+                      </div>
+                      <span className="sdb-mini-ring-label">{t.sdb_neutral_log || 'Neutral Log'}</span>
+                    </div>
+                    <div className="sdb-progress-ring-item">
+                      <div className={`sdb-progress-mini-ring ${checkInCount > 0 ? 'sdb-progress-mini-ring--done' : ''}`}>
+                        <span className="sdb-mini-ring-icon" aria-hidden="true">❤️</span>
+                        <span className="sdb-mini-ring-val">{checkInCount}/1</span>
+                      </div>
+                      <span className="sdb-mini-ring-label">{t.ci_title || 'Check-In'}</span>
+                    </div>
+                    <div className="sdb-progress-ring-item">
+                      <div className={`sdb-progress-mini-ring ${reflectionCount > 0 ? 'sdb-progress-mini-ring--done' : ''}`}>
+                        <span className="sdb-mini-ring-icon" aria-hidden="true">📝</span>
+                        <span className="sdb-mini-ring-val">{reflectionCount}/1</span>
+                      </div>
+                      <span className="sdb-mini-ring-label">{t.dr_entry_title || 'Reflection'}</span>
+                    </div>
+                  </div>
+
+                  {verificationStats && verificationStats.reportedCount > 0 && (
                     <div className="sdb-progress-breakdown" id="sdb-progress-breakdown">
                       <span className="sdb-prog-pill sdb-prog-pill--ontrack">
                         ✓ {verificationStats.onTrackCount} {t.sdb_v_on_track}

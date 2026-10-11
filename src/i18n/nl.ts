@@ -958,6 +958,8 @@ export const nl: Translations = {
   ci_nn_add_btn: 'Niet-Onderhandelbaren toevoegen',
 
   // ── Structured Diet Quick Build (Task 4) ──
+  sdb_quick_entry: 'Snelle invoer',
+  sdb_unstructured_guidance_text: 'Een flexibelere dag. Je kunt je voeding nog steeds registreren, maar er is geen geplande structuur.',
   sdb_quick_build: 'Snelle Aanmaak',
   sdb_qb_title: 'Snelle Aanmaak',
   sdb_qb_sub: 'Genereer je dagschema automatisch met een gekozen starttijd en interval.',

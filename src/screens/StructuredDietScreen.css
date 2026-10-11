@@ -7298,8 +7298,750 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   PHASE 43: PREMIUM MOBILE-FIRST REDESIGN — STRUCTURED DIET (6-SCREEN CONCEPT)
+   ══════════════════════════════════════════════════════════════════════════════ */
 
+/* ── Active Structure Goal Card (Screen 1 & 6) ── */
+.sdb-daily-profile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 78, 59, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-top: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
 
+.sdb-daily-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
 
+.sdb-daily-profile-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sdb-daily-profile-icon {
+  font-size: 1.25rem;
+}
+
+.sdb-daily-profile-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sdb-daily-profile-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #10b981;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sdb-daily-profile-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sdb-btn-open-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sdb-btn-open-settings:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+/* ── Urge Timer Button (Screen 1 & 6) ── */
+.sdb-timer-banner {
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.sdb-timer-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(13, 148, 136, 0.22) 100%);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  border-radius: 12px;
+  color: #2dd4bf;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+  box-sizing: border-box;
+}
+
+.sdb-timer-btn:hover {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(13, 148, 136, 0.32) 100%);
+  border-color: #2dd4bf;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(20, 184, 166, 0.25);
+}
+
+.sdb-timer-icon {
+  font-size: 1.1rem;
+}
+
+/* ── Day Type Selector Cards (Requirements 1 & 2: 3-column cards, zero ellipses) ── */
+.sdb-mode-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 0.75rem;
+  box-sizing: border-box;
+}
+
+.sdb-mode-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 12px 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 82px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.sdb-mode-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.sdb-mode-card--active {
+  border: 2px solid #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(6, 78, 59, 0.3) 100%);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.sdb-mode-card-check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #041710;
+  font-size: 0.7rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.sdb-mode-card-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.sdb-mode-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.25;
+  word-break: normal;
+  white-space: normal;
+  text-align: center;
+}
+
+.sdb-mode-card--active .sdb-mode-card-title {
+  color: #34d399;
+}
+
+/* ── Screen 6: Unstructured Guidance Banner ── */
+.sdb-mode-explanation-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sdb-mode-explanation-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sdb-mode-explanation-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sdb-mode-explanation-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0;
+}
+
+.sdb-mode-explanation-desc {
+  font-size: 0.8rem;
+  color: #d1d5db;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── 4-Action 2-Column Responsive Grid + Primary CTA (Requirements 3 & 4) ── */
+.sdb-quick-actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sdb-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .sdb-quick-actions-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sdb-action-grid-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #f1f5f9;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.sdb-action-grid-btn:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  transform: translateY(-1px);
+}
+
+.sdb-action-grid-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.sdb-action-grid-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sdb-primary-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 14px;
+  color: #041710;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  min-height: 50px;
+  box-sizing: border-box;
+}
+
+.sdb-primary-add-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.sdb-primary-add-icon {
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* ── Today's Progress Card with 4 Circular Mini Rings (Requirement 7) ── */
+.sdb-today-progress-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(6, 78, 59, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sdb-today-progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sdb-progress-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sdb-progress-summary {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.sdb-progress-rings-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sdb-progress-ring-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sdb-progress-mini-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.sdb-progress-mini-ring--done {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.sdb-mini-ring-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.sdb-mini-ring-val {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #94a3b8;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.sdb-progress-mini-ring--done .sdb-mini-ring-val {
+  color: #34d399;
+}
+
+.sdb-mini-ring-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
+}
+
+/* ── Block Card Redesign (Requirements 5 & 6 / Concept Screens 2 & 5) ── */
+.sdb-block-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.sdb-block-pills-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdb-block-time-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sdb-block-meal-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.sdb-block-main-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.sdb-block-thumb-container {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sdb-block-thumb-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.sdb-block-thumb-btn {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+
+.sdb-block-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.sdb-block-thumb-cam-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.sdb-block-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sdb-block-food-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0;
+  word-break: break-word;
+}
+
+.sdb-block-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sdb-block-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+}
+
+.sdb-btn-edit-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sdb-btn-edit-block:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sdb-block-verified-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdb-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.sdb-verified-badge--ontrack {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.sdb-verified-badge--slip {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.sdb-card-chevron {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Awareness Section Empty States (Screen 4) ── */
+.sdb-awareness-stat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sdb-awareness-empty-num {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #64748b;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.sdb-awareness-empty-desc {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  max-width: 280px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.sdb-categories-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sdb-categories-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.sdb-categories-empty-text {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  max-width: 280px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ── Verification Choice Buttons (Level 1) ── */
+.sdb-verify-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.sdb-verify-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sdb-verify-btn--ontrack {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.sdb-verify-btn--ontrack:hover,
+.sdb-verify-btn--ontrack.sdb-verify-btn--active {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.sdb-verify-btn--slip {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.sdb-verify-btn--slip:hover,
+.sdb-verify-btn--slip.sdb-verify-btn--active {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+}
+
+.sdb-verified-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.sdb-verified-link {
+  white-space: nowrap;
+  word-break: keep-all;
+}
 
 

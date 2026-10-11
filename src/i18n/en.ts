@@ -972,6 +972,8 @@ export const en: Translations = {
   ci_nn_add_btn: 'Add Non-Negotiables',
 
   // ── Structured Diet Quick Build (Task 4) ──
+  sdb_quick_entry: 'Quick Entry',
+  sdb_unstructured_guidance_text: 'A more flexible day. You can still log your eating, but there is no planned structure.',
   sdb_quick_build: 'Quick Build',
   sdb_qb_title: 'Quick Build',
   sdb_qb_sub: 'Generate your daily schedule automatically with a set start time and interval.',
