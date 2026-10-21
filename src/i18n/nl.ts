@@ -2271,6 +2271,28 @@ export const nl: Translations = {
   challenge_status_bar_view: 'Overzicht',
   challenge_status_bar_minimize: 'Uitdagingsstatus minimaliseren',
   challenge_status_bar_expand: 'Uitdagingsstatus uitvouwen',
+
+  // ── Phase 44: Active Challenge Continuation & Welcome Popup ──
+  challenge_welcome_badge: 'ACTIEVE UITDAGING',
+  challenge_welcome_day_of: 'Dag {current} van {total}',
+  challenge_welcome_progress: 'Voortgang',
+  challenge_welcome_stat_slips: 'Echte Uitglijders',
+  challenge_welcome_stat_resumed: 'Hervat',
+  challenge_welcome_stat_rate: 'Hervattingspercentage',
+  challenge_welcome_stat_no_slips: 'Geen uitglijders vastgelegd',
+  challenge_welcome_today_status: 'Oefening van vandaag',
+  challenge_welcome_today_done: 'Ingecheckt ({status})',
+  challenge_welcome_today_pending: 'Inchecken In Afwachting',
+  challenge_welcome_motivation_checked: 'De oefening van vandaag is voltooid. Consistentie draait om betrouwbaar herstel — blijf je dagelijkse ritme volgen.',
+  challenge_welcome_motivation_slips: 'Elke uitglijder is een kans om Resume-Ability te oefenen. Herstel en bewustzijn zijn veel belangrijker dan perfectie.',
+  challenge_welcome_motivation_on_track: 'Een Resume-Ability uitdaging draait om dagelijks bewustzijn en consistentie. Neem even de tijd om in te checken en je oefening vandaag te verankeren.',
+  challenge_welcome_btn_continue: 'Uitdaging Voortzetten',
+  challenge_welcome_btn_later: 'Misschien Later',
+  challenge_welcome_dont_show: 'Niet automatisch tonen bij starten van app',
+  challenge_welcome_close_aria: 'Sluit uitdaging welkomstvenster',
+  challenge_btn_view_summary: 'Uitdagingssamenvatting',
+  challenge_continue_already_checked: 'De oefening van vandaag is al vastgelegd ({status}). Wat is je volgende stap?',
+  challenge_continue_no_active: 'Geen actieve uitdaging gevonden om voort te zetten.',
 };
 
 

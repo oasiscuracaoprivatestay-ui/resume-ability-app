@@ -2271,6 +2271,28 @@ export const es: Translations = {
   challenge_status_bar_view: 'Centro de Control',
   challenge_status_bar_minimize: 'Minimizar estado del desafío',
   challenge_status_bar_expand: 'Expandir estado del desafío',
+
+  // ── Phase 44: Active Challenge Continuation & Welcome Popup ──
+  challenge_welcome_badge: 'DESAFÍO ACTIVO',
+  challenge_welcome_day_of: 'Día {current} de {total}',
+  challenge_welcome_progress: 'Progreso',
+  challenge_welcome_stat_slips: 'Deslices Reales',
+  challenge_welcome_stat_resumed: 'Recuperados',
+  challenge_welcome_stat_rate: 'Tasa de Recuperación',
+  challenge_welcome_stat_no_slips: 'Sin deslices registrados',
+  challenge_welcome_today_status: 'Práctica de hoy',
+  challenge_welcome_today_done: 'Registrado ({status})',
+  challenge_welcome_today_pending: 'Registro Pendiente',
+  challenge_welcome_motivation_checked: 'La práctica de hoy está completada. La constancia consiste en un regreso confiable: sigue respetando tu ritmo diario.',
+  challenge_welcome_motivation_slips: 'Cada desliz es una oportunidad para practicar la Resume-Ability. La recuperación y la consciencia importan mucho más que la perfección.',
+  challenge_welcome_motivation_on_track: 'Un desafío de Resume-Ability se basa en la consciencia y constancia diaria. Tómate un momento para registrarte y afianzar tu práctica hoy.',
+  challenge_welcome_btn_continue: 'Continuar Desafío',
+  challenge_welcome_btn_later: 'Quizás Más Tarde',
+  challenge_welcome_dont_show: 'No mostrar automáticamente al iniciar la app',
+  challenge_welcome_close_aria: 'Cerrar ventana de bienvenida del desafío',
+  challenge_btn_view_summary: 'Resumen del Desafío',
+  challenge_continue_already_checked: 'La práctica de hoy ya está registrada ({status}). ¿Cuál es tu siguiente paso?',
+  challenge_continue_no_active: 'No se encontró ningún desafío activo para continuar.',
 };
 
 

@@ -652,10 +652,10 @@
   margin-top: 1px;
 }
 
-/* ── Primary Section 2 Action Buttons (Continue / Recommit) ── */
+/* ── Primary Section 2 Action Buttons (Continue / Summary / Recommit) ── */
 .challenge-control-actions-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
 }
 

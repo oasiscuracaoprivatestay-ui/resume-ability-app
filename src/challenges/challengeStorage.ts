@@ -292,3 +292,83 @@ export function canShowChallengeInvitation(now = Date.now()): boolean {
 
   return true;
 }
+
+// ── Phase 44: Active Challenge Welcome Popup Persistence & Eligibility ───────
+
+export const CHALLENGE_WELCOME_DISABLED_KEY = 'sda_challenge_welcome_disabled';
+export const CHALLENGE_WELCOME_SESSION_KEY = 'sda_challenge_welcome_session_shown';
+
+/**
+ * Checks whether the user has opted out of the automatic Welcome Popup.
+ * Default is enabled (true). Returns false if explicitly disabled.
+ */
+export function isChallengeWelcomeAutoShowEnabled(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  try {
+    return localStorage.getItem(CHALLENGE_WELCOME_DISABLED_KEY) !== 'true';
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Persists the user's preference for the automatic Welcome Popup.
+ */
+export function setChallengeWelcomeAutoShowEnabled(enabled: boolean): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    if (enabled) {
+      localStorage.removeItem(CHALLENGE_WELCOME_DISABLED_KEY);
+    } else {
+      localStorage.setItem(CHALLENGE_WELCOME_DISABLED_KEY, 'true');
+    }
+  } catch {
+    // ignore storage restrictions
+  }
+}
+
+/**
+ * Checks whether the Welcome Popup has already been shown/dismissed during this browser session.
+ */
+export function wasChallengeWelcomeShownThisSession(): boolean {
+  if (typeof sessionStorage === 'undefined') return false;
+  try {
+    return sessionStorage.getItem(CHALLENGE_WELCOME_SESSION_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Marks the Welcome Popup as shown for the remainder of this continuous usage session.
+ */
+export function markChallengeWelcomeShownThisSession(): void {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    sessionStorage.setItem(CHALLENGE_WELCOME_SESSION_KEY, 'true');
+  } catch {
+    // ignore storage restrictions
+  }
+}
+
+/**
+ * Pure deterministic eligibility check for the Active Challenge Welcome Popup on app entry.
+ *
+ * Enforces:
+ * 1. An eligible active challenge MUST exist and have status 'active'.
+ * 2. Excludes completed, cancelled, or missing challenges.
+ * 3. User must NOT have disabled automatic popups.
+ * 4. Popup must NOT have already shown or been dismissed during the current session.
+ */
+export function canShowActiveChallengeWelcomePopup(challenge: ChallengeInstance | null): boolean {
+  if (!challenge || challenge.status !== 'active') {
+    return false;
+  }
+  if (!isChallengeWelcomeAutoShowEnabled()) {
+    return false;
+  }
+  if (wasChallengeWelcomeShownThisSession()) {
+    return false;
+  }
+  return true;
+}

@@ -2285,6 +2285,28 @@ export const en: Translations = {
   challenge_status_bar_view: 'Control Center',
   challenge_status_bar_minimize: 'Minimize Challenge status',
   challenge_status_bar_expand: 'Expand Challenge status',
+
+  // ── Phase 44: Active Challenge Continuation & Welcome Popup ──
+  challenge_welcome_badge: 'ACTIVE CHALLENGE',
+  challenge_welcome_day_of: 'Day {current} of {total}',
+  challenge_welcome_progress: 'Progress',
+  challenge_welcome_stat_slips: 'True Slips',
+  challenge_welcome_stat_resumed: 'Resumed',
+  challenge_welcome_stat_rate: 'Resume Rate',
+  challenge_welcome_stat_no_slips: 'No slips recorded',
+  challenge_welcome_today_status: "Today's Practice",
+  challenge_welcome_today_done: 'Checked In ({status})',
+  challenge_welcome_today_pending: 'Check-In Pending',
+  challenge_welcome_motivation_checked: "Today's practice is completed. Consistency is about reliable return — keep honoring your daily rhythm.",
+  challenge_welcome_motivation_slips: 'Every slip is an opportunity to practice Resume-Ability. Recovery and awareness matter far more than perfection.',
+  challenge_welcome_motivation_on_track: 'A Resume-Ability challenge is about daily awareness and consistency. Take a moment to check in and anchor your practice today.',
+  challenge_welcome_btn_continue: 'Continue Challenge',
+  challenge_welcome_btn_later: 'Maybe Later',
+  challenge_welcome_dont_show: "Don't show automatically on app launch",
+  challenge_welcome_close_aria: 'Close challenge welcome popup',
+  challenge_btn_view_summary: 'Challenge Summary',
+  challenge_continue_already_checked: "Today's practice is already logged ({status}). What is your next step?",
+  challenge_continue_no_active: 'No active challenge found to continue.',
 };
 
 

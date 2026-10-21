@@ -2178,6 +2178,28 @@ export interface Translations {
   challenge_status_bar_view: string;
   challenge_status_bar_minimize: string;
   challenge_status_bar_expand: string;
+
+  // ── Phase 44: Active Challenge Continuation & Welcome Popup ──
+  challenge_welcome_badge: string;
+  challenge_welcome_day_of: string;
+  challenge_welcome_progress: string;
+  challenge_welcome_stat_slips: string;
+  challenge_welcome_stat_resumed: string;
+  challenge_welcome_stat_rate: string;
+  challenge_welcome_stat_no_slips: string;
+  challenge_welcome_today_status: string;
+  challenge_welcome_today_done: string;
+  challenge_welcome_today_pending: string;
+  challenge_welcome_motivation_checked: string;
+  challenge_welcome_motivation_slips: string;
+  challenge_welcome_motivation_on_track: string;
+  challenge_welcome_btn_continue: string;
+  challenge_welcome_btn_later: string;
+  challenge_welcome_dont_show: string;
+  challenge_welcome_close_aria: string;
+  challenge_btn_view_summary: string;
+  challenge_continue_already_checked: string;
+  challenge_continue_no_active: string;
 }
 
 

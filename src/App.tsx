@@ -70,6 +70,13 @@ import { useTranslation } from './i18n';
 import { PersistentChallengeBar } from './components/premium/PersistentChallengeBar';
 import { BottomNav } from './components/premium/BottomNav';
 import { GlobalMoreSheet } from './components/premium/GlobalMoreSheet';
+import { ActiveChallengeWelcomeModal } from './components/premium/ActiveChallengeWelcomeModal';
+import { readActiveChallenge } from './components/premium/readActiveChallenge';
+import {
+  canShowActiveChallengeWelcomePopup,
+  calculateChallengePracticeStats,
+  type ChallengeInstance,
+} from './challenges';
 
 const ROOT_SCREENS = new Set<Screen>(['home', 'challenges', 'structured-diet', 'progress-victories']);
 
@@ -116,6 +123,10 @@ export default function App() {
   const [levelUpToShow, setLevelUpToShow] = useState<number | null>(null);
   // Phase 29C: Daily milestone reward celebration
   const [dailyMilestoneToShow, setDailyMilestoneToShow] = useState<DailyMilestoneTier | null>(null);
+
+  // Phase 44: Active Challenge Welcome Popup state
+  const [welcomeChallenge, setWelcomeChallenge] = useState<ChallengeInstance | null>(null);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   // Phase 42: Seven Diet-Abilities and Detail Navigation (with session restoration)
   const [selectedDietAbilityId, setSelectedDietAbilityId] = useState<CanonicalDietAbilityId>(() => {
@@ -169,6 +180,36 @@ export default function App() {
     window.addEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
     return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
   }, [levelUpToShow]);
+
+  // Phase 44: Evaluate Active Challenge Welcome Popup on app entry (respecting modal priority rules)
+  useEffect(() => {
+    // Modal priority rule: wait until higher-priority celebration modals are dismissed
+    if (levelUpToShow !== null || dailyMilestoneToShow !== null) return;
+
+    const evaluateWelcome = () => {
+      const active = readActiveChallenge();
+      if (active && canShowActiveChallengeWelcomePopup(active)) {
+        setWelcomeChallenge(active);
+        setShowWelcomePopup(true);
+      }
+    };
+
+    // Initial app entry check with slight delay for smooth entrance
+    const initialTimer = setTimeout(evaluateWelcome, 600);
+
+    // Return to app handler (tab reactivation)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        evaluateWelcome();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearTimeout(initialTimer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [levelUpToShow, dailyMilestoneToShow]);
 
   // Sync current screen with history state for back/forward navigation actual previous screen
   const screenRef = useRef<Screen>('home');
@@ -261,6 +302,30 @@ export default function App() {
     screenRef.current = target;
     setScreen(target);
   }, []);
+
+  // Phase 44: Continue Challenge handler from the Welcome Popup
+  const handleWelcomeContinue = useCallback(() => {
+    setShowWelcomePopup(false);
+    const active = welcomeChallenge || readActiveChallenge();
+    if (active && active.status === 'active') {
+      const stats = calculateChallengePracticeStats(active);
+      if (!stats.todayCheckedIn) {
+        // Daily practice pending: open daily check-in directly
+        try {
+          sessionStorage.setItem(CHALLENGE_OPEN_CHECKIN_KEY, '1');
+        } catch {}
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(OPEN_CHALLENGE_CHECKIN_EVENT));
+        }
+      } else {
+        // Daily practice completed: signal challenges screen to present status & next steps
+        try {
+          sessionStorage.setItem('challenge_show_next_action', '1');
+        } catch {}
+      }
+      navigate('challenges');
+    }
+  }, [welcomeChallenge, navigate]);
 
   // ── Start Timer (no slip) — skips context / slip recording ──
   const handleStartTimer = useCallback(() => {
@@ -982,7 +1047,16 @@ export default function App() {
           onClose={() => setDailyMilestoneToShow(null)}
         />
       )}
-      {levelUpToShow === null && dailyMilestoneToShow === null && !moreOpen && (
+      {/* ── Phase 44: Active Challenge Welcome Popup ── */}
+      {levelUpToShow === null && dailyMilestoneToShow === null && showWelcomePopup && welcomeChallenge && (
+        <ActiveChallengeWelcomeModal
+          isOpen={showWelcomePopup}
+          challenge={welcomeChallenge}
+          onClose={() => setShowWelcomePopup(false)}
+          onContinue={handleWelcomeContinue}
+        />
+      )}
+      {levelUpToShow === null && dailyMilestoneToShow === null && !moreOpen && !showWelcomePopup && (
         <div className="floating-buttons-stack">
           <FloatingProgramButton currentScreen={screen} />
           <FloatingTimerButton currentScreen={screen} onNavigate={navigate} onStartTimer={handleStartTimer} />

@@ -1,0 +1,494 @@
+/**
+ * Active Challenge Welcome Modal Styles (Phase 44)
+ *
+ * Premium mobile-first design adhering to SDA visual identity:
+ * - Near-black and dark green surfaces (#0a0f0d, #11221a, #162e24)
+ * - Emerald & turquoise accents (#10b981, #06b6d4)
+ * - Soft borders and subtle shadows
+ * - Responsive from 320px up to desktop viewports
+ * - Safe area inset compliance and scrollable short screen support
+ * - Touch targets >= 44px
+ */
+
+.challenge-welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background-color: rgba(5, 10, 8, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  animation: challengeWelcomeFadeIn 0.22s ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes challengeWelcomeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.challenge-welcome-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: min(92vh, calc(100dvh - 32px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: linear-gradient(180deg, #13271e 0%, #0d1a14 100%);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 20px;
+  padding: 22px 20px 20px 20px;
+  box-shadow:
+    0 24px 48px -12px rgba(0, 0, 0, 0.85),
+    0 0 32px rgba(16, 185, 129, 0.12);
+  color: #f3f4f6;
+  box-sizing: border-box;
+  animation: challengeWelcomeScaleIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes challengeWelcomeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Topbar (Badge & Close) ── */
+.challenge-welcome-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.challenge-welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.welcome-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: welcomePulseDot 2s infinite ease-in-out;
+}
+
+@keyframes welcomePulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+.welcome-badge-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  text-transform: uppercase;
+}
+
+.challenge-welcome-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  padding: 0;
+  margin: -6px -6px 0 0;
+}
+
+.challenge-welcome-close-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.challenge-welcome-close-btn:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* ── Header ── */
+.challenge-welcome-header {
+  margin-bottom: 16px;
+}
+
+.challenge-welcome-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.015em;
+}
+
+.challenge-welcome-ability-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Progress Section ── */
+.challenge-welcome-progress-section {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.welcome-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 0.88rem;
+}
+
+.welcome-progress-day {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.welcome-progress-remaining {
+  color: #34d399;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.welcome-progress-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.welcome-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #10b981 0%, #06b6d4 100%);
+  transition: width 0.4s ease-out;
+}
+
+.welcome-progress-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.welcome-progress-pct {
+  font-weight: 600;
+  color: #a7f3d0;
+}
+
+.welcome-progress-duration {
+  font-weight: 500;
+}
+
+/* ── Statistics Grid ── */
+.challenge-welcome-stats-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.welcome-stat-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.welcome-stat-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 3px;
+}
+
+.welcome-stat-label {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
+/* ── Today's Practice Status Banner ── */
+.welcome-today-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+}
+
+.welcome-today-banner--done {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
+}
+
+.welcome-today-banner--pending {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fde68a;
+}
+
+.welcome-today-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.welcome-today-banner--done .welcome-today-icon {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+}
+
+.welcome-today-banner--pending .welcome-today-icon {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+}
+
+.welcome-today-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.welcome-today-kicker {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  font-weight: 700;
+}
+
+.welcome-today-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ── Philosophy Card ── */
+.challenge-welcome-philosophy-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #10b981;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+}
+
+.welcome-philosophy-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.welcome-philosophy-text {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #d1d5db;
+  margin: 0;
+}
+
+/* ── Actions ── */
+.challenge-welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.challenge-welcome-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.challenge-welcome-btn-primary:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+.challenge-welcome-btn-primary:active {
+  transform: translateY(0);
+}
+
+.challenge-welcome-btn-primary:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+
+.challenge-welcome-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.challenge-welcome-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+.challenge-welcome-btn-secondary:focus-visible {
+  outline: 2px solid #9ca3af;
+  outline-offset: 2px;
+}
+
+/* ── Auto-show preference row ── */
+.challenge-welcome-pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.welcome-pref-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.76rem;
+  color: #9ca3af;
+}
+
+.welcome-pref-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.welcome-pref-label:hover .welcome-pref-text {
+  color: #d1d5db;
+}
+
+/* ── Responsiveness for Narrow Mobile (<= 360px & 320px) ── */
+@media (max-width: 360px) {
+  .challenge-welcome-card {
+    padding: 16px 14px 14px 14px;
+    border-radius: 16px;
+  }
+
+  .challenge-welcome-title {
+    font-size: 1.22rem;
+  }
+
+  .challenge-welcome-stats-box {
+    gap: 6px;
+  }
+
+  .welcome-stat-col {
+    padding: 8px 4px;
+    min-height: 54px;
+  }
+
+  .welcome-stat-val {
+    font-size: 1rem;
+  }
+
+  .welcome-stat-label {
+    font-size: 0.62rem;
+  }
+
+  .challenge-welcome-btn-primary {
+    font-size: 0.88rem;
+    padding: 11px 14px;
+  }
+}

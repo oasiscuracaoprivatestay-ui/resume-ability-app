@@ -42,6 +42,7 @@ import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
 import { ChallengeMilestoneModal } from '../components/ChallengeMilestoneModal';
 import { NextActionModal } from '../components/premium/NextActionModal';
+import { ActiveChallengeWelcomeModal } from '../components/premium/ActiveChallengeWelcomeModal';
 import { playFeedback } from '../utils/feedback';
 import { loadPledge } from '../utils/pledgeStorage';
 import { saveRecommitEvent } from '../utils/recommitStorage';
@@ -116,6 +117,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [continueToast, setContinueToast] = useState<string | null>(null);
   const [showNextActionModal, setShowNextActionModal] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   // Phase 41H.4: Completion view state
   const [showingStartWizard, setShowingStartWizard] = useState(preselectedDuration !== null);
@@ -227,11 +229,43 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   };
 
   const handleContinueChallenge = () => {
-    playFeedback('win');
-    setContinueToast(t.challenge_checkin_win_desc || 'Consistency is your superpower! Keep going.');
-    setTimeout(() => {
-      setContinueToast(null);
-    }, 3500);
+    const current = activeChallenge || syncCurrentChallenge();
+    if (!current || current.status !== 'active') {
+      playFeedback('neutral');
+      setContinueToast(t.challenge_continue_no_active || 'No active challenge found to continue.');
+      setTimeout(() => {
+        setContinueToast(null);
+      }, 3500);
+      return;
+    }
+
+    // Step 1 & 2: Challenge is detected and progress/ID/history are strictly preserved
+    const stats = calculateChallengePracticeStats(current);
+
+    if (!stats.todayCheckedIn) {
+      // Step 4: Practice pending — present daily action directly
+      playFeedback('commit');
+      setShowCheckInModal(true);
+    } else {
+      // Step 5: Practice already completed — show completion status and appropriate next step
+      playFeedback('win');
+      const statusKey = stats.todayLatestStatus;
+      const statusLabel = statusKey
+        ? (statusKey === 'on-structure'
+            ? (t.challenge_checkin_status_on_structure || 'On Structure')
+            : statusKey === 'near-slip'
+            ? (t.challenge_checkin_status_near_slip || 'Near Slip')
+            : (t.challenge_checkin_status_slip || 'True Slip'))
+        : (t.challenge_practice_status_done || 'Checked in today');
+
+      const msg = (t.challenge_continue_already_checked || "Today's practice is already logged ({status}). What is your next step?")
+        .replace('{status}', statusLabel);
+      setContinueToast(msg);
+      setShowNextActionModal(true);
+      setTimeout(() => {
+        setContinueToast(null);
+      }, 4500);
+    }
   };
 
   const handleScrollToRecommit = () => {
@@ -277,6 +311,20 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
     window.addEventListener(OPEN_CHALLENGE_CHECKIN_EVENT, handleOpenEvent);
     return () => window.removeEventListener(OPEN_CHALLENGE_CHECKIN_EVENT, handleOpenEvent);
+  }, [activeChallenge]);
+
+  // Phase 44: Listen for deep-linked Next Action request from Welcome Popup
+  useEffect(() => {
+    try {
+      const showNext = sessionStorage.getItem('challenge_show_next_action');
+      if (showNext === '1') {
+        sessionStorage.removeItem('challenge_show_next_action');
+        const current = activeChallenge || syncCurrentChallenge();
+        if (current && current.status === 'active') {
+          setShowNextActionModal(true);
+        }
+      }
+    } catch {}
   }, [activeChallenge]);
 
   const handleFrequencyChange = (freq: ChallengeReminderFrequency) => {
@@ -818,7 +866,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                   </div>
                 </div>
 
-                {/* Primary Section 2 Actions: Continue / Recommit */}
+                {/* Primary Section 2 Actions: Continue / Summary / Recommit */}
                 <div className="challenge-control-actions-row">
                   <button
                     type="button"
@@ -827,6 +875,14 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     onClick={handleContinueChallenge}
                   >
                     <span>✓ {t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-challenge-summary"
+                    className="challenge-control-btn challenge-control-btn--secondary"
+                    onClick={() => setShowSummaryModal(true)}
+                  >
+                    <span>📋 {t.challenge_btn_view_summary || 'Challenge Summary'}</span>
                   </button>
                   <button
                     type="button"
@@ -1589,6 +1645,20 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
             handleDismissModalMilestone();
             setViewTab('history');
           }}
+        />
+      )}
+      {/* ── Active Challenge Welcome Summary Modal (Phase 44) ── */}
+      {showSummaryModal && activeChallenge && activeChallenge.status === 'active' && (
+        <ActiveChallengeWelcomeModal
+          isOpen={showSummaryModal}
+          challenge={activeChallenge}
+          practiceStats={practiceStats || undefined}
+          onClose={() => setShowSummaryModal(false)}
+          onContinue={() => {
+            setShowSummaryModal(false);
+            handleContinueChallenge();
+          }}
+          isManualOpen={true}
         />
       )}
     </div>
