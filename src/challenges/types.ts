@@ -48,7 +48,7 @@ export interface ChallengeCheckInEntry {
   challengeId: string;
   dayIndex: number;       // 1-indexed (1..durationDays)
   dateKey: string;        // YYYY-MM-DD
-  status: CheckInStatus;  // 'on-structure' | 'near-slip' | 'slip'
+  status: CheckInStatus;  // 'on-structure' | 'near-slip' | 'slip' | 'resumed' | 'off-structure-aware'
   timestamp: number;      // epoch ms
   actionTaken?: 'continue' | 'recommit' | 'diet_review';
 }

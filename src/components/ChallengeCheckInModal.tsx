@@ -161,9 +161,9 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
         }
       } catch {}
 
-      if (selectedStatus === 'on-structure') {
+      if (selectedStatus === 'on-structure' || selectedStatus === 'resumed') {
         playFeedback('win');
-      } else if (selectedStatus === 'near-slip') {
+      } else if (selectedStatus === 'near-slip' || selectedStatus === 'off-structure-aware') {
         playFeedback('recovery');
       }
 
@@ -302,6 +302,46 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                   </span>
                   <span className="status-btn-desc">
                     {t.challenge_checkin_status_slip_sub || 'Off-structure eating occurred — ready to practice recovery.'}
+                  </span>
+                </div>
+              </button>
+
+              {/* Option 4: Resumed */}
+              <button
+                type="button"
+                id="btn-status-resumed"
+                className={`challenge-status-btn ${selectedStatus === 'resumed' ? 'challenge-status-btn--selected' : ''}`}
+                onClick={() => setSelectedStatus('resumed')}
+              >
+                <div className="status-btn-icon-wrap status-btn-icon-wrap--resumed">
+                  <span>✓</span>
+                </div>
+                <div className="status-btn-text">
+                  <span className="status-btn-title">
+                    {t.challenge_checkin_status_resumed || 'Resumed'}
+                  </span>
+                  <span className="status-btn-desc">
+                    {t.challenge_checkin_status_resumed_sub || 'I had a Slip, completed an appropriate return, and am following my structure again.'}
+                  </span>
+                </div>
+              </button>
+
+              {/* Option 5: Off Structure — Aware */}
+              <button
+                type="button"
+                id="btn-status-off-structure-aware"
+                className={`challenge-status-btn ${selectedStatus === 'off-structure-aware' ? 'challenge-status-btn--selected' : ''}`}
+                onClick={() => setSelectedStatus('off-structure-aware')}
+              >
+                <div className="status-btn-icon-wrap status-btn-icon-wrap--off-structure-aware">
+                  <span>◉</span>
+                </div>
+                <div className="status-btn-text">
+                  <span className="status-btn-title">
+                    {t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}
+                  </span>
+                  <span className="status-btn-desc">
+                    {t.challenge_checkin_status_off_structure_aware_sub || 'I recognize that I’m outside my structure. I haven’t resumed yet.'}
                   </span>
                 </div>
               </button>
@@ -515,6 +555,114 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                     }}
                   >
                     ⏱ {t.ci_action_timer || 'Recovery Timer'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedStatus === 'resumed' && (
+              <div className="feedback-section feedback-section--resumed">
+                <div className="feedback-icon-hero">✓</div>
+                <h3 className="feedback-title">
+                  {t.challenge_checkin_resumed_title || 'Structure Resumed!'}
+                </h3>
+                <p className="feedback-desc">
+                  {t.challenge_checkin_resumed_desc ||
+                    'You completed an appropriate return and are following your structure again. That is Resume-Ability in action.'}
+                </p>
+
+                {firstReason && (
+                  <div className="feedback-why-card">
+                    <span className="feedback-why-tag">{t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}</span>
+                    <p className="feedback-why-text">"{firstReason}"</p>
+                  </div>
+                )}
+
+                <div className="feedback-actions-stack">
+                  <button
+                    type="button"
+                    id="btn-ci-continue-challenge"
+                    className="challenge-primary-submit-btn"
+                    onClick={handleContinueChallenge}
+                  >
+                    <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                    <span>→</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-ci-diet-diet"
+                    className="challenge-secondary-action-btn"
+                    onClick={() => {
+                      onClose();
+                      onNavigate('structured-diet');
+                    }}
+                  >
+                    {t.challenge_checkin_action_diet || 'Return to Structured Diet'}
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-ci-review-nn"
+                    className="challenge-secondary-action-btn"
+                    onClick={() => {
+                      onClose();
+                      onNavigate('commitment');
+                    }}
+                  >
+                    {t.challenge_checkin_action_nn || 'Review Non-Negotiables'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedStatus === 'off-structure-aware' && (
+              <div className="feedback-section feedback-section--aware">
+                <div className="feedback-icon-hero">◉</div>
+                <h3 className="feedback-title">
+                  {t.challenge_checkin_aware_title || 'Awareness Acknowledged'}
+                </h3>
+                <p className="feedback-desc">
+                  {t.challenge_checkin_aware_desc ||
+                    'Recognizing where you are without shame is the critical first step. You are ready whenever you decide to resume.'}
+                </p>
+
+                {firstReason && (
+                  <div className="feedback-why-card">
+                    <span className="feedback-why-tag">{t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}</span>
+                    <p className="feedback-why-text">"{firstReason}"</p>
+                  </div>
+                )}
+
+                <div className="feedback-actions-stack">
+                  <button
+                    type="button"
+                    id="btn-ci-continue-challenge"
+                    className="challenge-primary-submit-btn"
+                    onClick={handleContinueChallenge}
+                  >
+                    <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                    <span>→</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-ci-review-why"
+                    className="challenge-secondary-action-btn"
+                    onClick={() => {
+                      onClose();
+                      onNavigate('commitment');
+                    }}
+                  >
+                    {t.challenge_checkin_action_why || 'Review My Why'}
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-ci-timer"
+                    className="challenge-secondary-action-btn"
+                    onClick={() => {
+                      onClose();
+                      onNavigate('context');
+                    }}
+                  >
+                    ⏱ {t.challenge_checkin_action_timer || '15-Min Urge Delay (Timer)'}
                   </button>
                 </div>
               </div>

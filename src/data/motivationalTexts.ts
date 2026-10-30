@@ -273,7 +273,12 @@ export function getFreeMotivationalTexts(lang: 'en' | 'es' | 'nl' = 'en'): Motiv
 // Awareness (Near Slip), and Recovery (Slip).
 // ══════════════════════════════════════════════════════════════════════════════
 
-export type CheckInMotivationContext = 'on-structure' | 'near-slip' | 'slip';
+export type CheckInMotivationContext =
+  | 'on-structure'
+  | 'near-slip'
+  | 'slip'
+  | 'resumed'
+  | 'off-structure-aware';
 
 export interface PostCheckInQuoteItem {
   id: string;
@@ -372,6 +377,38 @@ export const POST_CHECKIN_QUOTES: PostCheckInQuoteItem[] = [
     en: 'You don’t need perfection. You need the ability to return.',
     es: 'No necesitas perfección. Necesitas la capacidad de regresar.',
     nl: 'Je hebt geen perfectie nodig. Je hebt het vermogen nodig om terug te keren.',
+  },
+
+  // ── RESUMED: Returning to structure in action ──
+  {
+    id: 'quote-res-1',
+    context: 'resumed',
+    en: 'Returning to structure is Resume-Ability in action. Every return proves your commitment.',
+    es: 'Regresar a la estructura es la Habilidad de Reanudar en acción. Cada regreso demuestra tu compromiso.',
+    nl: 'Terugkeren naar structuur is Resume-Ability in actie. Elke terugkeer bewijst je toewijding.',
+  },
+  {
+    id: 'quote-res-2',
+    context: 'resumed',
+    en: 'Mastery is not avoiding the fall; mastery is the speed and grace of your return.',
+    es: 'La maestría no es evitar la caída; la maestría es la rapidez y serenidad de tu regreso.',
+    nl: 'Meesterschap is niet het vermijden van de val; meesterschap is de snelheid en rust van je terugkeer.',
+  },
+
+  // ── OFF STRUCTURE — AWARE: Honest awareness, non-shaming ──
+  {
+    id: 'quote-osa-1',
+    context: 'off-structure-aware',
+    en: 'Awareness without shame is the beginning of every successful return. You are in control.',
+    es: 'La conciencia sin culpa es el inicio de todo regreso exitoso. Tienes el control.',
+    nl: 'Bewustzijn zonder schaamte is het begin van elke succesvolle terugkeer. Jij hebt de controle.',
+  },
+  {
+    id: 'quote-osa-2',
+    context: 'off-structure-aware',
+    en: 'Pausing to recognize where you are gives you the power to choose your next step consciously.',
+    es: 'Pausar para reconocer dónde estás te da el poder de elegir tu siguiente paso conscientemente.',
+    nl: 'Stilstaan om te herkennen waar je bent geeft je de kracht om je volgende stap bewust te kiezen.',
   },
 ];
 

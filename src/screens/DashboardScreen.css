@@ -478,6 +478,8 @@
 .kpi-count--on-structure .kpi-count-value { color: var(--success); }
 .kpi-count--near-slip    .kpi-count-value { color: var(--kpi-amber); }
 .kpi-count--slip         .kpi-count-value { color: var(--danger); opacity: 0.8; }
+.kpi-count--resumed      .kpi-count-value { color: #2dd4bf; }
+.kpi-count--off-structure-aware .kpi-count-value { color: #a78bfa; }
 
 /* ── 7-day stat grid ─────────────────────────────────── */
 .kpi-stat-grid {
@@ -527,6 +529,10 @@
 .kpi-stat--near-slip    .kpi-stat-pct  { color: var(--kpi-amber); }
 .kpi-stat--slip         .kpi-stat-value,
 .kpi-stat--slip         .kpi-stat-pct  { color: var(--danger); opacity: 0.8; }
+.kpi-stat--resumed      .kpi-stat-value,
+.kpi-stat--resumed      .kpi-stat-pct  { color: #2dd4bf; }
+.kpi-stat--off-structure-aware .kpi-stat-value,
+.kpi-stat--off-structure-aware .kpi-stat-pct { color: #a78bfa; }
 
 /* ── Segmented bar ───────────────────────────────────── */
 .kpi-bar {
@@ -548,6 +554,8 @@
 .kpi-bar-seg--on-structure { background: var(--success); }
 .kpi-bar-seg--near-slip    { background: var(--kpi-amber); }
 .kpi-bar-seg--slip         { background: var(--danger); opacity: 0.8; }
+.kpi-bar-seg--resumed      { background: #2dd4bf; }
+.kpi-bar-seg--off-structure-aware { background: #a78bfa; }
 
 /* ── Legend ──────────────────────────────────────────── */
 .kpi-legend {
@@ -566,6 +574,8 @@
 .kpi-legend-item--on-structure { color: var(--success); }
 .kpi-legend-item--near-slip    { color: var(--kpi-amber); }
 .kpi-legend-item--slip         { color: var(--danger); opacity: 0.85; }
+.kpi-legend-item--resumed      { color: #2dd4bf; }
+.kpi-legend-item--off-structure-aware { color: #a78bfa; }
 
 /* ── Insight ─────────────────────────────────────────── */
 .kpi-insight {

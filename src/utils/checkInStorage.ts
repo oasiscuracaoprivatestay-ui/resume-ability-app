@@ -12,7 +12,12 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type CheckInStatus = 'on-structure' | 'near-slip' | 'slip';
+export type CheckInStatus =
+  | 'on-structure'
+  | 'near-slip'
+  | 'slip'
+  | 'resumed'
+  | 'off-structure-aware';
 
 export interface CheckInRecord {
   id: string;
@@ -25,6 +30,8 @@ export interface StatusCounts {
   'on-structure': number;
   'near-slip': number;
   'slip': number;
+  'resumed': number;
+  'off-structure-aware': number;
   total: number;
 }
 
@@ -32,6 +39,8 @@ export interface StatusPercentages {
   'on-structure': number;  // 0–100, rounded
   'near-slip': number;
   'slip': number;
+  'resumed': number;
+  'off-structure-aware': number;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -174,9 +183,18 @@ export function getLatestCheckIn(): CheckInRecord | null {
  * NOTE: near-slip and slip are always counted separately.
  */
 export function getStatusCounts(records: CheckInRecord[]): StatusCounts {
-  const counts: StatusCounts = { 'on-structure': 0, 'near-slip': 0, 'slip': 0, total: 0 };
+  const counts: StatusCounts = {
+    'on-structure': 0,
+    'near-slip': 0,
+    'slip': 0,
+    'resumed': 0,
+    'off-structure-aware': 0,
+    total: 0,
+  };
   for (const r of records) {
-    counts[r.status] += 1;
+    if (counts[r.status] !== undefined) {
+      counts[r.status] += 1;
+    }
     counts.total += 1;
   }
   return counts;
@@ -189,12 +207,20 @@ export function getStatusCounts(records: CheckInRecord[]): StatusCounts {
  */
 export function getStatusPercentages(counts: StatusCounts): StatusPercentages {
   if (counts.total === 0) {
-    return { 'on-structure': 0, 'near-slip': 0, 'slip': 0 };
+    return {
+      'on-structure': 0,
+      'near-slip': 0,
+      'slip': 0,
+      'resumed': 0,
+      'off-structure-aware': 0,
+    };
   }
   return {
-    'on-structure': Math.round((counts['on-structure'] / counts.total) * 100),
-    'near-slip':    Math.round((counts['near-slip']    / counts.total) * 100),
-    'slip':         Math.round((counts['slip']          / counts.total) * 100),
+    'on-structure':        Math.round((counts['on-structure']        / counts.total) * 100),
+    'near-slip':           Math.round((counts['near-slip']           / counts.total) * 100),
+    'slip':                Math.round((counts['slip']                / counts.total) * 100),
+    'resumed':             Math.round((counts['resumed']             / counts.total) * 100),
+    'off-structure-aware': Math.round((counts['off-structure-aware'] / counts.total) * 100),
   };
 }
 
@@ -205,9 +231,11 @@ export function getStatusPercentages(counts: StatusCounts): StatusPercentages {
 export function getDominantStatus(counts: StatusCounts): CheckInStatus | null {
   if (counts.total === 0) return null;
   const entries: [CheckInStatus, number][] = [
-    ['on-structure', counts['on-structure']],
-    ['near-slip',    counts['near-slip']],
-    ['slip',         counts['slip']],
+    ['on-structure',        counts['on-structure']],
+    ['near-slip',           counts['near-slip']],
+    ['slip',                counts['slip']],
+    ['resumed',             counts['resumed']],
+    ['off-structure-aware', counts['off-structure-aware']],
   ];
   entries.sort((a, b) => b[1] - a[1]);
 // Tie: top two share the same count

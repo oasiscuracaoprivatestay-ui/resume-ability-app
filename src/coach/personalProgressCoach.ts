@@ -173,7 +173,16 @@ export function generatePersonalProgressResponse(
       if (lang === 'es') {
         let msg = `Tienes ${todayPoints} puntos hoy y tu Índice Diario de Resume-Ability es ${index !== null ? `${index}/100` : 'aún no calculado'}.\n\n`;
         if (checkedIn) {
-          const statusStr = latestStatus === 'on-structure' ? 'En Estructura' : (latestStatus === 'near-slip' ? 'Casi Desliz' : 'Desliz');
+          const statusStr =
+            latestStatus === 'on-structure'
+              ? 'En Estructura'
+              : latestStatus === 'near-slip'
+              ? 'Casi Desliz'
+              : latestStatus === 'resumed'
+              ? 'Reanudado'
+              : latestStatus === 'off-structure-aware'
+              ? 'Fuera de Estructura — Consciente'
+              : 'Desliz';
           msg += `Has hecho check-in ${checkInCount === 1 ? 'una vez' : `${checkInCount} veces`} hoy y tu estado actual es ${statusStr}. `;
         } else {
           msg += `Aún no has completado tu Daily Check-In hoy. `;
@@ -199,7 +208,16 @@ export function generatePersonalProgressResponse(
       if (lang === 'nl') {
         let msg = `Je staat vandaag op ${todayPoints} punten en je Dagelijkse Resume-Ability Index is ${index !== null ? `${index}/100` : 'nog niet berekend'}.\n\n`;
         if (checkedIn) {
-          const statusStr = latestStatus === 'on-structure' ? 'Op Schema' : (latestStatus === 'near-slip' ? 'Bijna-Uitglijder' : 'Uitglijder');
+          const statusStr =
+            latestStatus === 'on-structure'
+              ? 'Op Schema'
+              : latestStatus === 'near-slip'
+              ? 'Bijna-Uitglijder'
+              : latestStatus === 'resumed'
+              ? 'Hervat'
+              : latestStatus === 'off-structure-aware'
+              ? 'Buiten Structuur — Bewust'
+              : 'Uitglijder';
           msg += `Je hebt ${checkInCount === 1 ? 'één keer' : `${checkInCount} keer`} ingecheckt en staat momenteel ${statusStr}. `;
         } else {
           msg += `Je hebt vandaag nog geen Daily Check-In gedaan. `;
@@ -225,7 +243,18 @@ export function generatePersonalProgressResponse(
       // Default: English
       let msg = `You're at ${todayPoints} points today, and your Daily Resume-Ability Index is ${index !== null ? `${index}/100` : 'not yet calculated'}.\n\n`;
       if (checkedIn) {
-        const statusStr = latestStatus === 'on-structure' ? 'On Structure' : (latestStatus === 'near-slip' ? 'Near Slip' : (latestStatus === 'slip' ? 'Slip' : 'completed'));
+        const statusStr =
+          latestStatus === 'on-structure'
+            ? 'On Structure'
+            : latestStatus === 'near-slip'
+            ? 'Near Slip'
+            : latestStatus === 'resumed'
+            ? 'Resumed'
+            : latestStatus === 'off-structure-aware'
+            ? 'Off Structure — Aware'
+            : latestStatus === 'slip'
+            ? 'Slip'
+            : 'completed';
         msg += `You've checked in ${checkInCount === 1 ? 'once' : `${checkInCount} times`} and you're currently ${statusStr}. `;
       } else {
         msg += `You haven't completed a Daily Check-In yet today. `;
@@ -344,7 +373,16 @@ export function generatePersonalProgressResponse(
         if (!checkedIn) {
           return 'Aún no has completado un Daily Check-In hoy.';
         }
-        const statusStr = latest === 'on-structure' ? 'En Estructura' : (latest === 'near-slip' ? 'Casi Desliz' : 'Desliz');
+        const statusStr =
+          latest === 'on-structure'
+            ? 'En Estructura'
+            : latest === 'near-slip'
+            ? 'Casi Desliz'
+            : latest === 'resumed'
+            ? 'Reanudado'
+            : latest === 'off-structure-aware'
+            ? 'Fuera de Estructura — Consciente'
+            : 'Desliz';
         if (isLatestQuery) {
           return `Tu último check-in de hoy fue ${statusStr}.`;
         }
@@ -355,7 +393,16 @@ export function generatePersonalProgressResponse(
         if (!checkedIn) {
           return 'Je hebt vandaag nog geen Daily Check-In gedaan.';
         }
-        const statusStr = latest === 'on-structure' ? 'Op Schema' : (latest === 'near-slip' ? 'Bijna-Uitglijder' : 'Uitglijder');
+        const statusStr =
+          latest === 'on-structure'
+            ? 'Op Schema'
+            : latest === 'near-slip'
+            ? 'Bijna-Uitglijder'
+            : latest === 'resumed'
+            ? 'Hervat'
+            : latest === 'off-structure-aware'
+            ? 'Buiten Structuur — Bewust'
+            : 'Uitglijder';
         if (isLatestQuery) {
           return `Je laatste check-in van vandaag was ${statusStr}.`;
         }
@@ -366,7 +413,18 @@ export function generatePersonalProgressResponse(
       if (!checkedIn) {
         return "You haven't completed a Daily Check-In yet today.";
       }
-      const statusStr = latest === 'on-structure' ? 'On Structure' : (latest === 'near-slip' ? 'Near Slip' : (latest === 'slip' ? 'Slip' : 'completed'));
+      const statusStr =
+        latest === 'on-structure'
+          ? 'On Structure'
+          : latest === 'near-slip'
+          ? 'Near Slip'
+          : latest === 'resumed'
+          ? 'Resumed'
+          : latest === 'off-structure-aware'
+          ? 'Off Structure — Aware'
+          : latest === 'slip'
+          ? 'Slip'
+          : 'completed';
       if (isLatestQuery) {
         return `Your latest check-in today was ${statusStr}.`;
       }

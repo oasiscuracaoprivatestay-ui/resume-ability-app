@@ -177,6 +177,16 @@
   color: #63b3ed;
 }
 
+.status-btn-icon-wrap--resumed {
+  background: rgba(45, 212, 191, 0.18);
+  color: #2dd4bf;
+}
+
+.status-btn-icon-wrap--off-structure-aware {
+  background: rgba(167, 139, 250, 0.18);
+  color: #a78bfa;
+}
+
 .status-btn-text {
   display: flex;
   flex-direction: column;
@@ -284,6 +294,14 @@
 .feedback-icon-hero {
   font-size: 3rem;
   margin-bottom: 0.75rem;
+}
+
+.feedback-section--resumed .feedback-icon-hero {
+  color: #2dd4bf;
+}
+
+.feedback-section--aware .feedback-icon-hero {
+  color: #a78bfa;
 }
 
 .feedback-title {

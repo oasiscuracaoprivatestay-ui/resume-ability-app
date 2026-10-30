@@ -139,6 +139,10 @@ export const ActiveChallengeWelcomeModal: React.FC<ActiveChallengeWelcomeModalPr
       ? (t.challenge_checkin_status_on_structure || 'On Structure')
       : todayStatusKey === 'near-slip'
       ? (t.challenge_checkin_status_near_slip || 'Near Slip')
+      : todayStatusKey === 'resumed'
+      ? (t.challenge_checkin_status_resumed || 'Resumed')
+      : todayStatusKey === 'off-structure-aware'
+      ? (t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware')
       : (t.challenge_checkin_status_slip || 'True Slip')
     : (t.challenge_practice_status_done || 'Checked in today');
 

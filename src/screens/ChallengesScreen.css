@@ -292,6 +292,18 @@
   color: #38bdf8;
 }
 
+.challenge-checkin-latest-pill--resumed {
+  background: rgba(45, 212, 191, 0.16);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  color: #2dd4bf;
+}
+
+.challenge-checkin-latest-pill--off-structure-aware {
+  background: rgba(167, 139, 250, 0.16);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #a78bfa;
+}
+
 .challenge-checkin-desc {
   font-size: 0.84rem;
   color: #94a3b8;

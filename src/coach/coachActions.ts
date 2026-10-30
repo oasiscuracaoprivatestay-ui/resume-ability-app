@@ -215,7 +215,13 @@ export async function executeActionProposal(
     switch (proposal.type) {
       case 'LOG_CHECK_IN': {
         const status = payload.status as CheckInStatus;
-        const VALID_CHECKIN_STATUSES: CheckInStatus[] = ['on-structure', 'near-slip', 'slip'];
+        const VALID_CHECKIN_STATUSES: CheckInStatus[] = [
+          'on-structure',
+          'near-slip',
+          'slip',
+          'resumed',
+          'off-structure-aware',
+        ];
         if (!VALID_CHECKIN_STATUSES.includes(status)) {
           return {
             success: false,
@@ -244,13 +250,24 @@ export async function executeActionProposal(
         };
         saveExecutionReceipt(receipt);
 
+        const statusLabel =
+          status === 'on-structure'
+            ? 'On Structure'
+            : status === 'near-slip'
+            ? 'Near Slip'
+            : status === 'resumed'
+            ? 'Resumed'
+            : status === 'off-structure-aware'
+            ? 'Off Structure — Aware'
+            : 'Slip';
+
         return {
           success: true,
           actionType: 'LOG_CHECK_IN',
           recordId: checkInRecord.id,
           pointsAwarded: scoreResult.pointsAwarded,
           status: 'executed',
-          message: `Recorded Daily Check-In (${status === 'on-structure' ? 'On Structure' : (status === 'near-slip' ? 'Near Slip' : 'Slip')}).`,
+          message: `Recorded Daily Check-In (${statusLabel}).`,
         };
       }
 

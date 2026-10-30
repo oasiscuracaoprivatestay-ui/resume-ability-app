@@ -338,7 +338,17 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
             date: entities.date,
             timestamp: Date.now(),
           },
-          `Daily Check-In: ${checkInStatus === 'on-structure' ? 'On Structure' : (checkInStatus === 'near-slip' ? 'Near Slip' : 'Slip')}`
+          `Daily Check-In: ${
+            checkInStatus === 'on-structure'
+              ? 'On Structure'
+              : checkInStatus === 'near-slip'
+              ? 'Near Slip'
+              : checkInStatus === 'resumed'
+              ? 'Resumed'
+              : checkInStatus === 'off-structure-aware'
+              ? 'Off Structure — Aware'
+              : 'Slip'
+          }`
         );
 
         return {
@@ -364,6 +374,8 @@ export class DeterministicUnderstandingProvider implements CoachUnderstandingPro
             { label: 'On Structure', value: 'on-structure', description: 'Followed my planned food structure' },
             { label: 'Near Slip', value: 'near-slip', description: 'Felt close to slipping but stayed in control' },
             { label: 'Slip', value: 'slip', description: 'Departed from my planned food structure' },
+            { label: 'Resumed', value: 'resumed', description: 'Had a slip, completed an appropriate return, and am back on structure' },
+            { label: 'Off Structure — Aware', value: 'off-structure-aware', description: 'Recognize being outside structure and haven’t resumed yet' },
           ],
         });
 

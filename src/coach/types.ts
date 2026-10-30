@@ -143,7 +143,7 @@ export interface NormalizedScoringSnapshot {
 export interface NormalizedCheckInSnapshot {
   hasCheckedInToday: boolean;
   checkInCountToday: number;
-  latestCheckInStatus: 'on-structure' | 'near-slip' | 'slip' | null;
+  latestCheckInStatus: CheckInStatus | null;
 }
 
 export interface NormalizedDietSnapshot {

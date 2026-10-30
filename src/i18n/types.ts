@@ -94,10 +94,14 @@ export interface Translations {
   kpi_status_on_structure: string;
   kpi_status_near_slip: string;
   kpi_status_slip: string;
+  kpi_status_resumed: string;
+  kpi_status_off_structure_aware: string;
   kpi_insight_none: string;
   kpi_insight_on_structure: string;
   kpi_insight_near_slip: string;
   kpi_insight_slip: string;
+  kpi_insight_resumed: string;
+  kpi_insight_off_structure_aware: string;
   kpi_insight_mixed: string;
   kpi_total_checkins: string;      // "Total Check-Ins" label for the wins card
   kpi_nn_reviews_label: string;    // compact "NN Reviews" label for dashboard
@@ -1736,6 +1740,10 @@ export interface Translations {
   challenge_checkin_status_near_slip_sub: string;
   challenge_checkin_status_slip: string;
   challenge_checkin_status_slip_sub: string;
+  challenge_checkin_status_resumed: string;
+  challenge_checkin_status_resumed_sub: string;
+  challenge_checkin_status_off_structure_aware: string;
+  challenge_checkin_status_off_structure_aware_sub: string;
   challenge_checkin_btn_continue: string;
   challenge_checkin_btn_submit: string;
   challenge_checkin_diet_link: string;
@@ -1745,6 +1753,10 @@ export interface Translations {
   challenge_checkin_near_desc: string;
   challenge_checkin_slip_title: string;
   challenge_checkin_slip_desc: string;
+  challenge_checkin_resumed_title: string;
+  challenge_checkin_resumed_desc: string;
+  challenge_checkin_aware_title: string;
+  challenge_checkin_aware_desc: string;
   challenge_checkin_recommit_hint: string;
   challenge_checkin_recommitted_success: string;
   challenge_checkin_action_why: string;

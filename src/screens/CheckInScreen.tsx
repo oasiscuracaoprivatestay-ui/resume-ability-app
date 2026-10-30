@@ -52,9 +52,11 @@ const STATUS_OPTIONS: StatusOption[] = [
 ];
 
 const DONE_ICON: Record<CheckInStatus, string> = {
-  'on-structure': '✓',
-  'near-slip':    '⚡',
-  'slip':         '↻',
+  'on-structure':        '✓',
+  'near-slip':           '⚡',
+  'slip':                '↻',
+  'resumed':             '✓',
+  'off-structure-aware': '◉',
 };
 
 // ── Support action config (Near Slip) ─────────────────────────────────────────
@@ -290,19 +292,25 @@ export default function CheckInScreen({ onNavigate }: CheckInScreenProps) {
 
   // ── i18n label maps ────────────────────────────────────────────────────────
   const statusLabel: Record<CheckInStatus, string> = {
-    'on-structure': t.ci_on_structure,
-    'near-slip':    t.ci_near_slip,
-    'slip':         t.ci_slip,
+    'on-structure':        t.ci_on_structure,
+    'near-slip':           t.ci_near_slip,
+    'slip':                t.ci_slip,
+    'resumed':             t.challenge_checkin_status_resumed || 'Resumed',
+    'off-structure-aware': t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware',
   };
   const statusBody: Record<CheckInStatus, string> = {
-    'on-structure': t.ci_on_structure_body,
-    'near-slip':    t.ci_near_slip_body,
-    'slip':         t.ci_slip_body,
+    'on-structure':        t.ci_on_structure_body,
+    'near-slip':           t.ci_near_slip_body,
+    'slip':                t.ci_slip_body,
+    'resumed':             t.challenge_checkin_status_resumed_sub || 'I had a Slip, completed an appropriate return, and am following my structure again.',
+    'off-structure-aware': t.challenge_checkin_status_off_structure_aware_sub || 'I recognize that I’m outside my structure. I haven’t resumed yet.',
   };
   const doneBody: Record<CheckInStatus, string> = {
-    'on-structure': t.ci_done_on_structure,
-    'near-slip':    t.ci_done_near_slip,
-    'slip':         t.ci_done_slip,
+    'on-structure':        t.ci_done_on_structure,
+    'near-slip':           t.ci_done_near_slip,
+    'slip':                t.ci_done_slip,
+    'resumed':             t.challenge_checkin_resumed_desc || 'You completed an appropriate return and are following your structure again.',
+    'off-structure-aware': t.challenge_checkin_aware_desc || 'Recognizing where you are without shame is the critical first step.',
   };
 
   const handleSupportAction = (id: string) => {

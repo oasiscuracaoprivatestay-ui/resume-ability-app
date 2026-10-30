@@ -674,14 +674,20 @@ function CheckInKPI({ t, refreshKey }: CheckInKPIProps) {
     insight = t.kpi_insight_near_slip;
   } else if (dominant === 'slip') {
     insight = t.kpi_insight_slip;
+  } else if (dominant === 'resumed') {
+    insight = t.kpi_insight_resumed || 'Most of your recent check-ins were Resumed.';
+  } else if (dominant === 'off-structure-aware') {
+    insight = t.kpi_insight_off_structure_aware || 'Most of your recent check-ins showed clear Awareness.';
   } else {
     insight = t.kpi_insight_mixed;  // tie (dominant === null) or unexpected
   }
 
   // ── Segmented bar widths (percentages already clamped/rounded) ─────────────
-  const onPct   = week7Pct['on-structure'];
-  const nearPct = week7Pct['near-slip'];
-  const slipPct = week7Pct['slip'];
+  const onPct      = week7Pct['on-structure'];
+  const nearPct    = week7Pct['near-slip'];
+  const slipPct    = week7Pct['slip'];
+  const resumedPct = week7Pct['resumed'];
+  const awarePct   = week7Pct['off-structure-aware'];
 
   return (
     <div className="kpi-section">
@@ -724,6 +730,18 @@ function CheckInKPI({ t, refreshKey }: CheckInKPIProps) {
               <span className="kpi-count-value">{todayCounts['slip']}</span>
               <span className="kpi-count-label">{t.kpi_status_slip}</span>
             </div>
+            {todayCounts['resumed'] > 0 && (
+              <div className="kpi-count kpi-count--resumed">
+                <span className="kpi-count-value">{todayCounts['resumed']}</span>
+                <span className="kpi-count-label">{t.kpi_status_resumed || 'Resumed'}</span>
+              </div>
+            )}
+            {todayCounts['off-structure-aware'] > 0 && (
+              <div className="kpi-count kpi-count--off-structure-aware">
+                <span className="kpi-count-value">{todayCounts['off-structure-aware']}</span>
+                <span className="kpi-count-label">{t.kpi_status_off_structure_aware || 'Aware'}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -753,20 +771,38 @@ function CheckInKPI({ t, refreshKey }: CheckInKPIProps) {
                 <span className="kpi-stat-pct">{slipPct}%</span>
                 <span className="kpi-stat-label">{t.kpi_status_slip}</span>
               </div>
+              {week7Counts['resumed'] > 0 && (
+                <div className="kpi-stat kpi-stat--resumed">
+                  <span className="kpi-stat-value">{week7Counts['resumed']}</span>
+                  <span className="kpi-stat-pct">{resumedPct}%</span>
+                  <span className="kpi-stat-label">{t.kpi_status_resumed || 'Resumed'}</span>
+                </div>
+              )}
+              {week7Counts['off-structure-aware'] > 0 && (
+                <div className="kpi-stat kpi-stat--off-structure-aware">
+                  <span className="kpi-stat-value">{week7Counts['off-structure-aware']}</span>
+                  <span className="kpi-stat-pct">{awarePct}%</span>
+                  <span className="kpi-stat-label">{t.kpi_status_off_structure_aware || 'Aware'}</span>
+                </div>
+              )}
             </div>
 
             {/* Segmented bar */}
             <div className="kpi-bar" role="img" aria-label="7-day status distribution">
-              {onPct   > 0 && <div className="kpi-bar-seg kpi-bar-seg--on-structure" style={{ width: `${onPct}%` }} />}
-              {nearPct > 0 && <div className="kpi-bar-seg kpi-bar-seg--near-slip"    style={{ width: `${nearPct}%` }} />}
-              {slipPct > 0 && <div className="kpi-bar-seg kpi-bar-seg--slip"         style={{ width: `${slipPct}%` }} />}
+              {onPct      > 0 && <div className="kpi-bar-seg kpi-bar-seg--on-structure" style={{ width: `${onPct}%` }} />}
+              {nearPct    > 0 && <div className="kpi-bar-seg kpi-bar-seg--near-slip"    style={{ width: `${nearPct}%` }} />}
+              {slipPct    > 0 && <div className="kpi-bar-seg kpi-bar-seg--slip"         style={{ width: `${slipPct}%` }} />}
+              {resumedPct > 0 && <div className="kpi-bar-seg kpi-bar-seg--resumed"      style={{ width: `${resumedPct}%` }} />}
+              {awarePct   > 0 && <div className="kpi-bar-seg kpi-bar-seg--off-structure-aware" style={{ width: `${awarePct}%` }} />}
             </div>
 
             {/* Bar legend */}
             <div className="kpi-legend">
-              {onPct   > 0 && <span className="kpi-legend-item kpi-legend-item--on-structure">✓ {t.kpi_status_on_structure} {onPct}%</span>}
-              {nearPct > 0 && <span className="kpi-legend-item kpi-legend-item--near-slip">⚡ {t.kpi_status_near_slip} {nearPct}%</span>}
-              {slipPct > 0 && <span className="kpi-legend-item kpi-legend-item--slip">↻ {t.kpi_status_slip} {slipPct}%</span>}
+              {onPct      > 0 && <span className="kpi-legend-item kpi-legend-item--on-structure">✓ {t.kpi_status_on_structure} {onPct}%</span>}
+              {nearPct    > 0 && <span className="kpi-legend-item kpi-legend-item--near-slip">⚡ {t.kpi_status_near_slip} {nearPct}%</span>}
+              {slipPct    > 0 && <span className="kpi-legend-item kpi-legend-item--slip">↻ {t.kpi_status_slip} {slipPct}%</span>}
+              {resumedPct > 0 && <span className="kpi-legend-item kpi-legend-item--resumed">✓ {t.kpi_status_resumed || 'Resumed'} {resumedPct}%</span>}
+              {awarePct   > 0 && <span className="kpi-legend-item kpi-legend-item--off-structure-aware">◉ {t.kpi_status_off_structure_aware || 'Aware'} {awarePct}%</span>}
             </div>
           </>
         )}

@@ -39,7 +39,7 @@ import { getTodayScore, getLifetimeScore } from '../utils/scoringEngine';
 import { getCurrentLevel } from '../utils/progressionEngine';
 import { loadPledge } from '../utils/pledgeStorage';
 import { loadSlipperyZones } from '../utils/slipperyZonesStorage';
-import { getTodayCheckIns, getLatestCheckIn, getCheckIns } from '../utils/checkInStorage';
+import { getTodayCheckIns, getLatestCheckIn, getCheckIns, type CheckInStatus } from '../utils/checkInStorage';
 import {
   getDailyDietVerification,
   getTodayDietVerification,
@@ -94,7 +94,7 @@ export function buildCoachContext(dateKey = getLocalDateKey()): CoachContext {
 
   // ── 2. Daily Check-In (Canonical Domain) ───────────────────────────────────
   let checkIns: ReturnType<typeof getTodayCheckIns> = [];
-  let latestCheckInStatus: 'on-structure' | 'near-slip' | 'slip' | null = null;
+  let latestCheckInStatus: CheckInStatus | null = null;
   try {
     checkIns = getTodayCheckIns();
     const latest = getLatestCheckIn();

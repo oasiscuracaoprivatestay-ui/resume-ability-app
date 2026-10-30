@@ -104,12 +104,19 @@ export const FOOD_CATEGORY_KEYS: readonly FoodCategoryKey[] = [
   'soups',
 ] as const;
 
-export type CheckInStatus = 'on-structure' | 'near-slip' | 'slip';
+export type CheckInStatus =
+  | 'on-structure'
+  | 'near-slip'
+  | 'slip'
+  | 'resumed'
+  | 'off-structure-aware';
 
 export const CANONICAL_CHECKIN_STATUSES: readonly CheckInStatus[] = [
   'on-structure',
   'near-slip',
   'slip',
+  'resumed',
+  'off-structure-aware',
 ] as const;
 
 export type SDACoachingMode =
@@ -195,7 +202,7 @@ export interface NormalizedScoringSnapshot {
 export interface NormalizedCheckInSnapshot {
   hasCheckedInToday: boolean;
   checkInCountToday: number;
-  latestCheckInStatus: 'on-structure' | 'near-slip' | 'slip' | null;
+  latestCheckInStatus: CheckInStatus | null;
 }
 
 export interface NormalizedDietSnapshot {

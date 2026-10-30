@@ -255,6 +255,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
             ? (t.challenge_checkin_status_on_structure || 'On Structure')
             : statusKey === 'near-slip'
             ? (t.challenge_checkin_status_near_slip || 'Near Slip')
+            : statusKey === 'resumed'
+            ? (t.challenge_checkin_status_resumed || 'Resumed')
+            : statusKey === 'off-structure-aware'
+            ? (t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware')
             : (t.challenge_checkin_status_slip || 'True Slip'))
         : (t.challenge_practice_status_done || 'Checked in today');
 
@@ -611,6 +615,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                             ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
                             : practiceStats.todayLatestStatus === 'near-slip'
                             ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
+                            : practiceStats.todayLatestStatus === 'resumed'
+                            ? `✓ ${t.challenge_checkin_status_resumed || 'Resumed'}`
+                            : practiceStats.todayLatestStatus === 'off-structure-aware'
+                            ? `◉ ${t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}`
                             : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
                         </span>
                       )}
@@ -804,6 +812,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                               ? '✓'
                               : practiceStats.todayLatestStatus === 'near-slip'
                               ? '⚡'
+                              : practiceStats.todayLatestStatus === 'resumed'
+                              ? '✓'
+                              : practiceStats.todayLatestStatus === 'off-structure-aware'
+                              ? '◉'
                               : '↻')
                           : '—'}
                       </span>

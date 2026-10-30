@@ -415,6 +415,12 @@ export function resolveCheckInStatus(text: string): CheckInStatus | null {
   if (/\b(?:near slip|near-slip|close to slipping|cerca de deslizar|bijna uitglijden)\b/i.test(clean)) {
     return 'near-slip';
   }
+  if (/\b(?:resumed|reanudado|hervat)\b/i.test(clean)) {
+    return 'resumed';
+  }
+  if (/\b(?:off structure|off-structure|fuera de estructura|buiten structuur)\b/i.test(clean)) {
+    return 'off-structure-aware';
+  }
   if (/\b(?:slipped|i slipped|deslic[eé]|uitgegleden)\b/i.test(clean)) {
     return 'slip';
   }
