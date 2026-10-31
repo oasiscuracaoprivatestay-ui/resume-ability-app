@@ -2030,6 +2030,12 @@ export interface Translations {
   home_focus_edit: string;
   home_focus_next_meal: string;
   home_focus_now: string;
+  home_focus_next_beverage: string;
+  home_focus_now_meal: string;
+  home_focus_now_beverage: string;
+  home_focus_all_completed_title: string;
+  home_focus_all_completed_sub: string;
+  home_focus_view_diet: string;
   home_focus_empty_title: string;
   home_focus_empty_body: string;
   home_focus_empty_cta: string;

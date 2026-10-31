@@ -263,6 +263,126 @@
   flex-shrink: 0;
 }
 
+/* Today's Focus - Prominent Redesign */
+.sda-focus-row--prominent {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.45) 0%, rgba(4, 11, 9, 0.65) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-radius: var(--sda-radius-md, 12px);
+}
+
+.sda-focus-row--prominent:hover {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(4, 11, 9, 0.75) 100%);
+}
+
+.sda-focus-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.sda-focus-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sda-focus-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(45, 212, 191, 0.15);
+  color: var(--sda-turquoise-soft, #2dd4bf);
+  flex-shrink: 0;
+}
+
+.sda-focus-icon-wrap--current {
+  background: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+
+.sda-focus-kicker-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sda-focus-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a7f3d0;
+  background: rgba(6, 95, 70, 0.35);
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.sda-focus-content-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sda-focus-type-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sda-text-2, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sda-focus-desc--full {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.sda-focus-empty--completed {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.25) 0%, rgba(4, 11, 9, 0.5) 100%);
+  border-color: rgba(52, 211, 153, 0.18);
+}
+
+.sda-focus-icon--completed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.sda-focus-time-legacy {
+  font-size: var(--sda-fs-small);
+  font-weight: 700;
+  color: var(--sda-text-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 /* Progress preview */
 .sda-progress-grid {
   list-style: none;

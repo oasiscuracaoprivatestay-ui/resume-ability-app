@@ -162,6 +162,7 @@ export interface DailyVerificationStats {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'resume-ability-diet-verifications';
+export const DIET_VERIFICATION_UPDATED_EVENT = 'sda_diet_verification_updated';
 
 // ── Local date helper ─────────────────────────────────────────────────────────
 
@@ -207,6 +208,9 @@ export function loadAllDietVerifications(): Record<string, DailyDietVerification
 export function saveAllDietVerifications(data: Record<string, DailyDietVerification>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent(DIET_VERIFICATION_UPDATED_EVENT));
+    }
   } catch {
     // Storage quota or private mode restriction — fail silently
   }

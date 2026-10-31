@@ -289,8 +289,8 @@ export function dispatchBrowserNotification(
   try {
     const notif = new Notification(candidate.title, {
       body: candidate.body,
-      icon: '/audio/cover.jpg', // fallback existing asset or icon
-      badge: '/audio/cover.jpg',
+      icon: '/icons/icon-192.svg',
+      badge: '/icons/icon-192.svg',
       tag: candidate.key,
     });
 

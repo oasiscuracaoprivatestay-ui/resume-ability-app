@@ -233,6 +233,7 @@ export interface StructuredDietPlan {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'resume-ability-diet';
+export const DIET_UPDATED_EVENT = 'sda_diet_updated';
 export const DEFAULT_PLAN_NAME = 'My Structured Diet';
 export const DEFAULT_ACTIVE_GOAL_ID: BuiltInGoalId = 'moderate_fat_loss';
 
@@ -684,6 +685,9 @@ export function loadDietStore(): StructureDietStore {
 export function saveDietStore(store: StructureDietStore): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent(DIET_UPDATED_EVENT));
+    }
   } catch {
     // Storage quota exceeded or private-mode restriction — fail silently.
   }
@@ -1154,6 +1158,15 @@ export function getLocalDateKey(date = new Date()): string {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+/**
+ * Returns the local date key for yesterday formatted as "YYYY-MM-DD".
+ */
+export function getYesterdayDateKey(todayDate = new Date()): string {
+  const d = new Date(todayDate);
+  d.setDate(d.getDate() - 1);
+  return getLocalDateKey(d);
 }
 
 /**
