@@ -2338,6 +2338,11 @@ export const nl: Translations = {
   challenge_reminders_off_short: 'Uit',
   challenge_reminders_short_label: 'Herinneringen',
   challenge_hold_sub_commit: 'HOUD INGEDRUKT OM JE TE BINDEN',
+  challenge_diet_mode_structured: 'Gestructureerd',
+  challenge_diet_mode_free: 'Vrije dag',
+  challenge_diet_more_blocks: '+{count} extra geplande blokken',
+  challenge_nn_rule_singular: 'Regel',
+  challenge_nn_rule_plural: 'Regels',
 };
 
 

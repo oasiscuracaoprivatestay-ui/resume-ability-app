@@ -2352,6 +2352,11 @@ export const en: Translations = {
   challenge_reminders_off_short: 'Off',
   challenge_reminders_short_label: 'Reminders',
   challenge_hold_sub_commit: 'PRESS AND HOLD TO COMMIT',
+  challenge_diet_mode_structured: 'Structured',
+  challenge_diet_mode_free: 'Free Day',
+  challenge_diet_more_blocks: '+{count} more planned blocks',
+  challenge_nn_rule_singular: 'Rule',
+  challenge_nn_rule_plural: 'Rules',
 };
 
 

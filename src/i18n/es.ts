@@ -2338,6 +2338,11 @@ export const es: Translations = {
   challenge_reminders_off_short: 'No',
   challenge_reminders_short_label: 'Recordatorios',
   challenge_hold_sub_commit: 'MANTÉN PULSADO PARA COMPROMETERTE',
+  challenge_diet_mode_structured: 'Estructurado',
+  challenge_diet_mode_free: 'Día libre',
+  challenge_diet_more_blocks: '+{count} bloques planificados más',
+  challenge_nn_rule_singular: 'Regla',
+  challenge_nn_rule_plural: 'Reglas',
 };
 
 

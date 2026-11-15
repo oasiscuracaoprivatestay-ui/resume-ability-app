@@ -1,17 +1,18 @@
 /**
- * SDA Ability Challenges System — Challenge Diet Summary Card Styles (Phase 41G)
+ * SDA Ability Challenges System — Challenge Diet Summary Card Styles
+ * Midnight Emerald premium design system with full multi-line meal readability.
  */
 
 .challenge-diet-card {
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(16, 38, 32, 0.94) 0%, rgba(11, 27, 22, 0.97) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  border-radius: 18px;
   padding: 16px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: 0 8px 22px rgba(3, 10, 8, 0.34);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .challenge-diet-header {
@@ -25,26 +26,38 @@
 .challenge-diet-title-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  min-width: 0;
+  flex: 1 1 200px;
 }
 
 .challenge-diet-icon {
-  font-size: 1.5rem;
-  line-height: 1;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: radial-gradient(circle, rgba(45, 212, 179, 0.2) 0%, rgba(13, 35, 29, 0.94) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.34);
+  color: #2DD4B3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .challenge-diet-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  min-width: 0;
 }
 
 .challenge-diet-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 15.5px;
   font-weight: 700;
-  color: #f8fafc;
-  letter-spacing: -0.01em;
+  color: #F5F8F7;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
 }
 
 .challenge-diet-badges {
@@ -55,196 +68,238 @@
 }
 
 .challenge-diet-profile-pill {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  font-size: 11px;
+  font-weight: 700;
+  color: #2DD4B3;
+  background: rgba(45, 212, 179, 0.12);
+  border: 1px solid rgba(45, 212, 179, 0.28);
   padding: 2px 8px;
   border-radius: 999px;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .challenge-diet-mode-pill {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
   border-radius: 999px;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
 }
 
 .challenge-diet-mode-pill--structured {
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.12);
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: #C2D4CE;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .challenge-diet-mode-pill--free {
-  color: #facc15;
-  background: rgba(250, 204, 21, 0.12);
-  border: 1px solid rgba(250, 204, 21, 0.25);
+  color: #FCD34D;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.32);
 }
 
 .challenge-diet-progress-col {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
-  min-width: 140px;
+  gap: 6px;
+  min-width: 132px;
+  flex: 0 1 auto;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .challenge-diet-progress-col {
-    align-items: flex-start;
+    align-items: stretch;
     width: 100%;
   }
 }
 
 .challenge-diet-progress-text {
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #A7BBB5;
+  line-height: 1.3;
 }
 
 .challenge-diet-progress-bar-wrap {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(7, 21, 18, 0.9);
+  border: 1px solid rgba(45, 212, 179, 0.16);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .challenge-diet-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #38bdf8 100%);
+  background: linear-gradient(90deg, #2DD4B3 0%, #10B981 100%);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
 
 .challenge-diet-empty {
-  padding: 12px;
+  padding: 14px 12px;
   text-align: center;
-  color: #94a3b8;
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
+  color: #A7BBB5;
+  font-size: 13px;
+  background: rgba(9, 24, 20, 0.72);
+  border: 1px dashed rgba(45, 212, 179, 0.18);
+  border-radius: 12px;
 }
 
 .challenge-diet-empty p {
   margin: 0;
+  line-height: 1.45;
 }
 
 .challenge-diet-blocks-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .challenge-diet-block-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: rgba(9, 24, 20, 0.78);
+  border: 1px solid rgba(45, 212, 179, 0.14);
+  transition: border-color 0.18s ease;
 }
 
-.challenge-diet-block-left {
+.challenge-diet-block-item--on-track {
+  border-color: rgba(45, 212, 179, 0.34);
+  background: linear-gradient(135deg, rgba(16, 52, 43, 0.65) 0%, rgba(9, 24, 20, 0.85) 100%);
+}
+
+.challenge-diet-block-item--flexible {
+  border-color: rgba(94, 234, 212, 0.3);
+}
+
+.challenge-diet-block-item--slip {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.challenge-diet-block-meta-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  min-width: 0;
-  flex: 1;
+  flex-wrap: wrap;
 }
 
 .challenge-diet-block-time {
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
   font-weight: 700;
-  color: #cbd5e1;
+  font-variant-numeric: tabular-nums;
+  color: #2DD4B3;
+  background: rgba(45, 212, 179, 0.1);
+  border: 1px solid rgba(45, 212, 179, 0.2);
+  padding: 2.5px 8px;
+  border-radius: 999px;
   white-space: nowrap;
+  line-height: 1.3;
 }
 
 .challenge-diet-block-desc {
-  font-size: 0.82rem;
-  color: #f1f5f9;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.challenge-diet-block-right {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
+  margin: 0;
+  font-size: 13.6px;
+  color: #F5F8F7;
+  font-weight: 600;
+  line-height: 1.42;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .challenge-diet-status-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 6px;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+.challenge-diet-pending-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+  flex-shrink: 0;
 }
 
 .challenge-diet-status-tag--on-track {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(52, 211, 153, 0.34);
 }
 
 .challenge-diet-status-tag--flexible {
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #5EEAD4;
+  background: rgba(45, 212, 179, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.32);
 }
 
 .challenge-diet-status-tag--slip {
-  color: #fb923c;
-  background: rgba(251, 146, 60, 0.12);
-  border: 1px solid rgba(251, 146, 60, 0.25);
+  color: #FCD34D;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.34);
 }
 
 .challenge-diet-status-tag--pending {
-  color: #64748b;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #A7BBB5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .challenge-diet-more-hint {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  color: #A7BBB5;
   text-align: center;
   padding-top: 2px;
 }
 
 .challenge-diet-actions {
   display: flex;
-  justify-content: flex-end;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 .challenge-diet-open-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 13px;
+  background: rgba(21, 56, 47, 0.9);
+  color: #2DD4B3;
+  border: 1px solid rgba(45, 212, 179, 0.34);
+  font-size: 13.8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .challenge-diet-open-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(26, 68, 57, 0.96);
+  border-color: rgba(45, 212, 179, 0.58);
+  color: #FFFFFF;
 }

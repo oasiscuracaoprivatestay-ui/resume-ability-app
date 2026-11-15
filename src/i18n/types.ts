@@ -2245,6 +2245,11 @@ export interface Translations {
   challenge_reminders_off_short: string;
   challenge_reminders_short_label: string;
   challenge_hold_sub_commit: string;
+  challenge_diet_mode_structured: string;
+  challenge_diet_mode_free: string;
+  challenge_diet_more_blocks: string;
+  challenge_nn_rule_singular: string;
+  challenge_nn_rule_plural: string;
 }
 
 

@@ -235,6 +235,16 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [showNextActionModal, setShowNextActionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
+  // Phase 3: Collapsible secondary sections (reduce mobile scroll; expand on desktop / focus action)
+  const [isTimelineOpen, setIsTimelineOpen] = useState<boolean>(false);
+  const [isNnOpen, setIsNnOpen] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.innerWidth >= 900
+  );
+  const [isWhyOpen, setIsWhyOpen] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.innerWidth >= 900
+  );
+  const [isMovementOpen, setIsMovementOpen] = useState<boolean>(false);
+
   // Phase 41H.4: Completion view state
   const [showingStartWizard, setShowingStartWizard] = useState(preselectedDuration !== null);
 
@@ -396,10 +406,13 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   };
 
   const handleScrollToRecommit = () => {
-    const el = document.getElementById('section-my-non-negotiables');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    setIsNnOpen(true);
+    requestAnimationFrame(() => {
+      const el = document.getElementById('section-my-non-negotiables');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
   };
 
   // Phase 41E & 41F: Check for direct check-in trigger from Home card, push notification, or deep link
@@ -569,7 +582,11 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   );
 
   return (
-    <div className={`challenges-screen ${isNewChallengeWizard ? 'challenges-screen--new-wizard' : ''}`}>
+    <div
+      className={`challenges-screen ${
+        isNewChallengeWizard ? 'challenges-screen--new-wizard' : 'challenges-screen--premium-hub'
+      }`}
+    >
       {/* ── Header ── */}
       {isNewChallengeWizard ? (
         <header className="challenges-header sda-ch-header">
@@ -625,37 +642,65 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
           </div>
         </header>
       ) : (
-        <header className="challenges-header">
-          <button
-            id="btn-challenges-back"
-            className="challenges-back-btn"
-            onClick={onBack}
-            aria-label={t.common_back || 'Back'}
-          >
-            <AppIcon name="arrow-left" size={16} />
-            <span>{t.common_back || 'Back'}</span>
-          </button>
-          <h1 className="challenges-title">
-            {activeChallenge && activeChallenge.status === 'active'
-              ? (t.challenge_control_center_title || 'Daily Challenge Control Center')
-              : (t.challenge_screen_title || 'Ability Challenges')}
-          </h1>
-          <div className="challenges-tabs">
+        <header className="challenges-header sda-ch-header">
+          <div className="sda-ch-header-top">
+            <button
+              id="btn-challenges-back"
+              className="challenges-back-btn sda-ch-back-btn"
+              onClick={onBack}
+              aria-label={t.common_back || 'Back'}
+            >
+              <AppIcon name="arrow-left" size={16} />
+              <span>{t.common_back || 'Back'}</span>
+            </button>
+
+            <div className="sda-ch-crest">
+              <LaurelSprigSvg />
+              <div className="sda-ch-crest-inner">
+                <div className="sda-ch-crest-title-row">
+                  <GoldenTrophySvg />
+                  <h1 className="challenges-title sda-ch-title">
+                    {t.challenge_screen_title || 'Ability Challenges'}
+                  </h1>
+                </div>
+                <p className="sda-ch-subtitle">
+                  {viewTab === 'challenge' && activeChallenge && activeChallenge.status === 'active'
+                    ? (t.challenge_control_center_title || 'Daily Challenge Control Center')
+                    : (t.challenge_header_tagline || 'BUILD · PRACTICE · STAY IN CONTROL')}
+                </p>
+              </div>
+              <LaurelSprigSvg mirrored />
+            </div>
+
+            <span className="sda-ch-header-spacer" aria-hidden="true" />
+          </div>
+
+          <div className="challenges-tabs sda-ch-tabs">
             <button
               id="tab-challenge-active"
-              className={`challenges-tab-btn ${viewTab === 'challenge' ? 'challenges-tab-btn--active' : ''}`}
+              className={`challenges-tab-btn sda-ch-tab-btn ${viewTab === 'challenge' ? 'challenges-tab-btn--active sda-ch-tab-btn--active' : ''}`}
               onClick={() => setViewTab('challenge')}
             >
-              {activeChallenge && activeChallenge.status === 'active'
-                ? (t.challenge_tab_current || 'Active Challenge')
-                : (t.challenge_tab_start || 'New Challenge')}
+              <AppIcon
+                name={activeChallenge && activeChallenge.status === 'active' ? 'target' : 'zap'}
+                size={15}
+                className="sda-ch-tab-icon sda-ch-tab-icon--zap"
+              />
+              <span>
+                {activeChallenge && activeChallenge.status === 'active'
+                  ? (t.challenge_tab_current || 'Active Challenge')
+                  : (t.challenge_tab_start || 'New Challenge')}
+              </span>
             </button>
             <button
               id="tab-challenge-history"
-              className={`challenges-tab-btn ${viewTab === 'history' ? 'challenges-tab-btn--active' : ''}`}
+              className={`challenges-tab-btn sda-ch-tab-btn ${viewTab === 'history' ? 'challenges-tab-btn--active sda-ch-tab-btn--active' : ''}`}
               onClick={() => setViewTab('history')}
             >
-              {t.challenge_tab_history || 'History'} {history.length > 0 && `(${history.length})`}
+              <AppIcon name="history" size={15} className="sda-ch-tab-icon" />
+              <span>
+                {t.challenge_tab_history || 'History'} {history.length > 0 && `(${history.length})`}
+              </span>
             </button>
           </div>
         </header>
@@ -663,24 +708,68 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
       {errorMessage && (
         <div className="challenge-error-notice" role="alert">
-          <span>⚠️ {errorMessage}</span>
-          <button className="challenge-error-dismiss" onClick={() => setErrorMessage(null)}>✕</button>
+          <span className="challenge-error-copy">
+            <AppIcon name="alert-triangle" size={16} />
+            <span>{errorMessage}</span>
+          </span>
+          <button
+            type="button"
+            className="challenge-error-dismiss"
+            onClick={() => setErrorMessage(null)}
+            aria-label="Close"
+          >
+            <AppIcon name="x" size={16} />
+          </button>
         </div>
       )}
 
       {/* ── View Tab: History ── */}
       {viewTab === 'history' && (
-        <div className="challenges-history-view">
-          <h2 className="challenges-section-heading">
-            {t.challenge_history_heading || 'Challenge History'}
-          </h2>
+        <div className="challenges-history-view sda-hist-view">
+          <div className="sda-hist-head-row">
+            <div className="sda-hist-head-title-group">
+              <span className="sda-hist-head-icon" aria-hidden="true">
+                <AppIcon name="history" size={18} />
+              </span>
+              <h2 className="challenges-section-heading sda-hist-heading">
+                {t.challenge_history_heading || 'Challenge History'}
+              </h2>
+            </div>
+            {history.length > 0 && (
+              <span className="sda-hist-count-pill">
+                {history.length}
+              </span>
+            )}
+          </div>
+
           {history.length === 0 ? (
-            <div className="challenge-history-empty">
-              <span className="challenge-empty-icon">📜</span>
-              <p>{t.challenge_history_empty || 'No previous challenges yet. Take on your first challenge today!'}</p>
+            <div className="challenge-history-empty sda-hist-empty">
+              <div className="sda-hist-empty-emblem" aria-hidden="true">
+                <AppIcon name="trophy" size={28} />
+              </div>
+              <p className="sda-hist-empty-text">
+                {t.challenge_history_empty || 'No previous challenges yet. Take on your first challenge today!'}
+              </p>
+              <button
+                type="button"
+                id="btn-history-start-challenge"
+                className="sda-hist-empty-cta"
+                onClick={() => setViewTab('challenge')}
+              >
+                <AppIcon
+                  name={activeChallenge && activeChallenge.status === 'active' ? 'target' : 'zap'}
+                  size={16}
+                />
+                <span>
+                  {activeChallenge && activeChallenge.status === 'active'
+                    ? (t.challenge_btn_view || 'View Challenge')
+                    : (t.challenge_btn_start_challenge || 'Start a Challenge')}
+                </span>
+                <AppIcon name="chevron-right" size={16} />
+              </button>
             </div>
           ) : (
-            <div className="challenges-history-list">
+            <div className="challenges-history-list sda-hist-grid">
               {history.map((item) => {
                 const isCompleted = item.status === 'completed';
                 const isCancelled = item.status === 'cancelled';
@@ -690,59 +779,128 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 const eligibleSlips = item.relevantEventCounts?.eligibleSlips || 0;
                 const resumedSlips = item.relevantEventCounts?.resumedSlips || 0;
                 const resumeRate = item.relevantEventCounts?.resumeRate;
+                const daysCompleted = item.relevantEventCounts?.daysCompleted || 0;
+                const completionPct =
+                  item.durationDays > 0
+                    ? Math.min(100, Math.max(0, Math.round((daysCompleted / item.durationDays) * 100)))
+                    : 0;
+                const unitLabel =
+                  item.durationDays === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days');
 
                 // Factual recovery rate: strictly no percentage if no eligible slips
-                const rateText = eligibleSlips > 0 && resumeRate !== null
-                  ? `${resumedSlips} / ${eligibleSlips} (${resumeRate}%)`
-                  : (t.challenge_completion_no_slips || 'No eligible slips recorded');
+                const rateText =
+                  eligibleSlips > 0 && resumeRate !== null
+                    ? `${resumedSlips} / ${eligibleSlips} (${resumeRate}%)`
+                    : (t.challenge_completion_no_slips || 'No eligible slips recorded');
 
                 // Earned milestone badges for completed challenges only
                 const earnedBadges = isCompleted
-                  ? CHALLENGE_MILESTONE_DEFINITIONS.filter((m) =>
-                      (item.celebratedMilestones && item.celebratedMilestones.includes(m.id)) ||
-                      isMilestoneEligible(m, item)
+                  ? CHALLENGE_MILESTONE_DEFINITIONS.filter(
+                      (m) =>
+                        (item.celebratedMilestones && item.celebratedMilestones.includes(m.id)) ||
+                        isMilestoneEligible(m, item)
                     )
                   : [];
 
                 return (
-                  <div key={item.id} className={`challenge-history-card challenge-history-card--${item.status}`} id={`history-card-${item.id}`}>
-                    <div className="challenge-history-header">
-                      <div className="challenge-history-title-wrap">
-                        <span className="challenge-history-title">
-                          {item.durationDays}-Day {abilityName}
+                  <article
+                    key={item.id}
+                    className={`challenge-history-card sda-hist-card challenge-history-card--${item.status}`}
+                    id={`history-card-${item.id}`}
+                  >
+                    <div className="challenge-history-header sda-hist-card-top">
+                      <div className="challenge-history-title-wrap sda-hist-title-group">
+                        <span
+                          className={`sda-hist-card-icon sda-hist-card-icon--${item.status}`}
+                          aria-hidden="true"
+                        >
+                          <AppIcon name={isCompleted ? 'trophy' : 'rotate-ccw'} size={17} />
                         </span>
+                        <div className="sda-hist-title-copy">
+                          <span className="challenge-history-title sda-hist-card-title">
+                            {item.durationDays}-{t.common_day || 'Day'} {abilityName}
+                          </span>
+                          <span className="history-date-range sda-hist-date-range">
+                            <AppIcon name="calendar" size={12} />
+                            <span>
+                              {item.startDate} → {item.endDate}
+                            </span>
+                          </span>
+                        </div>
                       </div>
+
                       <span className={`challenge-status-badge challenge-status-badge--${item.status}`}>
-                        {isCompleted ? (t.challenge_status_completed || 'Completed') : (t.challenge_status_cancelled || 'Cancelled')}
+                        <AppIcon name={isCompleted ? 'check-circle' : 'clock'} size={12} />
+                        <span>
+                          {isCompleted
+                            ? (t.challenge_status_completed || 'Completed')
+                            : (t.challenge_status_cancelled || 'Cancelled')}
+                        </span>
                       </span>
                     </div>
 
-                    <div className="challenge-history-dates">
-                      <span className="history-date-range">📅 {item.startDate} → {item.endDate}</span>
-                      <span className="history-duration-tag">{item.relevantEventCounts?.daysCompleted || 0}/{item.durationDays} days</span>
+                    <div className="challenge-history-dates sda-hist-progress-strip">
+                      <div className="sda-hist-progress-track" aria-hidden="true">
+                        <div
+                          className={`sda-hist-progress-fill sda-hist-progress-fill--${item.status}`}
+                          style={{ width: `${completionPct}%` }}
+                        />
+                      </div>
+                      <span className="history-duration-tag sda-hist-duration-tag">
+                        {daysCompleted}/{item.durationDays} {unitLabel.toLowerCase()}
+                      </span>
                     </div>
 
-                    <div className="challenge-history-stats">
-                      <div className="challenge-history-stat-item">
-                        <span className="stat-label">{t.challenge_completion_practice_consistency || 'Practice Consistency'}</span>
-                        <span className="stat-val">{distinctDays}/{item.durationDays} days</span>
-                        <span className="stat-sub">{totalCheckIns} {t.challenge_practice_total_checkins || 'check-ins'}</span>
+                    <div className="challenge-history-stats sda-hist-stats-grid">
+                      <div className="challenge-history-stat-item sda-hist-stat-box">
+                        <span className="stat-label">
+                          {t.challenge_completion_practice_consistency || 'Practice Consistency'}
+                        </span>
+                        <span className="stat-val">
+                          {distinctDays}/{item.durationDays} {unitLabel.toLowerCase()}
+                        </span>
+                        <span className="stat-sub">
+                          {totalCheckIns} {t.challenge_practice_total_checkins || 'Total Check-Ins'}
+                        </span>
                       </div>
-                      <div className="challenge-history-stat-item">
-                        <span className="stat-label">{t.challenge_resumed_slips || 'Recovered Slips'}</span>
+
+                      <div className="challenge-history-stat-item sda-hist-stat-box">
+                        <span className="stat-label">
+                          {t.challenge_resumed_slips || 'Resumed'}
+                        </span>
                         <span className="stat-val">{rateText}</span>
-                        <span className="stat-sub">{eligibleSlips > 0 ? `${resumedSlips} resumed` : (t.challenge_checkin_status_on_structure || 'On structure')}</span>
+                        <span className="stat-sub">
+                          {eligibleSlips > 0
+                            ? `${resumedSlips} ${t.challenge_resumed_short || 'resumed'}`
+                            : (t.challenge_checkin_status_on_structure || 'On Structure')}
+                        </span>
                       </div>
                     </div>
 
                     {isCompleted && earnedBadges.length > 0 && (
-                      <div className="challenge-history-badges-section">
-                        <span className="history-badges-label">{t.challenge_history_badges_label || 'Earned Milestone Badges'}:</span>
-                        <div className="challenge-history-badges-list">
+                      <div className="challenge-history-badges-section sda-hist-badges-wrap">
+                        <span className="history-badges-label">
+                          {t.challenge_history_badges_label || 'Earned Milestone Badges'}
+                        </span>
+                        <div className="challenge-history-badges-list sda-hist-badges-list">
                           {earnedBadges.map((badge) => (
-                            <span key={badge.id} className={`history-badge-pill history-badge-pill--${badge.category}`}>
-                              {badge.category === 'completion' ? '🏆' : badge.category === 'recovery' ? '🔄' : badge.category === 'first_checkin' ? '🎯' : '⭐'}{' '}
-                              {(t[badge.badgeKey as keyof typeof t] as string) || badge.id}
+                            <span
+                              key={badge.id}
+                              className={`history-badge-pill history-badge-pill--${badge.category}`}
+                            >
+                              <AppIcon
+                                name={
+                                  badge.category === 'completion'
+                                    ? 'trophy'
+                                    : badge.category === 'recovery'
+                                    ? 'rotate-ccw'
+                                    : badge.category === 'first_checkin'
+                                    ? 'target'
+                                    : 'award'
+                                }
+                                size={12}
+                              />
+                              <span>{(t[badge.badgeKey as keyof typeof t] as string) || badge.id}</span>
                             </span>
                           ))}
                         </div>
@@ -750,13 +908,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     )}
 
                     {isCancelled && (
-                      <div className="challenge-history-cancelled-wrap">
+                      <div className="challenge-history-cancelled-wrap sda-hist-cancelled-note">
+                        <AppIcon name="shield" size={14} />
                         <p className="challenge-history-cancelled-text">
-                          {t.challenge_history_cancelled_note || 'Ended early • Every day of practice counts toward your ability.'}
+                          {t.challenge_history_cancelled_note ||
+                            'Ended early • Every day of practice counts toward your ability.'}
                         </p>
                       </div>
                     )}
-                  </div>
+                  </article>
                 );
               })}
             </div>
@@ -768,108 +928,69 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       {viewTab === 'challenge' && (
         <>
           {activeChallenge && activeChallenge.status === 'active' ? (
-            /* ── ACTIVE CHALLENGE DETAIL VIEW: DAILY CHALLENGE CONTROL CENTER ── */
-            <div className="challenges-active-view control-center-hub">
+            /* ── ACTIVE CHALLENGE DETAIL VIEW: DAILY CHALLENGE CONTROL CENTER (Phase 3 Midnight Emerald) ── */
+            <div className="challenges-active-view control-center-hub sda-ac-hub">
               {continueToast && (
-                <div className="challenge-continue-toast" role="status">
-                  <span>🏆 {continueToast}</span>
-                  <button className="challenge-toast-dismiss" onClick={() => setContinueToast(null)}>✕</button>
+                <div className="challenge-continue-toast sda-ac-toast" role="status">
+                  <span className="sda-ac-toast-text">
+                    <AppIcon name="trophy" size={16} />
+                    <span>{continueToast}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="challenge-toast-dismiss"
+                    onClick={() => setContinueToast(null)}
+                    aria-label="Close"
+                  >
+                    <AppIcon name="x" size={15} />
+                  </button>
                 </div>
               )}
 
-              {/* ── SECTION 1: WHERE AM I NOW? ── */}
-              <section className="control-center-section" id="section-where-am-i-now">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge">1</span>
-                  <h3 className="control-center-section-title">
-                    {t.challenge_section_where_now || 'Where Am I Now?'}
-                  </h3>
-                </div>
+              {/* ── COMPACT PROGRESS HERO (Exclusively /images/mountain-path-hero.png) ── */}
+              <div className="challenge-hub-hero sda-ac-hero">
+                <img
+                  src="/images/mountain-path-hero.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="sda-ac-hero-img"
+                />
+                <div className="sda-ac-hero-scrim" aria-hidden="true" />
 
-                <div className="challenge-checkin-banner" id="challenge-checkin-banner">
-                  <div className="challenge-checkin-banner-content">
-                    <div className="challenge-checkin-status-row">
-                      <span className="challenge-checkin-badge">
-                        <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'target'} size={15} />
-                        <span>
-                          {practiceStats?.todayCheckedIn
-                            ? (t.challenge_practice_status_done || 'Checked in today')
-                            : (t.challenge_practice_status_pending || 'Pending Check-In')}
-                        </span>
-                      </span>
-                      {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
-                        <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
-                          {practiceStats.todayLatestStatus === 'on-structure'
-                            ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
-                            : practiceStats.todayLatestStatus === 'near-slip'
-                            ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
-                            : practiceStats.todayLatestStatus === 'resumed'
-                            ? `✓ ${t.challenge_checkin_status_resumed || 'Resumed'}`
-                            : practiceStats.todayLatestStatus === 'off-structure-aware'
-                            ? `◉ ${t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}`
-                            : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
-                        </span>
-                      )}
+                <div className="sda-ac-hero-body">
+                  <div className="challenge-hub-badges-row sda-ac-hero-badges">
+                    <div className="challenge-hub-badge challenge-hub-badge--ability">
+                      <AppIcon name="trophy" size={12} />
+                      <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
                     </div>
-                    <p className="challenge-checkin-desc">
-                      {practiceStats?.todayCheckedIn
-                        ? (t.challenge_checkin_day_badge?.replace('{current}', String(activeChallenge.currentDay)).replace('{total}', String(activeChallenge.durationDays)) + ' • ' + (t.challenge_practice_status_done || 'Checked in today'))
-                        : (t.challenge_checkin_prompt || 'Report your current structure status')}
-                    </p>
-                  </div>
-                  <button
-                    id="btn-active-challenge-checkin"
-                    className="challenge-checkin-cta-btn"
-                    onClick={() => setShowCheckInModal(true)}
-                  >
-                    <span>
-                      {practiceStats?.todayCheckedIn
-                        ? (t.challenge_btn_checkin_again || 'Check In Again')
-                        : (t.challenge_btn_checkin || 'Check In to Challenge')}
-                    </span>
-                    <AppIcon name="chevron-right" size={16} />
-                  </button>
-                </div>
-              </section>
-
-              {/* ── SECTION 2: CURRENT CHALLENGE ── */}
-              <section className="control-center-section" id="section-current-challenge">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge">2</span>
-                  <h3 className="control-center-section-title">
-                    {t.challenge_section_current_challenge || 'Current Challenge'}
-                  </h3>
-                </div>
-
-                <div className="challenge-hub-hero">
-                  <div className="challenge-hub-hero-inner">
-                    <div className="challenge-hub-hero-content">
-                      <div className="challenge-hub-badges-row">
-                        <div className="challenge-hub-badge challenge-hub-badge--ability">
-                          <AppIcon name="trophy" size={13} />
-                          <span>{t.challenge_resume_ability_title || 'Resume-Ability Challenge'}</span>
-                        </div>
-                        <div className="challenge-hub-badge challenge-hub-badge--duration">
-                          <span>{activeChallenge.durationDays} {activeChallenge.durationDays === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')}</span>
-                        </div>
-                        {activeChallenge.reminderEnabled && (
-                          <div className="challenge-hub-badge challenge-hub-badge--reminders">
-                            <AppIcon name="bell" size={13} />
-                            <span>
-                              {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
-                                ? activeChallenge.reminderTimes.join(', ')
-                                : activeChallenge.reminderFrequency || 'Reminders'}
-                            </span>
-                          </div>
-                        )}
-                        {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
-                          <div className="challenge-hub-badge challenge-hub-badge--push">
-                            <AppIcon name="check" size={13} />
-                            <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
-                          </div>
-                        )}
+                    <div className="challenge-hub-badge challenge-hub-badge--duration">
+                      <span>
+                        {activeChallenge.durationDays}{' '}
+                        {activeChallenge.durationDays === 1
+                          ? (t.common_day || 'Day')
+                          : (t.common_days || 'Days')}
+                      </span>
+                    </div>
+                    {activeChallenge.reminderEnabled && (
+                      <div className="challenge-hub-badge challenge-hub-badge--reminders">
+                        <AppIcon name="bell" size={12} />
+                        <span>
+                          {activeChallenge.reminderTimes && activeChallenge.reminderTimes.length > 0
+                            ? activeChallenge.reminderTimes.join(', ')
+                            : activeChallenge.reminderFrequency || 'Reminders'}
+                        </span>
                       </div>
+                    )}
+                    {activeChallenge.reminderEnabled && pushStatus === 'enabled' && (
+                      <div className="challenge-hub-badge challenge-hub-badge--push">
+                        <AppIcon name="check" size={12} />
+                        <span>{t.challenge_push_status_enabled || 'Notifications Active'}</span>
+                      </div>
+                    )}
+                  </div>
 
+                  <div className="challenge-hub-hero-inner sda-ac-hero-main">
+                    <div className="challenge-hub-hero-content sda-ac-hero-copy">
                       <h2 className="challenge-hub-title">
                         {t.challenge_day_of_total
                           ?.replace('{current}', String(activeChallenge.currentDay))
@@ -882,13 +1003,18 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                           ? (t.challenge_final_day_desc || 'Final day of the challenge! Keep your recovery awareness sharp.')
                           : (t.challenge_days_left_desc?.replace('{days}', String(activeChallenge.daysRemaining)) || `${activeChallenge.daysRemaining} days remaining in this challenge.`)}
                       </p>
+
+                      <div className="sda-ac-hero-dates">
+                        <AppIcon name="calendar" size={12} />
+                        <span>{activeChallenge.startDate} → {activeChallenge.endDate}</span>
+                      </div>
                     </div>
 
-                    <div className="challenge-hub-hero-ring-wrap">
+                    <div className="challenge-hub-hero-ring-wrap sda-ac-hero-ring">
                       <ProgressRing
                         value={activeChallenge.progress}
-                        size={116}
-                        strokeWidth={10}
+                        size={96}
+                        strokeWidth={8.5}
                         ariaLabel={`Day ${activeChallenge.currentDay} of ${activeChallenge.durationDays}, ${Math.round(activeChallenge.progress * 100)}% complete`}
                       >
                         <div className="challenge-hub-ring-label">
@@ -898,12 +1024,128 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                       </ProgressRing>
                     </div>
                   </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="challenge-progress-bar-wrapper">
+                  <div
+                    className="challenge-progress-bar-fill"
+                    style={{ width: `${Math.round(activeChallenge.progress * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* ── RESPONSIVE 2-COLUMN CONTROL GRID ── */}
+              <div className="sda-ac-grid">
+                {/* ── PRIMARY COLUMN: DAILY CHECK-IN, ACTIONS, PROGRESS & TIMELINE ── */}
+                <div className="sda-ac-col-primary">
+                  {/* ── SECTION 1: DAILY CHECK-IN & QUICK ACTIONS ── */}
+                  <section className="control-center-section sda-ac-section" id="section-where-am-i-now">
+                    <div className="sda-ac-section-head">
+                      <span className="sda-ac-section-icon">
+                        <AppIcon name="target" size={15} />
+                      </span>
+                      <h3 className="control-center-section-title">
+                        {t.challenge_section_where_now || 'Where Am I Now?'}
+                      </h3>
+                    </div>
+
+                    <div
+                      className={`challenge-checkin-banner sda-ac-checkin-card ${
+                        practiceStats?.todayCheckedIn
+                          ? 'sda-ac-checkin-card--done'
+                          : 'sda-ac-checkin-card--pending'
+                      }`}
+                      id="challenge-checkin-banner"
+                    >
+                      <div className="challenge-checkin-banner-content">
+                        <div className="challenge-checkin-status-row">
+                          <span className={`challenge-checkin-badge ${practiceStats?.todayCheckedIn ? 'is-done' : 'is-pending'}`}>
+                            <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'target'} size={14} />
+                            <span>
+                              {practiceStats?.todayCheckedIn
+                                ? (t.challenge_practice_status_done || 'Checked in today')
+                                : (t.challenge_practice_status_pending || 'Pending Check-In')}
+                            </span>
+                          </span>
+                          {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
+                            <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
+                              {practiceStats.todayLatestStatus === 'on-structure'
+                                ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
+                                : practiceStats.todayLatestStatus === 'near-slip'
+                                ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
+                                : practiceStats.todayLatestStatus === 'resumed'
+                                ? `✓ ${t.challenge_checkin_status_resumed || 'Resumed'}`
+                                : practiceStats.todayLatestStatus === 'off-structure-aware'
+                                ? `◉ ${t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}`
+                                : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
+                            </span>
+                          )}
+                        </div>
+                        <p className="challenge-checkin-desc">
+                          {practiceStats?.todayCheckedIn
+                            ? (t.challenge_checkin_day_badge
+                                ?.replace('{current}', String(activeChallenge.currentDay))
+                                .replace('{total}', String(activeChallenge.durationDays)) +
+                              ' • ' +
+                              (t.challenge_practice_status_done || 'Checked in today'))
+                            : (t.challenge_checkin_prompt || 'Report your current structure status')}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        id="btn-active-challenge-checkin"
+                        className="challenge-checkin-cta-btn"
+                        onClick={() => setShowCheckInModal(true)}
+                      >
+                        <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'zap'} size={16} />
+                        <span>
+                          {practiceStats?.todayCheckedIn
+                            ? (t.challenge_btn_checkin_again || 'Check In Again')
+                            : (t.challenge_btn_checkin || 'Check In to Challenge')}
+                        </span>
+                        <AppIcon name="chevron-right" size={16} />
+                      </button>
+                    </div>
+
+                    {/* Daily Control Actions: Continue / Summary / Recommit Focus */}
+                    <div className="challenge-control-actions-row sda-ac-actions-bar">
+                      <button
+                        type="button"
+                        id="btn-challenge-continue"
+                        className="challenge-control-btn challenge-control-btn--primary"
+                        onClick={handleContinueChallenge}
+                      >
+                        <AppIcon name="check-circle" size={15} />
+                        <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-challenge-summary"
+                        className="challenge-control-btn challenge-control-btn--secondary"
+                        onClick={() => setShowSummaryModal(true)}
+                      >
+                        <AppIcon name="clipboard-list" size={15} />
+                        <span>{t.challenge_btn_view_summary || 'Challenge Summary'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-challenge-recommit-focus"
+                        className="challenge-control-btn challenge-control-btn--secondary"
+                        onClick={handleScrollToRecommit}
+                      >
+                        <AppIcon name="rotate-ccw" size={15} />
+                        <span>{t.challenge_btn_recommit_focus || 'Recommit Focus'}</span>
+                      </button>
+                    </div>
+                  </section>
 
                   {/* Phase 41D: Web Push Activation / Status Banner */}
                   {activeChallenge.reminderEnabled && pushStatus === 'available' && (
-                    <div className="challenge-push-banner" id="challenge-push-enable-banner">
+                    <div className="challenge-push-banner sda-ac-push-card" id="challenge-push-enable-banner">
                       <span className="challenge-push-banner-text">
-                        <AppIcon name="bell" size={16} />
+                        <AppIcon name="bell" size={15} />
                         <span>{t.challenge_push_status_not_enabled || 'Reminders are configured. Enable notifications to receive them when SDA is closed.'}</span>
                       </span>
                       <button
@@ -917,499 +1159,601 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     </div>
                   )}
                   {activeChallenge.reminderEnabled && pushStatus === 'denied' && (
-                    <div className="challenge-push-banner challenge-push-banner--denied" id="challenge-push-denied-banner">
+                    <div className="challenge-push-banner challenge-push-banner--denied sda-ac-push-card" id="challenge-push-denied-banner">
                       <span className="challenge-push-banner-text">
-                        <AppIcon name="alert-triangle" size={16} />
+                        <AppIcon name="alert-triangle" size={15} />
                         <span>{t.challenge_push_status_denied || 'Notifications are blocked in your browser settings. To receive reminders, allow notifications for this site.'}</span>
                       </span>
                     </div>
                   )}
                   {activeChallenge.reminderEnabled && isIOS() && !isStandalonePWA() && (
-                    <div className="challenge-push-banner" id="challenge-push-ios-banner">
+                    <div className="challenge-push-banner sda-ac-push-card" id="challenge-push-ios-banner">
                       <span className="challenge-push-banner-text">
-                        📲 {t.challenge_push_ios_instruction || 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".'}
+                        <AppIcon name="bell" size={15} />
+                        <span>{t.challenge_push_ios_instruction || 'To receive Challenge reminders when SDA is closed on iPhone, tap Share and select "Add to Home Screen".'}</span>
                       </span>
                     </div>
                   )}
 
-                  {/* Progress bar */}
-                  <div className="challenge-progress-bar-wrapper">
-                    <div
-                      className="challenge-progress-bar-fill"
-                      style={{ width: `${Math.round(activeChallenge.progress * 100)}%` }}
-                    />
-                  </div>
+                  {/* Phase 41H: Intermediate Inline Achievement Banner */}
+                  {uncelebratedInlineMilestones.length > 0 && (
+                    <div className="challenge-inline-achievement sda-ac-milestone-banner" id="challenge-inline-achievement">
+                      <span className="inline-achievement-icon" aria-hidden="true">
+                        <AppIcon name="sparkles" size={18} />
+                      </span>
+                      <div className="inline-achievement-content">
+                        <div className="inline-achievement-header">
+                          <span className="inline-achievement-badge">
+                            {(t[uncelebratedInlineMilestones[0].badgeKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
+                          </span>
+                          <h4 className="inline-achievement-title">
+                            {(t[uncelebratedInlineMilestones[0].titleKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
+                          </h4>
+                        </div>
+                        <p className="inline-achievement-desc">
+                          {(t[uncelebratedInlineMilestones[0].descKey as keyof typeof t] as string) || ''}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        id="btn-ack-inline-milestone"
+                        className="inline-achievement-ack-btn"
+                        onClick={() => handleAcknowledgeInlineMilestone(uncelebratedInlineMilestones[0].id)}
+                        aria-label="Acknowledge achievement"
+                      >
+                        <AppIcon name="check" size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── SECTION 2: PROGRESS, RECOVERY METRICS & TIMELINE ── */}
+                  <section className="control-center-section sda-ac-section" id="section-current-challenge">
+                    <div className="sda-ac-section-head">
+                      <span className="sda-ac-section-icon">
+                        <AppIcon name="bar-chart" size={15} />
+                      </span>
+                      <h3 className="control-center-section-title">
+                        {t.challenge_section_current_challenge || 'Current Challenge'}
+                      </h3>
+                    </div>
+
+                    {/* Challenge Practice Progress */}
+                    <div className="challenge-practice-card sda-ac-card" id="challenge-practice-card">
+                      <div className="sda-ac-card-head">
+                        <div>
+                          <h4 className="challenge-practice-title">
+                            {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
+                          </h4>
+                          <p className="challenge-practice-sub">
+                            {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="challenge-practice-grid">
+                        <div className="challenge-practice-box">
+                          <span className="practice-box-val">
+                            {practiceStats?.daysCheckedIn || 0}
+                            <span className="practice-box-denom">/{activeChallenge.durationDays}</span>
+                          </span>
+                          <span className="practice-box-label">
+                            {t.challenge_practice_days_checked || 'Days Checked In'}
+                          </span>
+                        </div>
+                        <div className="challenge-practice-box">
+                          <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
+                          <span className="practice-box-label">
+                            {t.challenge_practice_total_checkins || 'Total Check-Ins'}
+                          </span>
+                        </div>
+                        <div className="challenge-practice-box">
+                          <span className={`practice-box-val ${practiceStats?.todayCheckedIn ? 'is-checked' : 'is-empty'}`}>
+                            {practiceStats?.todayCheckedIn
+                              ? (practiceStats.todayLatestStatus === 'on-structure'
+                                  ? '✓'
+                                  : practiceStats.todayLatestStatus === 'near-slip'
+                                  ? '⚡'
+                                  : practiceStats.todayLatestStatus === 'resumed'
+                                  ? '✓'
+                                  : practiceStats.todayLatestStatus === 'off-structure-aware'
+                                  ? '◉'
+                                  : '↻')
+                              : '—'}
+                          </span>
+                          <span className="practice-box-label">
+                            {t.challenge_practice_today_status || "Today's Status"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Phase 41H: Celebrated Milestones Badges Row */}
+                      {celebratedMilestonesList.length > 0 && (
+                        <div className="challenge-milestones-row" id="challenge-celebrated-milestones-row">
+                          {celebratedMilestonesList.map((m) => (
+                            <span
+                              key={m.id}
+                              className="challenge-milestone-pill"
+                              title={(t[m.descKey as keyof typeof t] as string) || ''}
+                            >
+                              <AppIcon name="award" size={12} />
+                              <span>{(t[m.badgeKey as keyof typeof t] as string) || m.id}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Factual Recovery Metrics Card (Strictly separated from practice consistency) */}
+                    <div className="challenge-metrics-card sda-ac-card">
+                      <div className="sda-ac-card-head">
+                        <h4 className="challenge-metrics-title">
+                          {t.challenge_recovery_metrics || 'Recovery Practice Metrics'}
+                        </h4>
+                        {activeChallenge.relevantEventCounts.eligibleSlips === 0 && (
+                          <span className="challenge-no-slips-hint">
+                            <AppIcon name="check-circle" size={12} />
+                            <span>{t.challenge_no_slips_yet || 'No Resume opportunities yet'}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="challenge-metrics-grid">
+                        <div className="challenge-metric-box">
+                          <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
+                          <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
+                        </div>
+                        <div className="challenge-metric-box">
+                          <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
+                          <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
+                        </div>
+                        <div className="challenge-metric-box">
+                          <span className="metric-box-val metric-box-val--text">
+                            {activeChallenge.relevantEventCounts.eligibleSlips > 0 && activeChallenge.relevantEventCounts.resumeRate !== null
+                              ? `${activeChallenge.relevantEventCounts.resumeRate}%`
+                              : (t.challenge_no_slips_short || 'No slips')}
+                          </span>
+                          <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
+                        </div>
+                      </div>
+
+                      <div className="challenge-philosophy-banner">
+                        <span className="philosophy-icon" aria-hidden="true">
+                          <AppIcon name="sparkles" size={15} />
+                        </span>
+                        <p>
+                          {t.challenge_philosophy_quote ||
+                            'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Day-by-day Recovery Timeline (Collapsible) */}
+                    <details
+                      className="challenge-timeline-collapsible sda-ac-details"
+                      id="challenge-timeline-collapsible"
+                      open={isTimelineOpen}
+                      onToggle={(e) => setIsTimelineOpen((e.currentTarget as HTMLDetailsElement).open)}
+                    >
+                      <summary className="challenge-timeline-summary">
+                        <span className="timeline-summary-title">
+                          <span className="sda-ac-collapse-icon">
+                            <AppIcon name="calendar" size={14} />
+                          </span>
+                          <span>
+                            {t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length}{' '}
+                            {dayBreakdown.length === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')})
+                          </span>
+                        </span>
+                        <span className="timeline-summary-chevron" aria-hidden="true">
+                          <AppIcon name="chevron-down" size={16} />
+                        </span>
+                      </summary>
+                      <div className="challenge-timeline-list">
+                        {dayBreakdown.map((d) => {
+                          let iconNode: React.ReactNode = <span className="timeline-dot-upcoming" />;
+                          let desc = t.challenge_day_upcoming || 'Upcoming';
+                          let rowClass = 'timeline-row timeline-row--upcoming';
+
+                          if (d.isToday) {
+                            rowClass = 'timeline-row timeline-row--today';
+                            iconNode = <AppIcon name="target" size={14} />;
+                            desc = d.hasResumeOpportunity
+                              ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
+                              : (t.challenge_day_today || 'Today (in progress)');
+                          } else if (d.isPast) {
+                            if (d.hasResumeOpportunity) {
+                              iconNode =
+                                d.resumedCount > 0 ? (
+                                  <AppIcon name="rotate-ccw" size={14} />
+                                ) : (
+                                  <AppIcon name="zap" size={14} />
+                                );
+                              desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
+                              rowClass =
+                                d.resumedCount > 0
+                                  ? 'timeline-row timeline-row--resumed'
+                                  : 'timeline-row timeline-row--slip';
+                            } else {
+                              iconNode = <AppIcon name="check" size={14} />;
+                              desc = t.challenge_day_no_slips || 'Completed (on-track)';
+                              rowClass = 'timeline-row timeline-row--clean';
+                            }
+                          }
+
+                          return (
+                            <div key={d.dayIndex} className={rowClass}>
+                              <div className="timeline-left">
+                                <span className="timeline-icon" aria-hidden="true">{iconNode}</span>
+                                <span className="timeline-day-label">
+                                  {t.challenge_day_label || 'Day'} {d.dayIndex}
+                                </span>
+                              </div>
+                              <div className="timeline-right">
+                                <div className="timeline-date-row">
+                                  <span className="timeline-date">{d.dateKey}</span>
+                                  {d.checkInsCount && d.checkInsCount > 0 ? (
+                                    <span className="timeline-checkin-tag">
+                                      ✓ {t.challenge_timeline_checked_in || 'Checked in'}
+                                      {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <span className="timeline-desc">{desc}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  </section>
                 </div>
 
-                {/* Phase 41H: Intermediate Inline Achievement Banner */}
-                {uncelebratedInlineMilestones.length > 0 && (
-                  <div className="challenge-inline-achievement" id="challenge-inline-achievement">
-                    <span className="inline-achievement-icon" aria-hidden="true">⭐</span>
-                    <div className="inline-achievement-content">
-                      <div className="inline-achievement-header">
-                        <span className="inline-achievement-badge">
-                          {(t[uncelebratedInlineMilestones[0].badgeKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
-                        </span>
-                        <h4 className="inline-achievement-title">
-                          {(t[uncelebratedInlineMilestones[0].titleKey as keyof typeof t] as string) || uncelebratedInlineMilestones[0].id}
-                        </h4>
-                      </div>
-                      <p className="inline-achievement-desc">
-                        {(t[uncelebratedInlineMilestones[0].descKey as keyof typeof t] as string) || ''}
-                      </p>
+                {/* ── SECONDARY COLUMN: STRUCTURED DIET, NON-NEGOTIABLES, WHY & MOVEMENT ── */}
+                <div className="sda-ac-col-secondary">
+                  {/* ── SECTION: MY STRUCTURED DIET (Open by default for immediate meal visibility) ── */}
+                  <section className="control-center-section sda-ac-section" id="section-my-structured-diet">
+                    <div className="sda-ac-section-head">
+                      <span className="sda-ac-section-icon">
+                        <AppIcon name="utensils" size={15} />
+                      </span>
+                      <h3 className="control-center-section-title">
+                        {t.challenge_section_diet || 'My Structured Diet'}
+                      </h3>
                     </div>
+
+                    <ChallengeDietSummaryCard onNavigate={onNavigate} />
+                  </section>
+
+                  {/* ── COLLAPSIBLE SECTION: MY NON-NEGOTIABLES ── */}
+                  <section className="control-center-section sda-ac-accordion" id="section-my-non-negotiables">
                     <button
                       type="button"
-                      id="btn-ack-inline-milestone"
-                      className="inline-achievement-ack-btn"
-                      onClick={() => handleAcknowledgeInlineMilestone(uncelebratedInlineMilestones[0].id)}
-                      aria-label="Acknowledge achievement"
+                      className={`sda-ac-collapse-trigger ${isNnOpen ? 'is-open' : ''}`}
+                      aria-expanded={isNnOpen}
+                      aria-controls="challenge-nn-card"
+                      onClick={() => setIsNnOpen((prev) => !prev)}
                     >
-                      ✓
-                    </button>
-                  </div>
-                )}
-
-                {/* Challenge Practice Progress */}
-                <div className="challenge-practice-card" id="challenge-practice-card">
-                  <h3 className="challenge-practice-title">
-                    {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
-                  </h3>
-                  <p className="challenge-practice-sub">
-                    {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
-                  </p>
-                  <div className="challenge-practice-grid">
-                    <div className="challenge-practice-box">
-                      <span className="practice-box-val">
-                        {practiceStats?.daysCheckedIn || 0}/{activeChallenge.durationDays}
-                      </span>
-                      <span className="practice-box-label">
-                        {t.challenge_practice_days_checked || 'Days Checked In'}
-                      </span>
-                    </div>
-                    <div className="challenge-practice-box">
-                      <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
-                      <span className="practice-box-label">
-                        {t.challenge_practice_total_checkins || 'Total Check-Ins'}
-                      </span>
-                    </div>
-                    <div className="challenge-practice-box">
-                      <span className="practice-box-val">
-                        {practiceStats?.todayCheckedIn
-                          ? (practiceStats.todayLatestStatus === 'on-structure'
-                              ? '✓'
-                              : practiceStats.todayLatestStatus === 'near-slip'
-                              ? '⚡'
-                              : practiceStats.todayLatestStatus === 'resumed'
-                              ? '✓'
-                              : practiceStats.todayLatestStatus === 'off-structure-aware'
-                              ? '◉'
-                              : '↻')
-                          : '—'}
-                      </span>
-                      <span className="practice-box-label">
-                        {t.challenge_practice_today_status || 'Today\'s Status'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Phase 41H: Celebrated Milestones Badges Row */}
-                  {celebratedMilestonesList.length > 0 && (
-                    <div className="challenge-milestones-row" id="challenge-celebrated-milestones-row">
-                      {celebratedMilestonesList.map((m) => (
-                        <span
-                          key={m.id}
-                          className="challenge-milestone-pill"
-                          title={(t[m.descKey as keyof typeof t] as string) || ''}
-                        >
-                          ✓ {(t[m.badgeKey as keyof typeof t] as string) || m.id}
+                      <span className="sda-ac-collapse-left">
+                        <span className="sda-ac-collapse-icon">
+                          <AppIcon name="shield" size={15} />
                         </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Factual Metrics Card (Strictly separated from practice consistency) */}
-                <div className="challenge-metrics-card">
-                  <h3 className="challenge-metrics-title">{t.challenge_recovery_metrics || 'Recovery Practice Metrics'}</h3>
-                  <div className="challenge-metrics-grid">
-                    <div className="challenge-metric-box">
-                      <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
-                      <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
-                    </div>
-                    <div className="challenge-metric-box">
-                      <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
-                      <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
-                    </div>
-                    <div className="challenge-metric-box">
-                      <span className="metric-box-val">
-                        {activeChallenge.relevantEventCounts.eligibleSlips > 0 && activeChallenge.relevantEventCounts.resumeRate !== null
-                          ? `${activeChallenge.relevantEventCounts.resumeRate}%`
-                          : (t.challenge_no_slips_short || 'No slips')}
+                        <span className="sda-ac-collapse-title">
+                          {t.challenge_section_nn || 'My Non-Negotiables'}
+                        </span>
                       </span>
-                      <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
-                    </div>
-                  </div>
+                      <span className="sda-ac-collapse-right">
+                        <span className="sda-ac-collapse-pill">
+                          {savedNonNegotiables.length}{' '}
+                          {savedNonNegotiables.length === 1
+                            ? (t.challenge_nn_rule_singular || 'Rule')
+                            : (t.challenge_nn_rule_plural || 'Rules')}
+                        </span>
+                        <span className="sda-ac-collapse-chevron" aria-hidden="true">
+                          <AppIcon name="chevron-down" size={16} />
+                        </span>
+                      </span>
+                    </button>
 
-                  {activeChallenge.relevantEventCounts.eligibleSlips === 0 && (
-                    <div className="challenge-no-slips-hint">
-                      <span>✓ {t.challenge_no_slips_yet || 'No Resume opportunities yet'}</span>
-                    </div>
-                  )}
-
-                  <div className="challenge-philosophy-banner">
-                    <span className="philosophy-icon">💡</span>
-                    <p>
-                      {t.challenge_philosophy_quote ||
-                        'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Primary Section 2 Actions: Continue / Summary / Recommit */}
-                <div className="challenge-control-actions-row">
-                  <button
-                    type="button"
-                    id="btn-challenge-continue"
-                    className="challenge-control-btn challenge-control-btn--primary"
-                    onClick={handleContinueChallenge}
-                  >
-                    <span>✓ {t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    id="btn-challenge-summary"
-                    className="challenge-control-btn challenge-control-btn--secondary"
-                    onClick={() => setShowSummaryModal(true)}
-                  >
-                    <span>📋 {t.challenge_btn_view_summary || 'Challenge Summary'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    id="btn-challenge-recommit-focus"
-                    className="challenge-control-btn challenge-control-btn--secondary"
-                    onClick={handleScrollToRecommit}
-                  >
-                    <span>↻ {t.challenge_btn_recommit_focus || 'Recommit Focus'}</span>
-                  </button>
-                </div>
-
-                {/* Day-by-day Recovery Timeline (Collapsible for mobile layout) */}
-                <details className="challenge-timeline-collapsible" id="challenge-timeline-collapsible">
-                  <summary className="challenge-timeline-summary">
-                    <span className="timeline-summary-title">
-                      <AppIcon name="calendar" size={15} />
-                      <span>{t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length} days)</span>
-                    </span>
-                    <span className="timeline-summary-chevron">▼</span>
-                  </summary>
-                  <div className="challenge-timeline-list">
-                    {dayBreakdown.map((d) => {
-                      let icon = '○';
-                      let desc = t.challenge_day_upcoming || 'Upcoming';
-                      let rowClass = 'timeline-row timeline-row--upcoming';
-
-                      if (d.isToday) {
-                        rowClass = 'timeline-row timeline-row--today';
-                        icon = '🎯';
-                        desc = d.hasResumeOpportunity
-                          ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
-                          : (t.challenge_day_today || 'Today (in progress)');
-                      } else if (d.isPast) {
-                        if (d.hasResumeOpportunity) {
-                          icon = d.resumedCount > 0 ? '🔄' : '⚠️';
-                          desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
-                          rowClass = d.resumedCount > 0
-                            ? 'timeline-row timeline-row--resumed'
-                            : 'timeline-row timeline-row--slip';
-                        } else {
-                          icon = '✓';
-                          desc = t.challenge_day_no_slips || 'Completed (on-track)';
-                          rowClass = 'timeline-row timeline-row--clean';
-                        }
-                      }
-
-                      return (
-                        <div key={d.dayIndex} className={rowClass}>
-                          <div className="timeline-left">
-                            <span className="timeline-icon">{icon}</span>
-                            <span className="timeline-day-label">
-                              {t.challenge_day_label || 'Day'} {d.dayIndex}
+                    <div className="challenge-nn-card sda-ac-accordion-body" id="challenge-nn-card" hidden={!isNnOpen}>
+                      {savedNonNegotiables.length > 0 ? (
+                        <div className="challenge-nn-content">
+                          <div className="challenge-nn-meta-row">
+                            <span className="challenge-nn-count-tag">
+                              <AppIcon name="shield" size={13} />
+                              <span>
+                                {savedNonNegotiables.length}{' '}
+                                {savedNonNegotiables.length === 1
+                                  ? (t.challenge_nn_rule_singular || 'Rule')
+                                  : (t.challenge_nn_rule_plural || 'Rules')}
+                              </span>
+                            </span>
+                            <span className="challenge-nn-review-stat">
+                              {t.challenge_nn_reviewed_count?.replace('{count}', String(pledge.nonNegotiableReviewCount || 0)) ||
+                                `Reviewed ${pledge.nonNegotiableReviewCount || 0} times`}
                             </span>
                           </div>
-                          <div className="timeline-right">
-                            <div className="timeline-date-row">
-                              <span className="timeline-date">{d.dateKey}</span>
-                              {d.checkInsCount && d.checkInsCount > 0 ? (
-                                <span className="timeline-checkin-tag">
-                                  ✓ {t.challenge_timeline_checked_in || 'Checked in'}
-                                  {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
+
+                          <div className="challenge-nn-list">
+                            {savedNonNegotiables.map((rule, idx) => (
+                              <div key={idx} className="challenge-nn-item">
+                                <span className="challenge-nn-bullet" aria-hidden="true">
+                                  {idx + 1}
                                 </span>
-                              ) : null}
+                                <span className="challenge-nn-rule-text">{rule}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="challenge-nn-actions-block">
+                            <div className="challenge-nn-recommit-wrap">
+                              {hasRecommitted ? (
+                                <div className="challenge-recommitted-badge" id="challenge-control-recommitted-badge">
+                                  <AppIcon name="check-circle" size={16} />
+                                  <span>{t.challenge_nn_recommitted_badge || 'Re-commitment registered!'}</span>
+                                </div>
+                              ) : (
+                                <HoldCommitButton
+                                  id="btn-control-recommit-hold"
+                                  className="sda-ac-recommit-ritual"
+                                  variant="recommit"
+                                  icon={<AppIcon name="rotate-ccw" size={22} />}
+                                  label={t.challenge_nn_hold_to_recommit || 'HOLD TO RE-COMMIT'}
+                                  subLabel={t.challenge_hold_sub_commit || 'PRESS AND HOLD TO COMMIT'}
+                                  onComplete={handleHoldRecommit}
+                                />
+                              )}
                             </div>
-                            <span className="timeline-desc">{desc}</span>
+
+                            <button
+                              type="button"
+                              id="btn-challenge-manage-nn"
+                              className="challenge-section-link-btn"
+                              onClick={() => {
+                                sessionStorage.setItem('commitment_focus', 'nn');
+                                onNavigate('commitment');
+                              }}
+                            >
+                              <span>{t.challenge_nn_btn_manage || 'Review & Manage Rules'}</span>
+                              <AppIcon name="chevron-right" size={15} />
+                            </button>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </details>
-              </section>
-
-              {/* ── SECTION 3: WHY I AM DOING THIS ── */}
-              <section className="control-center-section" id="section-why-i-am-doing-this">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge">3</span>
-                  <h3 className="control-center-section-title">
-                    {t.challenge_section_why || 'Why I Am Doing This'}
-                  </h3>
-                </div>
-
-                <div className="challenge-why-card" id="challenge-why-card">
-                  {savedReasons.length > 0 ? (
-                    <div className="challenge-why-content">
-                      <div className="challenge-why-list">
-                        {savedReasons.map((reason, idx) => (
-                          <div key={idx} className="challenge-why-item">
-                            <span className="challenge-why-quote-mark">“</span>
-                            <p className="challenge-why-text">{reason}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="challenge-why-actions">
-                        <button
-                          type="button"
-                          id="btn-challenge-manage-why"
-                          className="challenge-section-link-btn"
-                          onClick={() => {
-                            sessionStorage.setItem('commitment_focus', 'why');
-                            onNavigate('commitment');
-                          }}
-                        >
-                          <span>{t.challenge_why_btn_review || 'Review & Edit My Why'}</span>
-                          <AppIcon name="chevron-right" size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="challenge-why-empty" id="challenge-why-empty">
-                      <span className="challenge-why-empty-icon">💡</span>
-                      <p className="challenge-why-empty-text">
-                        {t.challenge_why_empty || "You haven't added your personal Why yet. Adding your reasons provides anchoring during moments of temptation."}
-                      </p>
-                      <button
-                        type="button"
-                        id="btn-challenge-add-why"
-                        className="challenge-section-cta-btn"
-                        onClick={() => {
-                          sessionStorage.setItem('commitment_focus', 'why');
-                          onNavigate('commitment');
-                        }}
-                      >
-                        <span>{t.challenge_why_btn_add || 'Add My Why'}</span>
-                        <AppIcon name="chevron-right" size={15} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* ── SECTION 4: MY NON-NEGOTIABLES ── */}
-              <section className="control-center-section" id="section-my-non-negotiables">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge">4</span>
-                  <h3 className="control-center-section-title">
-                    {t.challenge_section_nn || 'My Non-Negotiables'}
-                  </h3>
-                </div>
-
-                <div className="challenge-nn-card" id="challenge-nn-card">
-                  {savedNonNegotiables.length > 0 ? (
-                    <div className="challenge-nn-content">
-                      <div className="challenge-nn-meta-row">
-                        <span className="challenge-nn-count-tag">
-                          <AppIcon name="shield" size={14} />
-                          <span>{savedNonNegotiables.length} {savedNonNegotiables.length === 1 ? 'Rule' : 'Rules'}</span>
-                        </span>
-                        <span className="challenge-nn-review-stat">
-                          {t.challenge_nn_reviewed_count?.replace('{count}', String(pledge.nonNegotiableReviewCount || 0)) ||
-                            `Reviewed ${pledge.nonNegotiableReviewCount || 0} times`}
-                        </span>
-                      </div>
-
-                      <div className="challenge-nn-list">
-                        {savedNonNegotiables.map((rule, idx) => (
-                          <div key={idx} className="challenge-nn-item">
-                            <span className="challenge-nn-bullet">🛡️</span>
-                            <span className="challenge-nn-rule-text">{rule}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="challenge-nn-actions-block">
-                        <div className="challenge-nn-recommit-wrap">
-                          {hasRecommitted ? (
-                            <div className="challenge-recommitted-badge" id="challenge-control-recommitted-badge">
-                              <span className="recommitted-check">✓</span>
-                              <span>{t.challenge_nn_recommitted_badge || 'Re-commitment registered!'}</span>
-                            </div>
-                          ) : (
-                            <HoldCommitButton
-                              id="btn-control-recommit-hold"
-                              variant="recommit"
-                              label={`→ ${t.challenge_nn_hold_to_recommit || 'HOLD TO RE-COMMIT'}`}
-                              onComplete={handleHoldRecommit}
-                            />
-                          )}
+                      ) : (
+                        <div className="challenge-nn-empty" id="challenge-nn-empty">
+                          <span className="challenge-nn-empty-icon" aria-hidden="true">
+                            <AppIcon name="shield" size={22} />
+                          </span>
+                          <p className="challenge-nn-empty-text">
+                            {t.challenge_nn_empty || 'No Non-Negotiables defined yet. Set your personal boundaries to protect your structured eating.'}
+                          </p>
+                          <button
+                            type="button"
+                            id="btn-challenge-set-nn"
+                            className="challenge-section-cta-btn"
+                            onClick={() => {
+                              sessionStorage.setItem('commitment_focus', 'nn');
+                              onNavigate('commitment');
+                            }}
+                          >
+                            <span>{t.challenge_nn_btn_manage || 'Set Non-Negotiables'}</span>
+                            <AppIcon name="chevron-right" size={15} />
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          id="btn-challenge-manage-nn"
-                          className="challenge-section-link-btn"
-                          onClick={() => {
-                            sessionStorage.setItem('commitment_focus', 'nn');
-                            onNavigate('commitment');
-                          }}
-                        >
-                          <span>{t.challenge_nn_btn_manage || 'Review & Manage Rules'}</span>
-                          <AppIcon name="chevron-right" size={15} />
-                        </button>
-                      </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="challenge-nn-empty" id="challenge-nn-empty">
-                      <span className="challenge-nn-empty-icon">🛡️</span>
-                      <p className="challenge-nn-empty-text">
-                        {t.challenge_nn_empty || 'No Non-Negotiables defined yet. Set your personal boundaries to protect your structured eating.'}
-                      </p>
-                      <button
-                        type="button"
-                        id="btn-challenge-set-nn"
-                        className="challenge-section-cta-btn"
-                        onClick={() => {
-                          sessionStorage.setItem('commitment_focus', 'nn');
-                          onNavigate('commitment');
-                        }}
-                      >
-                        <span>{t.challenge_nn_btn_manage || 'Set Non-Negotiables'}</span>
-                        <AppIcon name="chevron-right" size={15} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </section>
+                  </section>
 
-              {/* ── SECTION 5: MY STRUCTURED DIET ── */}
-              <section className="control-center-section" id="section-my-structured-diet">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge">5</span>
-                  <h3 className="control-center-section-title">
-                    {t.challenge_section_diet || 'My Structured Diet'}
-                  </h3>
-                </div>
-
-                <ChallengeDietSummaryCard onNavigate={onNavigate} />
-              </section>
-
-              {/* ── SECTION: CHALLENGE MOVEMENT (OPTIONAL) (Phase 43.4) ── */}
-              <section className="control-center-section challenge-movement-section" id="section-challenge-movement">
-                <div className="control-center-section-header">
-                  <span className="section-number-badge section-number-badge--optional">
-                    <AppIcon name="footprints" size={13} />
-                  </span>
-                  <h3 className="control-center-section-title">
-                    {t.act_challenge_section_title}
-                  </h3>
-                </div>
-
-                <div className="challenge-movement-card" id="challenge-movement-card">
-                  <p className="challenge-movement-desc">
-                    {t.act_challenge_section_desc}
-                  </p>
-
-                  <div className="challenge-movement-count-row">
-                    <span className="challenge-movement-count-label">
-                      {t.act_challenge_linked_count}
-                    </span>
-                    <span className="challenge-movement-count-badge" id="challenge-activity-count">
-                      {challengeActivityCount}
-                    </span>
-                  </div>
-
-                  <div className="challenge-movement-actions">
+                  {/* ── COLLAPSIBLE SECTION: WHY I AM DOING THIS ── */}
+                  <section className="control-center-section sda-ac-accordion" id="section-why-i-am-doing-this">
                     <button
                       type="button"
-                      id="btn-challenge-view-activities"
-                      className="challenge-section-link-btn challenge-movement-btn-view"
-                      onClick={() => onNavigate('activity-log')}
+                      className={`sda-ac-collapse-trigger ${isWhyOpen ? 'is-open' : ''}`}
+                      aria-expanded={isWhyOpen}
+                      aria-controls="challenge-why-card"
+                      onClick={() => setIsWhyOpen((prev) => !prev)}
                     >
-                      <span>{t.act_challenge_btn_view}</span>
+                      <span className="sda-ac-collapse-left">
+                        <span className="sda-ac-collapse-icon">
+                          <AppIcon name="heart" size={15} />
+                        </span>
+                        <span className="sda-ac-collapse-title">
+                          {t.challenge_section_why || 'Why I Am Doing This'}
+                        </span>
+                      </span>
+                      <span className="sda-ac-collapse-right">
+                        <span className="sda-ac-collapse-pill">{savedReasons.length}</span>
+                        <span className="sda-ac-collapse-chevron" aria-hidden="true">
+                          <AppIcon name="chevron-down" size={16} />
+                        </span>
+                      </span>
+                    </button>
+
+                    <div className="challenge-why-card sda-ac-accordion-body" id="challenge-why-card" hidden={!isWhyOpen}>
+                      {savedReasons.length > 0 ? (
+                        <div className="challenge-why-content">
+                          <div className="challenge-why-list">
+                            {savedReasons.map((reason, idx) => (
+                              <div key={idx} className="challenge-why-item">
+                                <span className="challenge-why-quote-mark" aria-hidden="true">“</span>
+                                <p className="challenge-why-text">{reason}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="challenge-why-actions">
+                            <button
+                              type="button"
+                              id="btn-challenge-manage-why"
+                              className="challenge-section-link-btn"
+                              onClick={() => {
+                                sessionStorage.setItem('commitment_focus', 'why');
+                                onNavigate('commitment');
+                              }}
+                            >
+                              <span>{t.challenge_why_btn_review || 'Review & Edit My Why'}</span>
+                              <AppIcon name="chevron-right" size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="challenge-why-empty" id="challenge-why-empty">
+                          <span className="challenge-why-empty-icon" aria-hidden="true">
+                            <AppIcon name="sparkles" size={22} />
+                          </span>
+                          <p className="challenge-why-empty-text">
+                            {t.challenge_why_empty || "You haven't added your personal Why yet. Adding your reasons provides anchoring during moments of temptation."}
+                          </p>
+                          <button
+                            type="button"
+                            id="btn-challenge-add-why"
+                            className="challenge-section-cta-btn"
+                            onClick={() => {
+                              sessionStorage.setItem('commitment_focus', 'why');
+                              onNavigate('commitment');
+                            }}
+                          >
+                            <span>{t.challenge_why_btn_add || 'Add My Why'}</span>
+                            <AppIcon name="chevron-right" size={15} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* ── COLLAPSIBLE SECTION: OPTIONAL MOVEMENT & ACTIVITY ── */}
+                  <section className="control-center-section challenge-movement-section sda-ac-accordion" id="section-challenge-movement">
+                    <button
+                      type="button"
+                      className={`sda-ac-collapse-trigger ${isMovementOpen ? 'is-open' : ''}`}
+                      aria-expanded={isMovementOpen}
+                      aria-controls="challenge-movement-card"
+                      onClick={() => setIsMovementOpen((prev) => !prev)}
+                    >
+                      <span className="sda-ac-collapse-left">
+                        <span className="sda-ac-collapse-icon">
+                          <AppIcon name="footprints" size={15} />
+                        </span>
+                        <span className="sda-ac-collapse-title">
+                          {t.act_challenge_section_title}
+                        </span>
+                      </span>
+                      <span className="sda-ac-collapse-right">
+                        <span className="sda-ac-collapse-pill">
+                          <span className="challenge-movement-count-badge" id="challenge-activity-count">
+                            {challengeActivityCount}
+                          </span>
+                        </span>
+                        <span className="sda-ac-collapse-chevron" aria-hidden="true">
+                          <AppIcon name="chevron-down" size={16} />
+                        </span>
+                      </span>
+                    </button>
+
+                    <div className="challenge-movement-card sda-ac-accordion-body" id="challenge-movement-card" hidden={!isMovementOpen}>
+                      <p className="challenge-movement-desc">
+                        {t.act_challenge_section_desc}
+                      </p>
+
+                      <div className="challenge-movement-count-row">
+                        <span className="challenge-movement-count-label">
+                          {t.act_screen_title}
+                        </span>
+                        <span className="challenge-movement-count-value">
+                          {challengeActivityCount} {t.act_challenge_linked_count}
+                        </span>
+                      </div>
+
+                      <div className="challenge-movement-actions">
+                        <button
+                          type="button"
+                          id="btn-challenge-view-activities"
+                          className="challenge-section-link-btn challenge-movement-btn-view"
+                          onClick={() => onNavigate('activity-log')}
+                        >
+                          <span>{t.act_challenge_btn_view}</span>
+                          <AppIcon name="chevron-right" size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          id="btn-challenge-add-activity"
+                          className="challenge-section-cta-btn challenge-movement-btn-add"
+                          onClick={() => {
+                            try {
+                              sessionStorage.setItem('activity_log_open_modal', 'true');
+                            } catch {
+                              // ignore
+                            }
+                            onNavigate('activity-log');
+                          }}
+                        >
+                          <AppIcon name="plus" size={14} />
+                          <span>{t.act_btn_record}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Contextual Links: Seven Diet-Abilities & My Progress & Victories */}
+                  <div className="sda-ac-links-grid">
+                    <button
+                      type="button"
+                      id="btn-challenges-seven-abilities-link"
+                      className="challenge-seven-abilities-link-btn"
+                      onClick={() => onNavigate('seven-abilities')}
+                    >
+                      <span className="sda-ac-link-icon">
+                        <AppIcon name="layers" size={16} />
+                      </span>
+                      <span className="sda-ac-link-label">
+                        {t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}
+                      </span>
                       <AppIcon name="chevron-right" size={15} />
                     </button>
+
                     <button
                       type="button"
-                      id="btn-challenge-add-activity"
-                      className="challenge-section-cta-btn challenge-movement-btn-add"
-                      onClick={() => {
-                        try {
-                          sessionStorage.setItem('activity_log_open_modal', 'true');
-                        } catch {
-                          // ignore
-                        }
-                        onNavigate('activity-log');
-                      }}
+                      id="btn-challenge-view-victories"
+                      className="challenge-seven-abilities-link-btn"
+                      onClick={() => onNavigate('progress-victories')}
                     >
-                      <span>+ {t.act_btn_record}</span>
+                      <span className="sda-ac-link-icon">
+                        <AppIcon name="award" size={16} />
+                      </span>
+                      <span className="sda-ac-link-label">
+                        {t.challenge_btn_view_victories || 'My Progress & Victories →'}
+                      </span>
+                      <AppIcon name="chevron-right" size={15} />
+                    </button>
+                  </div>
+
+                  {/* Cancel Challenge Option */}
+                  <div className="challenge-actions-row">
+                    <button
+                      type="button"
+                      id="btn-cancel-challenge-initiate"
+                      className="challenge-cancel-link"
+                      onClick={() => setShowCancelModal(true)}
+                    >
+                      {t.challenge_btn_cancel || 'Cancel Challenge'}
                     </button>
                   </div>
                 </div>
-              </section>
-
-              {/* Contextual Link to Seven Diet-Abilities (Phase 42.3) */}
-              <div className="challenge-seven-abilities-link-wrap">
-                <button
-                  type="button"
-                  id="btn-challenges-seven-abilities-link"
-                  className="challenge-seven-abilities-link-btn"
-                  onClick={() => onNavigate('seven-abilities')}
-                >
-                  <AppIcon name="layers" size={16} />
-                  <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
-                </button>
-              </div>
-
-              {/* Contextual Link to My Progress & Victories (Phase 4) */}
-              <div className="challenge-seven-abilities-link-wrap" style={{ marginTop: '0px' }}>
-                <button
-                  type="button"
-                  id="btn-challenge-view-victories"
-                  className="challenge-seven-abilities-link-btn"
-                  onClick={() => onNavigate('progress-victories')}
-                >
-                  <AppIcon name="award" size={16} />
-                  <span>{t.challenge_btn_view_victories || 'My Progress & Victories →'}</span>
-                </button>
-              </div>
-
-              {/* Cancel Challenge Option */}
-              <div className="challenge-actions-row">
-                <button
-                  id="btn-cancel-challenge-initiate"
-                  className="challenge-cancel-link"
-                  onClick={() => setShowCancelModal(true)}
-                >
-                  {t.challenge_btn_cancel || 'Cancel Challenge'}
-                </button>
               </div>
             </div>
           ) : completedChallengeToSummarize ? (
-            /* ── CHALLENGE COMPLETION EXPERIENCE ── */
-            <div className="challenges-completion-view" id="challenges-completion-view">
-              <div className="challenge-completion-card">
+            /* ── CHALLENGE COMPLETION EXPERIENCE (Phase 3 Midnight Emerald) ── */
+            <div className="challenges-completion-view sda-completion-view" id="challenges-completion-view">
+              <div className="challenge-completion-card sda-completion-card">
                 <div className="completion-card-badge-row">
-                  <span className="completion-card-pill">🏆 {t.challenge_status_completed || 'Completed'}</span>
-                  <span className="completion-card-duration">{completedChallengeToSummarize.durationDays}-Day Challenge</span>
+                  <span className="completion-card-pill">
+                    <AppIcon name="trophy" size={13} />
+                    <span>{t.challenge_status_completed || 'Completed'}</span>
+                  </span>
+                  <span className="completion-card-duration">
+                    {completedChallengeToSummarize.durationDays}{' '}
+                    {completedChallengeToSummarize.durationDays === 1
+                      ? (t.common_day || 'Day')
+                      : (t.common_days || 'Days')}
+                  </span>
                 </div>
 
                 <h2 className="completion-card-title">
@@ -1421,7 +1765,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                 </p>
 
                 <div className="completion-card-dates">
-                  <span>📅 {completedChallengeToSummarize.startDate} → {completedChallengeToSummarize.endDate}</span>
+                  <AppIcon name="calendar" size={13} />
+                  <span>{completedChallengeToSummarize.startDate} → {completedChallengeToSummarize.endDate}</span>
                 </div>
 
                 <div className="completion-card-stats-grid">
@@ -1450,14 +1795,16 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     </span>
                     <span className="stat-sub">
                       {(completedChallengeToSummarize.relevantEventCounts?.eligibleSlips || 0) > 0 && completedChallengeToSummarize.relevantEventCounts?.resumeRate !== null
-                        ? `${completedChallengeToSummarize.relevantEventCounts.resumeRate}% resume rate`
+                        ? `${completedChallengeToSummarize.relevantEventCounts.resumeRate}% ${t.challenge_resume_rate?.toLowerCase() || 'resume rate'}`
                         : (t.challenge_completion_no_slips || 'No eligible slips recorded')}
                     </span>
                   </div>
                 </div>
 
                 <div className="completion-philosophy-notice">
-                  <span className="completion-notice-icon">🛡️</span>
+                  <span className="completion-notice-icon" aria-hidden="true">
+                    <AppIcon name="shield" size={18} />
+                  </span>
                   <p className="completion-notice-text">
                     {t.challenge_completion_period_notice || 'You completed your Challenge duration! Completing a challenge is about practicing awareness and consistency — not about flawless perfection or fearing slips.'}
                   </p>
@@ -1470,7 +1817,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     className="completion-btn-secondary"
                     onClick={() => setViewTab('history')}
                   >
-                    <span>📜 {t.challenge_completion_btn_review || 'Review My Challenge'}</span>
+                    <AppIcon name="history" size={16} />
+                    <span>{t.challenge_completion_btn_review || 'Review My Challenge'}</span>
                   </button>
 
                   <button
@@ -1479,8 +1827,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     className="completion-btn-primary"
                     onClick={() => setShowingStartWizard(true)}
                   >
-                    <span>🛡️ {t.challenge_completion_btn_start_new || 'Start a New Challenge'}</span>
-                    <span>→</span>
+                    <AppIcon name="zap" size={16} />
+                    <span>{t.challenge_completion_btn_start_new || 'Start a New Challenge'}</span>
+                    <AppIcon name="chevron-right" size={16} />
                   </button>
                 </div>
               </div>
@@ -1946,7 +2295,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       {showPermissionModal && (
         <div className="challenge-push-modal-overlay" role="dialog" aria-modal="true">
           <div className="challenge-push-modal">
-            <div className="challenge-push-modal-icon">🔔</div>
+            <div className="challenge-push-modal-icon" aria-hidden="true">
+              <AppIcon name="bell" size={24} />
+            </div>
             <h3 className="challenge-push-modal-title">
               {t.challenge_push_modal_title || 'STAY CONNECTED TO YOUR STRUCTURE'}
             </h3>
