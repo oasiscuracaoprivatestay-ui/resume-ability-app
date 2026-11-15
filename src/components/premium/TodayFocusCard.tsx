@@ -192,16 +192,21 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
   return (
     <section className="sda-card sda-focus" aria-labelledby="sda-focus-title" id="home-today-focus">
       <header className="sda-card-head">
-        <h2 id="sda-focus-title" className="sda-card-title">{t.home_focus_title}</h2>
+        <span className="sda-card-title-group">
+          <span className="sda-card-title-icon" aria-hidden="true">
+            <AppIcon name="target" size={18} />
+          </span>
+          <h2 id="sda-focus-title" className="sda-card-title">{t.home_focus_title}</h2>
+        </span>
         <button
           id="btn-home-focus-edit"
           type="button"
-          className="sda-pill-btn"
+          className="sda-inline-link"
           onClick={() => onNavigate('structured-diet')}
           aria-label={t.home_focus_edit}
         >
-          <AppIcon name="pencil" size={14} />
-          <span>{t.home_focus_edit}</span>
+          <span>{t.home_focus_edit_schedule}</span>
+          <AppIcon name="chevron-right" size={15} />
         </button>
       </header>
 
@@ -212,34 +217,37 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
           className="sda-focus-row sda-focus-row--prominent"
           onClick={() => onNavigate('structured-diet')}
         >
-          <div className="sda-focus-top-bar">
-            <div className="sda-focus-badge-group">
+          <div className="sda-focus-split">
+            <div className="sda-focus-primary">
               <span
                 className={`sda-focus-icon-wrap ${isCurrent ? 'sda-focus-icon-wrap--current' : ''}`}
                 aria-hidden="true"
               >
-                <AppIcon name={isBeverage ? 'droplet' : 'utensils'} size={18} />
+                <AppIcon name={isBeverage ? 'droplet' : 'utensils'} size={20} />
               </span>
-              <span className="sda-focus-kicker-badge">
-                {statusKicker}
-              </span>
+              <div className="sda-focus-primary-meta">
+                <div className="sda-focus-top-bar">
+                  <span className="sda-focus-block-title">
+                    {typeDisplay || statusKicker}
+                  </span>
+                  <span className="sda-focus-kicker-badge">
+                    {statusKicker}
+                  </span>
+                </div>
+                {timeRange && (
+                  <span className="sda-focus-time-pill" title={timeRange}>
+                    <AppIcon name="clock" size={13} />
+                    <span>{timeRange}</span>
+                  </span>
+                )}
+              </div>
             </div>
-            {timeRange && (
-              <span className="sda-focus-time-pill" title={timeRange}>
-                <AppIcon name="clock" size={13} />
-                <span>{timeRange}</span>
-              </span>
-            )}
-          </div>
 
-          <div className="sda-focus-content-wrap">
-            {typeDisplay && (
-              <span className="sda-focus-type-tag">
-                {typeDisplay}
-              </span>
-            )}
-            <div className="sda-focus-desc sda-focus-desc--full">
-              {foodDescription || typeDisplay}
+            <div className="sda-focus-content-wrap">
+              <div className="sda-focus-desc sda-focus-desc--full">
+                {foodDescription || typeDisplay}
+              </div>
+              <AppIcon name="chevron-right" size={18} className="sda-focus-chevron" />
             </div>
           </div>
         </button>
@@ -258,7 +266,7 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
             className="sda-pill-btn sda-pill-btn--accent"
             onClick={() => onNavigate('structured-diet')}
           >
-            <AppIcon name="calendar" size={14} />
+            <AppIcon name="calendar" size={15} />
             <span>{t.home_focus_view_diet}</span>
           </button>
         </div>
@@ -277,7 +285,7 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
             className="sda-pill-btn sda-pill-btn--accent"
             onClick={() => onNavigate('structured-diet')}
           >
-            <AppIcon name="plus" size={14} />
+            <AppIcon name="plus" size={15} />
             <span>{t.home_focus_empty_cta}</span>
           </button>
         </div>

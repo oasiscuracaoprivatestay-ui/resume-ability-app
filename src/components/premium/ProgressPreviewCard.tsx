@@ -78,16 +78,17 @@ export function ProgressPreviewCard({ onNavigate }: ProgressPreviewCardProps) {
     return () => events.forEach((e) => window.removeEventListener(e, refresh));
   }, []);
 
-  const metrics: { id: string; icon: AppIconName; label: string; value: string; sub?: string }[] = [
+  const metrics: { id: string; icon: AppIconName; iconTone?: 'gold'; label: string; value: string; sub?: string }[] = [
     {
       id: 'home-progress-days',
-      icon: 'check-circle',
+      icon: 'calendar',
       label: t.home_progress_days_checked,
-      value: snap.daysChecked === null ? '—' : String(snap.daysChecked),
-      sub:
-        snap.durationDays === null
-          ? undefined
-          : formatTemplate(t.home_hero_of_total, { total: snap.durationDays }),
+      value:
+        snap.daysChecked === null
+          ? '—'
+          : snap.durationDays !== null
+          ? `${snap.daysChecked}/${snap.durationDays}`
+          : String(snap.daysChecked),
     },
     {
       id: 'home-progress-resume',
@@ -98,37 +99,41 @@ export function ProgressPreviewCard({ onNavigate }: ProgressPreviewCardProps) {
     },
     {
       id: 'home-progress-score',
-      icon: 'sparkles',
+      icon: 'zap',
+      iconTone: 'gold',
       label: t.home_progress_today_score,
       value: String(snap.todayScore),
     },
     {
       id: 'home-progress-movement',
-      icon: 'footprints',
+      icon: 'running',
       label: t.home_progress_movement,
       value: formatTemplate(t.home_progress_minutes, { minutes: snap.movementMinutes }),
     },
   ];
 
   return (
-    <section className="sda-card sda-progress" aria-labelledby="sda-progress-title" id="home-progress-preview">
-      <header className="sda-card-head">
-        <h2 id="sda-progress-title" className="sda-card-title">{t.home_progress_title}</h2>
+    <section className="sda-progress-section sda-progress" aria-labelledby="sda-progress-title" id="home-progress-preview">
+      <header className="sda-section-head">
+        <h2 id="sda-progress-title" className="home-section-title">{t.home_progress_title}</h2>
         <button
           id="btn-home-progress-see-all"
           type="button"
-          className="sda-link-btn"
+          className="sda-inline-link"
           onClick={() => onNavigate('progress-victories')}
         >
-          {t.home_progress_see_all}
-          <AppIcon name="chevron-right" size={14} />
+          <span>{t.home_progress_see_all}</span>
+          <AppIcon name="chevron-right" size={15} />
         </button>
       </header>
       <ul className="sda-progress-grid">
         {metrics.map((m) => (
           <li key={m.id} id={m.id} className="sda-metric">
-            <span className="sda-metric-icon" aria-hidden="true">
-              <AppIcon name={m.icon} size={18} />
+            <span
+              className={`sda-metric-icon${m.iconTone === 'gold' ? ' sda-metric-icon--gold' : ''}`}
+              aria-hidden="true"
+            >
+              <AppIcon name={m.icon} size={20} />
             </span>
             <span className="sda-metric-value">{m.value}</span>
             <span className="sda-metric-label">{m.label}</span>

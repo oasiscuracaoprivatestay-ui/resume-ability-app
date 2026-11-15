@@ -1,19 +1,20 @@
 /**
- * Super Diet-Ability — Premium Challenge Hero (Phase 2)
+ * Super Diet-Ability — Premium Challenge Hero
  *
- * The primary Home hero. Reuses the existing Challenge engine verbatim:
- *   - syncCurrentChallenge / getChallengeDayBreakdown / calculateChallengePracticeStats
+ * Uses the approved coastal sunrise photograph (/images/hero-atmosphere.jpg)
+ * and reuses the existing Challenge engine verbatim:
+ *   - readActiveChallenge / getChallengeDayBreakdown / calculateChallengePracticeStats
  *   - invitation eligibility + snooze (canShowChallengeInvitation, setChallengeInvitationSnooze)
  *
  * States:
  *   1. Active Challenge → actual ability, actual duration (1/3/7/30/90), current day,
- *      progress ring, and a compact window of real Challenge days with check-in marks.
+ *      progress ring, days remaining, honest today status (cursive "I Am on Track" ONLY
+ *      when supported by actual today application state), and 7-day check-in strip.
  *   2. No active Challenge, invitation eligible → flagship 90-Day Resume-Ability invite
- *      with "Remind me later" snooze.
- *   3. No active Challenge, invitation snoozed → compact invite (respects the snooze).
+ *      with "Start the 90-Day Challenge", "Choose another duration", and "Remind me later".
+ *   3. No active Challenge, invitation snoozed → compact invite respecting snooze.
  *
- * The "I Am on Track" control calls the existing onInControl handler unchanged.
- * This component never writes scores or Challenge data itself.
+ * Never writes scores or Challenge data itself.
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -21,6 +22,7 @@ import { useTranslation } from '../../i18n';
 import type { Screen } from '../../types';
 import {
   getChallengeDayBreakdown,
+  calculateChallengePracticeStats,
   canShowChallengeInvitation,
   setChallengeInvitationSnooze,
   markChallengeInvitationPrompted,
@@ -31,6 +33,8 @@ import {
   type ChallengeDayProgress,
   type SnoozeOptionDays,
 } from '../../challenges';
+import { loadInControlEvents } from '../../utils/inControlStorage';
+import { SCORE_UPDATED_EVENT } from '../../utils/scoringEngine';
 import { STATS_RESET_EVENT } from '../../utils/resetStats';
 import { getHeroWeekWindow, dateKeyToLocalDate, formatTemplate } from '../../utils/homeSelectors';
 import { ProgressRing } from './ProgressRing';
@@ -47,15 +51,27 @@ interface ChallengeHeroProps {
   onInControl?: () => void;
 }
 
-export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
+function hasInControlToday(): boolean {
+  try {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return loadInControlEvents().some((e) => e.timestamp >= startOfDay);
+  } catch {
+    return false;
+  }
+}
+
+export function ChallengeHero({ onNavigate }: ChallengeHeroProps) {
   const { t, lang } = useTranslation();
   const [challenge, setChallenge] = useState<ChallengeInstance | null>(null);
   const [days, setDays] = useState<ChallengeDayProgress[]>([]);
   const [inviteEligible, setInviteEligible] = useState(false);
   const [showSnooze, setShowSnooze] = useState(false);
+  const [inControlToday, setInControlToday] = useState(false);
 
   const refresh = () => {
     const current = readActiveChallenge();
+    setInControlToday(hasInControlToday());
     if (current && current.status === 'active') {
       setChallenge(current);
       setDays(getChallengeDayBreakdown(current));
@@ -71,9 +87,11 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
     refresh();
     const onUpdate = () => refresh();
     window.addEventListener(CHALLENGE_UPDATED_EVENT, onUpdate);
+    window.addEventListener(SCORE_UPDATED_EVENT, onUpdate);
     window.addEventListener(STATS_RESET_EVENT, onUpdate);
     return () => {
       window.removeEventListener(CHALLENGE_UPDATED_EVENT, onUpdate);
+      window.removeEventListener(SCORE_UPDATED_EVENT, onUpdate);
       window.removeEventListener(STATS_RESET_EVENT, onUpdate);
     };
   }, []);
@@ -87,6 +105,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
       return null;
     }
   }, [lang]);
+
   const longDateFmt = useMemo(() => {
     try {
       return new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' });
@@ -95,21 +114,16 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
     }
   }, [lang]);
 
-  const onTrackButton = (
-    <button
-      id="btn-in-control"
-      type="button"
-      className="sda-hero-ontrack"
-      onClick={onInControl ?? (() => onNavigate('control'))}
-    >
+  const onTrackPill = (
+    <div id="status-hero-ontrack" className="sda-hero-ontrack" role="status">
       <span className="sda-hero-ontrack-script">{t.home_in_control}</span>
       <span className="sda-hero-ontrack-check" aria-hidden="true">
-        <AppIcon name="check" size={14} strokeWidth={3} />
+        <AppIcon name="check" size={13} strokeWidth={3} />
       </span>
-    </button>
+    </div>
   );
 
-  // ── State 2 & 3: no active Challenge → flagship 90-Day invitation ──
+  // ── State 2 & 3: no active Challenge → flagship 90-Day invitation (never shows "I Am on Track") ──
   if (!challenge) {
     const startFlagship = () => {
       markChallengeInvitationPrompted();
@@ -130,35 +144,43 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
     return (
       <section
         id="home-ability-challenges"
-        className={`sda-hero sda-hero--invite${inviteEligible ? '' : ' sda-hero--compact'}`}
+        className={`sda-challenge-hero sda-challenge-hero--invite${
+          inviteEligible ? '' : ' sda-challenge-hero--compact'
+        }`}
         aria-labelledby="sda-hero-invite-title"
       >
         <div className="sda-hero-media" aria-hidden="true">
           <img src={HERO_IMAGE_URL} alt="" decoding="async" loading="eager" />
         </div>
+
         <div className="sda-hero-body" id="challenge-invitation-card">
-          <span className="sda-hero-eyebrow">{t.home_hero_invite_eyebrow}</span>
-          <h2 id="sda-hero-invite-title" className="sda-hero-title">
-            {t.home_hero_invite_title}
-          </h2>
-          <span className="sda-hero-ability">{getCanonicalAbilityName('resume-ability')}</span>
-          {inviteEligible && <p className="sda-hero-copy">{t.home_hero_invite_body}</p>}
+          <div className="sda-hero-stage-copy">
+            <span className="sda-hero-eyebrow">{t.home_hero_invite_eyebrow}</span>
+            <h2 id="sda-hero-invite-title" className="sda-hero-title">
+              {t.home_hero_invite_title}
+            </h2>
+            <span className="sda-hero-ability">
+              {getCanonicalAbilityName('resume-ability')}
+            </span>
+            {inviteEligible && <p className="sda-hero-copy">{t.home_hero_invite_body}</p>}
+          </div>
 
           <div className="sda-hero-invite-actions">
             <button
               id="btn-invite-start-challenge"
               type="button"
-              className="sda-btn-primary"
+              className="sda-hero-cta-primary"
               onClick={startFlagship}
             >
               <span>{t.home_hero_invite_cta}</span>
               <AppIcon name="chevron-right" size={18} />
             </button>
+
             <div className="sda-hero-invite-links">
               <button
                 id="btn-invite-other-duration"
                 type="button"
-                className="sda-link-btn"
+                className="sda-hero-link-btn"
                 onClick={() => {
                   markChallengeInvitationPrompted();
                   onNavigate('challenges');
@@ -170,7 +192,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
                 <button
                   id="btn-invite-remind-later"
                   type="button"
-                  className="sda-link-btn sda-link-btn--muted"
+                  className="sda-hero-link-btn sda-hero-link-btn--muted"
                   onClick={() => setShowSnooze(true)}
                   aria-expanded={showSnooze}
                 >
@@ -178,6 +200,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
                 </button>
               )}
             </div>
+
             {inviteEligible && showSnooze && (
               <div className="sda-hero-snooze" role="group" aria-label={t.challenge_snooze_heading}>
                 <span className="sda-hero-snooze-label">{t.challenge_snooze_heading}</span>
@@ -187,7 +210,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
                       key={d}
                       id={`btn-snooze-${d}d`}
                       type="button"
-                      className="sda-chip"
+                      className="sda-hero-snooze-chip"
                       onClick={() => handleSnooze(d)}
                     >
                       {t[`challenge_snooze_${d}d` as 'challenge_snooze_1d']}
@@ -196,7 +219,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
                   <button
                     id="btn-snooze-not-now"
                     type="button"
-                    className="sda-chip sda-chip--ghost"
+                    className="sda-hero-snooze-chip sda-hero-snooze-chip--ghost"
                     onClick={() => handleSnooze('not_now')}
                   >
                     {t.challenge_snooze_not_now}
@@ -205,14 +228,29 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
               </div>
             )}
           </div>
-          <div className="sda-hero-ontrack-row">{onTrackButton}</div>
         </div>
       </section>
     );
   }
 
-  // ── State 1: active Challenge (all values from the engine) ──
+  // ── State 1: active Challenge (all values strictly from the engine) ──
   const { currentDay, durationDays, daysRemaining } = challenge;
+  const practiceStats = calculateChallengePracticeStats(challenge);
+  const latestStatus = practiceStats.todayLatestStatus;
+
+  const isConfirmedOnTrack =
+    (practiceStats.todayCheckedIn &&
+      (latestStatus === 'on-structure' || latestStatus === 'resumed')) ||
+    (!practiceStats.todayCheckedIn && inControlToday);
+
+  let statusPillLabel = t.home_challenge_checkin_pending;
+  if (practiceStats.todayCheckedIn && !isConfirmedOnTrack) {
+    if (latestStatus === 'near-slip') statusPillLabel = t.kpi_status_near_slip;
+    else if (latestStatus === 'slip') statusPillLabel = t.kpi_status_slip;
+    else if (latestStatus === 'off-structure-aware') statusPillLabel = t.kpi_status_off_structure_aware;
+    else statusPillLabel = t.home_checkin_done_today;
+  }
+
   const progress = Math.min(1, Math.max(0, currentDay / durationDays));
   const percent = Math.round(progress * 100);
   const ringAria = formatTemplate(t.home_hero_ring_aria, {
@@ -228,7 +266,7 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
   return (
     <section
       id="home-ability-challenges"
-      className="sda-hero sda-hero--active"
+      className="sda-challenge-hero sda-challenge-hero--active"
       aria-labelledby="sda-hero-title"
       data-duration={durationDays}
       data-current-day={currentDay}
@@ -236,19 +274,22 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
       <div className="sda-hero-media" aria-hidden="true">
         <img src={HERO_IMAGE_URL} alt="" decoding="async" loading="eager" />
       </div>
+
       <div className="sda-hero-body" id="active-challenge-card">
         <div className="sda-hero-top">
-          <div>
+          <div className="sda-hero-stage-copy">
             <span className="sda-hero-eyebrow">{t.home_hero_eyebrow}</span>
             <h2 id="sda-hero-title" className="sda-hero-title">
               {formatTemplate(t.home_hero_title_days, { days: durationDays })}
             </h2>
-            <span className="sda-hero-ability">{getCanonicalAbilityName(challenge.abilityId)}</span>
+            <span className="sda-hero-ability">
+              {getCanonicalAbilityName(challenge.abilityId)}
+            </span>
           </div>
           <button
             id="btn-home-view-challenge"
             type="button"
-            className="sda-icon-btn"
+            className="sda-hero-icon-btn"
             onClick={() => onNavigate('challenges')}
             aria-label={t.home_hero_open_challenge}
             title={t.home_hero_open_challenge}
@@ -258,17 +299,25 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
         </div>
 
         <div className="sda-hero-mid">
-          <ProgressRing value={progress} size={128} strokeWidth={9} ariaLabel={ringAria}>
+          <ProgressRing value={progress} size={94} strokeWidth={8} ariaLabel={ringAria}>
             <span className="sda-ring-kicker">{t.home_hero_day_label}</span>
-            <span className="sda-ring-number" id="sda-hero-current-day">{currentDay}</span>
+            <span className="sda-ring-number" id="sda-hero-current-day">
+              {currentDay}
+            </span>
             <span className="sda-ring-total">
               {formatTemplate(t.home_hero_of_total, { total: durationDays })}
             </span>
           </ProgressRing>
-          <div className="sda-hero-mid-side">
-            <span className="sda-hero-remaining">{remainingLabel}</span>
-            {onTrackButton}
-          </div>
+
+          <span className="sda-hero-remaining">{remainingLabel}</span>
+        </div>
+
+        <div className="sda-hero-bottom-status">
+          {isConfirmedOnTrack ? (
+            onTrackPill
+          ) : (
+            <span className="sda-hero-status-pending">{statusPillLabel}</span>
+          )}
         </div>
 
         {weekWindow.length > 0 && (
@@ -294,9 +343,11 @@ export function ChallengeHero({ onNavigate, onInControl }: ChallengeHeroProps) {
               return (
                 <li key={d.dayIndex} className={cls} aria-label={label} data-day-index={d.dayIndex}>
                   <span className="sda-day-dot" aria-hidden="true">
-                    {checked ? <AppIcon name="check" size={13} strokeWidth={3} /> : null}
+                    {checked ? <AppIcon name="check" size={13} strokeWidth={3} /> : d.dayIndex}
                   </span>
-                  <span className="sda-day-letter" aria-hidden="true">{letter}</span>
+                  <span className="sda-day-letter" aria-hidden="true">
+                    {letter}
+                  </span>
                 </li>
               );
             })}

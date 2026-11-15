@@ -2311,6 +2311,22 @@ export const es: Translations = {
   challenge_btn_view_summary: 'Resumen del Desafío',
   challenge_continue_already_checked: 'La práctica de hoy ya está registrada ({status}). ¿Cuál es tu siguiente paso?',
   challenge_continue_no_active: 'No se encontró ningún desafío activo para continuar.',
+  home_brand_system_sub: 'SISTEMA RESUME-ABILITY',
+  home_abilities_hero_prefix: 'Las',
+  home_abilities_hero_suffix: 'Habilidades',
+  home_abilities_hero_tagline: 'para perder grasa corporal — ¡y no recuperarla jamás!',
+  home_abilities_hero_alt: 'Sendero de montaña al amanecer que ilustra los siete principios oficiales de Super Diet-Ability',
+  home_abilities_companion_heading: 'Las 7 Diet-Abilities Oficiales',
+  home_abilities_explore_all: 'Ver todas',
+  home_abilities_badge_active: 'Activo',
+  home_abilities_badge_coming_soon: 'Próximamente',
+  home_challenge_active_sub: 'Practica tu Resume-Ability y construye una constancia duradera.',
+  home_challenge_checkin_pending: 'Check-in pendiente',
+  home_action_in_control: 'Estoy en control',
+  home_focus_edit_schedule: 'Editar horario',
+  home_quick_coach_full: 'Coach IA SDA',
+  home_tools_title: 'Práctica y Protección',
+  home_resources_title: 'Aprender y Recursos',
 };
 
 

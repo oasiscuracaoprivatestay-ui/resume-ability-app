@@ -1,397 +1,538 @@
-/* ══════════════════════════════════════════════
-   Premium Challenge Hero (Phase 2 — refinement pass)
-   - Bright, warm photographic treatment with targeted scrims
-     (top-left for the title, bottom for controls) so text keeps
-     WCAG contrast without dimming the whole image.
-   - Compact mobile layout: smaller ring, tighter rhythm.
-   ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   Super Diet-Ability — Approved Flagship & Active Challenge Hero
+   - Restores /images/hero-atmosphere.jpg (coastal sunrise & seated woman)
+     preserving original composition and natural warm/turquoise colors.
+   - Directional left/bottom dark-emerald scrim keeps text crisp while
+     keeping the seated woman on the right clearly visible on mobile.
+   - Restores Great Vibes cursive script exclusively for "I Am on Track".
+   ══════════════════════════════════════════════════════════════════════ */
 
-.sda-hero {
+.sda-challenge-hero {
   position: relative;
   overflow: hidden;
-  border-radius: var(--sda-radius-xl);
-  border: 1px solid rgba(94, 234, 212, 0.18);
-  background: var(--sda-bg-deep);
-  box-shadow: var(--sda-shadow-card), 0 0 0 1px rgba(45, 212, 191, 0.05) inset, 0 18px 50px rgba(8, 60, 50, 0.35);
+  border-radius: 22px;
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  background: #081814;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(45, 212, 179, 0.05) inset;
   isolation: isolate;
-  animation: sda-rise 0.5s var(--sda-ease) both;
 }
 
-.sda-hero-media {
+/* Photographic stage: sized near the image's native 4:3 aspect ratio above
+   the bottom control tray so the coastal horizon, sunrise, and seated woman
+   remain uncropped and unobstructed on 320px, 390px, and 430px viewports. */
+.sda-challenge-hero .sda-hero-media {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 78px;
   z-index: -1;
-  /* CSS-only fallback if the decorative image is unavailable */
-  background:
-    radial-gradient(120% 70% at 30% 35%, rgba(251, 191, 120, 0.35) 0%, transparent 55%),
-    radial-gradient(120% 70% at 85% 10%, rgba(45, 212, 191, 0.28) 0%, transparent 55%),
-    linear-gradient(180deg, #0f3b36 0%, #071a15 100%);
+  background: #081814;
 }
 
-.sda-hero-media img {
+.sda-challenge-hero--active .sda-hero-media {
+  bottom: 62px;
+}
+
+.sda-challenge-hero--compact .sda-hero-media {
+  bottom: 68px;
+}
+
+.sda-challenge-hero .sda-hero-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 66% 55%;
+  object-position: 68% 58%;
   display: block;
-  filter: saturate(1.08) contrast(1.02);
 }
 
-/* Targeted scrims: legible text, luminous image */
-.sda-hero-media::after {
+.sda-challenge-hero--active .sda-hero-media img {
+  object-position: 14% 56%;
+}
+
+/* Subtle directional dark gradient for text readability on the left + smooth
+   bottom melt into #081814, keeping the right-side seated woman luminous */
+.sda-challenge-hero .sda-hero-media::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(100deg, rgba(3, 14, 12, 0.72) 0%, rgba(3, 14, 12, 0.42) 42%, rgba(3, 14, 12, 0) 72%),
-    linear-gradient(180deg, rgba(3, 14, 12, 0.5) 0%, rgba(3, 14, 12, 0.12) 34%, rgba(3, 14, 12, 0.18) 58%, rgba(3, 14, 12, 0.86) 100%);
-}
-
-/* Soft emerald tint at the edges to keep the palette cohesive */
-.sda-hero-media::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
   pointer-events: none;
-  background: radial-gradient(140% 90% at 70% 40%, transparent 55%, rgba(6, 40, 34, 0.45) 100%);
-}
-
-.sda-hero--invite .sda-hero-media::after {
   background:
-    linear-gradient(100deg, rgba(3, 14, 12, 0.88) 0%, rgba(3, 14, 12, 0.58) 50%, rgba(3, 14, 12, 0.15) 82%),
-    linear-gradient(180deg, rgba(3, 14, 12, 0.42) 0%, rgba(3, 14, 12, 0.3) 35%, rgba(3, 14, 12, 0.92) 100%);
+    linear-gradient(
+      98deg,
+      rgba(4, 15, 12, 0.82) 0%,
+      rgba(4, 15, 12, 0.56) 44%,
+      rgba(4, 15, 12, 0.10) 68%,
+      rgba(4, 15, 12, 0.02) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(4, 15, 12, 0.28) 0%,
+      rgba(4, 15, 12, 0.04) 36%,
+      rgba(4, 15, 12, 0.08) 72%,
+      #081814 100%
+    );
 }
 
-.sda-hero-body {
+.sda-challenge-hero .sda-hero-body {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--sda-space-3);
-  padding: var(--sda-space-4);
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 16px 14px;
 }
 
-.sda-hero-top {
+.sda-challenge-hero--invite .sda-hero-stage-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 61%;
+  min-height: 196px;
+}
+
+.sda-challenge-hero--invite.sda-challenge-hero--compact .sda-hero-stage-copy {
+  min-height: 132px;
+}
+
+.sda-challenge-hero .sda-hero-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--sda-space-3);
+  gap: 12px;
 }
 
-.sda-hero-eyebrow {
-  display: inline-block;
-  font-size: var(--sda-fs-micro);
-  font-weight: 700;
-  letter-spacing: var(--sda-tracking-eyebrow);
-  text-transform: uppercase;
-  color: #bbf7d0;
-  margin-bottom: 4px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
-}
-
-.sda-hero-title {
-  font-size: clamp(1.4rem, 5.6vw, var(--sda-fs-display));
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: #ffffff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-}
-
-.sda-hero-ability {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #d5efe8;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
-}
-
-.sda-hero-copy {
-  font-size: 0.92rem;
-  line-height: 1.5;
-  color: #e3f5f0;
-  max-width: 36ch;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
-}
-
-/* Invite: just enough headroom to let the photograph breathe */
-.sda-hero--invite .sda-hero-body {
-  padding-top: var(--sda-space-6);
-}
-
-.sda-hero--invite.sda-hero--compact .sda-hero-body {
-  padding-top: var(--sda-space-4);
-}
-
-.sda-hero-mid {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sda-space-3);
-}
-
-.sda-hero-mid-side {
+.sda-challenge-hero--active .sda-hero-stage-copy {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  flex: 1 1 auto;
+  align-items: flex-start;
   min-width: 0;
 }
 
-.sda-hero-remaining {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #e3f5f0;
-  background: rgba(3, 14, 12, 0.62);
-  border: 1px solid var(--sda-glass-border);
-  padding: 5px 11px;
-  border-radius: var(--sda-radius-pill);
-  backdrop-filter: var(--sda-blur);
-  -webkit-backdrop-filter: var(--sda-blur);
-  white-space: nowrap;
+.sda-challenge-hero .sda-hero-eyebrow {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #bbf7d0;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.78);
 }
 
-/* Ring: compact on phones, scales up on wide layouts (SVG uses viewBox) */
-.sda-hero .sda-ring {
-  width: 104px !important;
-  height: 104px !important;
-  background: radial-gradient(circle at 50% 50%, rgba(3, 14, 12, 0.82) 0%, rgba(3, 14, 12, 0.7) 62%, transparent 64%);
+.sda-challenge-hero .sda-hero-title {
+  font-size: clamp(22px, 5.8vw, 27px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.72);
 }
 
-.sda-hero .sda-ring svg {
+.sda-challenge-hero .sda-hero-ability {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d7f3eb;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.82);
+}
+
+.sda-challenge-hero .sda-hero-copy {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.46;
+  color: #eef8f5;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.88);
+}
+
+.sda-challenge-hero .sda-hero-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid rgba(110, 231, 183, 0.22);
+  background: rgba(4, 14, 12, 0.52);
+  color: #f5f8f7;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.16s ease, background 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-challenge-hero .sda-hero-icon-btn:hover {
+  border-color: rgba(94, 234, 212, 0.5);
+  background: rgba(16, 38, 32, 0.78);
+}
+
+/* Active Challenge middle section — kept compact on the left so the seated
+   woman overlooking the ocean on the right remains clearly visible */
+.sda-challenge-hero .sda-hero-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 56%;
+}
+
+.sda-challenge-hero .sda-hero-bottom-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.sda-challenge-hero .sda-ring {
+  width: 92px !important;
+  height: 92px !important;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(4, 15, 12, 0.84) 0%,
+    rgba(4, 15, 12, 0.72) 62%,
+    transparent 65%
+  );
+}
+
+.sda-challenge-hero .sda-ring svg {
   width: 100%;
   height: 100%;
 }
 
-.sda-ring-kicker {
-  font-size: 0.66rem;
-  font-weight: 600;
+.sda-challenge-hero .sda-ring-kicker {
+  font-size: 10.5px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sda-text-2);
+  color: #bfd2cc;
 }
 
-.sda-ring-number {
-  font-size: 2.1rem;
-  font-weight: 700;
+.sda-challenge-hero .sda-ring-number {
+  font-size: 29px;
+  font-weight: 800;
   letter-spacing: -0.03em;
-  margin: 2px 0 1px;
-  color: var(--sda-text);
+  line-height: 1.05;
+  margin: 1px 0;
+  color: #ffffff;
   font-variant-numeric: tabular-nums;
 }
 
-.sda-ring-total {
-  font-size: 0.72rem;
-  color: var(--sda-text-2);
+.sda-challenge-hero .sda-ring-total {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #bfd2cc;
 }
 
-/* "I Am on Track" — elegant script label on a clearly interactive button */
-.sda-hero-ontrack {
-  position: relative;
+.sda-challenge-hero .sda-hero-remaining {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  max-width: 100%;
-  padding: 5px 6px 5px 16px;
-  border-radius: var(--sda-radius-pill);
-  border: 1px solid rgba(94, 234, 212, 0.55);
-  background:
-    linear-gradient(135deg, rgba(45, 212, 191, 0.24) 0%, rgba(16, 185, 129, 0.12) 100%),
-    rgba(3, 14, 12, 0.6);
-  color: var(--sda-text);
-  cursor: pointer;
-  font-family: inherit;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 0 18px rgba(45, 212, 191, 0.18);
-  backdrop-filter: var(--sda-blur);
-  -webkit-backdrop-filter: var(--sda-blur);
-  transition: transform var(--sda-dur-fast) var(--sda-ease), box-shadow var(--sda-dur-med) var(--sda-ease),
-    border-color var(--sda-dur-med) var(--sda-ease), background var(--sda-dur-med) var(--sda-ease);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sda-hero-ontrack:hover {
-  border-color: var(--sda-turquoise-soft);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4), var(--sda-glow);
-  transform: translateY(-1px);
-}
-
-.sda-hero-ontrack:active {
-  transform: scale(0.97);
-}
-
-.sda-hero-ontrack:focus-visible {
-  outline: 2px solid #ecfdf5;
-  outline-offset: 3px;
-}
-
-.sda-hero-ontrack-script {
-  font-family: var(--sda-font-script);
-  font-size: 1.55rem;
-  line-height: 1.05;
-  color: #ffffff;
-  text-shadow: 0 0 14px rgba(94, 234, 212, 0.5), 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e6f6f1;
+  background: rgba(4, 15, 12, 0.68);
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  padding: 5px 11px;
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   white-space: nowrap;
 }
 
-.sda-hero-ontrack-check {
+.sda-challenge-hero .sda-hero-status-pending {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #c7dad4;
+  background: rgba(16, 38, 32, 0.82);
+  border: 1px solid rgba(45, 212, 179, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+/* ── Restored "I Am on Track" — Great Vibes script + emerald check status pill ── */
+.sda-challenge-hero .sda-hero-ontrack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 41px;
+  max-width: 100%;
+  padding: 4px 5px 4px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(94, 234, 212, 0.55);
+  background:
+    linear-gradient(135deg, rgba(45, 212, 191, 0.24) 0%, rgba(16, 185, 129, 0.12) 100%),
+    rgba(3, 14, 12, 0.66);
+  color: #ffffff;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 18px rgba(45, 212, 191, 0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Decorative cursive/script font strictly scoped to this phrase */
+.sda-challenge-hero .sda-hero-ontrack-script {
+  font-family: 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: 23.5px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(94, 234, 212, 0.5), 0 1px 3px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.sda-challenge-hero .sda-hero-ontrack-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 31px;
+  height: 31px;
   border-radius: 50%;
-  background: var(--sda-gradient-cta);
-  color: var(--sda-on-accent);
+  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #34d399 100%);
+  color: #04201a;
   box-shadow: 0 0 12px rgba(45, 212, 191, 0.55);
   flex-shrink: 0;
 }
 
-.sda-hero-ontrack-row {
+/* ── Invite CTA & Links ── */
+.sda-challenge-hero .sda-hero-invite-actions {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-/* Day strip — real Challenge days only */
-.sda-hero-days {
-  list-style: none;
+.sda-challenge-hero .sda-hero-cta-primary {
+  width: 100%;
+  min-height: 50px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 4px;
-  padding: 8px 10px;
-  border-radius: var(--sda-radius-md);
-  background: rgba(3, 14, 12, 0.94);
-  border: 1px solid var(--sda-glass-border);
-  backdrop-filter: var(--sda-blur);
-  -webkit-backdrop-filter: var(--sda-blur);
+  gap: 10px;
+  padding: 12px 18px 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #34d399 100%);
+  color: #04201a;
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(45, 212, 191, 0.28);
+  transition: filter 0.16s ease, transform 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.sda-day {
+.sda-challenge-hero .sda-hero-cta-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.sda-challenge-hero .sda-hero-invite-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.sda-challenge-hero .sda-hero-link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 2px;
+  background: none;
+  border: none;
+  color: #5eead4;
+  font-family: inherit;
+  font-size: 13.75px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-challenge-hero .sda-hero-link-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sda-challenge-hero .sda-hero-link-btn--muted {
+  color: #bfd2cc;
+  font-weight: 500;
+}
+
+.sda-challenge-hero .sda-hero-snooze {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(16, 38, 32, 0.9);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+}
+
+.sda-challenge-hero .sda-hero-snooze-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #bfd2cc;
+}
+
+.sda-challenge-hero .sda-hero-snooze-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sda-challenge-hero .sda-hero-snooze-chip {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  background: #102620;
+  color: #f5f8f7;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sda-challenge-hero .sda-hero-snooze-chip--ghost {
+  background: transparent;
+  color: #bfd2cc;
+}
+
+/* ── 7-Day Real Challenge Strip ── */
+.sda-challenge-hero .sda-hero-days {
+  list-style: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  background: rgba(11, 27, 23, 0.94);
+  border: 1px solid rgba(45, 212, 179, 0.16);
+}
+
+.sda-challenge-hero .sda-day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  flex: 1 1 0;
+  gap: 5px;
   min-width: 0;
 }
 
-.sda-day-dot {
-  width: 24px;
-  height: 24px;
+.sda-challenge-hero .sda-day-dot {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid rgba(184, 216, 207, 0.45);
-  color: var(--sda-on-accent);
-  transition: background var(--sda-dur-med) var(--sda-ease);
+  border: 1.5px solid rgba(184, 216, 207, 0.4);
+  color: #d6e4e0;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.sda-day--checked .sda-day-dot {
+.sda-challenge-hero .sda-day--checked .sda-day-dot {
   border-color: transparent;
-  background: var(--sda-gradient-cta);
-  box-shadow: 0 0 10px rgba(45, 212, 191, 0.45);
+  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #34d399 100%);
+  color: #04201a;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.4);
 }
 
-.sda-day--today .sda-day-dot {
-  outline: 2px solid var(--sda-turquoise-soft);
-  outline-offset: 2px;
+.sda-challenge-hero .sda-day--today .sda-day-dot {
+  border-color: #2dd4b3;
+  box-shadow: 0 0 0 2px rgba(45, 212, 179, 0.24);
+  color: #ffffff;
 }
 
-.sda-day--future .sda-day-dot {
+.sda-challenge-hero .sda-day--future .sda-day-dot {
   border-style: dashed;
   opacity: 0.6;
 }
 
-.sda-day-letter {
-  font-size: 0.66rem;
-  font-weight: 600;
+.sda-challenge-hero .sda-day-letter {
+  font-size: 11.5px;
+  font-weight: 700;
   line-height: 1;
-  color: #ecfdf5;
+  color: #bfd2cc;
   text-transform: uppercase;
 }
 
-.sda-day--today .sda-day-letter {
-  color: #a7f3d0;
-  font-weight: 700;
+.sda-challenge-hero .sda-day--today .sda-day-letter {
+  color: #5eead4;
 }
 
-/* Invite actions */
-.sda-hero-invite-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sda-space-2);
-  margin-top: var(--sda-space-1);
+/* Narrow 320px phones */
+@media (max-width: 359px) {
+  .sda-challenge-hero .sda-hero-body {
+    padding: 14px 12px 12px;
+  }
+  .sda-challenge-hero--active .sda-hero-media {
+    bottom: 108px;
+  }
+  .sda-challenge-hero--active .sda-hero-media img {
+    object-position: 66% 56%;
+  }
+  .sda-challenge-hero--invite .sda-hero-stage-copy {
+    max-width: 65%;
+    min-height: 184px;
+  }
+  .sda-challenge-hero .sda-hero-copy {
+    font-size: 13px;
+  }
+  .sda-challenge-hero .sda-hero-ontrack-script {
+    font-size: 21.5px;
+  }
+  .sda-challenge-hero .sda-hero-cta-primary {
+    font-size: 14px;
+    padding: 10px 14px 10px 16px;
+  }
 }
 
-.sda-hero-invite-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0 var(--sda-space-4);
-}
-
-.sda-hero-invite-links .sda-link-btn {
-  min-height: 40px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
-}
-
-.sda-hero-invite-links .sda-link-btn--muted {
-  color: var(--sda-text-2);
-  font-weight: 500;
-}
-
-.sda-hero-snooze {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sda-space-2);
-  padding: var(--sda-space-3);
-  border-radius: var(--sda-radius-md);
-  background: rgba(3, 14, 12, 0.7);
-  border: 1px solid var(--sda-glass-border);
-}
-
-.sda-hero-snooze-label {
-  font-size: var(--sda-fs-small);
-  color: var(--sda-text-2);
-  font-weight: 600;
-}
-
-.sda-hero-snooze-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sda-space-2);
-}
-
-@keyframes sda-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 360px) {
-  .sda-hero-body { padding: var(--sda-space-3) var(--sda-space-3) var(--sda-space-4); }
-  .sda-hero-ontrack-script { font-size: 1.35rem; }
-  .sda-hero .sda-ring { width: 96px !important; height: 96px !important; }
-  .sda-day-dot { width: 22px; height: 22px; }
-}
-
-/* Wide layouts: roomier hero */
+/* Wide tablet & desktop layouts */
 @media (min-width: 900px) {
-  .sda-hero-body {
-    padding: var(--sda-space-5);
-    gap: var(--sda-space-4);
+  .sda-challenge-hero .sda-hero-body {
+    padding: 22px 22px 18px;
+    gap: 16px;
   }
-  .sda-hero .sda-ring {
-    width: 128px !important;
-    height: 128px !important;
+  .sda-challenge-hero--invite .sda-hero-stage-copy {
+    max-width: 56%;
+    min-height: 220px;
   }
-  .sda-ring-number { font-size: 2.6rem; }
-  .sda-hero-ontrack-script { font-size: 1.7rem; }
-  .sda-hero--invite .sda-hero-body { padding-top: 96px; }
+  .sda-challenge-hero .sda-hero-mid {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    max-width: 66%;
+  }
+  .sda-challenge-hero .sda-ring {
+    width: 114px !important;
+    height: 114px !important;
+  }
+  .sda-challenge-hero .sda-ring-number {
+    font-size: 34px;
+  }
+  .sda-challenge-hero .sda-hero-ontrack-script {
+    font-size: 27px;
+  }
 }

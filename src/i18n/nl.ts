@@ -2311,6 +2311,22 @@ export const nl: Translations = {
   challenge_btn_view_summary: 'Uitdagingssamenvatting',
   challenge_continue_already_checked: 'De oefening van vandaag is al vastgelegd ({status}). Wat is je volgende stap?',
   challenge_continue_no_active: 'Geen actieve uitdaging gevonden om voort te zetten.',
+  home_brand_system_sub: 'RESUME-ABILITY SYSTEEM',
+  home_abilities_hero_prefix: 'De',
+  home_abilities_hero_suffix: 'Vaardigheden',
+  home_abilities_hero_tagline: 'om lichaamsvet te verliezen — en voor altijd weg te houden!',
+  home_abilities_hero_alt: 'Bergpad bij zonsopgang ter illustratie van de zeven officiële Super Diet-Ability principes',
+  home_abilities_companion_heading: 'De 7 Officiële Diet-Abilities',
+  home_abilities_explore_all: 'Alles bekijken',
+  home_abilities_badge_active: 'Actief',
+  home_abilities_badge_coming_soon: 'Binnenkort',
+  home_challenge_active_sub: 'Oefen je Resume-Ability en bouw blijvende consistentie op.',
+  home_challenge_checkin_pending: 'Check-in openstaand',
+  home_action_in_control: 'Ik heb controle',
+  home_focus_edit_schedule: 'Schema bewerken',
+  home_quick_coach_full: 'SDA AI-Coach',
+  home_tools_title: 'Oefening & Bescherming',
+  home_resources_title: 'Leren & Bronnen',
 };
 
 

@@ -2218,6 +2218,22 @@ export interface Translations {
   challenge_btn_view_summary: string;
   challenge_continue_already_checked: string;
   challenge_continue_no_active: string;
+  home_brand_system_sub: string;
+  home_abilities_hero_prefix: string;
+  home_abilities_hero_suffix: string;
+  home_abilities_hero_tagline: string;
+  home_abilities_hero_alt: string;
+  home_abilities_companion_heading: string;
+  home_abilities_explore_all: string;
+  home_abilities_badge_active: string;
+  home_abilities_badge_coming_soon: string;
+  home_challenge_active_sub: string;
+  home_challenge_checkin_pending: string;
+  home_action_in_control: string;
+  home_focus_edit_schedule: string;
+  home_quick_coach_full: string;
+  home_tools_title: string;
+  home_resources_title: string;
 }
 
 

@@ -2325,6 +2325,22 @@ export const en: Translations = {
   challenge_btn_view_summary: 'Challenge Summary',
   challenge_continue_already_checked: "Today's practice is already logged ({status}). What is your next step?",
   challenge_continue_no_active: 'No active challenge found to continue.',
+  home_brand_system_sub: 'RESUME-ABILITY SYSTEM',
+  home_abilities_hero_prefix: 'The',
+  home_abilities_hero_suffix: 'Abilities',
+  home_abilities_hero_tagline: 'to Lose Body Fat—\nand Keep It Off Forever!',
+  home_abilities_hero_alt: 'Mountain sunrise trail illustrating the seven official Super Diet-Ability principles',
+  home_abilities_companion_heading: 'The 7 Official Diet-Abilities',
+  home_abilities_explore_all: 'Explore All',
+  home_abilities_badge_active: 'Active',
+  home_abilities_badge_coming_soon: 'Coming Soon',
+  home_challenge_active_sub: 'Practice your Resume-Ability and build lasting consistency.',
+  home_challenge_checkin_pending: 'Check-in pending',
+  home_action_in_control: 'I Am in Control',
+  home_focus_edit_schedule: 'Edit Schedule',
+  home_quick_coach_full: 'SDA AI Coach',
+  home_tools_title: 'Practice & Protection',
+  home_resources_title: 'Learn & Resources',
 };
 
 
