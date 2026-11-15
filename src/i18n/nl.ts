@@ -2327,6 +2327,17 @@ export const nl: Translations = {
   home_quick_coach_full: 'SDA AI-Coach',
   home_tools_title: 'Oefening & Bescherming',
   home_resources_title: 'Leren & Bronnen',
+  challenge_header_tagline: 'BOUW · OEFEN · BLIJF IN CONTROLE',
+  challenge_hero_eyebrow: 'JOUW VOLGENDE',
+  challenge_hero_title: 'UITDAGING\nSTART HIER.',
+  challenge_hero_body: 'Oefen consistentie, herstel van uitglijders en bouw je Super Diet-Ability op.',
+  challenge_available_now: 'NU BESCHIKBAAR',
+  challenge_more_abilities_label: 'Nog 6 Diet-Abilities',
+  challenge_reminders_compact_desc: 'Ontvang vriendelijke herinneringen om in te checken en op koers te blijven.',
+  challenge_reminders_on: 'Aan',
+  challenge_reminders_off_short: 'Uit',
+  challenge_reminders_short_label: 'Herinneringen',
+  challenge_hold_sub_commit: 'HOUD INGEDRUKT OM JE TE BINDEN',
 };
 
 

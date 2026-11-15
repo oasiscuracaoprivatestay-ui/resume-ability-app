@@ -2520,3 +2520,1286 @@
     gap: 8px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Phase 2: Super Diet-Ability — Premium New Challenge Screen Redesign
+   Scoped strictly to .challenges-screen--new-wizard so Active Challenge,
+   Completion Summary, and History views preserve their exact appearance.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#root:has(.challenges-screen--new-wizard) {
+  max-width: 1120px;
+  background: #071512;
+}
+
+.app-shell:has(.challenges-screen--new-wizard) .sda-bottom-nav {
+  background: rgba(7, 21, 18, 0.96);
+  border-top: 1px solid rgba(45, 212, 179, 0.16);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.app-shell:has(.challenges-screen--new-wizard) .sda-nav-item {
+  color: #B4C7C1;
+}
+
+.app-shell:has(.challenges-screen--new-wizard) .sda-nav-item--active {
+  color: #2DD4B3;
+}
+
+.challenges-screen.challenges-screen--new-wizard {
+  --sda-bg: #071512;
+  --sda-surface: #102620;
+  --sda-card: #153129;
+  --sda-accent: #2DD4B3;
+  --sda-text: #F5F8F7;
+  --sda-muted: #A7BBB5;
+  --sda-subtext: #C2D4CE;
+  --sda-border: rgba(45, 212, 179, 0.18);
+
+  max-width: 100%;
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 16px calc(128px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(ellipse 92% 40% at 50% 0%, rgba(22, 74, 61, 0.34) 0%, rgba(7, 21, 18, 0) 68%),
+    var(--sda-bg);
+  color: var(--sda-text);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+.challenges-screen--new-wizard *,
+.challenges-screen--new-wizard *::before,
+.challenges-screen--new-wizard *::after {
+  box-sizing: border-box;
+}
+
+.challenges-screen--new-wizard button {
+  font-family: inherit;
+  min-height: 44px;
+}
+
+/* ── 1. Premium Ability Challenges Header & Segmented Tabs ── */
+.challenges-screen--new-wizard .sda-ch-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.challenges-screen--new-wizard .sda-ch-header-top {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 4px;
+}
+
+.challenges-screen--new-wizard .sda-ch-back-btn {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 6px 4px 6px 0;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--sda-accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--new-wizard .sda-ch-back-btn:hover {
+  background: rgba(45, 212, 179, 0.08);
+  color: #5EEAD4;
+}
+
+.challenges-screen--new-wizard .sda-ch-header-spacer {
+  display: block;
+  width: 52px;
+  height: 1px;
+}
+
+.challenges-screen--new-wizard .sda-ch-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-laurel {
+  width: 17px;
+  height: 34px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(217, 119, 6, 0.22));
+}
+
+.challenges-screen--new-wizard .sda-ch-laurel--right {
+  transform: scaleX(-1);
+}
+
+.challenges-screen--new-wizard .sda-ch-crest-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-crest-title-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.challenges-screen--new-wizard .sda-ch-trophy-svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.35));
+}
+
+.challenges-screen--new-wizard .sda-ch-title {
+  margin: 0;
+  font-size: 18.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--sda-text);
+}
+
+.challenges-screen--new-wizard .sda-ch-subtitle {
+  margin: 0;
+  font-size: 8.8px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #B4C7C1;
+  line-height: 1.25;
+}
+
+.challenges-screen--new-wizard .sda-ch-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(11, 29, 24, 0.92);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.challenges-screen--new-wizard .sda-ch-tab-btn {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #B4C7C1;
+  background: transparent;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--new-wizard .sda-ch-tab-btn:hover:not(.sda-ch-tab-btn--active) {
+  color: var(--sda-text);
+  background: rgba(45, 212, 179, 0.06);
+}
+
+.challenges-screen--new-wizard .sda-ch-tab-btn--active {
+  background: linear-gradient(180deg, rgba(25, 80, 67, 0.95) 0%, rgba(14, 48, 40, 0.96) 100%);
+  border-color: rgba(45, 212, 179, 0.82);
+  color: #FFFFFF;
+  box-shadow:
+    0 0 18px rgba(45, 212, 179, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.challenges-screen--new-wizard .sda-ch-tab-icon--zap {
+  color: var(--sda-accent);
+  fill: currentColor;
+}
+
+/* ── 2. Wizard Container & Grid ── */
+.challenges-screen--new-wizard .sda-ch-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.challenges-screen--new-wizard .sda-ch-back-summary {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(16, 38, 32, 0.86);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  color: var(--sda-accent);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.challenges-screen--new-wizard .sda-ch-wizard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.challenges-screen--new-wizard .sda-ch-col-setup,
+.challenges-screen--new-wizard .sda-ch-col-commit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── 3. Cinematic Hero Introduction Card ── */
+.challenges-screen--new-wizard .sda-ch-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  background: #0B1F1A;
+  min-height: 210px;
+  padding: 20px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  box-shadow: 0 12px 28px rgba(3, 10, 8, 0.42);
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 74% 56%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      95deg,
+      rgba(6, 22, 18, 0.94) 0%,
+      rgba(7, 25, 20, 0.85) 42%,
+      rgba(7, 24, 19, 0.28) 68%,
+      rgba(7, 21, 18, 0.05) 100%
+    ),
+    linear-gradient(180deg, rgba(6, 20, 16, 0.14) 0%, rgba(6, 20, 16, 0.42) 100%);
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  max-width: 63%;
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-eyebrow {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #DCEBE6;
+  line-height: 1.2;
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-title {
+  margin: 0;
+  font-size: 22.5px;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-bar {
+  display: block;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--sda-accent);
+  box-shadow: 0 0 10px rgba(45, 212, 179, 0.45);
+  margin: 2px 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-hero-body {
+  margin: 0;
+  font-size: 12.8px;
+  font-weight: 500;
+  line-height: 1.38;
+  color: #E3F0EC;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* ── 4. Step Headings (01 & 02) ── */
+.challenges-screen--new-wizard .sda-ch-step-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--sda-text);
+}
+
+.challenges-screen--new-wizard .sda-ch-step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3EE8C5 0%, #20B899 100%);
+  color: #05201A;
+  font-size: 12.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(45, 212, 179, 0.34);
+}
+
+/* ── 5. Section 01: Prominent Selected Resume-Ability Card ── */
+.challenges-screen--new-wizard .sda-ch-ability-featured,
+.challenges-screen--new-wizard .sda-ch-ability-featured.ability-select-card--selected {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 12px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(21, 56, 47, 0.94) 0%, rgba(12, 34, 28, 0.96) 100%) !important;
+  border: 1.5px solid rgba(45, 212, 179, 0.8) !important;
+  box-shadow:
+    0 0 22px rgba(45, 212, 179, 0.2),
+    inset 0 1px 0 rgba(45, 212, 179, 0.14);
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-featured:hover {
+  border-color: #2DD4B3 !important;
+  box-shadow:
+    0 0 26px rgba(45, 212, 179, 0.26),
+    inset 0 1px 0 rgba(45, 212, 179, 0.18);
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 212, 179, 0.18) 0%, rgba(14, 38, 32, 0.92) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.36);
+  color: var(--sda-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-name {
+  font-size: 15.8px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.challenges-screen--new-wizard .sda-ch-available-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  background: rgba(16, 60, 50, 0.88);
+  border: 1px solid rgba(45, 212, 179, 0.38);
+  color: var(--sda-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-desc {
+  display: block;
+  margin: 0;
+  font-size: 12.6px;
+  line-height: 1.38;
+  color: var(--sda-subtext);
+}
+
+.challenges-screen--new-wizard .sda-ch-ability-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--sda-accent);
+  color: #05201A;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(45, 212, 179, 0.42);
+}
+
+/* ── 6. Expandable 6 Coming Soon Diet-Abilities ── */
+.challenges-screen--new-wizard .sda-ch-more-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-toggle {
+  width: 100%;
+  min-height: 46px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: rgba(16, 38, 32, 0.84);
+  border: 1px solid rgba(45, 212, 179, 0.16);
+  color: #D6E4DF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-toggle:hover {
+  background: rgba(21, 49, 41, 0.92);
+  border-color: rgba(45, 212, 179, 0.32);
+}
+
+.challenges-screen--new-wizard .sda-ch-more-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-cluster-wrap {
+  width: 22px;
+  height: 22px;
+  color: #B4C7C1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-cluster-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-label {
+  font-size: 13.8px;
+  font-weight: 600;
+  color: #D6E4DF;
+  text-align: left;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #B4C7C1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #B4C7C1;
+  transition: transform 0.2s ease;
+}
+
+.challenges-screen--new-wizard .sda-ch-more-toggle--open .sda-ch-more-chevron {
+  transform: rotate(180deg);
+  color: var(--sda-accent);
+}
+
+.challenges-screen--new-wizard .sda-ch-more-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(12, 30, 25, 0.9);
+  border: 1px solid rgba(45, 212, 179, 0.16);
+  animation: fadeIn 0.2s ease;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-card {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(18, 42, 35, 0.7);
+  border: 1px solid rgba(45, 212, 179, 0.14);
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  opacity: 0.88;
+  cursor: not-allowed;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sda-accent);
+  opacity: 0.85;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-name {
+  font-size: 13.8px;
+  font-weight: 700;
+  color: #E2EFEA;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #A7BBB5;
+  white-space: nowrap;
+}
+
+.challenges-screen--new-wizard .sda-ch-coming-desc {
+  margin: 0;
+  font-size: 12.2px;
+  line-height: 1.38;
+  color: var(--sda-muted);
+}
+
+.challenges-screen--new-wizard .sda-ch-explore-wrap {
+  margin-top: 2px;
+}
+
+.challenges-screen--new-wizard .sda-ch-explore-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(21, 52, 43, 0.88);
+  border: 1px solid rgba(45, 212, 179, 0.28);
+  color: var(--sda-accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.challenges-screen--new-wizard .sda-ch-explore-btn:hover {
+  background: rgba(26, 65, 54, 0.94);
+  border-color: rgba(45, 212, 179, 0.5);
+}
+
+/* ── 7. Section 02: Choose Duration Cards ── */
+.challenges-screen--new-wizard .sda-ch-duration-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-card {
+  min-height: 62px;
+  padding: 9px 4px;
+  border-radius: 14px;
+  background: rgba(16, 38, 32, 0.86);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-card:hover:not(.sda-ch-duration-card--selected) {
+  background: rgba(21, 49, 41, 0.92);
+  border-color: rgba(45, 212, 179, 0.36);
+  transform: none;
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-card--selected,
+.challenges-screen--new-wizard .sda-ch-duration-card.duration-pill-btn--selected {
+  background: linear-gradient(180deg, rgba(25, 78, 66, 0.94) 0%, rgba(14, 46, 39, 0.96) 100%) !important;
+  border: 1.5px solid var(--sda-accent) !important;
+  box-shadow:
+    0 0 18px rgba(45, 212, 179, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: none;
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-num {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #FFFFFF;
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-unit {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sda-muted);
+}
+
+.challenges-screen--new-wizard .sda-ch-duration-card--selected .sda-ch-duration-unit {
+  color: var(--sda-accent);
+}
+
+/* ── 8. Compact Challenge Reminders Card ── */
+.challenges-screen--new-wizard .sda-ch-reminders-card {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(16, 38, 32, 0.86);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-bell {
+  color: var(--sda-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-title {
+  font-size: 14.2px;
+  font-weight: 700;
+  color: var(--sda-text);
+  line-height: 1.25;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-sub {
+  font-size: 12.2px;
+  line-height: 1.35;
+  color: var(--sda-muted);
+}
+
+.challenges-screen--new-wizard .sda-ch-switch {
+  min-height: 44px;
+  min-width: 62px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-track {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 9px 3px 4px;
+  min-width: 58px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(8, 22, 18, 0.92);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  transition: all 0.18s ease;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-input:focus-visible + .sda-ch-switch-track {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-knob {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-state {
+  font-size: 11px;
+  font-weight: 700;
+  color: #D6E4DF;
+  line-height: 1;
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-track--on {
+  flex-direction: row-reverse;
+  padding: 3px 4px 3px 10px;
+  background: rgba(23, 76, 64, 0.95);
+  border-color: var(--sda-accent);
+  box-shadow: 0 0 12px rgba(45, 212, 179, 0.28);
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-track--on .sda-ch-switch-knob {
+  background: var(--sda-accent);
+}
+
+.challenges-screen--new-wizard .sda-ch-switch-track--on .sda-ch-switch-state {
+  color: var(--sda-accent);
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-expanded {
+  padding-top: 12px;
+  border-top: 1px solid rgba(45, 212, 179, 0.14);
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-expanded .reminders-freq-btn {
+  min-height: 44px;
+  border-radius: 12px;
+  background: rgba(10, 26, 22, 0.85);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  color: #D6E4DF;
+  font-size: 12.8px;
+  font-weight: 600;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-expanded .reminders-freq-btn--selected {
+  background: rgba(25, 78, 66, 0.92);
+  border-color: var(--sda-accent);
+  color: #FFFFFF;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-expanded .reminder-time-input {
+  min-height: 44px;
+  border-radius: 10px;
+  background: rgba(10, 26, 22, 0.9);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  color: var(--sda-text);
+  font-family: inherit;
+}
+
+.challenges-screen--new-wizard .sda-ch-reminders-expanded .reminder-time-remove-btn,
+.challenges-screen--new-wizard .sda-ch-reminders-expanded .reminder-time-add-btn {
+  min-height: 44px;
+  border-radius: 10px;
+}
+
+/* ── 9. Challenge Commitment Card & Glowing Circular Hold-to-Start ── */
+.challenges-screen--new-wizard .sda-ch-commitment-card {
+  padding: 16px 13px 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 74%, rgba(32, 112, 93, 0.22) 0%, rgba(12, 31, 26, 0) 56%),
+    linear-gradient(180deg, rgba(17, 43, 36, 0.94) 0%, rgba(10, 26, 22, 0.97) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 12px 28px rgba(3, 10, 8, 0.36);
+}
+
+.challenges-screen--new-wizard .sda-ch-commit-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.challenges-screen--new-wizard .sda-ch-commit-icon {
+  color: var(--sda-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenges-screen--new-wizard .sda-ch-commit-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--sda-text);
+}
+
+.challenges-screen--new-wizard .sda-ch-summary-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px 5px;
+  padding: 2px 1px 4px;
+  background: transparent;
+  border: none;
+}
+
+.challenges-screen--new-wizard .sda-ch-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: none;
+  font-size: 11.2px;
+  line-height: 1.3;
+  position: relative;
+}
+
+.challenges-screen--new-wizard .sda-ch-summary-item:not(:last-child)::after {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: rgba(45, 212, 179, 0.24);
+  margin-left: 5px;
+}
+
+.challenges-screen--new-wizard .sda-ch-summary-item .detail-label {
+  color: var(--sda-muted);
+  font-weight: 500;
+}
+
+.challenges-screen--new-wizard .sda-ch-summary-item .detail-val {
+  color: var(--sda-accent);
+  font-weight: 700;
+}
+
+.challenges-screen--new-wizard .sda-ch-rule-box {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(11, 31, 26, 0.84);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  margin: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-rule-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sda-accent);
+  color: var(--sda-accent);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-rule-text {
+  margin: 0;
+  font-size: 12.8px;
+  line-height: 1.44;
+  color: #D6E4DF;
+}
+
+.challenges-screen--new-wizard .sda-ch-rule-text strong {
+  color: var(--sda-accent);
+  font-weight: 700;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-stage {
+  position: relative;
+  padding: 6px 0 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-waves {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(100%, 352px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.challenges-screen--new-wizard .sda-ch-wave {
+  width: calc(50% - 68px);
+  max-width: 112px;
+  height: 24px;
+  filter: drop-shadow(0 0 6px rgba(45, 212, 179, 0.48));
+}
+
+.challenges-screen--new-wizard .sda-ch-wave--right {
+  transform: scaleX(-1);
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual.hold-commit-ritual-container {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  gap: 8px;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-ring-wrap {
+  order: 1;
+  width: 132px;
+  height: 132px;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-ring-track {
+  stroke: rgba(45, 212, 179, 0.28);
+  stroke-width: 2.5;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-button {
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(circle at 50% 38%, #174035 0%, #091E19 78%);
+  border: 2px solid var(--sda-accent);
+  box-shadow:
+    0 0 0 6px rgba(45, 212, 179, 0.08),
+    0 0 28px rgba(45, 212, 179, 0.38),
+    inset 0 0 18px rgba(45, 212, 179, 0.18);
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-button:hover:not(:disabled) {
+  border-color: #5EEAD4;
+  box-shadow:
+    0 0 0 8px rgba(45, 212, 179, 0.12),
+    0 0 34px rgba(45, 212, 179, 0.48),
+    inset 0 0 20px rgba(45, 212, 179, 0.24);
+  transform: scale(1.02);
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-button--active {
+  background: radial-gradient(circle at 50% 42%, #1E5A4B 0%, #0C2A23 82%);
+  border-color: #5EEAD4;
+  box-shadow:
+    0 0 0 10px rgba(45, 212, 179, 0.16),
+    0 0 38px rgba(45, 212, 179, 0.58) !important;
+}
+
+.challenges-screen--new-wizard .sda-ch-bolt-svg {
+  width: 30px;
+  height: 36px;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.46));
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-pct {
+  color: var(--sda-accent);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-instruction-wrap {
+  order: 2;
+  margin-top: 2px;
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-cue-text {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  color: var(--sda-accent);
+  text-shadow: 0 0 14px rgba(45, 212, 179, 0.28);
+}
+
+.challenges-screen--new-wizard .sda-ch-hold-ritual .hold-commit-sub-instruction {
+  order: 3;
+  font-size: 10.8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #B4C7C1;
+  margin: -2px 0 0;
+}
+
+/* ── Ultra-narrow phones (320px - 384px) ── */
+@media (max-width: 384px) {
+  .challenges-screen.challenges-screen--new-wizard {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-header-top {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-header-spacer {
+    display: none;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-title {
+    font-size: 18px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-ability-top {
+    flex-wrap: wrap;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-content {
+    max-width: 68%;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-title {
+    font-size: 20px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-duration-grid {
+    gap: 5px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-duration-num {
+    font-size: 18px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-duration-unit {
+    font-size: 9px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-summary-item:not(:last-child)::after {
+    display: none;
+  }
+}
+
+/* ── Desktop Responsive Layout (>= 900px) ── */
+@media (min-width: 900px) {
+  .challenges-screen.challenges-screen--new-wizard {
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 128px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-header {
+    margin-bottom: 16px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-header-top {
+    grid-template-columns: 80px minmax(0, 1fr) 80px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-header-spacer {
+    width: 80px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-back-btn {
+    font-size: 14.5px;
+    gap: 6px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-laurel {
+    width: 22px;
+    height: 42px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-trophy-svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-title {
+    font-size: 24px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-subtitle {
+    font-size: 10.5px;
+    letter-spacing: 0.15em;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-card {
+    min-height: 274px;
+    padding: 28px 34px;
+    background: #0B1F1A;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-img {
+    left: 24%;
+    width: 76%;
+    object-position: 62% 58%;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-scrim {
+    background:
+      linear-gradient(
+        90deg,
+        #0B1F1A 0%,
+        #0B1F1A 25%,
+        rgba(11, 31, 26, 0.9) 39%,
+        rgba(11, 31, 26, 0.22) 58%,
+        rgba(11, 31, 26, 0.04) 100%
+      ),
+      linear-gradient(180deg, rgba(6, 20, 16, 0.1) 0%, rgba(6, 20, 16, 0.34) 100%);
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-content {
+    max-width: 48%;
+    gap: 10px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-eyebrow {
+    font-size: 13.5px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-title {
+    font-size: 30px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-hero-body {
+    font-size: 14.5px;
+    max-width: 420px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-wizard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-summary-item {
+    font-size: 13px;
+  }
+
+  .challenges-screen--new-wizard .sda-ch-commitment-card {
+    padding: 22px 22px 26px;
+    position: sticky;
+    top: 16px;
+  }
+
+  .app-shell:has(.challenges-screen--new-wizard) .sda-bottom-nav {
+    background: transparent;
+    border-top: none;
+    pointer-events: none;
+  }
+
+  .app-shell:has(.challenges-screen--new-wizard) .sda-bottom-nav-list {
+    pointer-events: auto;
+    background: rgba(16, 38, 32, 0.88);
+    border: 1px solid rgba(45, 212, 179, 0.22);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 24px rgba(4, 12, 10, 0.42);
+  }
+}

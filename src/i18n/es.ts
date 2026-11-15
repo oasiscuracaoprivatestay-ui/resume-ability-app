@@ -2327,6 +2327,17 @@ export const es: Translations = {
   home_quick_coach_full: 'Coach IA SDA',
   home_tools_title: 'Práctica y Protección',
   home_resources_title: 'Aprender y Recursos',
+  challenge_header_tagline: 'CONSTRUYE · PRACTICA · MANTÉN EL CONTROL',
+  challenge_hero_eyebrow: 'TU PRÓXIMO',
+  challenge_hero_title: 'DESAFÍO\nCOMIENZA AQUÍ.',
+  challenge_hero_body: 'Practica la constancia, recupérate de los deslices y construye tu Super Diet-Ability.',
+  challenge_available_now: 'DISPONIBLE AHORA',
+  challenge_more_abilities_label: '6 Diet-Abilities más',
+  challenge_reminders_compact_desc: 'Recibe recordatorios suaves para registrarte y mantener el rumbo.',
+  challenge_reminders_on: 'Sí',
+  challenge_reminders_off_short: 'No',
+  challenge_reminders_short_label: 'Recordatorios',
+  challenge_hold_sub_commit: 'MANTÉN PULSADO PARA COMPROMETERTE',
 };
 
 

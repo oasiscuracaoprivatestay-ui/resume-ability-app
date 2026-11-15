@@ -2341,6 +2341,17 @@ export const en: Translations = {
   home_quick_coach_full: 'SDA AI Coach',
   home_tools_title: 'Practice & Protection',
   home_resources_title: 'Learn & Resources',
+  challenge_header_tagline: 'BUILD · PRACTICE · STAY IN CONTROL',
+  challenge_hero_eyebrow: 'YOUR NEXT',
+  challenge_hero_title: 'CHALLENGE\nSTARTS HERE.',
+  challenge_hero_body: 'Practice consistency, recover from slips, and build your Super Diet-Ability.',
+  challenge_available_now: 'AVAILABLE NOW',
+  challenge_more_abilities_label: '6 more Diet-Abilities',
+  challenge_reminders_compact_desc: 'Get gentle reminders to check in and stay on track.',
+  challenge_reminders_on: 'On',
+  challenge_reminders_off_short: 'Off',
+  challenge_reminders_short_label: 'Reminders',
+  challenge_hold_sub_commit: 'PRESS AND HOLD TO COMMIT',
 };
 
 

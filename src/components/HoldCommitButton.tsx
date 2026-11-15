@@ -7,6 +7,8 @@ export interface HoldCommitButtonProps {
   variant?: 'commit' | 'recommit' | 'review';
   label?: string;
   holdingLabel?: string;
+  subLabel?: string;
+  icon?: React.ReactNode;
   disabled?: boolean;
   disabledReason?: string;
   durationMs?: number;
@@ -26,6 +28,8 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
   variant = 'commit',
   label,
   holdingLabel,
+  subLabel,
+  icon,
   disabled = false,
   disabledReason,
   durationMs = DEFAULT_HOLD_MS,
@@ -283,7 +287,7 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
           {holding ? (
             <span className="hold-commit-pct">{pct}%</span>
           ) : (
-            <span className="hold-commit-center-icon">{defaultIcon}</span>
+            <span className="hold-commit-center-icon">{icon ?? defaultIcon}</span>
           )}
         </button>
       </div>
@@ -293,7 +297,7 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
           ? holdingLabel || `${pct}%`
           : disabled
             ? disabledReason || t.nn_review_check_all_first
-            : t.commit_hold_instruction || 'Press and hold'}
+            : subLabel || t.commit_hold_instruction || 'Press and hold'}
       </p>
     </div>
   );

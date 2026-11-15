@@ -69,6 +69,121 @@ interface ChallengesScreenProps {
   onBack: () => void;
 }
 
+const LaurelSprigSvg: React.FC<{ mirrored?: boolean }> = ({ mirrored = false }) => (
+  <svg
+    className={`sda-ch-laurel ${mirrored ? 'sda-ch-laurel--right' : 'sda-ch-laurel--left'}`}
+    viewBox="0 0 26 46"
+    fill="none"
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient id={mirrored ? 'sda-laurel-r' : 'sda-laurel-l'} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#F6D56B" />
+        <stop offset="55%" stopColor="#DFA53A" />
+        <stop offset="100%" stopColor="#B67C1E" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M21 43C11.5 36.5 7.5 26 9.5 14C10.6 8.2 13.5 4.2 17 2"
+      stroke={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`}
+      strokeWidth="1.35"
+      strokeLinecap="round"
+    />
+    <ellipse cx="15" cy="5.2" rx="3.4" ry="1.5" transform="rotate(-38 15 5.2)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+    <ellipse cx="11.2" cy="10.8" rx="3.8" ry="1.65" transform="rotate(-28 11.2 10.8)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+    <ellipse cx="14.6" cy="13.5" rx="3.3" ry="1.45" transform="rotate(25 14.6 13.5)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} opacity="0.88" />
+    <ellipse cx="8.8" cy="18" rx="4" ry="1.7" transform="rotate(-18 8.8 18)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+    <ellipse cx="13.2" cy="20.6" rx="3.4" ry="1.5" transform="rotate(32 13.2 20.6)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} opacity="0.88" />
+    <ellipse cx="9.2" cy="25.6" rx="4" ry="1.7" transform="rotate(-6 9.2 25.6)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+    <ellipse cx="14.2" cy="27.8" rx="3.4" ry="1.5" transform="rotate(38 14.2 27.8)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} opacity="0.88" />
+    <ellipse cx="11.8" cy="33" rx="3.9" ry="1.65" transform="rotate(10 11.8 33)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+    <ellipse cx="16.8" cy="34.5" rx="3.2" ry="1.4" transform="rotate(46 16.8 34.5)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} opacity="0.85" />
+    <ellipse cx="16.2" cy="39.2" rx="3.6" ry="1.55" transform="rotate(24 16.2 39.2)" fill={`url(#${mirrored ? 'sda-laurel-r' : 'sda-laurel-l'})`} />
+  </svg>
+);
+
+const GoldenTrophySvg: React.FC = () => (
+  <svg className="sda-ch-trophy-svg" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="sda-trophy-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FDE68A" />
+        <stop offset="48%" stopColor="#FBBF24" />
+        <stop offset="100%" stopColor="#D97706" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M8 5H20V11.5C20 14.8137 17.3137 17.5 14 17.5C10.6863 17.5 8 14.8137 8 11.5V5Z"
+      fill="url(#sda-trophy-gold)"
+    />
+    <path
+      d="M8 7H5.5C4.67157 7 4 7.67157 4 8.5V9.5C4 11.7091 5.79086 13.5 8 13.5"
+      stroke="url(#sda-trophy-gold)"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M20 7H22.5C23.3284 7 24 7.67157 24 8.5V9.5C24 11.7091 22.2091 13.5 20 13.5"
+      stroke="url(#sda-trophy-gold)"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path d="M14 17.5V21.5" stroke="url(#sda-trophy-gold)" strokeWidth="2.4" strokeLinecap="round" />
+    <rect x="9" y="21.5" width="10" height="2.6" rx="1.3" fill="url(#sda-trophy-gold)" />
+  </svg>
+);
+
+const AbilityClusterSvg: React.FC = () => (
+  <svg className="sda-ch-cluster-svg" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+    <circle cx="11" cy="11" r="2.1" stroke="currentColor" strokeWidth="1.4" />
+    <circle cx="11" cy="4.4" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="16.7" cy="7.7" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="16.7" cy="14.3" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="11" cy="17.6" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="5.3" cy="14.3" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+    <circle cx="5.3" cy="7.7" r="1.8" stroke="currentColor" strokeWidth="1.35" />
+  </svg>
+);
+
+const GoldenBoltSvg: React.FC = () => (
+  <svg className="sda-ch-bolt-svg" viewBox="0 0 32 38" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="sda-bolt-gold" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stopColor="#FEF08A" />
+        <stop offset="45%" stopColor="#FBBF24" />
+        <stop offset="100%" stopColor="#EA8A0A" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M18.6 2L6.5 20.4H15.4L12.8 36L25.5 17.2H16.5L18.6 2Z"
+      fill="url(#sda-bolt-gold)"
+    />
+  </svg>
+);
+
+const EnergyWaveSvg: React.FC<{ side: 'left' | 'right' }> = ({ side }) => (
+  <svg
+    className={`sda-ch-wave sda-ch-wave--${side}`}
+    viewBox="0 0 116 26"
+    fill="none"
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient id={`sda-wave-grad-${side}`} x1="0%" y1="50%" x2="100%" y2="50%">
+        <stop offset="0%" stopColor="#2DD4B3" stopOpacity="0" />
+        <stop offset="55%" stopColor="#2DD4B3" stopOpacity="0.62" />
+        <stop offset="88%" stopColor="#5EEAD4" stopOpacity="0.92" />
+        <stop offset="100%" stopColor="#2DD4B3" stopOpacity="0.18" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M2 15C24 15 36 20 56 15C74 10.5 84 5.5 98 11.5C105 14.5 110 15.5 114 15"
+      stroke={`url(#sda-wave-grad-${side})`}
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, onBack }) => {
   const { t } = useTranslation();
   const [activeChallenge, setActiveChallenge] = useState<ChallengeInstance | null>(null);
@@ -77,6 +192,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
   // Start wizard state
   const [selectedAbility, setSelectedAbility] = useState<ChallengeAbilityId>('resume-ability');
+  const [showMoreAbilities, setShowMoreAbilities] = useState<boolean>(false);
   // Phase 2: one-shot preselect hint set by the Home flagship 90-Day invite.
   // Consumed once on mount; when absent/invalid, existing defaults are unchanged.
   const [preselectedDuration] = useState<ChallengeDurationDays | null>(() => {
@@ -179,13 +295,20 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   }, [milestoneEval.celebrated]);
 
   const [activityRefreshKey, setActivityRefreshKey] = useState<number>(0);
+  const isRefreshingRef = React.useRef<boolean>(false);
 
   const refreshState = () => {
-    const current = syncCurrentChallenge();
-    setActiveChallenge(current);
-    setHistory(getChallengeHistory());
-    setPushStatus(getPushDeliveryStatus());
-    setPledge(loadPledge());
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
+    try {
+      const current = syncCurrentChallenge();
+      setActiveChallenge(current);
+      setHistory(getChallengeHistory());
+      setPushStatus(getPushDeliveryStatus());
+      setPledge(loadPledge());
+    } finally {
+      isRefreshingRef.current = false;
+    }
   };
 
   useEffect(() => {
@@ -435,43 +558,108 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     (n) => typeof n === 'string' && n.trim().length > 0
   );
 
+  const isNewChallengeWizard =
+    viewTab === 'challenge' &&
+    !(activeChallenge && activeChallenge.status === 'active') &&
+    !completedChallengeToSummarize;
+
+  const comingSoonAbilities = useMemo(
+    () => CHALLENGE_DEFINITIONS.filter((def) => !def.isActive),
+    []
+  );
+
   return (
-    <div className="challenges-screen">
+    <div className={`challenges-screen ${isNewChallengeWizard ? 'challenges-screen--new-wizard' : ''}`}>
       {/* ── Header ── */}
-      <header className="challenges-header">
-        <button
-          id="btn-challenges-back"
-          className="challenges-back-btn"
-          onClick={onBack}
-          aria-label={t.common_back || 'Back'}
-        >
-          <AppIcon name="arrow-left" size={16} />
-          <span>{t.common_back || 'Back'}</span>
-        </button>
-        <h1 className="challenges-title">
-          {activeChallenge && activeChallenge.status === 'active'
-            ? (t.challenge_control_center_title || 'Daily Challenge Control Center')
-            : (t.challenge_screen_title || 'Ability Challenges')}
-        </h1>
-        <div className="challenges-tabs">
+      {isNewChallengeWizard ? (
+        <header className="challenges-header sda-ch-header">
+          <div className="sda-ch-header-top">
+            <button
+              id="btn-challenges-back"
+              className="challenges-back-btn sda-ch-back-btn"
+              onClick={onBack}
+              aria-label={t.common_back || 'Back'}
+            >
+              <AppIcon name="arrow-left" size={16} />
+              <span>{t.common_back || 'Back'}</span>
+            </button>
+
+            <div className="sda-ch-crest">
+              <LaurelSprigSvg />
+              <div className="sda-ch-crest-inner">
+                <div className="sda-ch-crest-title-row">
+                  <GoldenTrophySvg />
+                  <h1 className="challenges-title sda-ch-title">
+                    {t.challenge_screen_title || 'Ability Challenges'}
+                  </h1>
+                </div>
+                <p className="sda-ch-subtitle">
+                  {t.challenge_header_tagline || 'BUILD · PRACTICE · STAY IN CONTROL'}
+                </p>
+              </div>
+              <LaurelSprigSvg mirrored />
+            </div>
+
+            <span className="sda-ch-header-spacer" aria-hidden="true" />
+          </div>
+
+          <div className="challenges-tabs sda-ch-tabs">
+            <button
+              id="tab-challenge-active"
+              className={`challenges-tab-btn sda-ch-tab-btn ${viewTab === 'challenge' ? 'challenges-tab-btn--active sda-ch-tab-btn--active' : ''}`}
+              onClick={() => setViewTab('challenge')}
+            >
+              <AppIcon name="zap" size={15} className="sda-ch-tab-icon sda-ch-tab-icon--zap" />
+              <span>{t.challenge_tab_start || 'New Challenge'}</span>
+            </button>
+            <button
+              id="tab-challenge-history"
+              className={`challenges-tab-btn sda-ch-tab-btn ${viewTab !== 'challenge' ? 'challenges-tab-btn--active sda-ch-tab-btn--active' : ''}`}
+              onClick={() => setViewTab('history')}
+            >
+              <AppIcon name="history" size={15} className="sda-ch-tab-icon" />
+              <span>
+                {t.challenge_tab_history || 'History'} {history.length > 0 && `(${history.length})`}
+              </span>
+            </button>
+          </div>
+        </header>
+      ) : (
+        <header className="challenges-header">
           <button
-            id="tab-challenge-active"
-            className={`challenges-tab-btn ${viewTab === 'challenge' ? 'challenges-tab-btn--active' : ''}`}
-            onClick={() => setViewTab('challenge')}
+            id="btn-challenges-back"
+            className="challenges-back-btn"
+            onClick={onBack}
+            aria-label={t.common_back || 'Back'}
           >
+            <AppIcon name="arrow-left" size={16} />
+            <span>{t.common_back || 'Back'}</span>
+          </button>
+          <h1 className="challenges-title">
             {activeChallenge && activeChallenge.status === 'active'
-              ? (t.challenge_tab_current || 'Active Challenge')
-              : (t.challenge_tab_start || 'New Challenge')}
-          </button>
-          <button
-            id="tab-challenge-history"
-            className={`challenges-tab-btn ${viewTab === 'history' ? 'challenges-tab-btn--active' : ''}`}
-            onClick={() => setViewTab('history')}
-          >
-            {t.challenge_tab_history || 'History'} {history.length > 0 && `(${history.length})`}
-          </button>
-        </div>
-      </header>
+              ? (t.challenge_control_center_title || 'Daily Challenge Control Center')
+              : (t.challenge_screen_title || 'Ability Challenges')}
+          </h1>
+          <div className="challenges-tabs">
+            <button
+              id="tab-challenge-active"
+              className={`challenges-tab-btn ${viewTab === 'challenge' ? 'challenges-tab-btn--active' : ''}`}
+              onClick={() => setViewTab('challenge')}
+            >
+              {activeChallenge && activeChallenge.status === 'active'
+                ? (t.challenge_tab_current || 'Active Challenge')
+                : (t.challenge_tab_start || 'New Challenge')}
+            </button>
+            <button
+              id="tab-challenge-history"
+              className={`challenges-tab-btn ${viewTab === 'history' ? 'challenges-tab-btn--active' : ''}`}
+              onClick={() => setViewTab('history')}
+            >
+              {t.challenge_tab_history || 'History'} {history.length > 0 && `(${history.length})`}
+            </button>
+          </div>
+        </header>
+      )}
 
       {errorMessage && (
         <div className="challenge-error-notice" role="alert">
@@ -1298,261 +1486,424 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
               </div>
             </div>
           ) : (
-            /* ── START CHALLENGE WIZARD ── */
-            <div className="challenges-wizard-view">
+            /* ── START CHALLENGE WIZARD (Phase 2 Premium Redesign) ── */
+            <div className="challenges-wizard-view sda-ch-wizard">
               {latestCompletedChallenge && (
                 <button
                   type="button"
-                  className="wizard-back-completion-link"
+                  className="wizard-back-completion-link sda-ch-back-summary"
                   onClick={() => setShowingStartWizard(false)}
                 >
                   {t.challenge_completion_back_summary || '← Back to Completion Summary'}
                 </button>
               )}
-              <div className="wizard-intro-card">
-                <span className="wizard-intro-icon">🛡️</span>
-                <h2 className="wizard-intro-title">
-                  {t.challenge_wizard_title || 'Take on an Ability Challenge'}
-                </h2>
-                <p className="wizard-intro-body">
-                  {t.challenge_wizard_body ||
-                    'Select a duration to practice your Resume-Ability. This challenge is about developing consistency and recovery — not avoiding every slip.'}
-                </p>
-              </div>
 
-              {/* Step 1: Choose Ability */}
-              <div className="wizard-step">
-                <h3 className="wizard-step-title">
-                  <span className="step-num">1</span>
-                  {t.challenge_step_ability || 'Choose Ability'}
-                </h3>
-                <div className="ability-selector-grid">
-                  {CHALLENGE_DEFINITIONS.map((def) => {
-                    const isSelected = selectedAbility === def.abilityId;
-                    return (
-                      <button
-                        key={def.id}
-                        className={`ability-select-card ${isSelected ? 'ability-select-card--selected' : ''} ${!def.isActive ? 'ability-select-card--disabled' : ''}`}
-                        onClick={() => {
-                          if (def.isActive) {
-                            setSelectedAbility(def.abilityId);
-                          }
-                        }}
-                        disabled={!def.isActive}
-                      >
-                        <div className="ability-card-top">
-                          <span className="ability-card-name">
-                            {def.canonicalName ||
-                              (def.id === 'resume-ability'
-                                ? (t.challenge_resume_ability_title || 'Resume-Ability')
-                                : def.id.replace(/-/g, ' '))}
+              {/* Cinematic Challenge Introduction Card */}
+              <section className="wizard-intro-card sda-ch-hero-card" aria-labelledby="sda-ch-hero-heading">
+                <img
+                  src="/images/hero-atmosphere.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  className="sda-ch-hero-img"
+                />
+                <div className="sda-ch-hero-scrim" aria-hidden="true" />
+                <div className="sda-ch-hero-content">
+                  <span className="sda-ch-hero-eyebrow">
+                    {t.challenge_hero_eyebrow || 'YOUR NEXT'}
+                  </span>
+                  <h2 id="sda-ch-hero-heading" className="wizard-intro-title sda-ch-hero-title">
+                    {(t.challenge_hero_title || 'CHALLENGE\nSTARTS HERE.')
+                      .split('\n')
+                      .map((line, idx, arr) => (
+                        <React.Fragment key={idx}>
+                          {line}
+                          {idx < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                  </h2>
+                  <span className="sda-ch-hero-bar" aria-hidden="true" />
+                  <p className="wizard-intro-body sda-ch-hero-body">
+                    {t.challenge_hero_body ||
+                      'Practice consistency, recover from slips, and build your Super Diet-Ability.'}
+                  </p>
+                </div>
+              </section>
+
+              <div className="sda-ch-wizard-grid">
+                <div className="sda-ch-col-setup">
+                  {/* Step 01: Choose Ability */}
+                  <section className="wizard-step sda-ch-section" aria-labelledby="heading-choose-ability">
+                    <h3 id="heading-choose-ability" className="wizard-step-title sda-ch-step-heading">
+                      <span className="step-num sda-ch-step-badge">01</span>
+                      <span>{t.challenge_step_ability || 'Choose Ability'}</span>
+                    </h3>
+
+                    {/* Prominent Selected Resume-Ability Card */}
+                    <button
+                      type="button"
+                      id="card-ability-resume-ability"
+                      className={`ability-select-card sda-ch-ability-featured ${
+                        selectedAbility === RESUME_ABILITY_CHALLENGE_DEFINITION.abilityId
+                          ? 'ability-select-card--selected'
+                          : ''
+                      }`}
+                      onClick={() => setSelectedAbility(RESUME_ABILITY_CHALLENGE_DEFINITION.abilityId)}
+                      aria-pressed={selectedAbility === RESUME_ABILITY_CHALLENGE_DEFINITION.abilityId}
+                    >
+                      <span className="sda-ch-ability-icon" aria-hidden="true">
+                        <AppIcon name="layers" size={24} />
+                      </span>
+
+                      <span className="sda-ch-ability-body">
+                        <span className="sda-ch-ability-top">
+                          <span className="ability-card-name sda-ch-ability-name">
+                            {RESUME_ABILITY_CHALLENGE_DEFINITION.canonicalName}
                           </span>
-                          {!def.isActive && (
-                            <span className="ability-coming-soon">{t.challenge_coming_soon || 'Coming Soon'}</span>
-                          )}
-                        </div>
-                        <p className="ability-card-desc">
-                          {def.id === 'resume-ability'
-                            ? (t.challenge_resume_ability_brief || 'Build psychological resilience by recovering immediately whenever life drifts.')
-                            : 'Future Super Diet-Ability.'}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
+                          <span className="sda-ch-available-pill">
+                            {t.challenge_available_now || 'AVAILABLE NOW'}
+                          </span>
+                        </span>
+                        <span className="ability-card-desc sda-ch-ability-desc">
+                          {t.challenge_resume_ability_brief ||
+                            'Build psychological resilience by recovering immediately whenever life drifts.'}
+                        </span>
+                      </span>
 
-                <div className="wizard-seven-abilities-link-wrap">
-                  <button
-                    type="button"
-                    id="btn-wizard-seven-abilities-link"
-                    className="wizard-seven-abilities-link-btn"
-                    onClick={() => onNavigate('seven-abilities')}
-                  >
-                    <AppIcon name="layers" size={16} />
-                    <span>{t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}</span>
-                  </button>
-                </div>
-              </div>
+                      <span className="sda-ch-ability-check" aria-hidden="true">
+                        <AppIcon name="check" size={16} strokeWidth={3} />
+                      </span>
+                    </button>
 
-              {/* Step 2: Choose Duration */}
-              <div className="wizard-step">
-                <h3 className="wizard-step-title">
-                  <span className="step-num">2</span>
-                  {t.challenge_step_duration || 'Choose Duration'}
-                </h3>
-                <div className="duration-selector-row">
-                  {RESUME_ABILITY_CHALLENGE_DEFINITION.supportedDurations.map((d) => {
-                    const isSelected = selectedDuration === d;
-                    return (
+                    {/* Compact Expandable 6 Coming Soon Abilities */}
+                    <div className="sda-ch-more-wrap">
                       <button
-                        key={d}
-                        id={`btn-duration-${d}`}
-                        className={`duration-pill-btn ${isSelected ? 'duration-pill-btn--selected' : ''}`}
-                        onClick={() => setSelectedDuration(d)}
+                        type="button"
+                        id="btn-toggle-coming-soon-abilities"
+                        className={`sda-ch-more-toggle ${showMoreAbilities ? 'sda-ch-more-toggle--open' : ''}`}
+                        onClick={() => setShowMoreAbilities((prev) => !prev)}
+                        aria-expanded={showMoreAbilities}
+                        aria-controls="panel-coming-soon-abilities"
                       >
-                        <span className="duration-pill-num">{d}</span>
-                        <span className="duration-pill-label">
-                          {d === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')}
+                        <span className="sda-ch-more-left">
+                          <span className="sda-ch-cluster-wrap" aria-hidden="true">
+                            <AbilityClusterSvg />
+                          </span>
+                          <span className="sda-ch-more-label">
+                            {t.challenge_more_abilities_label || '6 more Diet-Abilities'}
+                          </span>
+                        </span>
+
+                        <span className="sda-ch-more-right">
+                          <span className="sda-ch-coming-pill">
+                            {(t.challenge_coming_soon || 'Coming Soon').toUpperCase()}
+                          </span>
+                          <span className="sda-ch-more-chevron" aria-hidden="true">
+                            <AppIcon name="chevron-down" size={16} />
+                          </span>
                         </span>
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* Step 3: Keep This Challenge Top of Mind (Phase 41B Reminders) */}
-              <div className="wizard-step">
-                <div className="challenge-reminders-card">
-                  <div className="reminders-card-header">
-                    <h4 className="reminders-section-title">
-                      {t.challenge_reminders_section_title || 'KEEP THIS CHALLENGE TOP OF MIND'}
-                    </h4>
-                    <p className="reminders-section-desc">
-                      {t.challenge_reminders_section_desc ||
-                        'Get gentle reminders during the day to check in, report your status, and reconnect with your Challenge.'}
-                    </p>
-                  </div>
+                      {showMoreAbilities && (
+                        <div id="panel-coming-soon-abilities" className="sda-ch-more-panel">
+                          <div className="ability-selector-grid sda-ch-coming-list">
+                            {comingSoonAbilities.map((def, idx) => {
+                              const canonicalIndex = idx + 2;
+                              const localizedDesc =
+                                (t[def.descriptionKey as keyof typeof t] as string) || '';
+                              return (
+                                <button
+                                  key={def.id}
+                                  type="button"
+                                  id={`card-ability-${def.id}`}
+                                  className="ability-select-card ability-select-card--disabled sda-ch-coming-card"
+                                  disabled
+                                >
+                                  <div className="ability-card-top sda-ch-coming-card-top">
+                                    <span className="sda-ch-coming-title-group">
+                                      <span className="sda-ch-coming-num">0{canonicalIndex}</span>
+                                      <span className="ability-card-name sda-ch-coming-name">
+                                        {def.canonicalName}
+                                      </span>
+                                    </span>
+                                    <span className="ability-coming-soon sda-ch-coming-badge">
+                                      {t.challenge_coming_soon || 'Coming Soon'}
+                                    </span>
+                                  </div>
+                                  {localizedDesc && (
+                                    <p className="ability-card-desc sda-ch-coming-desc">
+                                      {localizedDesc}
+                                    </p>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
 
-                  <div className="reminders-toggle-row">
-                    <label className="reminders-toggle-label" htmlFor="toggle-challenge-reminders">
-                      <input
-                        id="toggle-challenge-reminders"
-                        type="checkbox"
-                        className="reminders-toggle-input"
-                        checked={remindersEnabled}
-                        onChange={(e) => setRemindersEnabled(e.target.checked)}
-                      />
-                      <span>{t.challenge_reminders_toggle_label || 'Challenge Reminders'}</span>
-                    </label>
-                  </div>
+                          <div className="wizard-seven-abilities-link-wrap sda-ch-explore-wrap">
+                            <button
+                              type="button"
+                              id="btn-wizard-seven-abilities-link"
+                              className="wizard-seven-abilities-link-btn sda-ch-explore-btn"
+                              onClick={() => onNavigate('seven-abilities')}
+                            >
+                              <AppIcon name="layers" size={16} />
+                              <span>
+                                {t.seven_abilities_challenge_link || 'Explore the Seven Diet-Abilities →'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
 
-                  {remindersEnabled && (
-                    <div className="reminders-controls">
-                      <div className="reminders-freq-label">
-                        {t.challenge_reminders_frequency_label || 'How often?'}
+                  {/* Step 02: Choose Duration */}
+                  <section className="wizard-step sda-ch-section" aria-labelledby="heading-choose-duration">
+                    <h3 id="heading-choose-duration" className="wizard-step-title sda-ch-step-heading">
+                      <span className="step-num sda-ch-step-badge">02</span>
+                      <span>{t.challenge_step_duration || 'Choose Duration'}</span>
+                    </h3>
+                    <div className="duration-selector-row sda-ch-duration-grid">
+                      {RESUME_ABILITY_CHALLENGE_DEFINITION.supportedDurations.map((d) => {
+                        const isSelected = selectedDuration === d;
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            id={`btn-duration-${d}`}
+                            className={`duration-pill-btn sda-ch-duration-card ${
+                              isSelected ? 'duration-pill-btn--selected sda-ch-duration-card--selected' : ''
+                            }`}
+                            onClick={() => setSelectedDuration(d)}
+                            aria-pressed={isSelected}
+                          >
+                            <span className="duration-pill-num sda-ch-duration-num">{d}</span>
+                            <span className="duration-pill-label sda-ch-duration-unit">
+                              {(d === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')).toUpperCase()}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* Compact Challenge Reminders Control (Phase 41B Preserved) */}
+                  <section className="wizard-step sda-ch-section" aria-labelledby="label-challenge-reminders">
+                    <div
+                      className={`challenge-reminders-card sda-ch-reminders-card ${
+                        remindersEnabled ? 'sda-ch-reminders-card--open' : ''
+                      }`}
+                    >
+                      <div className="sda-ch-reminders-row">
+                        <span className="sda-ch-reminders-bell" aria-hidden="true">
+                          <AppIcon name="bell" size={22} />
+                        </span>
+
+                        <div className="sda-ch-reminders-copy">
+                          <span id="label-challenge-reminders" className="sda-ch-reminders-title">
+                            {t.challenge_reminders_toggle_label || 'Challenge Reminders'}
+                          </span>
+                          <span className="sda-ch-reminders-sub">
+                            {t.challenge_reminders_compact_desc ||
+                              'Get gentle reminders to check in and stay on track.'}
+                          </span>
+                        </div>
+
+                        <label className="sda-ch-switch" htmlFor="toggle-challenge-reminders">
+                          <input
+                            id="toggle-challenge-reminders"
+                            type="checkbox"
+                            role="switch"
+                            aria-checked={remindersEnabled}
+                            aria-labelledby="label-challenge-reminders"
+                            className="reminders-toggle-input sda-ch-switch-input"
+                            checked={remindersEnabled}
+                            onChange={(e) => setRemindersEnabled(e.target.checked)}
+                          />
+                          <span
+                            className={`sda-ch-switch-track ${
+                              remindersEnabled ? 'sda-ch-switch-track--on' : ''
+                            }`}
+                            aria-hidden="true"
+                          >
+                            <span className="sda-ch-switch-knob" />
+                            <span className="sda-ch-switch-state">
+                              {remindersEnabled
+                                ? (t.challenge_reminders_on || 'On')
+                                : (t.challenge_reminders_off_short || 'Off')}
+                            </span>
+                          </span>
+                        </label>
                       </div>
-                      <div className="reminders-freq-grid">
-                        <button
-                          type="button"
-                          id="btn-freq-1x"
-                          className={`reminders-freq-btn ${reminderFrequency === '1x' ? 'reminders-freq-btn--selected' : ''}`}
-                          onClick={() => handleFrequencyChange('1x')}
-                        >
-                          {t.challenge_reminders_freq_1x || 'Once a day'}
-                        </button>
-                        <button
-                          type="button"
-                          id="btn-freq-2x"
-                          className={`reminders-freq-btn ${reminderFrequency === '2x' ? 'reminders-freq-btn--selected' : ''}`}
-                          onClick={() => handleFrequencyChange('2x')}
-                        >
-                          {t.challenge_reminders_freq_2x || 'Twice a day'}
-                        </button>
-                        <button
-                          type="button"
-                          id="btn-freq-3x"
-                          className={`reminders-freq-btn ${reminderFrequency === '3x' ? 'reminders-freq-btn--selected' : ''}`}
-                          onClick={() => handleFrequencyChange('3x')}
-                        >
-                          {t.challenge_reminders_freq_3x || 'Three times a day'}
-                        </button>
-                        <button
-                          type="button"
-                          id="btn-freq-custom"
-                          className={`reminders-freq-btn ${reminderFrequency === 'custom' ? 'reminders-freq-btn--selected' : ''}`}
-                          onClick={() => handleFrequencyChange('custom')}
-                        >
-                          {t.challenge_reminders_freq_custom || 'Custom'}
-                        </button>
-                      </div>
 
-                      <div className="reminders-times-label">
-                        {t.challenge_reminders_times_label || 'Reminder Times'}
-                      </div>
-                      <div className="reminders-times-list">
-                        {reminderTimes.map((time, idx) => (
-                          <div key={idx} className="reminder-time-row">
-                            <span className="reminder-time-index">#{idx + 1}</span>
-                            <input
-                              type="time"
-                              id={`input-reminder-time-${idx}`}
-                              className="reminder-time-input"
-                              value={time}
-                              onChange={(e) => handleTimeChange(idx, e.target.value)}
-                            />
-                            {reminderFrequency === 'custom' && reminderTimes.length > 1 && (
+                      {remindersEnabled && (
+                        <div className="reminders-controls sda-ch-reminders-expanded">
+                          <div className="reminders-freq-label">
+                            {t.challenge_reminders_frequency_label || 'How often?'}
+                          </div>
+                          <div className="reminders-freq-grid">
+                            <button
+                              type="button"
+                              id="btn-freq-1x"
+                              className={`reminders-freq-btn ${
+                                reminderFrequency === '1x' ? 'reminders-freq-btn--selected' : ''
+                              }`}
+                              onClick={() => handleFrequencyChange('1x')}
+                            >
+                              {t.challenge_reminders_freq_1x || 'Once a day'}
+                            </button>
+                            <button
+                              type="button"
+                              id="btn-freq-2x"
+                              className={`reminders-freq-btn ${
+                                reminderFrequency === '2x' ? 'reminders-freq-btn--selected' : ''
+                              }`}
+                              onClick={() => handleFrequencyChange('2x')}
+                            >
+                              {t.challenge_reminders_freq_2x || 'Twice a day'}
+                            </button>
+                            <button
+                              type="button"
+                              id="btn-freq-3x"
+                              className={`reminders-freq-btn ${
+                                reminderFrequency === '3x' ? 'reminders-freq-btn--selected' : ''
+                              }`}
+                              onClick={() => handleFrequencyChange('3x')}
+                            >
+                              {t.challenge_reminders_freq_3x || 'Three times a day'}
+                            </button>
+                            <button
+                              type="button"
+                              id="btn-freq-custom"
+                              className={`reminders-freq-btn ${
+                                reminderFrequency === 'custom' ? 'reminders-freq-btn--selected' : ''
+                              }`}
+                              onClick={() => handleFrequencyChange('custom')}
+                            >
+                              {t.challenge_reminders_freq_custom || 'Custom'}
+                            </button>
+                          </div>
+
+                          <div className="reminders-times-label">
+                            {t.challenge_reminders_times_label || 'Reminder Times'}
+                          </div>
+                          <div className="reminders-times-list">
+                            {reminderTimes.map((time, idx) => (
+                              <div key={idx} className="reminder-time-row">
+                                <span className="reminder-time-index">#{idx + 1}</span>
+                                <input
+                                  type="time"
+                                  id={`input-reminder-time-${idx}`}
+                                  className="reminder-time-input"
+                                  value={time}
+                                  onChange={(e) => handleTimeChange(idx, e.target.value)}
+                                />
+                                {reminderFrequency === 'custom' && reminderTimes.length > 1 && (
+                                  <button
+                                    type="button"
+                                    className="reminder-time-remove-btn"
+                                    onClick={() => handleRemoveCustomTime(idx)}
+                                  >
+                                    {t.challenge_reminders_remove_time || 'Remove'}
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {reminderFrequency === 'custom' && reminderTimes.length < 6 && (
                               <button
                                 type="button"
-                                className="reminder-time-remove-btn"
-                                onClick={() => handleRemoveCustomTime(idx)}
+                                id="btn-add-reminder-time"
+                                className="reminder-time-add-btn"
+                                onClick={handleAddCustomTime}
                               >
-                                {t.challenge_reminders_remove_time || 'Remove'}
+                                {t.challenge_reminders_add_time || '+ Add Time'}
                               </button>
                             )}
                           </div>
-                        ))}
-                        {reminderFrequency === 'custom' && reminderTimes.length < 6 && (
-                          <button
-                            type="button"
-                            id="btn-add-reminder-time"
-                            className="reminder-time-add-btn"
-                            onClick={handleAddCustomTime}
-                          >
-                            {t.challenge_reminders_add_time || '+ Add Time'}
-                          </button>
-                        )}
-                      </div>
 
-                      <p className="reminders-notice">
-                        {t.challenge_reminders_delivery_note ||
-                          'Notification delivery can be enabled after your Challenge starts.'}
+                          <p className="reminders-notice">
+                            {t.challenge_reminders_delivery_note ||
+                              'Notification delivery can be enabled after your Challenge starts.'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Challenge Commitment & Glowing Hold-to-Start Ritual */}
+                <div className="sda-ch-col-commit">
+                  <section
+                    className="wizard-review-card sda-ch-commitment-card"
+                    aria-labelledby="heading-challenge-commitment"
+                  >
+                    <div className="sda-ch-commit-head">
+                      <span className="sda-ch-commit-icon" aria-hidden="true">
+                        <AppIcon name="clipboard-list" size={20} />
+                      </span>
+                      <h3 id="heading-challenge-commitment" className="wizard-review-title sda-ch-commit-title">
+                        {t.challenge_review_heading || 'Challenge Commitment'}
+                      </h3>
+                    </div>
+
+                    <div className="wizard-review-details sda-ch-summary-strip">
+                      <div className="review-detail-row sda-ch-summary-item">
+                        <span className="detail-label">
+                          {t.challenge_selected_ability || 'Ability'}:
+                        </span>
+                        <span className="detail-val">
+                          {RESUME_ABILITY_CHALLENGE_DEFINITION.canonicalName}
+                        </span>
+                      </div>
+                      <div className="review-detail-row sda-ch-summary-item">
+                        <span className="detail-label">
+                          {t.challenge_selected_duration || 'Duration'}:
+                        </span>
+                        <span className="detail-val">
+                          {selectedDuration}{' '}
+                          {selectedDuration === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')}
+                        </span>
+                      </div>
+                      <div className="review-detail-row sda-ch-summary-item">
+                        <span className="detail-label">
+                          {t.challenge_reminders_short_label || 'Reminders'}:
+                        </span>
+                        <span className="detail-val">
+                          {remindersEnabled
+                            ? `${reminderTimes.length}x (${reminderTimes.join(', ')})`
+                            : (t.challenge_reminders_off || 'Off')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="wizard-safety-notice sda-ch-rule-box">
+                      <span className="sda-ch-rule-icon" aria-hidden="true">
+                        i
+                      </span>
+                      <p className="sda-ch-rule-text">
+                        <strong>{t.challenge_important_note || 'Important Rule'}:</strong>{' '}
+                        {t.challenge_rule_explanation ||
+                          'This challenge is about practicing Resume-Ability — not avoiding every slip. When an unexpected situation happens, your practice is to report it honestly and resume your structured eating.'}
                       </p>
                     </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Step 4: Review Challenge & Philosophy */}
-              <div className="wizard-review-card">
-                <h3 className="wizard-review-title">
-                  {t.challenge_review_heading || 'Challenge Commitment'}
-                </h3>
-                <div className="wizard-review-details">
-                  <div className="review-detail-row">
-                    <span className="detail-label">{t.challenge_selected_ability || 'Ability'}:</span>
-                    <span className="detail-val">Resume-Ability</span>
-                  </div>
-                  <div className="review-detail-row">
-                    <span className="detail-label">{t.challenge_selected_duration || 'Duration'}:</span>
-                    <span className="detail-val">{selectedDuration} {selectedDuration === 1 ? 'Day' : 'Days'}</span>
-                  </div>
-                  <div className="review-detail-row">
-                    <span className="detail-label">{t.challenge_reminders_toggle_label || 'Challenge Reminders'}:</span>
-                    <span className="detail-val">
-                      {remindersEnabled
-                        ? `${reminderTimes.length}x (${reminderTimes.join(', ')})`
-                        : (t.challenge_reminders_off || 'Off')}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="wizard-safety-notice">
-                  <p>
-                    <strong>{t.challenge_important_note || 'Important Rule'}:</strong>{' '}
-                    {t.challenge_rule_explanation ||
-                      'This challenge is about practicing Resume-Ability — not avoiding every slip. When an unexpected situation happens, your practice is to report it honestly and resume your structured eating.'}
-                  </p>
-                </div>
-
-                {/* Step 4: Hold to Start Ritual */}
-                <div className="wizard-hold-container">
-                  <HoldCommitButton
-                    variant="commit"
-                    label={t.challenge_hold_to_start || 'HOLD TO START CHALLENGE'}
-                    holdingLabel={t.challenge_starting || 'STARTING CHALLENGE...'}
-                    onComplete={handleStartChallenge}
-                    id="btn-hold-start-challenge"
-                  />
+                    <div className="wizard-hold-container sda-ch-hold-stage">
+                      <div className="sda-ch-hold-waves" aria-hidden="true">
+                        <EnergyWaveSvg side="left" />
+                        <EnergyWaveSvg side="right" />
+                      </div>
+                      <HoldCommitButton
+                        variant="commit"
+                        className="sda-ch-hold-ritual"
+                        label={t.challenge_hold_to_start || 'HOLD TO START CHALLENGE'}
+                        holdingLabel={t.challenge_starting || 'STARTING CHALLENGE...'}
+                        subLabel={t.challenge_hold_sub_commit || 'PRESS AND HOLD TO COMMIT'}
+                        icon={<GoldenBoltSvg />}
+                        onComplete={handleStartChallenge}
+                        id="btn-hold-start-challenge"
+                      />
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>

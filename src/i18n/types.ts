@@ -2234,6 +2234,17 @@ export interface Translations {
   home_quick_coach_full: string;
   home_tools_title: string;
   home_resources_title: string;
+  challenge_header_tagline: string;
+  challenge_hero_eyebrow: string;
+  challenge_hero_title: string;
+  challenge_hero_body: string;
+  challenge_available_now: string;
+  challenge_more_abilities_label: string;
+  challenge_reminders_compact_desc: string;
+  challenge_reminders_on: string;
+  challenge_reminders_off_short: string;
+  challenge_reminders_short_label: string;
+  challenge_hold_sub_commit: string;
 }
 
 
