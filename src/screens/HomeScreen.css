@@ -1046,4 +1046,20 @@
   .sda-home .home-resources-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .sda-home.home-premium {
+    padding-bottom: 128px;
+  }
+  .app-shell:has(.sda-home) .sda-bottom-nav {
+    background: transparent;
+    border-top: none;
+    pointer-events: none;
+  }
+  .app-shell:has(.sda-home) .sda-bottom-nav-list {
+    pointer-events: auto;
+    background: rgba(16, 38, 32, 0.88);
+    border: 1px solid rgba(45, 212, 179, 0.22);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 24px rgba(4, 12, 10, 0.42);
+  }
 }
