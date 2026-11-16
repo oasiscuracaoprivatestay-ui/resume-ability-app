@@ -184,12 +184,14 @@ export default function NotificationSettingsScreen({
         backId="btn-header-back"
         onBack={onBack ? onBack : () => onNavigate('home')}
         title={t.notif_screen_title}
+        subtitle={t.notif_screen_subtitle}
         eyebrow="PREFERENCES"
         showScoreBadge
         onNavigate={onNavigate}
         rightAction={
           <button
             id="btn-header-home"
+            type="button"
             className="sda-premium-header__home-btn"
             onClick={() => onNavigate('home')}
             aria-label="Go home"
@@ -200,9 +202,6 @@ export default function NotificationSettingsScreen({
       />
 
       <div className="notif-settings-content">
-        <div className="notif-settings-heading">
-          <p className="notif-subtitle">{t.notif_screen_subtitle}</p>
-        </div>
 
         {/* ── MASTER TOGGLE ── */}
         <div className="notif-card notif-card--master">

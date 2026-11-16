@@ -79,30 +79,29 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
 
   return (
     <div className="screen sound-haptics-screen">
-      <div className="sound-haptics-inner">
-        <PremiumScreenHeader
-          backId="btn-header-back"
-          onBack={onBack ? onBack : () => onNavigate('settings')}
-          title={t.settings_sound_screen_title}
-          eyebrow="PREFERENCES"
-          showScoreBadge
-          onNavigate={onNavigate}
-          rightAction={
-            <button
-              id="btn-header-home"
-              className="sda-premium-header__home-btn"
-              onClick={() => onNavigate('home')}
-              aria-label="Go home"
-            >
-              ⌂
-            </button>
-          }
-        />
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        onBack={onBack ? onBack : () => onNavigate('settings')}
+        title={t.settings_sound_screen_title}
+        subtitle={t.settings_sound_screen_subtitle}
+        eyebrow="PREFERENCES"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
+      />
 
+      <div className="sound-haptics-inner">
         <div className="sound-haptics-content">
-          <div className="sound-haptics-heading">
-            <p className="sound-haptics-subtitle">{t.settings_sound_screen_subtitle}</p>
-          </div>
 
           {/* Preferences Stack */}
           <div className="sound-card-stack">

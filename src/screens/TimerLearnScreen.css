@@ -4,11 +4,11 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .tl-screen {
-  padding: 0 1.25rem 2.5rem;
+  padding: 0 0 2.5rem;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: radial-gradient(circle at 50% 15%, rgba(6, 78, 59, 0.22) 0%, rgba(4, 11, 9, 0.95) 75%), var(--sda-bg-surface, #040b09);
+  background: radial-gradient(circle at 50% 15%, rgba(6, 78, 59, 0.22) 0%, rgba(4, 11, 9, 0.95) 75%), var(--sda-bg-surface, #071512);
   box-sizing: border-box;
 }
 
@@ -16,9 +16,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.25rem 0 2rem;
+  padding: 1.25rem 1.25rem 2rem;
   gap: 1.5rem;
-  max-width: 480px;
+  max-width: 580px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -165,8 +165,8 @@
 }
 
 @media (max-width: 380px) {
-  .tl-screen {
-    padding: 0 0.85rem 2rem;
+  .tl-content {
+    padding: 1rem 0.9rem 2rem;
   }
   .tl-heading {
     font-size: 1.25rem;

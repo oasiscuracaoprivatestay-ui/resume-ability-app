@@ -10,18 +10,18 @@
   max-width: 100%;
   box-sizing: border-box;
   background:
-    radial-gradient(ellipse at 50% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 90%, rgba(5, 150, 105, 0.08) 0%, transparent 55%),
-    #030706;
-  color: #f0fdf4;
+    radial-gradient(ellipse 85% 30% at 50% 0%, rgba(18, 52, 44, 0.55) 0%, rgba(7, 21, 18, 0) 72%),
+    #071512;
+  color: #f5f7f6;
+  font-family: 'Plus Jakarta Sans', var(--font, system-ui, sans-serif);
 }
 
 .settings-inner {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 1.5rem;
-  max-width: 680px;
+  padding: 1.15rem 1.25rem 0;
+  max-width: 720px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -29,7 +29,7 @@
 
 @media (max-width: 480px) {
   .settings-inner {
-    padding: 0 1rem;
+    padding: 0.95rem 0.9rem 0;
   }
 }
 
@@ -37,8 +37,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: calc(var(--sda-bottom-nav-h, 64px) + 2rem);
+  gap: 1.35rem;
+  padding-bottom: 3rem;
   max-width: 100%;
   box-sizing: border-box;
 }

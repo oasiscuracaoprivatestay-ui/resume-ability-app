@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import TermHelp from '../components/TermHelp';
 import {
   loadPledge,
@@ -27,7 +28,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
   const [showCommitModal, setShowCommitModal] = useState(false);
   const [hasCommittedNN, setHasCommittedNN] = useState(() => hasCommittedNonNegotiables());
 
-  // Direct access focus from Main Menu (e.g. Non-Negotiables button)
+  // Direct access focus from Main Menu / More Sheet (e.g. Non-Negotiables button)
   useEffect(() => {
     try {
       const focus = sessionStorage.getItem('commitment_focus');
@@ -179,27 +180,32 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="screen commit-screen">
+    <div className="screen commit-screen" id="commitment-screen">
+      <PremiumScreenHeader
+        title={t.commit_heading}
+        eyebrow={t.commit_label}
+        onBack={handleBack}
+        backId="btn-header-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        showScoreBadge={true}
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main || 'Go home'}
+          >
+            <AppIcon name="home" size={18} />
+          </button>
+        }
+      />
+
       <div className="commit-inner">
-        <PremiumScreenHeader
-          title={t.commit_heading}
-          eyebrow={t.commit_label}
-          onBack={handleBack}
-          backId="btn-header-back"
-          backAriaLabel={t.global_back || 'Go back'}
-          backText={t.global_back || 'Back'}
-          showScoreBadge={true}
-          onNavigate={onNavigate}
-        />
-
         <div className="commit-content">
-          {/* Heading */}
-          <div className="commit-heading-block">
-            <span className="section-label">{t.commit_label}</span>
-            <h1 className="commit-heading">{t.commit_heading}</h1>
-          </div>
-
-          {/* ════ WHY I'M DOING THIS ════ */}
+          {/* ════ 1. WHY I'M DOING THIS ════ */}
           <section className="commit-section" aria-label={t.commit_why_section} id="section-why">
             <h2 className="commit-section-title">{t.commit_why_section}</h2>
 
@@ -207,7 +213,6 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               {data.reasons.map((reason, idx) => (
                 <div key={idx} className="commit-item">
                   {editReasonIdx === idx ? (
-                    /* ── Edit mode ── */
                     <div className="commit-item-edit">
                       <input
                         id={`reason-edit-${idx}`}
@@ -224,12 +229,14 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                       />
                       <div className="commit-item-actions">
                         <button
+                          type="button"
                           className="commit-btn commit-btn--save"
                           onClick={() => saveReason(idx)}
                         >
                           {t.commit_save}
                         </button>
                         <button
+                          type="button"
                           className="commit-btn commit-btn--cancel"
                           onClick={() => setEditReasonIdx(null)}
                         >
@@ -238,26 +245,27 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                       </div>
                     </div>
                   ) : (
-                    /* ── Display mode ── */
                     <div className="commit-item-row">
-                      <span className="commit-reason-dot" aria-hidden="true">◉</span>
+                      <span className="commit-reason-dot" aria-hidden="true" />
                       <span className="commit-item-text">{reason}</span>
                       <div className="commit-item-controls">
                         <button
+                          type="button"
                           className="commit-icon-btn"
                           onClick={() => startEditReason(idx)}
                           aria-label={`${t.commit_edit}: ${reason}`}
                           title={t.commit_edit}
                         >
-                          ✎
+                          <AppIcon name="pencil" size={15} />
                         </button>
                         <button
+                          type="button"
                           className="commit-icon-btn commit-icon-btn--delete"
                           onClick={() => deleteReason(idx)}
                           aria-label={`${t.commit_delete}: ${reason}`}
                           title={t.commit_delete}
                         >
-                          ✕
+                          <AppIcon name="trash-2" size={15} />
                         </button>
                       </div>
                     </div>
@@ -265,7 +273,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                 </div>
               ))}
 
-              {/* ── Add reason ── */}
+              {/* Add reason */}
               {addingReason ? (
                 <div className="commit-item-add">
                   <input
@@ -283,10 +291,10 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                     aria-label="New reason"
                   />
                   <div className="commit-item-actions">
-                    <button className="commit-btn commit-btn--save" onClick={commitAddReason}>
+                    <button type="button" className="commit-btn commit-btn--save" onClick={commitAddReason}>
                       {t.commit_save}
                     </button>
-                    <button className="commit-btn commit-btn--cancel" onClick={cancelAddReason}>
+                    <button type="button" className="commit-btn commit-btn--cancel" onClick={cancelAddReason}>
                       {t.commit_cancel}
                     </button>
                   </div>
@@ -294,6 +302,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               ) : (
                 <button
                   id="btn-add-reason"
+                  type="button"
                   className="commit-add-btn"
                   onClick={() => { setAddingReason(true); setEditReasonIdx(null); }}
                 >
@@ -303,7 +312,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
             </div>
           </section>
 
-          {/* ════ NON-NEGOTIABLES ════ */}
+          {/* ════ 2. MY NON-NEGOTIABLES ════ */}
           <section className="commit-section" aria-label={t.commit_nn_section} id="section-non-negotiables">
             <div className="commit-section-header">
               <div className="commit-title-row">
@@ -321,7 +330,6 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               {data.nonNegotiables.map((nn, idx) => (
                 <div key={idx} className="commit-item">
                   {editNNIdx === idx ? (
-                    /* ── Edit mode ── */
                     <div className="commit-item-edit">
                       <input
                         id={`nn-edit-${idx}`}
@@ -338,12 +346,14 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                       />
                       <div className="commit-item-actions">
                         <button
+                          type="button"
                           className="commit-btn commit-btn--save"
                           onClick={() => saveNN(idx)}
                         >
                           {t.commit_save}
                         </button>
                         <button
+                          type="button"
                           className="commit-btn commit-btn--cancel"
                           onClick={() => setEditNNIdx(null)}
                         >
@@ -352,26 +362,27 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                       </div>
                     </div>
                   ) : (
-                    /* ── Display mode ── */
                     <div className="commit-item-row">
                       <span className="commit-nn-number" aria-hidden="true">{idx + 1}</span>
                       <span className="commit-item-text">{nn}</span>
                       <div className="commit-item-controls">
                         <button
+                          type="button"
                           className="commit-icon-btn"
                           onClick={() => startEditNN(idx)}
                           aria-label={`${t.commit_edit}: ${nn}`}
                           title={t.commit_edit}
                         >
-                          ✎
+                          <AppIcon name="pencil" size={15} />
                         </button>
                         <button
+                          type="button"
                           className="commit-icon-btn commit-icon-btn--delete"
                           onClick={() => deleteNN(idx)}
                           aria-label={`${t.commit_delete}: ${nn}`}
                           title={t.commit_delete}
                         >
-                          ✕
+                          <AppIcon name="trash-2" size={15} />
                         </button>
                       </div>
                     </div>
@@ -379,7 +390,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                 </div>
               ))}
 
-              {/* ── Add / limit ── */}
+              {/* Add / limit */}
               {nnAtLimit ? (
                 <p className="commit-limit-msg" role="status">{t.commit_nn_limit_reached}</p>
               ) : addingNN ? (
@@ -399,10 +410,10 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
                     aria-label="New non-negotiable"
                   />
                   <div className="commit-item-actions">
-                    <button className="commit-btn commit-btn--save" onClick={commitAddNN}>
+                    <button type="button" className="commit-btn commit-btn--save" onClick={commitAddNN}>
                       {t.commit_save}
                     </button>
-                    <button className="commit-btn commit-btn--cancel" onClick={cancelAddNN}>
+                    <button type="button" className="commit-btn commit-btn--cancel" onClick={cancelAddNN}>
                       {t.commit_cancel}
                     </button>
                   </div>
@@ -410,6 +421,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               ) : (
                 <button
                   id="btn-add-nn"
+                  type="button"
                   className="commit-add-btn"
                   onClick={() => { setAddingNN(true); setEditNNIdx(null); }}
                 >
@@ -418,71 +430,96 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               )}
             </div>
 
-            {/* ── Non-Negotiables Commitment Action (Task 2) ── */}
+            {/* Non-Negotiables Commitment Action */}
             {data.nonNegotiables.length > 0 ? (
               <div className="commit-nn-action-wrap">
                 <button
                   id="btn-commit-nn"
+                  type="button"
                   className="commit-nn-btn"
                   onClick={() => setShowCommitModal(true)}
                   aria-label={hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}
                 >
-                  <span className="commit-nn-btn-icon" aria-hidden="true">⚡</span>
+                  <AppIcon name="zap" size={18} />
                   <span>{hasCommittedNN ? t.nn_recommit_btn : t.nn_commit_btn}</span>
                 </button>
               </div>
             ) : (
               <div className="commit-nn-empty-notice" role="note">
                 <p className="commit-nn-empty-text">{t.nn_commit_empty_hint}</p>
-                {!addingNN && (
-                  <button
-                    id="btn-empty-add-nn"
-                    className="commit-nn-empty-btn"
-                    onClick={() => {
-                      setAddingNN(true);
-                      setEditNNIdx(null);
-                    }}
-                  >
-                    + {t.nn_commit_empty_add_btn}
-                  </button>
-                )}
               </div>
             )}
           </section>
 
-          {/* ════ STRUCTURED DIET ENTRY ════ */}
+          {/* ════ 3. MY SLIPPERY ZONES ENTRY ════ */}
+          <section className="commit-section commit-section--sz" aria-label={t.my_commitments_card_sz_title}>
+            <h2 className="commit-section-title">{t.my_commitments_card_sz_title}</h2>
+            <p className="commit-diet-hint">{t.my_commitments_card_sz_desc}</p>
+            <button
+              id="btn-commit-slippery-zones"
+              type="button"
+              className="commit-diet-btn"
+              onClick={() => onNavigate('my-slippery-zones')}
+            >
+              <span className="commit-diet-btn-left">
+                <span className="commit-diet-btn-icon commit-diet-btn-icon--amber" aria-hidden="true">
+                  <AppIcon name="alert-triangle" size={18} />
+                </span>
+                <span>{t.my_commitments_card_sz_title}</span>
+              </span>
+              <span className="commit-diet-btn-arrow" aria-hidden="true">
+                <AppIcon name="chevron-right" size={18} />
+              </span>
+            </button>
+          </section>
+
+          {/* ════ 4. STRUCTURED DIET ENTRY ════ */}
           <section className="commit-section commit-section--diet" aria-label={t.sdb_label}>
             <h2 className="commit-section-title">{t.sdb_label}</h2>
             <p className="commit-diet-hint">{t.sdb_commit_hint}</p>
             <button
               id="btn-structured-diet"
+              type="button"
               className="commit-diet-btn"
               onClick={() => onNavigate('structured-diet')}
             >
-              <span className="commit-diet-btn-icon">🥗</span>
-              <span>{t.sdb_open_builder}</span>
-              <span className="commit-diet-btn-arrow">›</span>
+              <span className="commit-diet-btn-left">
+                <span className="commit-diet-btn-icon" aria-hidden="true">
+                  <AppIcon name="utensils" size={18} />
+                </span>
+                <span>{t.sdb_open_builder}</span>
+              </span>
+              <span className="commit-diet-btn-arrow" aria-hidden="true">
+                <AppIcon name="chevron-right" size={18} />
+              </span>
             </button>
           </section>
 
-          {/* ════ REMINDERS ENTRY ════ */}
+          {/* ════ 5. SMART REMINDERS ENTRY ════ */}
           <section className="commit-section commit-section--reminders" aria-label={t.commit_reminders_label}>
             <h2 className="commit-section-title">{t.commit_reminders_label}</h2>
             <p className="commit-diet-hint">{t.commit_reminders_desc}</p>
             <button
               id="btn-reminders-settings"
+              type="button"
               className="commit-diet-btn"
               onClick={() => onNavigate('notification-settings')}
             >
-              <span className="commit-diet-btn-icon">🔔</span>
-              <span>{t.commit_reminders_btn}</span>
-              <span className="commit-diet-btn-arrow">›</span>
+              <span className="commit-diet-btn-left">
+                <span className="commit-diet-btn-icon" aria-hidden="true">
+                  <AppIcon name="bell" size={18} />
+                </span>
+                <span>{t.commit_reminders_btn}</span>
+              </span>
+              <span className="commit-diet-btn-arrow" aria-hidden="true">
+                <AppIcon name="chevron-right" size={18} />
+              </span>
             </button>
           </section>
 
-          {/* ════ DATA & STATISTICS ════ */}
+          {/* ════ 6. DATA & STATISTICS (SEPARATED DESTRUCTIVE ZONE) ════ */}
           <section className="commit-section commit-section--data-stats" aria-label={t.stats_section_title}>
-            <h2 className="commit-section-title">{t.stats_section_title}</h2>
+            <h2 className="commit-section-title commit-section-title--danger">{t.stats_section_title}</h2>
             <p className="commit-diet-hint">{t.stats_reset_section_desc}</p>
             <button
               id="btn-reset-all-stats"
@@ -490,12 +527,12 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               className="commit-reset-stats-btn"
               onClick={() => setShowResetModal(true)}
             >
-              <span className="commit-reset-stats-icon" aria-hidden="true">↺</span>
+              <AppIcon name="rotate-ccw" size={16} />
               <span>{t.stats_reset_btn}</span>
             </button>
           </section>
 
-          {/* Cancel / Return to Main Menu Action (Phase 29B) */}
+          {/* Return to Main Menu Action */}
           <div className="recommit-cancel-wrap">
             <button
               id="btn-commitment-cancel"
@@ -504,7 +541,8 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
               onClick={() => onNavigate('home')}
               aria-label={t.btn_return_to_main}
             >
-              ✕ {t.btn_return_to_main}
+              <AppIcon name="home" size={16} />
+              <span>{t.btn_return_to_main}</span>
             </button>
           </div>
         </div>
@@ -519,7 +557,7 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
         }}
       />
 
-      {/* ── Non-Negotiables Commit Modal ── */}
+      {/* Non-Negotiables Commit Modal */}
       <NonNegotiablesCommitModal
         isOpen={showCommitModal}
         nonNegotiables={data.nonNegotiables}
@@ -530,4 +568,3 @@ export default function CommitmentScreen({ onNavigate, onBack }: CommitmentScree
     </div>
   );
 }
-

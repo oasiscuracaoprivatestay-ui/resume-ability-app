@@ -15,8 +15,24 @@
 }
 
 /* Wide canvas on desktop for responsive shell if expanded */
-#root:has(.home-premium) .sda-persistent-bar-wrapper {
-  max-width: 1120px;
+#root:has(.home-premium) .sda-persistent-bar-wrapper,
+#root:has(.sda-premium-header) .sda-persistent-bar-wrapper,
+#root:has(.pv-screen) .sda-persistent-bar-wrapper,
+#root:has(.sdb-screen) .sda-persistent-bar-wrapper {
+  max-width: 100%;
+}
+
+/* Keep sticky screen headers cleanly offset below PersistentChallengeBar */
+.app-shell:has(.sda-persistent-bar--expanded) .sda-premium-header,
+.app-shell:has(.sda-persistent-bar--expanded) .sdb-header-topbar,
+.app-shell:has(.sda-persistent-bar--expanded) .pv-topbar {
+  top: 44px;
+}
+
+.app-shell:has(.sda-persistent-bar--minimized) .sda-premium-header,
+.app-shell:has(.sda-persistent-bar--minimized) .sdb-header-topbar,
+.app-shell:has(.sda-persistent-bar--minimized) .pv-topbar {
+  top: 28px;
 }
 
 .sda-persistent-bar {

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import type { Screen } from '../types';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import PremiumInfoModal from '../components/PremiumInfoModal';
 import { hasPremiumAccess } from '../utils/entitlements';
 import {
@@ -105,10 +106,12 @@ export default function MotivationalTextScreen({
   };
 
   return (
-    <div className="screen motivational-text-screen">
+    <div className="screen motivational-text-screen" id="motivational-text-screen">
       <PremiumScreenHeader
         backId="btn-header-back"
         onBack={onBack}
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Go back'}
         title={t.motivational_text_label}
         eyebrow="MINDSET RESET"
         showScoreBadge
@@ -116,17 +119,17 @@ export default function MotivationalTextScreen({
         rightAction={
           <button
             id="btn-header-home"
+            type="button"
             className="sda-premium-header__home-btn"
             onClick={() => onNavigate('home')}
-            aria-label="Go home"
+            aria-label={t.btn_return_to_main || 'Go home'}
           >
-            ⌂
+            <AppIcon name="home" size={18} />
           </button>
         }
       />
 
       <div className="motivational-text-content">
-        {/* Glow backdrop effects */}
         <div className="text-glow-top" aria-hidden="true" />
         <div className="text-glow-bottom" aria-hidden="true" />
 
@@ -134,6 +137,7 @@ export default function MotivationalTextScreen({
         <div className="mot-reading-view-toggle" role="tablist" aria-label={t.mot_reading_lib_title}>
           <button
             id="tab-reading-quick"
+            type="button"
             role="tab"
             aria-selected={activeView === 'quick'}
             className={`mot-reading-tab${activeView === 'quick' ? ' mot-reading-tab--active' : ''}`}
@@ -143,6 +147,7 @@ export default function MotivationalTextScreen({
           </button>
           <button
             id="tab-reading-library"
+            type="button"
             role="tab"
             aria-selected={activeView === 'library'}
             className={`mot-reading-tab${activeView === 'library' ? ' mot-reading-tab--active' : ''}`}
@@ -155,7 +160,7 @@ export default function MotivationalTextScreen({
         {activeView === 'quick' ? (
           <div className="motivational-text-card">
             <div className="motivational-text-badge">
-              <span className="motivational-text-badge-icon" aria-hidden="true">✦</span>
+              <AppIcon name="sparkles" size={14} />
               <span className="motivational-text-badge-label">{t.motivational_text_label}</span>
             </div>
 
@@ -166,24 +171,27 @@ export default function MotivationalTextScreen({
             <div className="motivational-text-actions">
               <button
                 id="btn-text-next"
+                type="button"
                 className="btn btn-secondary motivational-text-btn-next"
                 onClick={handleShowAnother}
               >
-                <span>↻</span>
+                <AppIcon name="rotate-ccw" size={16} />
                 <span>{t.motivational_text_btn_next}</span>
               </button>
 
               <button
                 id="btn-text-back"
+                type="button"
                 className="btn btn-secondary motivational-text-btn-back"
                 onClick={onBack}
               >
-                <span>←</span>
+                <AppIcon name="arrow-left" size={16} />
                 <span>{t.motivational_text_btn_back}</span>
               </button>
 
               <button
                 id="btn-text-home"
+                type="button"
                 className="btn btn-primary btn-large motivational-text-btn-home"
                 onClick={handleReturnHome}
               >
@@ -199,6 +207,7 @@ export default function MotivationalTextScreen({
                 <button
                   key={item.id}
                   id={`btn-read-${item.id}`}
+                  type="button"
                   role="listitem"
                   className={`mot-reading-item${isLocked ? ' mot-reading-item--locked' : ''}`}
                   onClick={() => handleSelectLibraryItem(item)}
@@ -209,7 +218,7 @@ export default function MotivationalTextScreen({
                     {isLocked ? (
                       <span className="prem-badge-chip">
                         <span className="prem-chip-icon" aria-hidden="true">🔒</span>
-                        {t.prem_badge}
+                        <span>{t.prem_badge}</span>
                       </span>
                     ) : (
                       <span className="free-badge-chip">{t.prem_free_badge}</span>
@@ -222,7 +231,7 @@ export default function MotivationalTextScreen({
                       <span>{t.prem_info_title}</span>
                     </div>
                   ) : (
-                    <p className="mot-reading-item-snippet">{item.body.slice(0, 110)}...</p>
+                    <p className="mot-reading-item-snippet">{item.body.slice(0, 115)}…</p>
                   )}
                 </button>
               );

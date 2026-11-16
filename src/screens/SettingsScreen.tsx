@@ -48,32 +48,29 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
 
   return (
     <div className="screen settings-screen">
+      <PremiumScreenHeader
+        backId="btn-header-back"
+        onBack={onBack ? onBack : () => onNavigate('home')}
+        title={t.settings_title}
+        subtitle={t.settings_subtitle}
+        eyebrow="PREFERENCES"
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label="Go home"
+          >
+            ⌂
+          </button>
+        }
+      />
+
       <div className="settings-inner">
-        <PremiumScreenHeader
-          backId="btn-header-back"
-          onBack={onBack ? onBack : () => onNavigate('home')}
-          title={t.settings_title}
-          eyebrow="PREFERENCES"
-          showScoreBadge
-          onNavigate={onNavigate}
-          rightAction={
-            <button
-              id="btn-header-home"
-              className="sda-premium-header__home-btn"
-              onClick={() => onNavigate('home')}
-              aria-label="Go home"
-            >
-              ⌂
-            </button>
-          }
-        />
-
         <div className="settings-content">
-          {/* Heading */}
-          <div className="settings-heading">
-            <p className="settings-subtitle">{t.settings_subtitle}</p>
-          </div>
-
           {/* Toast Notification */}
           {toastMessage && (
             <div className="settings-toast" role="status" aria-live="polite">

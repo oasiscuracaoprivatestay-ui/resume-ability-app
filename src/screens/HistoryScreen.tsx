@@ -11,7 +11,8 @@ import {
 import type { HistoryRange } from '../utils';
 import { useTranslation } from '../i18n';
 import type { Translations } from '../i18n';
-import ScreenHeader from '../components/ScreenHeader';
+import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import './HistoryScreen.css';
 
 // ── Helpers ──
@@ -142,49 +143,89 @@ export default function HistoryScreen({ onNavigate, onBack }: HistoryScreenProps
   }, []);
 
   return (
-    <div className="screen history-screen">
-      <ScreenHeader
+    <div className="screen history-screen" id="history-screen">
+      <PremiumScreenHeader
+        title={t.hist_heading}
+        eyebrow={t.hist_label}
         onBack={onBack ? onBack : () => onNavigate('home')}
-        onHome={() => onNavigate('home')}
+        backId="btn-header-back"
+        backAriaLabel={t.global_back || 'Go back'}
+        backText={t.global_back || 'Back'}
+        showScoreBadge
+        onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main || 'Go home'}
+          >
+            <AppIcon name="home" size={18} />
+          </button>
+        }
       />
 
       <div className="history-content">
-        <div className="history-heading">
-          <span className="section-label">{t.hist_label}</span>
-          <h2 className="section-heading">{t.hist_heading}</h2>
-        </div>
+        {/* ── Filter Controls Surface ── */}
+        <div className="hist-controls-card">
+          {/* Range selector */}
+          <div className="hist-range-bar" role="group" aria-label={t.hist_label}>
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                id={`btn-hist-range-${r}`}
+                type="button"
+                className={`hist-range-pill${range === r ? ' hist-range-pill--active' : ''}`}
+                aria-pressed={range === r}
+                onClick={() => setRange(r)}
+              >
+                {t[RANGE_KEYS[r]] as string}
+              </button>
+            ))}
+          </div>
 
-        {/* ── Range selector ── */}
-        <div className="hist-range-bar">
-          {RANGES.map((r) => (
+          {/* Tab selector */}
+          <div className="hist-tab-bar" role="tablist">
             <button
-              key={r}
-              className={`hist-range-pill${range === r ? ' hist-range-pill--active' : ''}`}
-              onClick={() => setRange(r)}
+              id="btn-hist-tab-summary"
+              type="button"
+              role="tab"
+              aria-selected={tab === 'summary'}
+              className={`hist-tab${tab === 'summary' ? ' hist-tab--active' : ''}`}
+              onClick={() => setTab('summary')}
             >
-              {t[RANGE_KEYS[r]] as string}
+              {t.hist_tab_summary}
             </button>
-          ))}
-        </div>
-
-        {/* ── Tab selector ── */}
-        <div className="hist-tab-bar">
-          <button
-            className={`hist-tab${tab === 'summary' ? ' hist-tab--active' : ''}`}
-            onClick={() => setTab('summary')}
-          >
-            {t.hist_tab_summary}
-          </button>
-          <button
-            className={`hist-tab${tab === 'log' ? ' hist-tab--active' : ''}`}
-            onClick={() => setTab('log')}
-          >
-            {t.hist_tab_log}
-          </button>
+            <button
+              id="btn-hist-tab-log"
+              type="button"
+              role="tab"
+              aria-selected={tab === 'log'}
+              className={`hist-tab${tab === 'log' ? ' hist-tab--active' : ''}`}
+              onClick={() => setTab('log')}
+            >
+              {t.hist_tab_log}
+            </button>
+          </div>
         </div>
 
         {totalSlips === 0 ? (
-          <p className="history-empty">{t.hist_empty}</p>
+          <div className="history-empty-card" id="history-empty-card">
+            <span className="history-empty-icon" aria-hidden="true">
+              <AppIcon name="history" size={26} />
+            </span>
+            <p className="history-empty">{t.hist_empty}</p>
+            <button
+              id="btn-hist-empty-home"
+              type="button"
+              className="hist-empty-home-btn"
+              onClick={() => onNavigate('home')}
+            >
+              <AppIcon name="home" size={16} />
+              <span>{t.btn_return_to_main || 'Return to Main Menu'}</span>
+            </button>
+          </div>
         ) : tab === 'summary' ? (
           /* ── Summary view ── */
           <div className="hist-summary">
@@ -202,8 +243,8 @@ export default function HistoryScreen({ onNavigate, onBack }: HistoryScreenProps
                 </span>
                 <span className="hist-stat-label">{t.hist_avg_recovery}</span>
               </div>
-              <div className="hist-stat-card">
-                <span className="hist-stat-value">
+              <div className="hist-stat-card hist-stat-card--wide">
+                <span className="hist-stat-value hist-stat-value--context">
                   {mostCommon
                     ? `${getContextIcon(mostCommon)} ${getContextLabel(t, mostCommon)}`
                     : '—'}
@@ -305,34 +346,55 @@ export default function HistoryScreen({ onNavigate, onBack }: HistoryScreenProps
 
         {/* ── Footer actions ── */}
         <div className="hist-footer">
-          <button className="hist-footer-btn" onClick={handleRefresh}>
-            {t.hist_refresh}
+          <button
+            id="btn-hist-refresh"
+            type="button"
+            className="hist-footer-btn"
+            onClick={handleRefresh}
+          >
+            <AppIcon name="rotate-ccw" size={15} />
+            <span>{t.hist_refresh}</span>
           </button>
           <button
+            id="btn-hist-clear"
+            type="button"
             className="hist-footer-btn hist-footer-btn--danger"
             onClick={() => setShowClearConfirm(true)}
           >
-            {t.hist_clear}
+            <AppIcon name="trash-2" size={15} />
+            <span>{t.hist_clear}</span>
           </button>
         </div>
 
         {/* ── Clear confirmation modal ── */}
         {showClearConfirm && (
-          <div className="hist-modal-overlay" onClick={() => setShowClearConfirm(false)}>
+          <div
+            className="hist-modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setShowClearConfirm(false)}
+          >
             <div className="hist-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="hist-modal-icon" aria-hidden="true">
+                <AppIcon name="alert-triangle" size={24} />
+              </div>
               <p className="hist-modal-text">{t.hist_clear_confirm}</p>
               <div className="hist-modal-actions">
                 <button
-                  className="hist-modal-btn hist-modal-btn--danger"
-                  onClick={handleClear}
-                >
-                  {t.hist_clear_yes}
-                </button>
-                <button
+                  id="btn-hist-clear-cancel"
+                  type="button"
                   className="hist-modal-btn"
                   onClick={() => setShowClearConfirm(false)}
                 >
                   {t.hist_clear_no}
+                </button>
+                <button
+                  id="btn-hist-clear-confirm"
+                  type="button"
+                  className="hist-modal-btn hist-modal-btn--danger"
+                  onClick={handleClear}
+                >
+                  {t.hist_clear_yes}
                 </button>
               </div>
             </div>

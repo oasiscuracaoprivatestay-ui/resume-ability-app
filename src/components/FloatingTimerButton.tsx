@@ -37,6 +37,10 @@ const HIDDEN_ON: Screen[] = [
   'ability-detail',
   'quiz',
   'timer-learn',
+  'history',
+  'sound-haptics',
+  'challenges',
+  'premium',
 ];
 
 interface FloatingTimerButtonProps {

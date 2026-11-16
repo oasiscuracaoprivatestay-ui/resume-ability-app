@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { playFeedback } from '../utils/feedback';
@@ -136,10 +137,13 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
     }
   };
 
+  const addNnLabel = (t.commit_nn_add || '+ Add Non-Negotiables').replace(/^\+\s*\+\s*/, '+ ');
+
   return (
     <div className="screen my-slippery-zones-screen" id="my-slippery-zones-screen">
       <PremiumScreenHeader
         title={t.sz_screen_title}
+        subtitle={t.sz_screen_subtitle}
         eyebrow="AWARENESS & TRIGGERS"
         onBack={() => onNavigate('my-commitments')}
         backId="btn-header-back"
@@ -147,19 +151,25 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
         backText={t.global_back || 'Back'}
         showScoreBadge={true}
         onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main || 'Go home'}
+          >
+            <AppIcon name="home" size={18} />
+          </button>
+        }
       />
 
       <div className="sz-screen-content">
-        <div className="sz-screen-header">
-          <h1 className="sz-screen-title">{t.sz_screen_title}</h1>
-          <p className="sz-screen-sub">{t.sz_screen_subtitle}</p>
-        </div>
-
         {/* 1. Review Introduction / Awareness Shield Banner */}
-        <div className="sz-awareness-card" id="sz-awareness-card">
+        <section className="sz-awareness-card" id="sz-awareness-card">
           <div className="sz-awareness-header">
             <span className="sz-awareness-icon" aria-hidden="true">
-              🛡️
+              <AppIcon name="shield" size={20} />
             </span>
             <p className="sz-awareness-text">{t.sz_awareness_banner}</p>
           </div>
@@ -168,14 +178,14 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               <span className="sz-stat-dot" aria-hidden="true" />
               <span>{formatLastReviewed(data.lastReviewedAt, t)}</span>
             </div>
-            <div className="sz-stat-badge" id="sz-stat-review-count">
+            <div className="sz-stat-badge sz-stat-badge--accent" id="sz-stat-review-count">
               <span>{t.sz_reviews_count.replace('{count}', String(data.reviewCount || 0))}</span>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* 2. WHY / COMMITMENT CONTEXT */}
-        <div className="sz-why-card" id="sz-why-card">
+        <section className="sz-why-card" id="sz-why-card">
           <div className="sz-why-header">
             <span className="sz-why-label">{t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}</span>
             <button
@@ -185,16 +195,16 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               onClick={() => onNavigate('commitment')}
               aria-label={`${t.pledge_why_manage} ${t.pledge_why_title}`}
             >
-              {t.commit_why_link || 'Manage'} ›
+              {t.commit_why_link || 'Manage →'}
             </button>
           </div>
           <p className={`sz-why-text ${firstReason ? '' : 'sz-why-text--empty'}`}>
             {firstReason || t.commit_why_empty || 'No Why specified yet.'}
           </p>
-        </div>
+        </section>
 
         {/* 3. NON-NEGOTIABLES REVIEW SECTION (INDIVIDUALLY CHECKABLE) */}
-        <div className="sz-nn-review-section" id="sz-nn-review-section">
+        <section className="sz-nn-review-section" id="sz-nn-review-section">
           <div className="sz-nn-header">
             <div className="sz-nn-header-text">
               <h2 className="sz-nn-title">{t.review_nn_section_title || 'NON-NEGOTIABLES REVIEW'}</h2>
@@ -203,7 +213,10 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               </p>
             </div>
             {nonNegotiables.length > 0 && (
-              <span className="sz-nn-progress-badge" id="sz-nn-progress-badge">
+              <span
+                className={`sz-nn-progress-badge ${allChecked ? 'sz-nn-progress-badge--complete' : ''}`}
+                id="sz-nn-progress-badge"
+              >
                 {t.nn_review_progress_status
                   ? t.nn_review_progress_status
                       .replace('{checked}', String(checkedCount))
@@ -222,9 +235,14 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
                 type="button"
                 className="btn-sz-add-nn"
                 id="btn-sz-add-nn"
-                onClick={() => onNavigate('commitment')}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('commitment_focus', 'nn');
+                  } catch {}
+                  onNavigate('commitment');
+                }}
               >
-                + {t.commit_nn_add || 'Add Non-Negotiables'}
+                {addNnLabel}
               </button>
             </div>
           ) : (
@@ -246,77 +264,76 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* 4. SLIPPERY ZONES SECTION */}
-        <div className="sz-list-header">
-          <h2 className="sz-list-title">{t.my_commitments_card_sz_title}</h2>
-          <button
-            type="button"
-            className="btn-add-sz"
-            id="btn-add-slippery-zone"
-            onClick={handleOpenAddModal}
-          >
-            {t.sz_add_zone_btn}
-          </button>
-        </div>
-
-        {/* Existing Slippery Zone List */}
-        <div className="sz-zones-list" id="sz-zones-list">
-          {data.zones.length === 0 ? (
-            <div className="sz-empty-state" id="sz-empty-state">
-              <span className="sz-empty-icon" aria-hidden="true">
-                📝
-              </span>
-              <h3 className="sz-empty-title">{t.sz_empty_title}</h3>
-              <p className="sz-empty-desc">{t.sz_empty_desc}</p>
-              <button
-                type="button"
-                className="btn-empty-add-sz"
-                id="btn-empty-add-slippery-zone"
-                onClick={handleOpenAddModal}
-              >
-                {t.sz_add_zone_btn}
-              </button>
+        <section className="sz-zones-section" aria-labelledby="sz-list-heading">
+          <div className="sz-list-header">
+            <div className="sz-list-title-wrap">
+              <h2 id="sz-list-heading" className="sz-list-title">
+                {t.my_commitments_card_sz_title}
+              </h2>
+              <span className="sz-zones-count">{data.zones.length}</span>
             </div>
-          ) : (
-            data.zones.map((zone: PersonalSlipperyZone, index: number) => (
-              <div key={zone.id} className="sz-zone-card" id={`sz-zone-card-${zone.id}`}>
-                <div className="sz-zone-num" aria-hidden="true">
-                  {index + 1}
-                </div>
-                <div className="sz-zone-body">
-                  <p className="sz-zone-title">{zone.title}</p>
-                </div>
-                <div className="sz-zone-actions">
-                  <button
-                    type="button"
-                    className="sz-action-btn sz-action-edit"
-                    id={`btn-edit-sz-${zone.id}`}
-                    onClick={() => handleOpenEditModal(zone)}
-                    aria-label={`${t.sz_edit_btn}: ${zone.title}`}
-                    title={t.sz_edit_btn}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    type="button"
-                    className="sz-action-btn sz-action-delete"
-                    id={`btn-delete-sz-${zone.id}`}
-                    onClick={() => setZoneToDelete(zone)}
-                    aria-label={`${t.sz_delete_btn}: ${zone.title}`}
-                    title={t.sz_delete_btn}
-                  >
-                    🗑️
-                  </button>
-                </div>
+            <button
+              type="button"
+              className="btn-add-sz"
+              id="btn-add-slippery-zone"
+              onClick={handleOpenAddModal}
+            >
+              {t.sz_add_zone_btn}
+            </button>
+          </div>
+
+          {/* Existing Slippery Zone List */}
+          <div className="sz-zones-list" id="sz-zones-list">
+            {data.zones.length === 0 ? (
+              <div className="sz-empty-state" id="sz-empty-state">
+                <span className="sz-empty-icon" aria-hidden="true">
+                  <AppIcon name="alert-triangle" size={24} />
+                </span>
+                <h3 className="sz-empty-title">{t.sz_empty_title}</h3>
+                <p className="sz-empty-desc">{t.sz_empty_desc}</p>
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              data.zones.map((zone: PersonalSlipperyZone, index: number) => (
+                <div key={zone.id} className="sz-zone-card" id={`sz-zone-card-${zone.id}`}>
+                  <div className="sz-zone-num" aria-hidden="true">
+                    {index + 1}
+                  </div>
+                  <div className="sz-zone-body">
+                    <p className="sz-zone-title">{zone.title}</p>
+                  </div>
+                  <div className="sz-zone-actions">
+                    <button
+                      type="button"
+                      className="sz-action-btn sz-action-edit"
+                      id={`btn-edit-sz-${zone.id}`}
+                      onClick={() => handleOpenEditModal(zone)}
+                      aria-label={`${t.sz_edit_btn}: ${zone.title}`}
+                      title={t.sz_edit_btn}
+                    >
+                      <AppIcon name="pencil" size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="sz-action-btn sz-action-delete"
+                      id={`btn-delete-sz-${zone.id}`}
+                      onClick={() => setZoneToDelete(zone)}
+                      aria-label={`${t.sz_delete_btn}: ${zone.title}`}
+                      title={t.sz_delete_btn}
+                    >
+                      <AppIcon name="trash-2" size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
 
         {/* 5. FINAL HOLD ACTION SECTION (STRICTLY BELOW SLIPPERY ZONES) */}
-        <div className="sz-review-action-section" id="sz-review-action-section">
+        <section className="sz-review-action-section" id="sz-review-action-section">
           {reviewCompleted ? (
             <div
               className="sz-celebration-banner"
@@ -325,7 +342,8 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
               aria-live="polite"
             >
               <div className="sz-celebration-badge">
-                ✓ {t.sz_review_confirmed || 'Review confirmed ✓'}
+                <AppIcon name="check-circle" size={18} />
+                <span>{t.sz_review_confirmed || 'Review confirmed'}</span>
               </div>
               {reviewMessage && <p className="sz-celebration-message">{reviewMessage}</p>}
               <button
@@ -334,9 +352,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
                 className="sz-btn-back-menu"
                 onClick={() => onNavigate('home')}
               >
-                <span className="sz-btn-back-menu-icon" aria-hidden="true">
-                  🏠
-                </span>
+                <AppIcon name="home" size={18} />
                 <span>{t.sz_back_to_menu || 'Back to Main Menu'}</span>
               </button>
             </div>
@@ -355,7 +371,7 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
                 onComplete={completeReview}
               />
 
-              {/* Cancel / Return to Main Menu Action (Sergio Feedback) */}
+              {/* Cancel / Return to Main Menu Action */}
               <button
                 id="btn-sz-cancel"
                 type="button"
@@ -363,16 +379,24 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
                 onClick={() => onNavigate('home')}
                 aria-label={t.sz_btn_cancel || 'Cancel / Return to Main Menu'}
               >
-                ✕ {t.sz_btn_cancel || 'Cancel / Return to Main Menu'}
+                <AppIcon name="x" size={15} />
+                <span>{t.sz_btn_cancel || 'Cancel / Return to Main Menu'}</span>
               </button>
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       {/* Add / Edit Modal */}
       {modalMode && (
-        <div className="sz-modal-overlay" role="dialog" aria-modal="true">
+        <div
+          className="sz-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
+        >
           <div className="sz-modal-content">
             <h3 className="sz-modal-title">
               {modalMode === 'add' ? t.sz_add_modal_title : t.sz_edit_modal_title}
@@ -413,7 +437,14 @@ export const MySlipperyZonesScreen: React.FC<MySlipperyZonesScreenProps> = ({ on
 
       {/* Delete Confirmation Modal */}
       {zoneToDelete && (
-        <div className="sz-modal-overlay" role="dialog" aria-modal="true">
+        <div
+          className="sz-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setZoneToDelete(null);
+          }}
+        >
           <div className="sz-modal-content sz-modal-delete">
             <h3 className="sz-modal-title">{t.sz_delete_btn}</h3>
             <p className="sz-delete-warning">{t.sz_delete_confirm}</p>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon, type AppIconName } from '../components/icons/AppIcon';
 import {
   listActivities,
   deleteActivity,
@@ -21,15 +22,15 @@ interface ActivityLogScreenProps {
   onBack: () => void;
 }
 
-const CATEGORY_ICONS: Record<ActivityCategory, string> = {
-  walking: '🚶',
-  running: '🏃',
-  cycling: '🚴',
-  swimming: '🏊',
-  strength_training: '🏋️',
-  mobility_yoga: '🧘',
-  sports: '🎾',
-  other_movement: '✨',
+const CATEGORY_APP_ICONS: Record<ActivityCategory, AppIconName> = {
+  walking: 'walking',
+  running: 'running',
+  cycling: 'cycling',
+  swimming: 'swimming',
+  strength_training: 'dumbbell',
+  mobility_yoga: 'yoga',
+  sports: 'sports-ball',
+  other_movement: 'activity',
 };
 
 export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate, onBack }) => {
@@ -180,7 +181,6 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
       return t.act_date_today;
     }
 
-    // Calculate yesterday
     const now = new Date();
     now.setDate(now.getDate() - 1);
     const yStr = now.getFullYear();
@@ -192,27 +192,35 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
       return t.act_date_yesterday;
     }
 
-    // Explicit date
     return dateKey;
   };
 
   return (
-    <div className="screen activity-log-screen">
+    <div className="screen activity-log-screen" id="activity-log-screen">
       <PremiumScreenHeader
         backId="btn-header-back"
         title={t.act_screen_title}
         subtitle={t.act_screen_subtitle}
         eyebrow="MOVEMENT & ACTIVITY"
         onBack={onBack}
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Go back'}
         showScoreBadge
         onNavigate={onNavigate}
+        rightAction={
+          <button
+            id="btn-header-home"
+            type="button"
+            className="sda-premium-header__home-btn"
+            onClick={() => onNavigate('home')}
+            aria-label={t.btn_return_to_main || 'Go home'}
+          >
+            <AppIcon name="home" size={18} />
+          </button>
+        }
       />
 
       <div className="activity-log-content">
-        <div className="activity-screen-hero" style={{ display: 'none' }}>
-          <h1 className="activity-screen-title">{t.act_screen_title}</h1>
-          <p className="activity-screen-subtitle">{t.act_screen_subtitle}</p>
-        </div>
         {/* Today's Movement Summary Widget */}
         <section id="card-today-activity-summary" className="activity-today-summary-card">
           <div className="activity-today-summary-header">
@@ -255,17 +263,11 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
         <section className="activity-history-section" aria-label={t.act_screen_title}>
           {groupedActivities.length === 0 ? (
             <div className="activity-empty-state">
-              <span className="activity-empty-icon" aria-hidden="true">🏃</span>
+              <span className="activity-empty-icon" aria-hidden="true">
+                <AppIcon name="footprints" size={26} />
+              </span>
               <h3 className="activity-empty-title">{t.act_empty_state_title}</h3>
               <p className="activity-empty-desc">{t.act_empty_state_desc}</p>
-              <button
-                id="btn-empty-record-activity"
-                type="button"
-                className="activity-empty-btn"
-                onClick={handleOpenAdd}
-              >
-                {t.act_btn_record}
-              </button>
             </div>
           ) : (
             groupedActivities.map((group) => (
@@ -290,7 +292,7 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
                         <div className="activity-item-top">
                           <div className="activity-item-main">
                             <span className="activity-item-icon" aria-hidden="true">
-                              {CATEGORY_ICONS[act.category]}
+                              <AppIcon name={CATEGORY_APP_ICONS[act.category]} size={20} strokeWidth={1.85} />
                             </span>
                             <div className="activity-item-titles">
                               <h4 className="activity-item-category">{catLabel}</h4>
@@ -311,12 +313,13 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
                           <div className="activity-item-badges">
                             {act.intensity && (
                               <span className={`activity-intensity-badge activity-intensity-badge--${act.intensity}`}>
-                                {t[`act_int_${act.intensity}` as keyof typeof t] as string || act.intensity}
+                                {(t[`act_int_${act.intensity}` as keyof typeof t] as string) || act.intensity}
                               </span>
                             )}
                             {act.associatedChallengeId && (
                               <span className="activity-challenge-badge">
-                                ⚡ {t.act_link_challenge}
+                                <AppIcon name="zap" size={12} />
+                                <span>{t.act_link_challenge}</span>
                               </span>
                             )}
                           </div>
@@ -336,7 +339,8 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
                             onClick={() => handleOpenEdit(act)}
                             aria-label={`${t.act_btn_edit} ${catLabel}`}
                           >
-                            ✎ {t.act_btn_edit}
+                            <AppIcon name="pencil" size={14} />
+                            <span>{t.act_btn_edit}</span>
                           </button>
                           <button
                             id={`btn-delete-activity-${act.id}`}
@@ -345,7 +349,8 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
                             onClick={() => handleRequestDelete(act)}
                             aria-label={`${t.act_btn_delete} ${catLabel}`}
                           >
-                            ✕ {t.act_btn_delete}
+                            <AppIcon name="trash-2" size={14} />
+                            <span>{t.act_btn_delete}</span>
                           </button>
                         </div>
                       </article>
@@ -388,7 +393,7 @@ export const ActivityLogScreen: React.FC<ActivityLogScreenProps> = ({ onNavigate
 
             {deleteError && (
               <div className="activity-delete-error" role="alert">
-                ⚠️ {deleteError}
+                {deleteError}
               </div>
             )}
 

@@ -36,6 +36,11 @@ const HIDDEN_ON: Screen[] = [
   'daily-audio',
   'timer-learn',
   'quiz',
+  'history',
+  'settings',
+  'sound-haptics',
+  'challenges',
+  'premium',
 ];
 
 interface FloatingProgramButtonProps {
