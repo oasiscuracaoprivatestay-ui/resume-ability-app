@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import type { Screen, SlipContext } from '../types';
-import { SLIP_CONTEXT_ICONS } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
+import { AppIcon, type AppIconName } from '../components/icons/AppIcon';
 import './ContextScreen.css';
 
 interface ContextScreenProps {
@@ -23,6 +24,19 @@ const CONTEXTS: SlipContext[] = [
   'all-or-nothing',
 ];
 
+const CONTEXT_APP_ICONS: Record<SlipContext, AppIconName> = {
+  'stress':         'zap',
+  'people-social':  'users',
+  'environment':    'map-pin',
+  'habit':          'refresh-cw',
+  'temptation':     'flame',
+  'hunger':         'utensils',
+  'celebration':    'sparkles',
+  'time-of-day':    'clock',
+  'delay':          'timer',
+  'all-or-nothing': 'alert-triangle',
+};
+
 const CTX_KEYS: Record<SlipContext, keyof ReturnType<typeof useTranslation>['t']> = {
   'stress':         'ctx_stress',
   'people-social':  'ctx_people_social',
@@ -38,6 +52,12 @@ const CTX_KEYS: Record<SlipContext, keyof ReturnType<typeof useTranslation>['t']
 
 export default function ContextScreen({ onSelect, onNavigate }: ContextScreenProps) {
   const { t } = useTranslation();
+  const [selectedCtx, setSelectedCtx] = useState<SlipContext | null>(null);
+
+  const handleSelect = (ctx: SlipContext) => {
+    setSelectedCtx(ctx);
+    onSelect(ctx);
+  };
 
   return (
     <div className="screen context-screen">
@@ -49,52 +69,64 @@ export default function ContextScreen({ onSelect, onNavigate }: ContextScreenPro
       <div className="context-content">
         <div className="context-heading">
           <div className="context-title-row">
-            <span className="section-label">{t.ctx_label}</span>
+            <span className="context-eyebrow">{t.ctx_label}</span>
             <TermHelp termKey="sz" btnId="btn-help-ctx-sz" />
           </div>
-          <h2 className="context-question">
-            {t.ctx_question}<br />
+          <h1 className="context-question">
+            {t.ctx_question}{' '}
             <span className="accent-text">{t.ctx_question_accent}</span>
-          </h2>
+          </h1>
           <p className="context-subtitle-hint">
             {t.sda_term_sz_def}
           </p>
         </div>
 
-        <div className="context-grid">
-          {CONTEXTS.map((ctx) => (
-            <button
-              key={ctx}
-              id={`ctx-${ctx}`}
-              className="context-option"
-              onClick={() => onSelect(ctx)}
-            >
-              <span className="context-icon">{SLIP_CONTEXT_ICONS[ctx]}</span>
-              <span className="context-label">{t[CTX_KEYS[ctx]] as string}</span>
-            </button>
-          ))}
+        <div className="context-grid" role="group" aria-label={t.ctx_label}>
+          {CONTEXTS.map((ctx) => {
+            const isSelected = selectedCtx === ctx;
+            return (
+              <button
+                key={ctx}
+                id={`ctx-${ctx}`}
+                type="button"
+                aria-pressed={isSelected}
+                className={`context-option ${isSelected ? 'context-option--selected' : ''}`}
+                onClick={() => handleSelect(ctx)}
+              >
+                <span className="context-icon" aria-hidden="true">
+                  <AppIcon name={CONTEXT_APP_ICONS[ctx]} size={17} />
+                </span>
+                <span className="context-label">{t[CTX_KEYS[ctx]] as string}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* ── Subtle timer education link ── */}
-        <button
-          id="btn-ctx-learn"
-          className="ctx-learn-link"
-          onClick={() => onNavigate('timer-learn')}
-        >
-          {t.ctx_learn_link}
-        </button>
-
-        {/* Cancel / Return to Main Menu Action (Phase 29B) */}
-        <div className="recommit-cancel-wrap">
+        {/* ── High-contrast secondary timer education link ── */}
+        <div className="context-footer-actions">
           <button
-            id="btn-ctx-cancel"
+            id="btn-ctx-learn"
             type="button"
-            className="recommit-cancel-btn"
-            onClick={() => onNavigate('home')}
-            aria-label={t.btn_cancel_to_main}
+            className="ctx-learn-link"
+            onClick={() => onNavigate('timer-learn')}
           >
-            ✕ {t.btn_cancel_to_main}
+            <AppIcon name="timer" size={15} />
+            <span>{t.ctx_learn_link}</span>
           </button>
+
+          {/* Cancel / Return to Main Menu Action (Phase 29B) */}
+          <div className="recommit-cancel-wrap">
+            <button
+              id="btn-ctx-cancel"
+              type="button"
+              className="recommit-cancel-btn"
+              onClick={() => onNavigate('home')}
+              aria-label={t.btn_cancel_to_main}
+            >
+              <AppIcon name="x" size={15} />
+              <span>{t.btn_cancel_to_main}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

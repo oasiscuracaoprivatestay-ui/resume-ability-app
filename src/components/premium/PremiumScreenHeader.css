@@ -3,7 +3,10 @@
    Intentional 2-row mobile layout (< 640px) + spacious single-row desktop
    ══════════════════════════════════════════════════════════════════════════ */
 
-#root:has(.sda-premium-header) {
+#root:has(.sda-premium-header),
+#root:has(.context-screen),
+#root:has(.slip-type-screen),
+#root:has(.nn-slip-screen) {
   max-width: 1040px;
   background: #071512;
 }
@@ -185,9 +188,9 @@
     grid-template-areas:
       'left right'
       'center center';
-    row-gap: 8px;
+    row-gap: 5px;
     column-gap: 8px;
-    padding: 10px 14px 12px;
+    padding: 8px 12px 9px;
   }
 
   .sda-premium-header__left {

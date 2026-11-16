@@ -2,6 +2,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import ScreenHeader from '../components/ScreenHeader';
 import TermHelp from '../components/TermHelp';
+import { AppIcon } from '../components/icons/AppIcon';
 import './SlipTypeScreen.css';
 
 interface SlipTypeScreenProps {
@@ -24,9 +25,9 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
             <span className="section-label">{t.slip_type_title}</span>
             <TermHelp termKey="slip" btnId="btn-help-slip" />
           </div>
-          <h2 className="slip-type-question">
+          <h1 className="slip-type-question">
             {t.slip_type_subtitle}
-          </h2>
+          </h1>
           <p className="slip-type-intro-hint">
             {t.sda_term_slip_def}
           </p>
@@ -35,11 +36,14 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
         <div className="slip-type-options">
           <button
             id="slip-type-sz"
+            type="button"
             className="slip-type-card"
             onClick={() => onNavigate('context')}
           >
             <div className="slip-type-card-left">
-              <span className="slip-type-card-icon">⚡</span>
+              <span className="slip-type-card-icon" aria-hidden="true">
+                <AppIcon name="zap" size={20} />
+              </span>
               <div className="slip-type-card-text">
                 <div className="slip-type-card-title-row">
                   <span className="slip-type-card-title">{t.slip_type_slippery_zone}</span>
@@ -48,16 +52,21 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
                 <span className="slip-type-card-desc">{t.slip_type_slippery_zone_desc}</span>
               </div>
             </div>
-            <span className="slip-type-card-arrow">›</span>
+            <span className="slip-type-card-arrow" aria-hidden="true">
+              <AppIcon name="chevron-right" size={18} />
+            </span>
           </button>
 
           <button
             id="slip-type-nn"
+            type="button"
             className="slip-type-card"
             onClick={() => onNavigate('slip-non-negotiable')}
           >
             <div className="slip-type-card-left">
-              <span className="slip-type-card-icon">🛡️</span>
+              <span className="slip-type-card-icon" aria-hidden="true">
+                <AppIcon name="shield" size={20} />
+              </span>
               <div className="slip-type-card-text">
                 <div className="slip-type-card-title-row">
                   <span className="slip-type-card-title">{t.slip_type_non_negotiable}</span>
@@ -66,7 +75,9 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
                 <span className="slip-type-card-desc">{t.slip_type_non_negotiable_desc}</span>
               </div>
             </div>
-            <span className="slip-type-card-arrow">›</span>
+            <span className="slip-type-card-arrow" aria-hidden="true">
+              <AppIcon name="chevron-right" size={18} />
+            </span>
           </button>
         </div>
 
@@ -79,7 +90,8 @@ export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
             onClick={() => onNavigate('home')}
             aria-label={t.btn_cancel_to_main}
           >
-            ✕ {t.btn_cancel_to_main}
+            <AppIcon name="x" size={15} />
+            <span>{t.btn_cancel_to_main}</span>
           </button>
         </div>
       </div>

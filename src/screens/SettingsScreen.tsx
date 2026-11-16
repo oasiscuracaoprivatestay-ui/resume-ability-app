@@ -3,6 +3,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import type { Language } from '../i18n/types';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import ResetStatsModal from '../components/ResetStatsModal';
 import './SettingsScreen.css';
 
@@ -49,11 +50,12 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
   return (
     <div className="screen settings-screen">
       <PremiumScreenHeader
+        className="sda-premium-header--compact"
         backId="btn-header-back"
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Back'}
         onBack={onBack ? onBack : () => onNavigate('home')}
         title={t.settings_title}
-        subtitle={t.settings_subtitle}
-        eyebrow="PREFERENCES"
         showScoreBadge
         onNavigate={onNavigate}
         rightAction={
@@ -64,13 +66,15 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
             onClick={() => onNavigate('home')}
             aria-label="Go home"
           >
-            ⌂
+            <AppIcon name="home" size={18} />
           </button>
         }
       />
 
       <div className="settings-inner">
         <div className="settings-content">
+          <p className="settings-lead-note">{t.settings_subtitle}</p>
+
           {/* Toast Notification */}
           {toastMessage && (
             <div className="settings-toast" role="status" aria-live="polite">
@@ -92,7 +96,9 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 onClick={() => setShowLanguageModal(true)}
                 aria-haspopup="dialog"
               >
-                <div className="settings-row-icon" aria-hidden="true">🌐</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="globe" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_lang_title}</span>
                   <span className="settings-row-desc">{t.settings_lang_desc}</span>
@@ -101,7 +107,9 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                   <span className="settings-pill settings-pill--accent">
                     {getLanguageName(lang)}
                   </span>
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
@@ -112,7 +120,9 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => showToast(t.settings_theme_notice)}
               >
-                <div className="settings-row-icon" aria-hidden="true">🎨</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="sliders" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_theme_title}</span>
                   <span className="settings-row-desc">{t.settings_theme_desc}</span>
@@ -121,13 +131,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                   <span className="settings-pill settings-pill--muted">
                     {t.settings_theme_active}
                   </span>
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
               {/* App Version Info */}
               <div className="settings-row-static">
-                <div className="settings-row-icon" aria-hidden="true">📱</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="smartphone" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_app_name}</span>
                   <span className="settings-row-desc">{t.settings_app_framework}</span>
@@ -154,13 +168,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('notification-settings')}
               >
-                <div className="settings-row-icon" aria-hidden="true">🔔</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="bell" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_reminders_title}</span>
                   <span className="settings-row-desc">{t.settings_reminders_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
@@ -171,13 +189,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('sound-haptics')}
               >
-                <div className="settings-row-icon" aria-hidden="true">🔊</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="volume-2" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_sound_title}</span>
                   <span className="settings-row-desc">{t.settings_sound_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
@@ -188,13 +210,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('motivation-choice')}
               >
-                <div className="settings-row-icon" aria-hidden="true">♫</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="music" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_motivation_title}</span>
                   <span className="settings-row-desc">{t.settings_motivation_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
             </div>
@@ -213,19 +239,25 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('dashboard')}
               >
-                <div className="settings-row-icon" aria-hidden="true">📊</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="bar-chart" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_history_title}</span>
                   <span className="settings-row-desc">{t.settings_history_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
               {/* Export Data Placeholder */}
               <div className="settings-row-static">
-                <div className="settings-row-icon" aria-hidden="true">💾</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="download" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_export_title}</span>
                   <span className="settings-row-desc">{t.settings_export_desc}</span>
@@ -244,7 +276,9 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn settings-row-btn--danger"
                 onClick={() => setShowResetModal(true)}
               >
-                <div className="settings-row-icon settings-row-icon--danger" aria-hidden="true">⚠️</div>
+                <div className="settings-row-icon settings-row-icon--danger" aria-hidden="true">
+                  <AppIcon name="alert-triangle" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label settings-row-label--danger">
                     {t.settings_reset_stats_title}
@@ -271,14 +305,18 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('premium')}
               >
-                <div className="settings-row-icon" aria-hidden="true">⭐</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="award" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.prem_badge || 'Premium'}</span>
                   <span className="settings-row-desc">{t.prem_btn_explore || 'Explore Premium features'}</span>
                 </div>
                 <div className="settings-row-right">
                   <span className="settings-pill settings-pill--accent">PRO</span>
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
@@ -289,13 +327,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => onNavigate('sda-terms')}
               >
-                <div className="settings-row-icon" aria-hidden="true">📖</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="book-open" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_terms_title}</span>
                   <span className="settings-row-desc">{t.settings_terms_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
 
@@ -306,13 +348,17 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 className="settings-row-btn"
                 onClick={() => setShowPrivacyModal(true)}
               >
-                <div className="settings-row-icon" aria-hidden="true">🔒</div>
+                <div className="settings-row-icon" aria-hidden="true">
+                  <AppIcon name="lock" size={17} />
+                </div>
                 <div className="settings-row-main">
                   <span className="settings-row-label">{t.settings_privacy_title}</span>
                   <span className="settings-row-desc">{t.settings_privacy_desc}</span>
                 </div>
                 <div className="settings-row-right">
-                  <span className="settings-chevron" aria-hidden="true">›</span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <AppIcon name="chevron-right" size={16} />
+                  </span>
                 </div>
               </button>
             </div>
@@ -365,7 +411,7 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 onClick={() => setShowLanguageModal(false)}
                 aria-label="Close language selector"
               >
-                ✕
+                <AppIcon name="x" size={18} />
               </button>
             </div>
             <div className="settings-lang-options" role="radiogroup" aria-label="Language options">
@@ -381,7 +427,11 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                   <span className="settings-lang-name">English</span>
                   <span className="settings-lang-native">English</span>
                 </div>
-                {lang === 'en' && <span className="settings-lang-check">✓</span>}
+                {lang === 'en' && (
+                  <span className="settings-lang-check" aria-hidden="true">
+                    <AppIcon name="check" size={18} />
+                  </span>
+                )}
               </button>
 
               <button
@@ -396,7 +446,11 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                   <span className="settings-lang-name">Español</span>
                   <span className="settings-lang-native">Spanish</span>
                 </div>
-                {lang === 'es' && <span className="settings-lang-check">✓</span>}
+                {lang === 'es' && (
+                  <span className="settings-lang-check" aria-hidden="true">
+                    <AppIcon name="check" size={18} />
+                  </span>
+                )}
               </button>
 
               <button
@@ -411,7 +465,11 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                   <span className="settings-lang-name">Nederlands</span>
                   <span className="settings-lang-native">Dutch</span>
                 </div>
-                {lang === 'nl' && <span className="settings-lang-check">✓</span>}
+                {lang === 'nl' && (
+                  <span className="settings-lang-check" aria-hidden="true">
+                    <AppIcon name="check" size={18} />
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -438,13 +496,15 @@ export default function SettingsScreen({ onNavigate, onBack }: SettingsScreenPro
                 onClick={() => setShowPrivacyModal(false)}
                 aria-label="Close privacy modal"
               >
-                ✕
+                <AppIcon name="x" size={18} />
               </button>
             </div>
             <div className="settings-privacy-body">
               <p className="settings-privacy-text">{t.settings_privacy_content}</p>
               <div className="settings-privacy-highlight">
-                <span className="settings-privacy-icon" aria-hidden="true">🔒</span>
+                <span className="settings-privacy-icon" aria-hidden="true">
+                  <AppIcon name="lock" size={18} />
+                </span>
                 <span>All your check-ins and commitments remain strictly on your local device.</span>
               </div>
             </div>

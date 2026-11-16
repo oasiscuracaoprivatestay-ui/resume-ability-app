@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n';
+import { AppIcon } from './icons/AppIcon';
 import './TermHelp.css';
 
 export type SdaTermKey = 'slip' | 'sz' | 'nn' | 'ra' | 'sd' | 'mf';
@@ -22,7 +23,6 @@ export default function TermHelp({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Derive term title and definition from key if provided
   let termTitle = title;
   let termDef = definition;
 
@@ -55,7 +55,6 @@ export default function TermHelp({
     }
   }
 
-  // Handle escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -119,7 +118,7 @@ export default function TermHelp({
                 onClick={handleClose}
                 aria-label={t.sda_btn_close}
               >
-                ✕
+                <AppIcon name="x" size={17} strokeWidth={2.1} />
               </button>
             </div>
             <p id="term-help-desc" className="term-help-body">

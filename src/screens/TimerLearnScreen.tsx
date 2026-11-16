@@ -1,6 +1,7 @@
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon, type AppIconName } from '../components/icons/AppIcon';
 import './TimerLearnScreen.css';
 
 interface TimerLearnScreenProps {
@@ -9,21 +10,23 @@ interface TimerLearnScreenProps {
 }
 
 // The four educational sections, keyed into i18n
-const SECTIONS = [
-  { icon: '⏱', titleKey: 'tl_a_title', bodyKey: 'tl_a_body', delay: '0.05s' },
-  { icon: '🧠', titleKey: 'tl_b_title', bodyKey: 'tl_b_body', delay: '0.1s' },
-  { icon: '📋', titleKey: 'tl_c_title', bodyKey: 'tl_c_body', delay: '0.15s' },
-  { icon: '✅', titleKey: 'tl_d_title', bodyKey: 'tl_d_body', delay: '0.2s' },
-] as const;
+const SECTIONS: { icon: AppIconName; titleKey: 'tl_a_title' | 'tl_b_title' | 'tl_c_title' | 'tl_d_title'; bodyKey: 'tl_a_body' | 'tl_b_body' | 'tl_c_body' | 'tl_d_body' }[] = [
+  { icon: 'timer', titleKey: 'tl_a_title', bodyKey: 'tl_a_body' },
+  { icon: 'activity', titleKey: 'tl_b_title', bodyKey: 'tl_b_body' },
+  { icon: 'clipboard-list', titleKey: 'tl_c_title', bodyKey: 'tl_c_body' },
+  { icon: 'check-circle', titleKey: 'tl_d_title', bodyKey: 'tl_d_body' },
+];
 
 export default function TimerLearnScreen({ onNavigate, onBack }: TimerLearnScreenProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="screen tl-screen">
+    <div className="screen tl-screen" id="timer-learn-screen">
       <PremiumScreenHeader
         backId="btn-header-back"
         onBack={onBack ? onBack : () => onNavigate('home')}
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Go back'}
         title={t.tl_heading}
         eyebrow={t.tl_label}
         showScoreBadge
@@ -31,54 +34,53 @@ export default function TimerLearnScreen({ onNavigate, onBack }: TimerLearnScree
         rightAction={
           <button
             id="btn-header-home"
+            type="button"
             className="sda-premium-header__home-btn"
             onClick={() => onNavigate('home')}
-            aria-label="Go home"
+            aria-label={t.btn_return_to_main || 'Go home'}
           >
-            ⌂
+            <AppIcon name="home" size={18} />
           </button>
         }
       />
 
       <div className="tl-content">
-        {/* Hero */}
-        <div className="tl-hero">
-          <span className="tl-hero-icon">⏱</span>
-          <div>
-            <span className="section-label">{t.tl_label}</span>
-            <h1 className="tl-heading">{t.tl_heading}</h1>
-          </div>
-        </div>
-
-        {/* Four sections */}
+        {/* Four structured educational cards — no duplicate page title */}
         <div className="tl-sections">
-          {SECTIONS.map((s) => (
-            <div
-              key={s.titleKey}
-              className="tl-section"
-              style={{ animationDelay: s.delay }}
-            >
-              <span className="tl-section-icon">{s.icon}</span>
-              <div className="tl-section-text">
-                <p className="tl-section-title">{t[s.titleKey]}</p>
-                <p className="tl-section-body">{t[s.bodyKey]}</p>
+          {SECTIONS.map((s, idx) => (
+            <article key={s.titleKey} className="tl-section">
+              <div className="tl-section-head">
+                <span className="tl-section-icon" aria-hidden="true">
+                  <AppIcon name={s.icon} size={17} strokeWidth={1.95} />
+                </span>
+                <h2 className="tl-section-title">{t[s.titleKey]}</h2>
+                <span className="tl-section-step" aria-hidden="true">
+                  0{idx + 1}
+                </span>
               </div>
-            </div>
+              <p className="tl-section-body">{t[s.bodyKey]}</p>
+            </article>
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Actions */}
         <div className="tl-actions">
           <button
             id="btn-tl-start"
-            className="btn btn-primary btn-large"
+            type="button"
+            className="tl-btn-primary"
             onClick={() => onNavigate('context')}
           >
-            {t.global_start_timer}
+            <span className="tl-btn-lead">
+              <AppIcon name="timer" size={18} strokeWidth={2} />
+              <span>{t.global_start_timer}</span>
+            </span>
+            <AppIcon name="arrow-right" size={16} strokeWidth={2.1} />
           </button>
           <button
             id="btn-tl-back"
-            className="btn btn-ghost"
+            type="button"
+            className="tl-btn-secondary"
             onClick={() => onNavigate('home')}
           >
             {t.tl_back}

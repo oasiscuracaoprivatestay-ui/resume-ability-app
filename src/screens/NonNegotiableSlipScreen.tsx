@@ -3,6 +3,7 @@ import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
 import ScreenHeader from '../components/ScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import './NonNegotiableSlipScreen.css';
 
 interface NonNegotiableSlipScreenProps {
@@ -33,10 +34,10 @@ export default function NonNegotiableSlipScreen({
       <div className="nn-slip-content">
         <div className="nn-slip-heading">
           <span className="section-label">{t.slip_nn_label}</span>
-          <h2 className="nn-slip-question">
-            {t.slip_nn_question}<br />
+          <h1 className="nn-slip-question">
+            {t.slip_nn_question}{' '}
             <span className="accent-text">{t.slip_nn_question_accent}</span>
-          </h2>
+          </h1>
         </div>
 
         {hasRules ? (
@@ -45,6 +46,7 @@ export default function NonNegotiableSlipScreen({
               <button
                 key={idx}
                 id={`nn-rule-${idx}`}
+                type="button"
                 className="nn-slip-card"
                 onClick={() => onSelect(rule)}
               >
@@ -52,17 +54,22 @@ export default function NonNegotiableSlipScreen({
                   <span className="nn-slip-badge">{idx + 1}</span>
                   <span className="nn-slip-text">{rule}</span>
                 </div>
-                <span className="nn-slip-card-arrow">›</span>
+                <span className="nn-slip-card-arrow" aria-hidden="true">
+                  <AppIcon name="chevron-right" size={18} />
+                </span>
               </button>
             ))}
           </div>
         ) : (
           <div className="nn-slip-empty" id="nn-slip-empty-state">
-            <span className="nn-empty-icon">🛡️</span>
-            <h3 className="nn-empty-title">{t.slip_nn_empty_title}</h3>
+            <span className="nn-empty-icon" aria-hidden="true">
+              <AppIcon name="shield" size={30} />
+            </span>
+            <h2 className="nn-empty-title">{t.slip_nn_empty_title}</h2>
             <p className="nn-empty-desc">{t.slip_nn_empty_desc}</p>
             <button
               id="btn-nn-go-commitment"
+              type="button"
               className="nn-empty-btn"
               onClick={() => onNavigate('commitment')}
             >
@@ -80,7 +87,8 @@ export default function NonNegotiableSlipScreen({
             onClick={() => onNavigate('home')}
             aria-label={t.btn_cancel_to_main}
           >
-            ✕ {t.btn_cancel_to_main}
+            <AppIcon name="x" size={15} />
+            <span>{t.btn_cancel_to_main}</span>
           </button>
         </div>
       </div>

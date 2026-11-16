@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import type {
   NotificationSettings,
   ReminderFrequency,
@@ -181,11 +182,12 @@ export default function NotificationSettingsScreen({
   return (
     <div className="screen notification-settings-screen">
       <PremiumScreenHeader
+        className="sda-premium-header--compact"
         backId="btn-header-back"
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Back'}
         onBack={onBack ? onBack : () => onNavigate('home')}
-        title={t.notif_screen_title}
-        subtitle={t.notif_screen_subtitle}
-        eyebrow="PREFERENCES"
+        title={t.settings_reminders_title || t.notif_screen_title}
         showScoreBadge
         onNavigate={onNavigate}
         rightAction={
@@ -196,19 +198,25 @@ export default function NotificationSettingsScreen({
             onClick={() => onNavigate('home')}
             aria-label="Go home"
           >
-            ⌂
+            <AppIcon name="home" size={18} />
           </button>
         }
       />
 
       <div className="notif-settings-content">
+        <p className="notif-lead-note">{t.notif_screen_subtitle}</p>
 
         {/* ── MASTER TOGGLE ── */}
         <div className="notif-card notif-card--master">
           <div className="notif-card-row">
-            <div className="notif-card-text">
-              <span className="notif-card-title">{t.notif_master_label}</span>
-              <p className="notif-card-desc">{t.notif_master_desc}</p>
+            <div className="notif-card-lead">
+              <span className="notif-icon-badge notif-icon-badge--master" aria-hidden="true">
+                <AppIcon name="bell" size={18} />
+              </span>
+              <div className="notif-card-text">
+                <span className="notif-card-title">{t.notif_master_label}</span>
+                <p className="notif-card-desc">{t.notif_master_desc}</p>
+              </div>
             </div>
             <button
               id="btn-toggle-reminders"
@@ -227,7 +235,9 @@ export default function NotificationSettingsScreen({
         {/* ── CALM BROWSER PERMISSION BANNER ── */}
         {settings.enabled && permissionState === 'denied' && (
           <div className="notif-notice notif-notice--blocked" role="alert">
-            <span className="notif-notice-icon" aria-hidden="true">ℹ️</span>
+            <span className="notif-notice-icon" aria-hidden="true">
+              <AppIcon name="info" size={17} />
+            </span>
             <div className="notif-notice-text">
               <strong>{t.notif_perm_blocked}</strong>
               <p>{t.notif_perm_fallback_notice}</p>
@@ -249,7 +259,9 @@ export default function NotificationSettingsScreen({
                 <div className="notif-card notif-card--delivery">
                   <div className="notif-delivery-header">
                     <div className="notif-delivery-title-row">
-                      <span className="notif-delivery-icon" aria-hidden="true">🌐</span>
+                      <span className="notif-icon-badge" aria-hidden="true">
+                        <AppIcon name="globe" size={16} />
+                      </span>
                       <span className="notif-card-label">{t.push_channel_push}</span>
                     </div>
                     <span className={`notif-status-badge notif-status-badge--${pushStatus}`}>
@@ -297,7 +309,9 @@ export default function NotificationSettingsScreen({
                   {/* iOS Installation Instructions Card */}
                   {isiOSDevice && !isStandalone && (
                     <div className="notif-ios-card">
-                      <span className="notif-ios-icon" aria-hidden="true">📲</span>
+                      <span className="notif-ios-icon" aria-hidden="true">
+                        <AppIcon name="smartphone" size={18} />
+                      </span>
                       <div className="notif-ios-content">
                         <strong className="notif-ios-title">{t.push_ios_install_title}</strong>
                         <p className="notif-ios-desc">{t.push_ios_install_desc}</p>
@@ -314,7 +328,8 @@ export default function NotificationSettingsScreen({
                         className="notif-install-pwa-btn"
                         onClick={handlePromptInstall}
                       >
-                        <span>⚡ {t.push_btn_install}</span>
+                        <AppIcon name="zap" size={15} />
+                        <span>{t.push_btn_install}</span>
                       </button>
                     </div>
                   )}
@@ -324,7 +339,9 @@ export default function NotificationSettingsScreen({
                 <div className="notif-card notif-card--delivery">
                   <div className="notif-delivery-header">
                     <div className="notif-delivery-title-row">
-                      <span className="notif-delivery-icon" aria-hidden="true">📱</span>
+                      <span className="notif-icon-badge" aria-hidden="true">
+                        <AppIcon name="smartphone" size={16} />
+                      </span>
                       <span className="notif-card-label">{t.push_channel_inapp}</span>
                     </div>
                     <span className="notif-status-badge notif-status-badge--enabled">
@@ -341,65 +358,74 @@ export default function NotificationSettingsScreen({
               <h2 id="notif-types-heading" className="notif-section-title">
                 {t.notif_section_types}
               </h2>
-              <div className="notif-card-stack">
-                <div className="notif-card notif-card--sub">
-                  <div className="notif-card-row">
+              <div className="notif-card-group">
+                <div className="notif-group-row">
+                  <div className="notif-card-lead">
+                    <span className="notif-icon-badge" aria-hidden="true">
+                      <AppIcon name="check-circle" size={16} />
+                    </span>
                     <div className="notif-card-text">
-                      <span className="notif-card-label">🧭 {t.notif_type_checkin}</span>
+                      <span className="notif-card-label">{t.notif_type_checkin}</span>
                       <p className="notif-card-desc">{t.notif_type_checkin_desc}</p>
                     </div>
-                    <button
-                      id="toggle-type-checkin"
-                      type="button"
-                      role="switch"
-                      aria-checked={settings.checkInEnabled}
-                      className={`notif-switch ${settings.checkInEnabled ? 'notif-switch--on' : ''}`}
-                      onClick={() => update(s => ({ ...s, checkInEnabled: !s.checkInEnabled }))}
-                      aria-label={t.notif_type_checkin}
-                    >
-                      <span className="notif-switch-handle" />
-                    </button>
                   </div>
+                  <button
+                    id="toggle-type-checkin"
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.checkInEnabled}
+                    className={`notif-switch ${settings.checkInEnabled ? 'notif-switch--on' : ''}`}
+                    onClick={() => update(s => ({ ...s, checkInEnabled: !s.checkInEnabled }))}
+                    aria-label={t.notif_type_checkin}
+                  >
+                    <span className="notif-switch-handle" />
+                  </button>
                 </div>
 
-                <div className="notif-card notif-card--sub">
-                  <div className="notif-card-row">
+                <div className="notif-group-row">
+                  <div className="notif-card-lead">
+                    <span className="notif-icon-badge" aria-hidden="true">
+                      <AppIcon name="utensils" size={16} />
+                    </span>
                     <div className="notif-card-text">
-                      <span className="notif-card-label">🥗 {t.notif_type_diet}</span>
+                      <span className="notif-card-label">{t.notif_type_diet}</span>
                       <p className="notif-card-desc">{t.notif_type_diet_desc}</p>
                     </div>
-                    <button
-                      id="toggle-type-diet"
-                      type="button"
-                      role="switch"
-                      aria-checked={settings.structuredDietEnabled}
-                      className={`notif-switch ${settings.structuredDietEnabled ? 'notif-switch--on' : ''}`}
-                      onClick={() => update(s => ({ ...s, structuredDietEnabled: !s.structuredDietEnabled }))}
-                      aria-label={t.notif_type_diet}
-                    >
-                      <span className="notif-switch-handle" />
-                    </button>
                   </div>
+                  <button
+                    id="toggle-type-diet"
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.structuredDietEnabled}
+                    className={`notif-switch ${settings.structuredDietEnabled ? 'notif-switch--on' : ''}`}
+                    onClick={() => update(s => ({ ...s, structuredDietEnabled: !s.structuredDietEnabled }))}
+                    aria-label={t.notif_type_diet}
+                  >
+                    <span className="notif-switch-handle" />
+                  </button>
                 </div>
 
-                <div className="notif-card notif-card--sub">
-                  <div className="notif-card-row">
+                <div className="notif-group-row">
+                  <div className="notif-card-lead">
+                    <span className="notif-icon-badge" aria-hidden="true">
+                      <AppIcon name="target" size={16} />
+                    </span>
                     <div className="notif-card-text">
-                      <span className="notif-card-label">🎯 {t.notif_type_why}</span>
+                      <span className="notif-card-label">{t.notif_type_why}</span>
                       <p className="notif-card-desc">{t.notif_type_why_desc}</p>
                     </div>
-                    <button
-                      id="toggle-type-why"
-                      type="button"
-                      role="switch"
-                      aria-checked={settings.resumeAbilityEnabled}
-                      className={`notif-switch ${settings.resumeAbilityEnabled ? 'notif-switch--on' : ''}`}
-                      onClick={() => update(s => ({ ...s, resumeAbilityEnabled: !s.resumeAbilityEnabled }))}
-                      aria-label={t.notif_type_why}
-                    >
-                      <span className="notif-switch-handle" />
-                    </button>
                   </div>
+                  <button
+                    id="toggle-type-why"
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.resumeAbilityEnabled}
+                    className={`notif-switch ${settings.resumeAbilityEnabled ? 'notif-switch--on' : ''}`}
+                    onClick={() => update(s => ({ ...s, resumeAbilityEnabled: !s.resumeAbilityEnabled }))}
+                    aria-label={t.notif_type_why}
+                  >
+                    <span className="notif-switch-handle" />
+                  </button>
                 </div>
               </div>
             </section>
@@ -423,7 +449,7 @@ export default function NotificationSettingsScreen({
                       onClick={() => handleSelectFrequency(f.id)}
                     >
                       <span className="notif-freq-radio-dot" />
-                      <span>{f.label}</span>
+                      <span className="notif-freq-label">{f.label}</span>
                     </button>
                   );
                 })}
@@ -431,7 +457,9 @@ export default function NotificationSettingsScreen({
 
               {settings.frequency === '15m' && (
                 <div className="notif-notice notif-notice--caution" role="note">
-                  <span className="notif-notice-icon">⚠️</span>
+                  <span className="notif-notice-icon" aria-hidden="true">
+                    <AppIcon name="alert-triangle" size={16} />
+                  </span>
                   <p>{t.notif_freq_15m_caution}</p>
                 </div>
               )}
@@ -532,13 +560,18 @@ export default function NotificationSettingsScreen({
               </div>
             </section>
 
-            {/* ── 5. RANDOMIZATION ── */}
+            {/* ── 5 & 6. TIMING VARIATION & PRIVACY ── */}
             <section className="notif-section">
-              <div className="notif-card notif-card--sub">
-                <div className="notif-card-row">
-                  <div className="notif-card-text">
-                    <span className="notif-card-label">{t.notif_randomize_label}</span>
-                    <p className="notif-card-desc">{t.notif_randomize_desc}</p>
+              <div className="notif-card-group">
+                <div className="notif-group-row">
+                  <div className="notif-card-lead">
+                    <span className="notif-icon-badge" aria-hidden="true">
+                      <AppIcon name="refresh-cw" size={16} />
+                    </span>
+                    <div className="notif-card-text">
+                      <span className="notif-card-label">{t.notif_randomize_label}</span>
+                      <p className="notif-card-desc">{t.notif_randomize_desc}</p>
+                    </div>
                   </div>
                   <button
                     id="toggle-randomize"
@@ -552,16 +585,16 @@ export default function NotificationSettingsScreen({
                     <span className="notif-switch-handle" />
                   </button>
                 </div>
-              </div>
-            </section>
 
-            {/* ── 6. PRIVACY ── */}
-            <section className="notif-section">
-              <div className="notif-card notif-card--sub">
-                <div className="notif-card-row">
-                  <div className="notif-card-text">
-                    <span className="notif-card-label">{t.notif_privacy_label}</span>
-                    <p className="notif-card-desc">{t.notif_privacy_desc}</p>
+                <div className="notif-group-row">
+                  <div className="notif-card-lead">
+                    <span className="notif-icon-badge" aria-hidden="true">
+                      <AppIcon name="lock" size={16} />
+                    </span>
+                    <div className="notif-card-text">
+                      <span className="notif-card-label">{t.notif_privacy_label}</span>
+                      <p className="notif-card-desc">{t.notif_privacy_desc}</p>
+                    </div>
                   </div>
                   <button
                     id="toggle-privacy-why"
@@ -586,7 +619,8 @@ export default function NotificationSettingsScreen({
                 className="notif-test-btn"
                 onClick={handleTestReminder}
               >
-                🔔 {t.push_btn_send_test}
+                <AppIcon name="bell" size={16} />
+                <span>{t.push_btn_send_test}</span>
               </button>
               {testPushResult && (
                 <p

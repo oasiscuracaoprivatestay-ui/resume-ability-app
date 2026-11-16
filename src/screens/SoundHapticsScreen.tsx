@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
+import { AppIcon } from '../components/icons/AppIcon';
 import {
   loadFeedbackSettings,
   saveFeedbackSettings,
@@ -80,11 +81,12 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
   return (
     <div className="screen sound-haptics-screen">
       <PremiumScreenHeader
+        className="sda-premium-header--compact"
         backId="btn-header-back"
+        backText={t.global_back || 'Back'}
+        backAriaLabel={t.global_back || 'Back'}
         onBack={onBack ? onBack : () => onNavigate('settings')}
         title={t.settings_sound_screen_title}
-        subtitle={t.settings_sound_screen_subtitle}
-        eyebrow="PREFERENCES"
         showScoreBadge
         onNavigate={onNavigate}
         rightAction={
@@ -95,24 +97,27 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
             onClick={() => onNavigate('home')}
             aria-label="Go home"
           >
-            ⌂
+            <AppIcon name="home" size={18} />
           </button>
         }
       />
 
       <div className="sound-haptics-inner">
         <div className="sound-haptics-content">
+          <p className="sound-lead-note">{t.settings_sound_screen_subtitle}</p>
 
           {/* Preferences Stack */}
           <div className="sound-card-stack">
             {/* Sound Effects Toggle */}
             <div className="sound-setting-card">
-              <div className="sound-setting-info">
-                <div className="sound-setting-icon-row">
-                  <span className="sound-setting-icon" aria-hidden="true">🔊</span>
+              <div className="sound-setting-lead">
+                <span className="sound-setting-icon" aria-hidden="true">
+                  <AppIcon name="volume-2" size={18} />
+                </span>
+                <div className="sound-setting-info">
                   <span className="sound-setting-name">{t.sound_toggle_label}</span>
+                  <p className="sound-setting-desc">{t.sound_toggle_desc}</p>
                 </div>
-                <p className="sound-setting-desc">{t.sound_toggle_desc}</p>
               </div>
               <button
                 id="btn-toggle-sound"
@@ -129,17 +134,19 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
 
             {/* Haptic Feedback Toggle */}
             <div className="sound-setting-card">
-              <div className="sound-setting-info">
-                <div className="sound-setting-icon-row">
-                  <span className="sound-setting-icon" aria-hidden="true">📳</span>
+              <div className="sound-setting-lead">
+                <span className="sound-setting-icon" aria-hidden="true">
+                  <AppIcon name="smartphone" size={18} />
+                </span>
+                <div className="sound-setting-info">
                   <span className="sound-setting-name">{t.haptic_toggle_label}</span>
+                  <p className="sound-setting-desc">{t.haptic_toggle_desc}</p>
+                  {!hapticsSupported && (
+                    <span className="haptic-unsupported-tag">
+                      {t.haptic_unsupported_notice}
+                    </span>
+                  )}
                 </div>
-                <p className="sound-setting-desc">{t.haptic_toggle_desc}</p>
-                {!hapticsSupported && (
-                  <span className="haptic-unsupported-tag">
-                    {t.haptic_unsupported_notice}
-                  </span>
-                )}
               </div>
               <button
                 id="btn-toggle-haptics"
@@ -166,7 +173,7 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
                 className={`feedback-action-btn ${activeButton === 'sound' ? 'feedback-action-btn--active' : ''}`}
                 onClick={handleTestSound}
               >
-                <span className="feedback-btn-icon" aria-hidden="true">🎵</span>
+                <AppIcon name="music" size={16} />
                 <span>{t.feedback_test_sound}</span>
               </button>
 
@@ -176,7 +183,7 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
                 className={`feedback-action-btn ${activeButton === 'haptic' ? 'feedback-action-btn--active' : ''}`}
                 onClick={handleTestHaptic}
               >
-                <span className="feedback-btn-icon" aria-hidden="true">⚡</span>
+                <AppIcon name="zap" size={16} />
                 <span>{t.feedback_test_haptic}</span>
               </button>
 
@@ -186,12 +193,12 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
                 className={`feedback-action-btn feedback-action-btn--wide ${activeButton === 'success' ? 'feedback-action-btn--active' : ''}`}
                 onClick={handleTestSuccess}
               >
-                <span className="feedback-btn-icon" aria-hidden="true">✨</span>
+                <AppIcon name="sparkles" size={16} />
                 <span>{t.feedback_test_success}</span>
               </button>
             </div>
 
-            {/* Status / Feedback feedback toast banner */}
+            {/* Status / Feedback toast banner */}
             {statusMessage && (
               <div className="feedback-status-banner" role="status">
                 <span className="feedback-status-text">{statusMessage}</span>
@@ -207,7 +214,8 @@ export default function SoundHapticsScreen({ onNavigate, onBack }: SoundHapticsS
               className="sound-back-settings-btn"
               onClick={() => onNavigate('settings')}
             >
-              ← {t.settings_title}
+              <AppIcon name="arrow-left" size={15} />
+              <span>{t.settings_title}</span>
             </button>
           </div>
         </div>

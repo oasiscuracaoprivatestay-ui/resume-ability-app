@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import { resetAllStats } from '../utils/resetStats';
+import { AppIcon } from './icons/AppIcon';
 import './ResetStatsModal.css';
 
 interface ResetStatsModalProps {
@@ -90,7 +91,7 @@ export default function ResetStatsModal({
         {step === 'choice' && (
           <div className="reset-modal-content">
             <div className="reset-modal-icon-badge" aria-hidden="true">
-              ⚠️
+              <AppIcon name="alert-triangle" size={24} />
             </div>
             <h2 id="reset-modal-title" className="reset-modal-title">
               {t.stats_modal_title}
@@ -98,7 +99,9 @@ export default function ResetStatsModal({
             <div className="reset-modal-body">
               <p className="reset-modal-warning-text">{t.stats_modal_desc_1}</p>
               <div className="reset-modal-preservation-box">
-                <span className="reset-modal-shield" aria-hidden="true">🛡️</span>
+                <span className="reset-modal-shield" aria-hidden="true">
+                  <AppIcon name="shield" size={20} />
+                </span>
                 <div>
                   <p>{t.stats_modal_desc_2}</p>
                   <p style={{ marginTop: '0.45rem', color: 'var(--sda-emerald-soft, #a7f3d0)', fontWeight: 600 }}>
@@ -115,7 +118,8 @@ export default function ResetStatsModal({
                 onClick={() => executeReset(false)}
                 autoFocus
               >
-                ✓ {t.stats_btn_reset_current_only}
+                <AppIcon name="check" size={16} style={{ marginRight: 6 }} />
+                {t.stats_btn_reset_current_only}
               </button>
               <button
                 type="button"
@@ -123,7 +127,8 @@ export default function ResetStatsModal({
                 className="reset-modal-btn reset-modal-btn--reset-subtle reset-modal-btn--full"
                 onClick={() => setStep('lifetime_confirm')}
               >
-                ⚠️ {t.stats_btn_reset_with_lifetime}
+                <AppIcon name="alert-triangle" size={15} style={{ marginRight: 6 }} />
+                {t.stats_btn_reset_with_lifetime}
               </button>
               <button
                 type="button"
@@ -141,7 +146,7 @@ export default function ResetStatsModal({
         {step === 'lifetime_confirm' && (
           <div className="reset-modal-content">
             <div className="reset-modal-icon-badge" aria-hidden="true">
-              💥
+              <AppIcon name="alert-triangle" size={24} />
             </div>
             <h2 id="reset-modal-title" className="reset-modal-title reset-modal-title--danger">
               {t.stats_lifetime_confirm_title}
@@ -177,7 +182,7 @@ export default function ResetStatsModal({
         {step === 'success' && (
           <div className="reset-modal-content">
             <div className="reset-modal-icon-badge reset-modal-icon-badge--success" aria-hidden="true">
-              ✓
+              <AppIcon name="check" size={26} />
             </div>
             <h2 id="reset-modal-title" className="reset-modal-title">
               {t.stats_done_title}
@@ -204,7 +209,7 @@ export default function ResetStatsModal({
         {step === 'error' && (
           <div className="reset-modal-content">
             <div className="reset-modal-icon-badge" aria-hidden="true" style={{ color: '#ef4444' }}>
-              ⚠️
+              <AppIcon name="alert-triangle" size={24} />
             </div>
             <h2 id="reset-modal-title" className="reset-modal-title reset-modal-title--danger">
               Reset Incomplete

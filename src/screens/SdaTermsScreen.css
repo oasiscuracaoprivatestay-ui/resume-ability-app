@@ -1,5 +1,6 @@
 /* ══════════════════════════════════════════════════════════════════════════════
-   SDA Terms Screen — Educational Glossary (Phase 9F: Premium Emerald Redesign)
+   SDA Terms Screen — Compact Interactive Glossary (Phase 6)
+   Midnight Intelligence × Premium Wellness · 320px–1280px
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .sda-terms-screen {
@@ -7,122 +8,215 @@
   flex-direction: column;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse at 50% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 90%, rgba(5, 150, 105, 0.08) 0%, transparent 55%),
-    #030706;
-  color: #f0fdf4;
+    radial-gradient(ellipse 85% 26% at 50% 0%, rgba(18, 52, 44, 0.52) 0%, rgba(7, 21, 18, 0) 70%),
+    #071512;
+  color: #f5f7f6;
+  font-family: 'Plus Jakarta Sans', var(--font, system-ui, sans-serif);
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .sda-terms-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 600px;
+  gap: 12px;
+  max-width: 760px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 16px calc(var(--sda-bottom-nav-h, 64px) + 2rem);
+  padding: 14px 16px 44px;
   box-sizing: border-box;
 }
 
-.sda-terms-header {
-  margin-bottom: 20px;
-  padding-top: 0.25rem;
+.sda-terms-intro-card {
+  background: rgba(16, 38, 32, 0.72);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  border-left: 3px solid #2dd4b3;
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sda-terms-slogan {
-  margin: 4px 0 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #34d399;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #2dd4b3;
+  line-height: 1.38;
 }
 
 .sda-terms-subtitle {
   margin: 0;
-  font-size: 0.88rem;
-  color: #a7f3d0;
-  opacity: 0.85;
-  line-height: 1.5;
+  font-size: 0.81rem;
+  color: #b8d3cb;
+  line-height: 1.45;
 }
 
 .sda-terms-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+@media (min-width: 720px) {
+  .sda-terms-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 
 .sda-term-card {
-  background: linear-gradient(180deg, rgba(6, 78, 59, 0.22) 0%, rgba(3, 20, 15, 0.5) 100%);
-  border: 1px solid rgba(52, 211, 153, 0.2);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  background: linear-gradient(160deg, #102620 0%, #0a1b16 100%);
+  border: 1px solid rgba(45, 212, 179, 0.2);
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.26);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .sda-term-card:hover {
-  border-color: rgba(52, 211, 153, 0.38);
-  background: linear-gradient(180deg, rgba(6, 78, 59, 0.3) 0%, rgba(3, 20, 15, 0.6) 100%);
-  transform: translateY(-1px);
+  border-color: rgba(45, 212, 179, 0.38);
 }
 
-.sda-term-top {
+.sda-term-trigger {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 13px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sda-term-trigger:focus-visible {
+  outline: 2px solid #2dd4b3;
+  outline-offset: -2px;
 }
 
 .sda-term-icon {
-  font-size: 1.25rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(45, 212, 179, 0.12);
+  border: 1px solid rgba(45, 212, 179, 0.26);
+  color: #2dd4b3;
+  flex-shrink: 0;
+}
+
+.sda-term-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sda-term-index {
+  font-size: 0.67rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #88aba1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .sda-term-name {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #f0fdf4;
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #f5f7f6;
+  line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.sda-term-chevron {
+  color: #9bb8b0;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.sda-term-chevron--open {
+  transform: rotate(180deg);
+  color: #2dd4b3;
+}
+
+.sda-term-body {
+  padding: 0 13px 12px 55px;
+  border-top: 1px solid rgba(45, 212, 179, 0.1);
+  padding-top: 9px;
+}
+
+@media (max-width: 380px) {
+  .sda-term-body {
+    padding: 9px 13px 12px 13px;
+  }
 }
 
 .sda-term-def {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: #a7f3d0;
-  opacity: 0.9;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #c8e1da;
 }
 
 .sda-terms-footer {
-  margin-top: 24px;
+  margin-top: 8px;
   display: flex;
   justify-content: center;
 }
 
 .sda-terms-home-btn {
   width: 100%;
-  max-width: 280px;
-  background: linear-gradient(135deg, #34d399, #059669);
-  color: #03140e;
-  font-weight: 700;
+  max-width: 320px;
+  min-height: 46px;
+  background: linear-gradient(135deg, #2dd4b3 0%, #10b981 100%);
+  color: #041712;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
   border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 9999px;
+  padding: 0.72rem 1.4rem;
+  border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(45, 212, 179, 0.28);
+  transition: transform 0.16s ease, filter 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .sda-terms-home-btn:hover {
+  filter: brightness(1.06);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
+.sda-terms-home-btn:focus-visible {
+  outline: 2px solid #2dd4b3;
+  outline-offset: 2px;
+}
+
+@media (max-width: 360px) {
+  .sda-terms-content {
+    padding: 12px 12px 36px;
+    gap: 10px;
+  }
 }
