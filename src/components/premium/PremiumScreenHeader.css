@@ -21,10 +21,11 @@
   width: 100%;
   box-sizing: border-box;
   padding: 12px 20px;
-  background: rgba(7, 21, 18, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(45, 212, 179, 0.16);
+  background: rgba(7, 21, 18, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(45, 212, 179, 0.18);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
   font-family: 'Plus Jakarta Sans', var(--font, system-ui, sans-serif);
   transition: background var(--sda-dur-fast, 160ms) var(--sda-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
@@ -221,6 +222,18 @@
   .sda-premium-header__subtitle {
     font-size: 0.8rem;
     white-space: normal;
+  }
+
+  /* Compact detail-screen header when Hero Card carries primary Ability title & subtitle */
+  .sda-premium-header.sda-premium-header--compact {
+    row-gap: 4px;
+    padding: 8px 14px 10px;
+  }
+
+  .sda-premium-header.sda-premium-header--compact .sda-premium-header__title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #c6dcd6;
   }
 }
 

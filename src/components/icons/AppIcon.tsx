@@ -69,7 +69,12 @@ export type AppIconName =
   | 'swimming'
   | 'dumbbell'
   | 'yoga'
-  | 'sports-ball';
+  | 'sports-ball'
+  | 'arrow-right'
+  | 'refresh-cw'
+  | 'lightbulb'
+  | 'anchor'
+  | 'info';
 
 const PATHS: Record<AppIconName, ReactNode> = {
   'chevron-left': <path d="m15 18-6-6 6-6" />,
@@ -412,6 +417,41 @@ const PATHS: Record<AppIconName, ReactNode> = {
       <line x1="2.5" y1="12" x2="21.5" y2="12" />
       <path d="M5.28 5.28a9.5 9.5 0 0 1 0 13.44" />
       <path d="M18.72 5.28a9.5 9.5 0 0 0 0 13.44" />
+    </>
+  ),
+  'arrow-right': (
+    <>
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </>
+  ),
+  'refresh-cw': (
+    <>
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M8 16H3v5" />
+    </>
+  ),
+  lightbulb: (
+    <>
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+    </>
+  ),
+  anchor: (
+    <>
+      <circle cx="12" cy="5" r="3" />
+      <line x1="12" x2="12" y1="8" y2="22" />
+      <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
     </>
   ),
 };

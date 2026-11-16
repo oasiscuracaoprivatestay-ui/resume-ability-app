@@ -19,7 +19,7 @@ import {
   MANUSCRIPT_RECOVERY_SEQUENCE,
 } from '../coach/knowledge/abilities/sevenDietAbilities';
 import { loadChallengeStore } from '../challenges/challengeStorage';
-import { calculateChallengeEventCounts } from '../challenges/challengeEngine';
+import { calculateChallengeEventCounts, getCalendarDaysDiff } from '../challenges/challengeEngine';
 import type { ChallengeInstance, ChallengeCheckInEntry } from '../challenges/types';
 import { getLocalDateKey } from '../utils/dietStorage';
 import { getDoctrineExplorationRecord } from './abilityStorage';
@@ -79,20 +79,41 @@ export function deriveResumeAbilityEvidence(
     (inst) => normalizeToCanonicalDietAbilityId(inst.abilityId) === 'resume_ability'
   );
 
-  // 2. Completed challenges count
+  // 2. Completed challenges count (including any active instance whose endDate has elapsed relative to referenceDateKey,
+  // matching deriveChallengeProgress / readActiveChallenge without mutating storage)
+  const isInstanceTimeComplete = (inst: ChallengeInstance): boolean =>
+    inst.status === 'active' && Boolean(inst.endDate) && referenceDateKey > inst.endDate;
+
   const completedChallengesCount = resumeInstances.filter(
-    (inst) => inst.status === 'completed'
+    (inst) => inst.status === 'completed' || isInstanceTimeComplete(inst)
   ).length;
 
-  // 3. Active challenge participation
+  // 3. Active challenge participation (derived against referenceDateKey so Day X of Y always matches PersistentChallengeBar)
   const activeInstance =
     store.activeChallenge &&
     store.activeChallenge.status === 'active' &&
+    !isInstanceTimeComplete(store.activeChallenge) &&
     normalizeToCanonicalDietAbilityId(store.activeChallenge.abilityId) === 'resume_ability'
       ? store.activeChallenge
       : undefined;
 
   const hasActiveChallenge = Boolean(activeInstance);
+
+  let derivedActiveCurrentDay: number | undefined;
+  let derivedActiveDaysRemaining: number | undefined;
+  if (activeInstance) {
+    const daysSinceStart = activeInstance.startDate
+      ? getCalendarDaysDiff(activeInstance.startDate, referenceDateKey)
+      : (activeInstance.currentDay ?? 1) - 1;
+    derivedActiveCurrentDay = Math.min(
+      activeInstance.durationDays,
+      Math.max(1, daysSinceStart + 1)
+    );
+    derivedActiveDaysRemaining = Math.max(
+      0,
+      activeInstance.durationDays - derivedActiveCurrentDay
+    );
+  }
 
   // 4. Canonical Check-Ins and Unique Practice Days deduplication
   const checkInsById = new Map<string, ChallengeCheckInEntry>();
@@ -173,8 +194,8 @@ export function deriveResumeAbilityEvidence(
     hasActiveChallenge,
     activeChallengeId: activeInstance?.id,
     activeChallengeDurationDays: activeInstance?.durationDays,
-    activeChallengeCurrentDay: activeInstance?.currentDay,
-    activeChallengeDaysRemaining: activeInstance?.daysRemaining,
+    activeChallengeCurrentDay: derivedActiveCurrentDay,
+    activeChallengeDaysRemaining: derivedActiveDaysRemaining,
     eligibleSlipsCount,
     resumedSlipsCount,
     resumeRate,

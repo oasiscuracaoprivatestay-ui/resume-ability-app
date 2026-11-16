@@ -141,6 +141,14 @@ export default function App() {
   const [coachInitialPrompt, setCoachInitialPrompt] = useState<string | null>(null);
   const [coachInitialAbilityId, setCoachInitialAbilityId] = useState<CanonicalDietAbilityId | null>(null);
 
+  // Reset window scroll position when switching screens or opening a different Ability Detail page,
+  // preventing mid-scroll entry underneath sticky headers while preserving inline state toggles.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [screen, selectedDietAbilityId]);
+
   // Initialize day start score and initialize acknowledged level on first run
   useEffect(() => {
     ensureDayStartScore();

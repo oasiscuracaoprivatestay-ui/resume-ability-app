@@ -154,9 +154,9 @@ body {
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  /* overflow-y: auto — lets the app-shell scroll within the root */
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* overflow-x: clip prevents horizontal overflow without creating a nested scrollport
+     that would break position: sticky for PersistentChallengeBar and PremiumScreenHeader */
+  overflow-x: clip;
   isolation: isolate;
 }
 
