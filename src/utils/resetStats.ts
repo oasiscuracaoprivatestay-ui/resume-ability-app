@@ -27,6 +27,7 @@ import { clearAllActivities } from '../activities';
 import { clearProgressVictories } from './progressVictoriesStorage';
 import { cleanupOrphanPhotos } from './photoStorage';
 import { loadDietStore } from './dietStorage';
+import { resetNinetyDayJourneyProgress } from '../challenges/ninetyDayJourneyStorage';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
@@ -96,6 +97,9 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
 
     // 12. Progress & Victories records (Phase 4)
     clearProgressVictories();
+
+    // 12b. Standalone 90-Day Journey progress (preserves written goalText)
+    resetNinetyDayJourneyProgress();
 
     // 13. Safe background cleanup of orphaned photos (e.g. progress photos, cleared verification photos)
     try {

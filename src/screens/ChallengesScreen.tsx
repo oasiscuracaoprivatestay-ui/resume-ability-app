@@ -36,6 +36,10 @@ import {
   ChallengeMilestoneMetadata,
   CHALLENGE_DEFINITIONS,
   RESUME_ABILITY_CHALLENGE_DEFINITION,
+  resolveNinetyDayJourneyView,
+  saveNinetyDayGoalText,
+  startStandaloneNinetyDayJourney,
+  NINETY_DAY_JOURNEY_UPDATED_EVENT,
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
@@ -60,6 +64,23 @@ import {
   getChallengeActivityCount,
   ACTIVITIES_UPDATED_EVENT,
 } from '../activities';
+import type { CheckInStatus } from '../utils/checkInStorage';
+import {
+  getActiveProfile,
+  getDayPlan,
+  getLocalTodayKey,
+  getLocalDateKey,
+} from '../utils/dietStorage';
+import {
+  getDailyVerificationStats,
+  DIET_VERIFICATION_UPDATED_EVENT,
+} from '../utils/dietVerificationStorage';
+import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
+import {
+  loadProgressVictoriesStore,
+  PROGRESS_VICTORIES_UPDATED_EVENT,
+} from '../utils/progressVictoriesStorage';
+import type { CanonicalDietAbilityId } from '../abilities';
 import { AppIcon } from '../components/icons/AppIcon';
 import { ProgressRing } from '../components/premium/ProgressRing';
 import './ChallengesScreen.css';
@@ -67,6 +88,7 @@ import './ChallengesScreen.css';
 interface ChallengesScreenProps {
   onNavigate: (screen: any) => void;
   onBack: () => void;
+  onOpenAbilityDetail?: (abilityId: CanonicalDietAbilityId) => void;
 }
 
 const LaurelSprigSvg: React.FC<{ mirrored?: boolean }> = ({ mirrored = false }) => (
@@ -184,7 +206,134 @@ const EnergyWaveSvg: React.FC<{ side: 'left' | 'right' }> = ({ side }) => (
   </svg>
 );
 
-export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, onBack }) => {
+const PracticeInfinitySvg: React.FC = () => (
+  <svg className="sda-pl-infinity-svg" viewBox="0 0 40 22" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="sda-pl-inf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#5EEAD4" />
+        <stop offset="50%" stopColor="#2DD4B3" />
+        <stop offset="100%" stopColor="#10B981" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M11.2 4.5C6.8 4.5 3.5 7.4 3.5 11C3.5 14.6 6.8 17.5 11.2 17.5C15.5 17.5 18.2 13.8 20 11C21.8 8.2 24.5 4.5 28.8 4.5C33.2 4.5 36.5 7.4 36.5 11C36.5 14.6 33.2 17.5 28.8 17.5C24.5 17.5 21.8 13.8 20 11C18.2 8.2 15.5 4.5 11.2 4.5Z"
+      stroke="url(#sda-pl-inf-grad)"
+      strokeWidth="2.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PracticeSlipBoltSvg: React.FC = () => (
+  <svg className="sda-pl-action-svg" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="sda-pl-bolt" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stopColor="#FEF08A" />
+        <stop offset="52%" stopColor="#FBBF24" />
+        <stop offset="100%" stopColor="#F59E0B" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M14.8 2.4L5.6 14.4H12.4L10.6 23.6L20.4 11.4H13.4L14.8 2.4Z"
+      fill="url(#sda-pl-bolt)"
+    />
+  </svg>
+);
+
+const PracticeDriftWavesSvg: React.FC = () => (
+  <svg className="sda-pl-action-svg" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+    <path
+      d="M3.5 8.2C6.4 5.8 9.6 5.8 13 8.2C16.4 10.6 19.6 10.6 22.5 8.2"
+      stroke="#D8B4FE"
+      strokeWidth="2.35"
+      strokeLinecap="round"
+    />
+    <path
+      d="M3.5 13C6.4 10.6 9.6 10.6 13 13C16.4 15.4 19.6 15.4 22.5 13"
+      stroke="#C084FC"
+      strokeWidth="2.35"
+      strokeLinecap="round"
+    />
+    <path
+      d="M3.5 17.8C6.4 15.4 9.6 15.4 13 17.8C16.4 20.2 19.6 20.2 22.5 17.8"
+      stroke="#A855F7"
+      strokeWidth="2.35"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const PracticeResumedCheckSvg: React.FC = () => (
+  <svg className="sda-pl-action-svg" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+    <circle cx="13" cy="13" r="9.6" stroke="#34D399" strokeWidth="2.2" />
+    <path
+      d="M8.8 13.2L11.7 16.1L17.4 10.2"
+      stroke="#6EE7B7"
+      strokeWidth="2.35"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PracticeRecommitShieldSvg: React.FC = () => (
+  <svg className="sda-pl-action-svg" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+    <path
+      d="M13 3.2L5.2 6.4V12.5C5.2 17.6 8.5 21.7 13 23C17.5 21.7 20.8 17.6 20.8 12.5V6.4L13 3.2Z"
+      stroke="#60A5FA"
+      strokeWidth="2.15"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9.6 13L12 15.4L16.7 10.6"
+      stroke="#93C5FD"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ContinuePlayEmblemSvg: React.FC = () => (
+  <svg className="sda-pl-continue-play-svg" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+    <circle cx="14" cy="14" r="13" fill="#2DD4B3" />
+    <path d="M11.6 9.3L19.4 14L11.6 18.7V9.3Z" fill="#041E18" />
+  </svg>
+);
+
+const GoalEditPencilSvg: React.FC = () => (
+  <svg className="sda-j90-pencil-svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d="M13.6 3.5L16.5 6.4L6.9 16H4V13.1L13.6 3.5Z"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M11.8 5.3L14.7 8.2"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const MilestoneStarSvg: React.FC = () => (
+  <svg className="sda-j90-star-svg" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path
+      d="M8 2.1L9.75 5.65L13.65 6.22L10.82 8.98L11.49 12.87L8 11.03L4.51 12.87L5.18 8.98L2.35 6.22L6.25 5.65L8 2.1Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
+  onNavigate,
+  onBack,
+  onOpenAbilityDetail,
+}) => {
   const { t } = useTranslation();
   const [activeChallenge, setActiveChallenge] = useState<ChallengeInstance | null>(null);
   const [history, setHistory] = useState<ChallengeInstance[]>([]);
@@ -225,8 +374,14 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Phase 41E: Challenge Check-In Modal state
+  // Phase 41E: Challenge Check-In Modal state (+ Phase 5A optional preselected status)
   const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [checkInInitialStatus, setCheckInInitialStatus] = useState<CheckInStatus | null>(null);
+
+  const openCheckInModal = useCallback((initial: CheckInStatus | null = null) => {
+    setCheckInInitialStatus(initial);
+    setShowCheckInModal(true);
+  }, []);
 
   // Phase 41G: Daily Challenge Control Center state
   const [pledge, setPledge] = useState(() => loadPledge());
@@ -234,6 +389,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const [continueToast, setContinueToast] = useState<string | null>(null);
   const [showNextActionModal, setShowNextActionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+  // Phase 5A: Practice Loop, 90-Day Goal & Consolidated Sections state
+  const [isBookInfoOpen, setIsBookInfoOpen] = useState<boolean>(false);
+  const [isMetricsOpen, setIsMetricsOpen] = useState<boolean>(false);
+  const [isEditing90DayGoal, setIsEditing90DayGoal] = useState<boolean>(false);
+  const [goal90Draft, setGoal90Draft] = useState<string>('');
+  const [isDietOpen, setIsDietOpen] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.innerWidth >= 900
+  );
 
   // Phase 3: Collapsible secondary sections (reduce mobile scroll; expand on desktop / focus action)
   const [isTimelineOpen, setIsTimelineOpen] = useState<boolean>(false);
@@ -328,12 +492,18 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       setActivityRefreshKey((k) => k + 1);
     };
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
+    window.addEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
     window.addEventListener('storage', handleUpdate);
     window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
+    window.addEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleUpdate);
+    window.addEventListener(PROGRESS_VICTORIES_UPDATED_EVENT, handleUpdate);
     return () => {
       window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener(PROGRESS_VICTORIES_UPDATED_EVENT, handleUpdate);
     };
   }, []);
 
@@ -378,7 +548,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
     if (!stats.todayCheckedIn) {
       // Step 4: Practice pending — present daily action directly
       playFeedback('commit');
-      setShowCheckInModal(true);
+      openCheckInModal(null);
     } else {
       // Step 5: Practice already completed — show completion status and appropriate next step
       playFeedback('win');
@@ -429,7 +599,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
           // Only open if the challenge is confirmed active
           const current = activeChallenge || syncCurrentChallenge();
           if (current && current.status === 'active') {
-            setShowCheckInModal(true);
+            openCheckInModal(null);
           }
         }
       } catch {
@@ -445,7 +615,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
       setActiveChallenge(current);
       sessionStorage.removeItem('challenge_open_checkin');
       if (current && current.status === 'active') {
-        setShowCheckInModal(true);
+        openCheckInModal(null);
       }
     };
 
@@ -563,6 +733,97 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
   const practiceStats = activeChallenge && activeChallenge.status === 'active'
     ? calculateChallengePracticeStats(activeChallenge)
     : null;
+
+  // Phase 5A: Authoritative 90-Day Goal & Journey Progress (separate from shorter challenges; unified for 90-day challenges)
+  const ninetyDayJourney = useMemo(() => {
+    void activityRefreshKey;
+    return resolveNinetyDayJourneyView(activeChallenge);
+  }, [activeChallenge, activityRefreshKey]);
+
+  const displayed90DayGoal = ninetyDayJourney.goalText.trim() || t.journey90_default_goal;
+
+  const handleStartEdit90DayGoal = () => {
+    setGoal90Draft(ninetyDayJourney.goalText.trim() || t.journey90_default_goal);
+    setIsEditing90DayGoal(true);
+  };
+
+  const handleSave90DayGoal = () => {
+    saveNinetyDayGoalText(goal90Draft);
+    setIsEditing90DayGoal(false);
+    setActivityRefreshKey((k) => k + 1);
+  };
+
+  const handleCancelEdit90DayGoal = () => {
+    setIsEditing90DayGoal(false);
+  };
+
+  const handleStart90DayJourney = () => {
+    startStandaloneNinetyDayJourney();
+    playFeedback('commit');
+    setActivityRefreshKey((k) => k + 1);
+  };
+
+  // Phase 5A: Factual Book 1 Practice Loop step state (never fabricates progress)
+  const practiceLoopState = useMemo(() => {
+    void activityRefreshKey;
+    try {
+      const todayDayKey = getLocalTodayKey();
+      const todayDateKey = getLocalDateKey();
+      const activeProfile = getActiveProfile();
+      const dayPlan = activeProfile?.diet
+        ? getDayPlan(activeProfile.diet, todayDayKey)
+        : { dayKey: todayDayKey, dayOfWeek: 0, mode: 'structured' as const, blocks: [] };
+      const blockIds = dayPlan.blocks.map((b) => b.id);
+      const dietStats = getDailyVerificationStats(dayPlan.blocks.length, todayDateKey, blockIds);
+      const hasMealPlan = dayPlan.mode === 'free' || dayPlan.blocks.length > 0;
+      const dailyReviewDoneToday = activeProfile?.id
+        ? hasCompletedDailyReview(todayDateKey, activeProfile.id)
+        : false;
+      const pvStore = loadProgressVictoriesStore();
+      const weeklyReflectionDoneToday = pvStore.weeklyReflections.some(
+        (r) => getLocalDateKey(new Date(r.updatedAt || r.createdAt)) === todayDateKey
+      );
+
+      let activeStep: 'diet' | 'today' | 'daily-review' | 'weekly-review' | null = null;
+      if (activeChallenge && activeChallenge.status === 'active') {
+        if (!hasMealPlan) {
+          activeStep = 'diet';
+        } else if (!dailyReviewDoneToday) {
+          const allBlocksVerified =
+            dayPlan.blocks.length > 0 && dietStats.reportedCount >= dayPlan.blocks.length;
+          if (allBlocksVerified && practiceStats?.todayCheckedIn) {
+            activeStep = 'daily-review';
+          } else {
+            activeStep = 'today';
+          }
+        } else if (
+          activeChallenge.durationDays >= 7 &&
+          (activeChallenge.currentDay % 7 === 0 || activeChallenge.daysRemaining === 0) &&
+          !weeklyReflectionDoneToday
+        ) {
+          activeStep = 'weekly-review';
+        }
+      }
+
+      return {
+        plannedBlocksCount: dietStats.plannedCount,
+        reportedBlocksCount: dietStats.reportedCount,
+        hasMealPlan,
+        dailyReviewDoneToday,
+        weeklyReflectionDoneToday,
+        activeStep,
+      };
+    } catch {
+      return {
+        plannedBlocksCount: 0,
+        reportedBlocksCount: 0,
+        hasMealPlan: false,
+        dailyReviewDoneToday: false,
+        weeklyReflectionDoneToday: false,
+        activeStep: null as 'diet' | 'today' | 'daily-review' | 'weekly-review' | null,
+      };
+    }
+  }, [activeChallenge, practiceStats, activityRefreshKey]);
 
   const savedReasons = (pledge.reasons || []).filter(
     (r) => typeof r === 'string' && r.trim().length > 0
@@ -1037,110 +1298,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
 
               {/* ── RESPONSIVE 2-COLUMN CONTROL GRID ── */}
               <div className="sda-ac-grid">
-                {/* ── PRIMARY COLUMN: DAILY CHECK-IN, ACTIONS, PROGRESS & TIMELINE ── */}
+                {/* ── PRIMARY COLUMN: PRACTICE LOOP, CONSOLIDATED METRICS & CONTINUE CTA ── */}
                 <div className="sda-ac-col-primary">
-                  {/* ── SECTION 1: DAILY CHECK-IN & QUICK ACTIONS ── */}
-                  <section className="control-center-section sda-ac-section" id="section-where-am-i-now">
-                    <div className="sda-ac-section-head">
-                      <span className="sda-ac-section-icon">
-                        <AppIcon name="target" size={15} />
-                      </span>
-                      <h3 className="control-center-section-title">
-                        {t.challenge_section_where_now || 'Where Am I Now?'}
-                      </h3>
-                    </div>
-
-                    <div
-                      className={`challenge-checkin-banner sda-ac-checkin-card ${
-                        practiceStats?.todayCheckedIn
-                          ? 'sda-ac-checkin-card--done'
-                          : 'sda-ac-checkin-card--pending'
-                      }`}
-                      id="challenge-checkin-banner"
-                    >
-                      <div className="challenge-checkin-banner-content">
-                        <div className="challenge-checkin-status-row">
-                          <span className={`challenge-checkin-badge ${practiceStats?.todayCheckedIn ? 'is-done' : 'is-pending'}`}>
-                            <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'target'} size={14} />
-                            <span>
-                              {practiceStats?.todayCheckedIn
-                                ? (t.challenge_practice_status_done || 'Checked in today')
-                                : (t.challenge_practice_status_pending || 'Pending Check-In')}
-                            </span>
-                          </span>
-                          {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
-                            <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
-                              {practiceStats.todayLatestStatus === 'on-structure'
-                                ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
-                                : practiceStats.todayLatestStatus === 'near-slip'
-                                ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
-                                : practiceStats.todayLatestStatus === 'resumed'
-                                ? `✓ ${t.challenge_checkin_status_resumed || 'Resumed'}`
-                                : practiceStats.todayLatestStatus === 'off-structure-aware'
-                                ? `◉ ${t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}`
-                                : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
-                            </span>
-                          )}
-                        </div>
-                        <p className="challenge-checkin-desc">
-                          {practiceStats?.todayCheckedIn
-                            ? (t.challenge_checkin_day_badge
-                                ?.replace('{current}', String(activeChallenge.currentDay))
-                                .replace('{total}', String(activeChallenge.durationDays)) +
-                              ' • ' +
-                              (t.challenge_practice_status_done || 'Checked in today'))
-                            : (t.challenge_checkin_prompt || 'Report your current structure status')}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        id="btn-active-challenge-checkin"
-                        className="challenge-checkin-cta-btn"
-                        onClick={() => setShowCheckInModal(true)}
-                      >
-                        <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'zap'} size={16} />
-                        <span>
-                          {practiceStats?.todayCheckedIn
-                            ? (t.challenge_btn_checkin_again || 'Check In Again')
-                            : (t.challenge_btn_checkin || 'Check In to Challenge')}
-                        </span>
-                        <AppIcon name="chevron-right" size={16} />
-                      </button>
-                    </div>
-
-                    {/* Daily Control Actions: Continue / Summary / Recommit Focus */}
-                    <div className="challenge-control-actions-row sda-ac-actions-bar">
-                      <button
-                        type="button"
-                        id="btn-challenge-continue"
-                        className="challenge-control-btn challenge-control-btn--primary"
-                        onClick={handleContinueChallenge}
-                      >
-                        <AppIcon name="check-circle" size={15} />
-                        <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        id="btn-challenge-summary"
-                        className="challenge-control-btn challenge-control-btn--secondary"
-                        onClick={() => setShowSummaryModal(true)}
-                      >
-                        <AppIcon name="clipboard-list" size={15} />
-                        <span>{t.challenge_btn_view_summary || 'Challenge Summary'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        id="btn-challenge-recommit-focus"
-                        className="challenge-control-btn challenge-control-btn--secondary"
-                        onClick={handleScrollToRecommit}
-                      >
-                        <AppIcon name="rotate-ccw" size={15} />
-                        <span>{t.challenge_btn_recommit_focus || 'Recommit Focus'}</span>
-                      </button>
-                    </div>
-                  </section>
-
                   {/* Phase 41D: Web Push Activation / Status Banner */}
                   {activeChallenge.reminderEnabled && pushStatus === 'available' && (
                     <div className="challenge-push-banner sda-ac-push-card" id="challenge-push-enable-banner">
@@ -1206,67 +1365,587 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                     </div>
                   )}
 
-                  {/* ── SECTION 2: PROGRESS, RECOVERY METRICS & TIMELINE ── */}
-                  <section className="control-center-section sda-ac-section" id="section-current-challenge">
-                    <div className="sda-ac-section-head">
-                      <span className="sda-ac-section-icon">
-                        <AppIcon name="bar-chart" size={15} />
+                  {/* ── PHASE 5A: MY 90-DAY GOAL & JOURNEY PROGRESS PANEL ── */}
+                  <section
+                    className={`sda-j90-card ${
+                      ninetyDayJourney.isActive ? 'sda-j90-card--active' : 'sda-j90-card--inactive'
+                    }`}
+                    id="section-ninety-day-journey"
+                    aria-labelledby="heading-ninety-day-goal"
+                  >
+                    <div className="sda-j90-top">
+                      <span className="sda-j90-infinity" aria-hidden="true">
+                        <PracticeInfinitySvg />
                       </span>
-                      <h3 className="control-center-section-title">
-                        {t.challenge_section_current_challenge || 'Current Challenge'}
-                      </h3>
+
+                      <div className="sda-j90-goal-wrap">
+                        <span id="heading-ninety-day-goal" className="sda-j90-eyebrow">
+                          {t.journey90_title}
+                        </span>
+
+                        {isEditing90DayGoal ? (
+                          <div className="sda-j90-edit-row">
+                            <input
+                              id="input-90day-goal"
+                              type="text"
+                              className="sda-j90-input"
+                              value={goal90Draft}
+                              maxLength={100}
+                              placeholder={t.journey90_goal_placeholder}
+                              aria-label={t.journey90_title}
+                              autoFocus
+                              onChange={(e) => setGoal90Draft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSave90DayGoal();
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleCancelEdit90DayGoal();
+                                }
+                              }}
+                            />
+                            <div className="sda-j90-edit-actions">
+                              <button
+                                type="button"
+                                id="btn-save-90day-goal"
+                                className="sda-j90-save-btn"
+                                onClick={handleSave90DayGoal}
+                              >
+                                {t.journey90_save_btn}
+                              </button>
+                              <button
+                                type="button"
+                                id="btn-cancel-90day-goal"
+                                className="sda-j90-cancel-btn"
+                                onClick={handleCancelEdit90DayGoal}
+                              >
+                                {t.journey90_cancel_btn}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="sda-j90-goal-text" id="text-90day-goal">
+                            {displayed90DayGoal}
+                          </p>
+                        )}
+                      </div>
+
+                      {!isEditing90DayGoal && (
+                        <button
+                          type="button"
+                          id="btn-edit-90day-goal"
+                          className="sda-j90-edit-btn"
+                          aria-label={t.journey90_edit_aria}
+                          onClick={handleStartEdit90DayGoal}
+                        >
+                          <GoalEditPencilSvg />
+                        </button>
+                      )}
                     </div>
 
-                    {/* Challenge Practice Progress */}
-                    <div className="challenge-practice-card sda-ac-card" id="challenge-practice-card">
-                      <div className="sda-ac-card-head">
-                        <div>
-                          <h4 className="challenge-practice-title">
-                            {t.challenge_practice_progress_title || 'Challenge Practice Progress'}
-                          </h4>
-                          <p className="challenge-practice-sub">
-                            {t.challenge_practice_progress_sub || 'Your daily consistency and check-in practice.'}
-                          </p>
+                    <div className="sda-j90-divider" aria-hidden="true" />
+
+                    <div className="sda-j90-progress-block">
+                      <div className="sda-j90-progress-meta">
+                        <span className="sda-j90-progress-label">{t.journey90_progress_label}</span>
+                        {ninetyDayJourney.isActive ? (
+                          <span className="sda-j90-progress-stat" id="stat-90day-progress">
+                            <span>
+                              {t.journey90_day_of_90.replace(
+                                '{day}',
+                                String(ninetyDayJourney.currentDay)
+                              )}
+                            </span>
+                            <span className="sda-j90-stat-dot" aria-hidden="true">
+                              •
+                            </span>
+                            <strong className="sda-j90-stat-pct">
+                              {ninetyDayJourney.completionPct}%
+                            </strong>
+                          </span>
+                        ) : (
+                          <span className="sda-j90-inactive-pill" id="stat-90day-inactive">
+                            {t.journey90_not_started}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Slim 90-Day Progress Bar */}
+                      <div
+                        className="sda-j90-bar-track"
+                        role="progressbar"
+                        aria-label={t.journey90_progress_label}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={ninetyDayJourney.completionPct}
+                      >
+                        <div
+                          className="sda-j90-bar-fill"
+                          style={{ width: `${ninetyDayJourney.completionPct}%` }}
+                        />
+                      </div>
+
+                      {/* 6-Milestone Track: Day 3, 7, 14, 30, 60, 90 */}
+                      <div className="sda-j90-milestones-wrap">
+                        <div className="sda-j90-milestones-line" aria-hidden="true">
+                          <div
+                            className="sda-j90-milestones-line-fill"
+                            style={{ width: `${ninetyDayJourney.milestoneTrackPct}%` }}
+                          />
+                        </div>
+
+                        <ol className="sda-j90-milestones-list">
+                          {ninetyDayJourney.milestones.map((ms) => (
+                            <li
+                              key={ms.day}
+                              className={`sda-j90-ms-item sda-j90-ms-item--${ms.state}`}
+                              data-milestone-day={ms.day}
+                              data-milestone-state={ms.state}
+                            >
+                              <span className="sda-j90-ms-node" aria-hidden="true">
+                                {ms.isFinal ? (
+                                  <MilestoneStarSvg />
+                                ) : ms.isReached ? (
+                                  <AppIcon name="check" size={11} />
+                                ) : null}
+                              </span>
+                              <span className="sda-j90-ms-label">
+                                {t.journey90_milestone_day.replace('{day}', String(ms.day))}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+
+                      {/* Explicit Inactive / Setup Entry Point for Shorter Challenges when 90-Day Journey Not Started */}
+                      {!ninetyDayJourney.isActive && (
+                        <div className="sda-j90-setup-row" id="setup-90day-journey">
+                          <span className="sda-j90-setup-hint">{t.journey90_inactive_hint}</span>
+                          <button
+                            type="button"
+                            id="btn-start-90day-journey"
+                            className="sda-j90-start-btn"
+                            onClick={handleStart90DayJourney}
+                          >
+                            <span>{t.journey90_start_btn}</span>
+                            <AppIcon name="chevron-right" size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* ── PHASE 5A: MY PRACTICE LOOP (Book 1 · Resume-Ability) ── */}
+                  <section
+                    className="sda-pl-card"
+                    id="section-my-practice-loop"
+                    aria-labelledby="heading-my-practice-loop"
+                  >
+                    <div className="sda-pl-header">
+                      <div className="sda-pl-title-group">
+                        <span className="sda-pl-infinity-wrap" aria-hidden="true">
+                          <PracticeInfinitySvg />
+                        </span>
+                        <div className="sda-pl-title-copy">
+                          <h3 id="heading-my-practice-loop" className="sda-pl-title">
+                            {t.pl_title}
+                          </h3>
+                          <p className="sda-pl-subtitle">{t.pl_subtitle}</p>
                         </div>
                       </div>
 
-                      <div className="challenge-practice-grid">
-                        <div className="challenge-practice-box">
-                          <span className="practice-box-val">
-                            {practiceStats?.daysCheckedIn || 0}
-                            <span className="practice-box-denom">/{activeChallenge.durationDays}</span>
-                          </span>
-                          <span className="practice-box-label">
-                            {t.challenge_practice_days_checked || 'Days Checked In'}
-                          </span>
+                      <button
+                        type="button"
+                        id="btn-pl-book-selector"
+                        className={`sda-pl-book-pill ${isBookInfoOpen ? 'is-open' : ''}`}
+                        aria-expanded={isBookInfoOpen}
+                        aria-controls="panel-pl-book-info"
+                        onClick={() => setIsBookInfoOpen((prev) => !prev)}
+                      >
+                        <span>{t.pl_book1_pill}</span>
+                        <AppIcon name="chevron-down" size={14} className="sda-pl-book-chevron" />
+                      </button>
+                    </div>
+
+                    {isBookInfoOpen && (
+                      <div id="panel-pl-book-info" className="sda-pl-book-drawer">
+                        <div className="sda-pl-book-row sda-pl-book-row--active">
+                          <div className="sda-pl-book-row-top">
+                            <span className="sda-pl-book-name">{t.pl_book1_pill}</span>
+                            <span className="sda-pl-book-badge sda-pl-book-badge--active">
+                              {t.pl_book1_active_badge}
+                            </span>
+                          </div>
+                          <p className="sda-pl-book-desc">{t.pl_book1_active_desc}</p>
+                          <button
+                            type="button"
+                            id="btn-pl-view-book1"
+                            className="sda-pl-book-link"
+                            onClick={() => {
+                              if (onOpenAbilityDetail) {
+                                onOpenAbilityDetail('resume_ability');
+                              } else {
+                                onNavigate('seven-abilities');
+                              }
+                            }}
+                          >
+                            <span>{t.pl_book1_view_principles}</span>
+                            <AppIcon name="chevron-right" size={14} />
+                          </button>
                         </div>
-                        <div className="challenge-practice-box">
-                          <span className="practice-box-val">{practiceStats?.totalCheckIns || 0}</span>
-                          <span className="practice-box-label">
-                            {t.challenge_practice_total_checkins || 'Total Check-Ins'}
-                          </span>
+
+                        <div className="sda-pl-book-row sda-pl-book-row--future" aria-disabled="true">
+                          <div className="sda-pl-book-row-top">
+                            <span className="sda-pl-book-name">{t.pl_book2_pill}</span>
+                            <span className="sda-pl-book-badge sda-pl-book-badge--future">
+                              {t.pl_book2_future_badge}
+                            </span>
+                          </div>
+                          <p className="sda-pl-book-desc">{t.pl_book2_future_desc}</p>
                         </div>
-                        <div className="challenge-practice-box">
-                          <span className={`practice-box-val ${practiceStats?.todayCheckedIn ? 'is-checked' : 'is-empty'}`}>
+                      </div>
+                    )}
+
+                    {/* Compact Consolidated Check-In Status Strip */}
+                    <div
+                      className={`sda-pl-checkin-strip ${
+                        practiceStats?.todayCheckedIn
+                          ? 'sda-pl-checkin-strip--done'
+                          : 'sda-pl-checkin-strip--pending'
+                      }`}
+                      id="challenge-checkin-banner"
+                    >
+                      <div className="sda-pl-checkin-left">
+                        <span className={`challenge-checkin-badge ${practiceStats?.todayCheckedIn ? 'is-done' : 'is-pending'}`}>
+                          <AppIcon name={practiceStats?.todayCheckedIn ? 'check-circle' : 'target'} size={13} />
+                          <span>
                             {practiceStats?.todayCheckedIn
-                              ? (practiceStats.todayLatestStatus === 'on-structure'
+                              ? (t.challenge_practice_status_done || 'Checked in today')
+                              : (t.challenge_practice_status_pending || 'Pending Check-In')}
+                          </span>
+                        </span>
+                        {practiceStats?.todayCheckedIn && practiceStats.todayLatestStatus && (
+                          <span className={`challenge-checkin-latest-pill challenge-checkin-latest-pill--${practiceStats.todayLatestStatus}`}>
+                            {practiceStats.todayLatestStatus === 'on-structure'
+                              ? `✓ ${t.challenge_checkin_status_on_structure || 'On Structure'}`
+                              : practiceStats.todayLatestStatus === 'near-slip'
+                              ? `⚡ ${t.challenge_checkin_status_near_slip || 'Near Slip'}`
+                              : practiceStats.todayLatestStatus === 'resumed'
+                              ? `✓ ${t.challenge_checkin_status_resumed || 'Resumed'}`
+                              : practiceStats.todayLatestStatus === 'off-structure-aware'
+                              ? `◉ ${t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware'}`
+                              : `↻ ${t.challenge_checkin_status_slip || 'True Slip'}`}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        id="btn-active-challenge-checkin"
+                        className="sda-pl-checkin-btn"
+                        onClick={() => openCheckInModal(null)}
+                      >
+                        <span>
+                          {practiceStats?.todayCheckedIn
+                            ? (t.challenge_btn_checkin_again || 'Check In Again')
+                            : t.pl_checkin_quick_btn}
+                        </span>
+                        <AppIcon name="chevron-right" size={14} />
+                      </button>
+                    </div>
+
+                    {/* 4 Action Cards: Gold / Purple / Emerald / Blue */}
+                    <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_title}>
+                      {/* 1. I Slipped (Warm Gold) — Opens ChallengeCheckInModal with Slip preselected */}
+                      <button
+                        type="button"
+                        id="btn-pl-slipped"
+                        className="sda-pl-action-card sda-pl-action-card--gold"
+                        onClick={() => openCheckInModal('slip')}
+                      >
+                        <span className="sda-pl-action-icon" aria-hidden="true">
+                          <PracticeSlipBoltSvg />
+                        </span>
+                        <span className="sda-pl-action-copy">
+                          <span className="sda-pl-action-title">{t.pl_action_slipped_title}</span>
+                          <span className="sda-pl-action-sub">{t.pl_action_slipped_sub}</span>
+                        </span>
+                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                      </button>
+
+                      {/* 2. I Am Drifting (Purple) */}
+                      <button
+                        type="button"
+                        id="btn-pl-drifting"
+                        className="sda-pl-action-card sda-pl-action-card--purple"
+                        onClick={() => openCheckInModal('off-structure-aware')}
+                      >
+                        <span className="sda-pl-action-icon" aria-hidden="true">
+                          <PracticeDriftWavesSvg />
+                        </span>
+                        <span className="sda-pl-action-copy">
+                          <span className="sda-pl-action-title">{t.pl_action_drifting_title}</span>
+                          <span className="sda-pl-action-sub">{t.pl_action_drifting_sub}</span>
+                        </span>
+                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                      </button>
+
+                      {/* 3. I Resumed (Emerald) */}
+                      <button
+                        type="button"
+                        id="btn-pl-resumed"
+                        className="sda-pl-action-card sda-pl-action-card--emerald"
+                        onClick={() => openCheckInModal('resumed')}
+                      >
+                        <span className="sda-pl-action-icon" aria-hidden="true">
+                          <PracticeResumedCheckSvg />
+                        </span>
+                        <span className="sda-pl-action-copy">
+                          <span className="sda-pl-action-title">{t.pl_action_resumed_title}</span>
+                          <span className="sda-pl-action-sub">{t.pl_action_resumed_sub}</span>
+                        </span>
+                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                      </button>
+
+                      {/* 4. Re-Commit (Blue) */}
+                      <button
+                        type="button"
+                        id="btn-pl-recommit"
+                        className="sda-pl-action-card sda-pl-action-card--blue"
+                        onClick={() => onNavigate('recommit')}
+                      >
+                        <span className="sda-pl-action-icon" aria-hidden="true">
+                          <PracticeRecommitShieldSvg />
+                        </span>
+                        <span className="sda-pl-action-copy">
+                          <span className="sda-pl-action-title">{t.pl_action_recommit_title}</span>
+                          <span className="sda-pl-action-sub">{t.pl_action_recommit_sub}</span>
+                        </span>
+                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                      </button>
+                    </div>
+
+                    {/* Book 1 Flow Strip: Structured Diet -> Today -> Daily Review -> Weekly Review */}
+                    <nav className="sda-pl-steps-flow" aria-label="Book 1 Practice Loop Steps">
+                      <button
+                        type="button"
+                        id="btn-pl-step-diet"
+                        className={`sda-pl-step-card ${
+                          practiceLoopState.activeStep === 'diet' ? 'is-current' : ''
+                        }`}
+                        aria-current={practiceLoopState.activeStep === 'diet' ? 'step' : undefined}
+                        onClick={() => onNavigate('structured-diet')}
+                      >
+                        <span className="sda-pl-step-icon" aria-hidden="true">
+                          <AppIcon name="utensils" size={19} />
+                        </span>
+                        <span className="sda-pl-step-title">{t.pl_step_diet_title}</span>
+                        <span className="sda-pl-step-sub">{t.pl_step_diet_sub}</span>
+                      </button>
+
+                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                      <button
+                        type="button"
+                        id="btn-pl-step-today"
+                        className={`sda-pl-step-card ${
+                          practiceLoopState.activeStep === 'today' ? 'is-current' : ''
+                        }`}
+                        aria-current={practiceLoopState.activeStep === 'today' ? 'step' : undefined}
+                        onClick={() => {
+                          const freshChallenge = syncCurrentChallenge() || activeChallenge;
+                          const freshStats =
+                            freshChallenge && freshChallenge.status === 'active'
+                              ? calculateChallengePracticeStats(freshChallenge)
+                              : practiceStats;
+                          if (!freshStats?.todayCheckedIn) {
+                            openCheckInModal(null);
+                          } else {
+                            onNavigate('structured-diet');
+                          }
+                        }}
+                      >
+                        <span className="sda-pl-step-icon" aria-hidden="true">
+                          <AppIcon name="sun" size={20} />
+                        </span>
+                        <span className="sda-pl-step-title">{t.pl_step_today_title}</span>
+                        <span className="sda-pl-step-sub">{t.pl_step_today_sub}</span>
+                      </button>
+
+                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                      <button
+                        type="button"
+                        id="btn-pl-step-daily-review"
+                        className={`sda-pl-step-card ${
+                          practiceLoopState.activeStep === 'daily-review' ? 'is-current' : ''
+                        } ${practiceLoopState.dailyReviewDoneToday ? 'is-done' : ''}`}
+                        aria-current={practiceLoopState.activeStep === 'daily-review' ? 'step' : undefined}
+                        onClick={() => onNavigate('daily-review')}
+                      >
+                        {practiceLoopState.dailyReviewDoneToday && (
+                          <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                        )}
+                        <span className="sda-pl-step-icon" aria-hidden="true">
+                          <AppIcon name="clipboard-list" size={19} />
+                        </span>
+                        <span className="sda-pl-step-title">{t.pl_step_daily_title}</span>
+                        <span className="sda-pl-step-sub">{t.pl_step_daily_sub}</span>
+                      </button>
+
+                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                      <button
+                        type="button"
+                        id="btn-pl-step-weekly-review"
+                        className={`sda-pl-step-card ${
+                          practiceLoopState.activeStep === 'weekly-review' ? 'is-current' : ''
+                        } ${practiceLoopState.weeklyReflectionDoneToday ? 'is-done' : ''}`}
+                        aria-current={practiceLoopState.activeStep === 'weekly-review' ? 'step' : undefined}
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem('pv_initial_tab', 'victories');
+                          } catch {
+                            // ignore
+                          }
+                          onNavigate('progress-victories');
+                        }}
+                      >
+                        {practiceLoopState.weeklyReflectionDoneToday && (
+                          <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                        )}
+                        <span className="sda-pl-step-icon" aria-hidden="true">
+                          <AppIcon name="bar-chart" size={19} />
+                        </span>
+                        <span className="sda-pl-step-title">{t.pl_step_weekly_title}</span>
+                        <span className="sda-pl-step-sub">{t.pl_step_weekly_sub}</span>
+                      </button>
+                    </nav>
+
+                    {/* Prominent Contextual Continue My Journey Action inside Practice Loop */}
+                    <button
+                      type="button"
+                      id="btn-challenge-continue"
+                      className="sda-pl-continue-btn"
+                      onClick={handleContinueChallenge}
+                    >
+                      <ContinuePlayEmblemSvg />
+                      <span>
+                        {(t.pl_continue_journey || 'Continue My Journey (Day {day})').replace(
+                          '{day}',
+                          String(activeChallenge.currentDay)
+                        )}
+                      </span>
+                    </button>
+                  </section>
+
+                  {/* ── CONSOLIDATED CHALLENGE PROGRESS & METRICS (Expandable) ── */}
+                  <section className="sda-pl-metrics-card" id="section-current-challenge">
+                    <button
+                      type="button"
+                      id="btn-toggle-challenge-metrics"
+                      className={`sda-pl-metrics-head ${isMetricsOpen ? 'is-open' : ''}`}
+                      aria-expanded={isMetricsOpen}
+                      aria-controls="challenge-metrics-expanded"
+                      onClick={() => setIsMetricsOpen((prev) => !prev)}
+                    >
+                      <span className="sda-pl-metrics-head-left">
+                        <span className="sda-pl-metrics-head-icon" aria-hidden="true">
+                          <AppIcon name="bar-chart" size={16} />
+                        </span>
+                        <span className="sda-pl-metrics-head-title">{t.pl_metrics_heading}</span>
+                      </span>
+                      <AppIcon
+                        name="chevron-right"
+                        size={16}
+                        className="sda-pl-metrics-head-chevron"
+                      />
+                    </button>
+
+                    {/* Always-visible Factual 4-Box Summary Strip */}
+                    <div className="sda-pl-metrics-strip" id="challenge-practice-card">
+                      <div className="sda-pl-metric-tile">
+                        <span className="sda-pl-metric-icon" aria-hidden="true">
+                          <AppIcon name="calendar" size={15} />
+                        </span>
+                        <span className="sda-pl-metric-val">
+                          {practiceStats?.daysCheckedIn || 0}
+                          <span className="sda-pl-metric-denom">/{activeChallenge.durationDays}</span>
+                        </span>
+                        <span className="sda-pl-metric-label">
+                          {t.challenge_practice_days_checked || 'Days Checked In'}
+                        </span>
+                      </div>
+
+                      <div className="sda-pl-metric-tile">
+                        <span className="sda-pl-metric-icon" aria-hidden="true">
+                          <AppIcon name="check-circle" size={15} />
+                        </span>
+                        <span className="sda-pl-metric-val">{practiceStats?.totalCheckIns || 0}</span>
+                        <span className="sda-pl-metric-label">
+                          {t.challenge_practice_total_checkins || 'Total Check-Ins'}
+                        </span>
+                      </div>
+
+                      <div className="sda-pl-metric-tile">
+                        <span className="sda-pl-metric-icon" aria-hidden="true">
+                          <AppIcon name="rotate-ccw" size={15} />
+                        </span>
+                        <span className="sda-pl-metric-val">
+                          {activeChallenge.relevantEventCounts.resumedSlips}
+                        </span>
+                        <span className="sda-pl-metric-label">
+                          {t.challenge_resumed_count || 'Resumed'}
+                        </span>
+                      </div>
+
+                      <div className="sda-pl-metric-tile">
+                        <span className="sda-pl-metric-icon" aria-hidden="true">
+                          <AppIcon name="target" size={15} />
+                        </span>
+                        {activeChallenge.relevantEventCounts.eligibleSlips > 0 &&
+                        activeChallenge.relevantEventCounts.resumeRate !== null ? (
+                          <>
+                            <span className="sda-pl-metric-val">
+                              {activeChallenge.relevantEventCounts.resumeRate}%
+                            </span>
+                            <span className="sda-pl-metric-label">
+                              {t.challenge_resume_rate || 'Resume Rate'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span
+                              className={`sda-pl-metric-val ${
+                                practiceStats?.todayCheckedIn ? 'is-checked' : 'is-empty'
+                              }`}
+                            >
+                              {practiceStats?.todayCheckedIn
+                                ? practiceStats.todayLatestStatus === 'on-structure' ||
+                                  practiceStats.todayLatestStatus === 'resumed'
                                   ? '✓'
                                   : practiceStats.todayLatestStatus === 'near-slip'
                                   ? '⚡'
-                                  : practiceStats.todayLatestStatus === 'resumed'
-                                  ? '✓'
                                   : practiceStats.todayLatestStatus === 'off-structure-aware'
                                   ? '◉'
-                                  : '↻')
-                              : '—'}
-                          </span>
-                          <span className="practice-box-label">
-                            {t.challenge_practice_today_status || "Today's Status"}
-                          </span>
-                        </div>
+                                  : '↻'
+                                : '—'}
+                            </span>
+                            <span className="sda-pl-metric-label">
+                              {t.challenge_practice_today_status || "Today's Status"}
+                            </span>
+                          </>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Phase 41H: Celebrated Milestones Badges Row */}
+                    {/* Expandable Recovery Metrics, Milestones, Timeline & Summary */}
+                    <div
+                      id="challenge-metrics-expanded"
+                      className="sda-pl-metrics-expanded"
+                      hidden={!isMetricsOpen}
+                    >
                       {celebratedMilestonesList.length > 0 && (
                         <div className="challenge-milestones-row" id="challenge-celebrated-milestones-row">
                           {celebratedMilestonesList.map((m) => (
@@ -1281,147 +1960,191 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
                           ))}
                         </div>
                       )}
-                    </div>
 
-                    {/* Factual Recovery Metrics Card (Strictly separated from practice consistency) */}
-                    <div className="challenge-metrics-card sda-ac-card">
-                      <div className="sda-ac-card-head">
-                        <h4 className="challenge-metrics-title">
-                          {t.challenge_recovery_metrics || 'Recovery Practice Metrics'}
-                        </h4>
-                        {activeChallenge.relevantEventCounts.eligibleSlips === 0 && (
-                          <span className="challenge-no-slips-hint">
-                            <AppIcon name="check-circle" size={12} />
-                            <span>{t.challenge_no_slips_yet || 'No Resume opportunities yet'}</span>
+                      <div className="challenge-metrics-card sda-ac-card sda-pl-recovery-subcard">
+                        <div className="sda-ac-card-head">
+                          <h4 className="challenge-metrics-title">
+                            {t.challenge_recovery_metrics || 'Recovery Practice Metrics'}
+                          </h4>
+                          {activeChallenge.relevantEventCounts.eligibleSlips === 0 && (
+                            <span className="challenge-no-slips-hint">
+                              <AppIcon name="check-circle" size={12} />
+                              <span>{t.challenge_no_slips_yet || 'No Resume opportunities yet'}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="challenge-metrics-grid">
+                          <div className="challenge-metric-box">
+                            <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
+                            <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
+                          </div>
+                          <div className="challenge-metric-box">
+                            <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
+                            <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
+                          </div>
+                          <div className="challenge-metric-box">
+                            <span className="metric-box-val metric-box-val--text">
+                              {activeChallenge.relevantEventCounts.eligibleSlips > 0 && activeChallenge.relevantEventCounts.resumeRate !== null
+                                ? `${activeChallenge.relevantEventCounts.resumeRate}%`
+                                : (t.challenge_no_slips_short || 'No slips')}
+                            </span>
+                            <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
+                          </div>
+                        </div>
+
+                        <div className="challenge-philosophy-banner">
+                          <span className="philosophy-icon" aria-hidden="true">
+                            <AppIcon name="sparkles" size={15} />
                           </span>
-                        )}
+                          <p>
+                            {t.challenge_philosophy_quote ||
+                              'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="challenge-metrics-grid">
-                        <div className="challenge-metric-box">
-                          <span className="metric-box-val">{activeChallenge.relevantEventCounts.eligibleSlips}</span>
-                          <span className="metric-box-label">{t.challenge_slips_recorded || 'True Slips'}</span>
-                        </div>
-                        <div className="challenge-metric-box">
-                          <span className="metric-box-val">{activeChallenge.relevantEventCounts.resumedSlips}</span>
-                          <span className="metric-box-label">{t.challenge_resumed_count || 'Resumed'}</span>
-                        </div>
-                        <div className="challenge-metric-box">
-                          <span className="metric-box-val metric-box-val--text">
-                            {activeChallenge.relevantEventCounts.eligibleSlips > 0 && activeChallenge.relevantEventCounts.resumeRate !== null
-                              ? `${activeChallenge.relevantEventCounts.resumeRate}%`
-                              : (t.challenge_no_slips_short || 'No slips')}
+                      {/* Day-by-day Recovery Timeline (Collapsible) */}
+                      <details
+                        className="challenge-timeline-collapsible sda-ac-details"
+                        id="challenge-timeline-collapsible"
+                        open={isTimelineOpen}
+                        onToggle={(e) => setIsTimelineOpen((e.currentTarget as HTMLDetailsElement).open)}
+                      >
+                        <summary className="challenge-timeline-summary">
+                          <span className="timeline-summary-title">
+                            <span className="sda-ac-collapse-icon">
+                              <AppIcon name="calendar" size={14} />
+                            </span>
+                            <span>
+                              {t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length}{' '}
+                              {dayBreakdown.length === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')})
+                            </span>
                           </span>
-                          <span className="metric-box-label">{t.challenge_resume_rate || 'Resume Rate'}</span>
-                        </div>
-                      </div>
-
-                      <div className="challenge-philosophy-banner">
-                        <span className="philosophy-icon" aria-hidden="true">
-                          <AppIcon name="sparkles" size={15} />
-                        </span>
-                        <p>
-                          {t.challenge_philosophy_quote ||
-                            'A Resume-Ability challenge is about practicing recovery and consistency — not perfection. Slips are opportunities to practice Resume-Ability.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Day-by-day Recovery Timeline (Collapsible) */}
-                    <details
-                      className="challenge-timeline-collapsible sda-ac-details"
-                      id="challenge-timeline-collapsible"
-                      open={isTimelineOpen}
-                      onToggle={(e) => setIsTimelineOpen((e.currentTarget as HTMLDetailsElement).open)}
-                    >
-                      <summary className="challenge-timeline-summary">
-                        <span className="timeline-summary-title">
-                          <span className="sda-ac-collapse-icon">
-                            <AppIcon name="calendar" size={14} />
+                          <span className="timeline-summary-chevron" aria-hidden="true">
+                            <AppIcon name="chevron-down" size={16} />
                           </span>
-                          <span>
-                            {t.challenge_timeline_toggle || 'Daily Recovery Timeline'} ({dayBreakdown.length}{' '}
-                            {dayBreakdown.length === 1 ? (t.common_day || 'Day') : (t.common_days || 'Days')})
-                          </span>
-                        </span>
-                        <span className="timeline-summary-chevron" aria-hidden="true">
-                          <AppIcon name="chevron-down" size={16} />
-                        </span>
-                      </summary>
-                      <div className="challenge-timeline-list">
-                        {dayBreakdown.map((d) => {
-                          let iconNode: React.ReactNode = <span className="timeline-dot-upcoming" />;
-                          let desc = t.challenge_day_upcoming || 'Upcoming';
-                          let rowClass = 'timeline-row timeline-row--upcoming';
+                        </summary>
+                        <div className="challenge-timeline-list">
+                          {dayBreakdown.map((d) => {
+                            let iconNode: React.ReactNode = <span className="timeline-dot-upcoming" />;
+                            let desc = t.challenge_day_upcoming || 'Upcoming';
+                            let rowClass = 'timeline-row timeline-row--upcoming';
 
-                          if (d.isToday) {
-                            rowClass = 'timeline-row timeline-row--today';
-                            iconNode = <AppIcon name="target" size={14} />;
-                            desc = d.hasResumeOpportunity
-                              ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
-                              : (t.challenge_day_today || 'Today (in progress)');
-                          } else if (d.isPast) {
-                            if (d.hasResumeOpportunity) {
-                              iconNode =
-                                d.resumedCount > 0 ? (
-                                  <AppIcon name="rotate-ccw" size={14} />
-                                ) : (
-                                  <AppIcon name="zap" size={14} />
-                                );
-                              desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
-                              rowClass =
-                                d.resumedCount > 0
-                                  ? 'timeline-row timeline-row--resumed'
-                                  : 'timeline-row timeline-row--slip';
-                            } else {
-                              iconNode = <AppIcon name="check" size={14} />;
-                              desc = t.challenge_day_no_slips || 'Completed (on-track)';
-                              rowClass = 'timeline-row timeline-row--clean';
+                            if (d.isToday) {
+                              rowClass = 'timeline-row timeline-row--today';
+                              iconNode = <AppIcon name="target" size={14} />;
+                              desc = d.hasResumeOpportunity
+                                ? `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`
+                                : (t.challenge_day_today || 'Today (in progress)');
+                            } else if (d.isPast) {
+                              if (d.hasResumeOpportunity) {
+                                iconNode =
+                                  d.resumedCount > 0 ? (
+                                    <AppIcon name="rotate-ccw" size={14} />
+                                  ) : (
+                                    <AppIcon name="zap" size={14} />
+                                  );
+                                desc = `${d.resumedCount}/${d.slipsCount} ${t.challenge_resumed_short || 'resumed'}`;
+                                rowClass =
+                                  d.resumedCount > 0
+                                    ? 'timeline-row timeline-row--resumed'
+                                    : 'timeline-row timeline-row--slip';
+                              } else {
+                                iconNode = <AppIcon name="check" size={14} />;
+                                desc = t.challenge_day_no_slips || 'Completed (on-track)';
+                                rowClass = 'timeline-row timeline-row--clean';
+                              }
                             }
-                          }
 
-                          return (
-                            <div key={d.dayIndex} className={rowClass}>
-                              <div className="timeline-left">
-                                <span className="timeline-icon" aria-hidden="true">{iconNode}</span>
-                                <span className="timeline-day-label">
-                                  {t.challenge_day_label || 'Day'} {d.dayIndex}
-                                </span>
-                              </div>
-                              <div className="timeline-right">
-                                <div className="timeline-date-row">
-                                  <span className="timeline-date">{d.dateKey}</span>
-                                  {d.checkInsCount && d.checkInsCount > 0 ? (
-                                    <span className="timeline-checkin-tag">
-                                      ✓ {t.challenge_timeline_checked_in || 'Checked in'}
-                                      {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
-                                    </span>
-                                  ) : null}
+                            return (
+                              <div key={d.dayIndex} className={rowClass}>
+                                <div className="timeline-left">
+                                  <span className="timeline-icon" aria-hidden="true">{iconNode}</span>
+                                  <span className="timeline-day-label">
+                                    {t.challenge_day_label || 'Day'} {d.dayIndex}
+                                  </span>
                                 </div>
-                                <span className="timeline-desc">{desc}</span>
+                                <div className="timeline-right">
+                                  <div className="timeline-date-row">
+                                    <span className="timeline-date">{d.dateKey}</span>
+                                    {d.checkInsCount && d.checkInsCount > 0 ? (
+                                      <span className="timeline-checkin-tag">
+                                        ✓ {t.challenge_timeline_checked_in || 'Checked in'}
+                                        {d.checkInsCount > 1 ? ` (×${d.checkInsCount})` : ''}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <span className="timeline-desc">{desc}</span>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                      </details>
+
+                      {/* Consolidated Secondary Controls: Challenge Summary & Recommit Focus */}
+                      <div className="sda-pl-secondary-controls">
+                        <button
+                          type="button"
+                          id="btn-challenge-summary"
+                          className="challenge-control-btn challenge-control-btn--secondary"
+                          onClick={() => setShowSummaryModal(true)}
+                        >
+                          <AppIcon name="clipboard-list" size={15} />
+                          <span>{t.challenge_btn_view_summary || 'Challenge Summary'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          id="btn-challenge-recommit-focus"
+                          className="challenge-control-btn challenge-control-btn--secondary"
+                          onClick={handleScrollToRecommit}
+                        >
+                          <AppIcon name="shield" size={15} />
+                          <span>{t.challenge_btn_recommit_focus || 'Recommit Focus'}</span>
+                        </button>
                       </div>
-                    </details>
+                    </div>
                   </section>
                 </div>
 
                 {/* ── SECONDARY COLUMN: STRUCTURED DIET, NON-NEGOTIABLES, WHY & MOVEMENT ── */}
                 <div className="sda-ac-col-secondary">
-                  {/* ── SECTION: MY STRUCTURED DIET (Open by default for immediate meal visibility) ── */}
-                  <section className="control-center-section sda-ac-section" id="section-my-structured-diet">
-                    <div className="sda-ac-section-head">
-                      <span className="sda-ac-section-icon">
-                        <AppIcon name="utensils" size={15} />
+                  {/* ── COLLAPSIBLE SECTION: TODAY'S STRUCTURED DIET ── */}
+                  <section className="control-center-section sda-ac-accordion" id="section-my-structured-diet">
+                    <button
+                      type="button"
+                      id="btn-toggle-challenge-diet"
+                      className={`sda-ac-collapse-trigger ${isDietOpen ? 'is-open' : ''}`}
+                      aria-expanded={isDietOpen}
+                      aria-controls="challenge-diet-accordion-body"
+                      onClick={() => setIsDietOpen((prev) => !prev)}
+                    >
+                      <span className="sda-ac-collapse-left">
+                        <span className="sda-ac-collapse-icon">
+                          <AppIcon name="utensils" size={15} />
+                        </span>
+                        <span className="sda-ac-collapse-title">
+                          {t.challenge_diet_summary_title || "Today's Structured Diet"}
+                        </span>
                       </span>
-                      <h3 className="control-center-section-title">
-                        {t.challenge_section_diet || 'My Structured Diet'}
-                      </h3>
-                    </div>
+                      <span className="sda-ac-collapse-right">
+                        <span className="sda-ac-collapse-pill">
+                          {practiceLoopState.reportedBlocksCount}/{practiceLoopState.plannedBlocksCount}
+                        </span>
+                        <span className="sda-ac-collapse-chevron" aria-hidden="true">
+                          <AppIcon name="chevron-down" size={16} />
+                        </span>
+                      </span>
+                    </button>
 
-                    <ChallengeDietSummaryCard onNavigate={onNavigate} />
+                    <div
+                      id="challenge-diet-accordion-body"
+                      className="sda-ac-accordion-body sda-ac-diet-accordion-body"
+                      hidden={!isDietOpen}
+                    >
+                      <ChallengeDietSummaryCard onNavigate={onNavigate} />
+                    </div>
                   </section>
 
                   {/* ── COLLAPSIBLE SECTION: MY NON-NEGOTIABLES ── */}
@@ -2325,16 +3048,21 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({ onNavigate, 
         </div>
       )}
 
-      {/* ── Challenge Check-In Modal (Phase 41E) ── */}
+      {/* ── Challenge Check-In Modal (Phase 41E / Phase 5A) ── */}
       {activeChallenge && activeChallenge.status === 'active' && (
         <ChallengeCheckInModal
           isOpen={showCheckInModal}
           challenge={activeChallenge}
-          onClose={() => setShowCheckInModal(false)}
+          initialStatus={checkInInitialStatus}
+          onClose={() => {
+            setShowCheckInModal(false);
+            setCheckInInitialStatus(null);
+          }}
           onNavigate={onNavigate}
           onCheckInCompleted={refreshState}
           onRecommitCompleted={() => {
             setShowCheckInModal(false);
+            setCheckInInitialStatus(null);
             refreshState();
             setShowNextActionModal(true);
           }}

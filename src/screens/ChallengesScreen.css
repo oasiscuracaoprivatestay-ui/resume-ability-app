@@ -5924,3 +5924,1417 @@
     box-shadow: 0 8px 24px rgba(4, 12, 10, 0.42);
   }
 }
+
+/* ==========================================================================
+   PHASE 5A — MY PRACTICE LOOP & CONSOLIDATED ACTIVE CHALLENGE CONTROL CENTER
+   ========================================================================== */
+
+.challenges-screen--premium-hub .sda-pl-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 15px 14px 15px;
+  background:
+    radial-gradient(120% 90% at 15% 0%, rgba(45, 212, 179, 0.11) 0%, rgba(45, 212, 179, 0) 60%),
+    linear-gradient(180deg, rgba(15, 40, 33, 0.96) 0%, rgba(8, 23, 19, 0.98) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.3);
+  box-shadow:
+    0 14px 32px rgba(2, 9, 7, 0.48),
+    0 0 24px rgba(45, 212, 179, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header Row: Infinity Emblem + Title/Subtitle + Book 1 Pill */
+.challenges-screen--premium-hub .sda-pl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.challenges-screen--premium-hub .sda-pl-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-infinity-wrap {
+  width: 34px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-infinity-svg {
+  width: 34px;
+  height: 22px;
+  filter: drop-shadow(0 0 8px rgba(45, 212, 179, 0.52));
+}
+
+.challenges-screen--premium-hub .sda-pl-title-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.16;
+  color: #FFFFFF;
+}
+
+.challenges-screen--premium-hub .sda-pl-subtitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #B9CFC8;
+  line-height: 1.24;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-pill {
+  position: relative;
+  min-height: 34px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(18, 54, 44, 0.92) 0%, rgba(10, 31, 25, 0.96) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.4);
+  color: #EAF8F4;
+  font-size: 10.8px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  max-width: 100%;
+  box-shadow:
+    0 2px 10px rgba(3, 12, 9, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Expand vertical touch target to >= 44px while preserving sleek header pill height */
+.challenges-screen--premium-hub .sda-pl-book-pill::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-pill:hover {
+  border-color: rgba(45, 212, 179, 0.72);
+  background: linear-gradient(180deg, rgba(23, 68, 56, 0.95) 0%, rgba(12, 38, 31, 0.98) 100%);
+}
+
+.challenges-screen--premium-hub .sda-pl-book-pill:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-chevron {
+  color: #6EE7CE;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-pill.is-open .sda-pl-book-chevron {
+  transform: rotate(180deg);
+}
+
+/* Book 1 / Book 2 Expandable Selector Drawer */
+.challenges-screen--premium-hub .sda-pl-book-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px;
+  border-radius: 14px;
+  background: rgba(6, 18, 15, 0.84);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+}
+
+.challenges-screen--premium-hub .sda-pl-book-row {
+  padding: 10px 12px;
+  border-radius: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-row--active {
+  background: rgba(20, 62, 50, 0.5);
+  border: 1px solid rgba(45, 212, 179, 0.36);
+}
+
+.challenges-screen--premium-hub .sda-pl-book-row--future {
+  background: rgba(13, 30, 25, 0.55);
+  border: 1px dashed rgba(148, 163, 184, 0.26);
+  opacity: 0.86;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #F2FBF8;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-badge--active {
+  background: rgba(16, 185, 129, 0.22);
+  border: 1px solid rgba(52, 211, 153, 0.48);
+  color: #6EE7B7;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-badge--future {
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #CBD5E1;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-desc {
+  margin: 0;
+  font-size: 11.8px;
+  line-height: 1.42;
+  color: #B9CFC8;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-link {
+  margin-top: 3px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: rgba(45, 212, 179, 0.12);
+  border: 1px solid rgba(45, 212, 179, 0.3);
+  color: #5EEAD4;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.challenges-screen--premium-hub .sda-pl-book-link:hover {
+  background: rgba(45, 212, 179, 0.2);
+  color: #FFFFFF;
+}
+
+/* Compact Consolidated Check-In Status Strip */
+.challenges-screen--premium-hub .sda-pl-checkin-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 13px;
+  background: rgba(7, 20, 16, 0.68);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+}
+
+.challenges-screen--premium-hub .sda-pl-checkin-strip--done {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(10, 32, 25, 0.68);
+}
+
+.challenges-screen--premium-hub .sda-pl-checkin-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-checkin-btn {
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(45, 212, 179, 0.14);
+  border: 1px solid rgba(45, 212, 179, 0.36);
+  color: #6EE7CE;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--premium-hub .sda-pl-checkin-btn:hover {
+  background: rgba(45, 212, 179, 0.24);
+  border-color: rgba(45, 212, 179, 0.62);
+  color: #FFFFFF;
+}
+
+.challenges-screen--premium-hub .sda-pl-checkin-btn:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+/* 4 Neon-Rimmed Practice Action Cards (2x2 Grid) */
+.challenges-screen--premium-hub .sda-pl-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card {
+  position: relative;
+  min-height: 68px;
+  padding: 10px 9px;
+  border-radius: 15px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 12px;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card:hover {
+  transform: translateY(-1px);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card:active {
+  transform: translateY(0);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 2px;
+}
+
+/* 1. Warm Gold: I Slipped */
+.challenges-screen--premium-hub .sda-pl-action-card--gold {
+  background:
+    radial-gradient(90% 120% at 15% 20%, rgba(251, 191, 36, 0.26) 0%, rgba(251, 191, 36, 0) 68%),
+    linear-gradient(135deg, rgba(112, 74, 12, 0.62) 0%, rgba(40, 27, 7, 0.92) 68%, rgba(64, 42, 10, 0.78) 100%);
+  border: 1.5px solid rgba(251, 191, 36, 0.78);
+  box-shadow:
+    0 4px 18px rgba(245, 158, 11, 0.18),
+    0 0 14px rgba(251, 191, 36, 0.14),
+    inset 0 1px 0 rgba(254, 240, 138, 0.25);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--gold:hover {
+  border-color: #FCD34D;
+  box-shadow:
+    0 6px 22px rgba(245, 158, 11, 0.26),
+    0 0 18px rgba(251, 191, 36, 0.22),
+    inset 0 1px 0 rgba(254, 240, 138, 0.34);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--gold .sda-pl-action-icon {
+  color: #FCD34D;
+  filter: drop-shadow(0 0 7px rgba(251, 191, 36, 0.45));
+}
+
+/* 2. Purple: I Am Drifting */
+.challenges-screen--premium-hub .sda-pl-action-card--purple {
+  background:
+    radial-gradient(90% 120% at 15% 20%, rgba(192, 132, 252, 0.26) 0%, rgba(192, 132, 252, 0) 68%),
+    linear-gradient(135deg, rgba(86, 36, 136, 0.64) 0%, rgba(30, 14, 54, 0.92) 68%, rgba(56, 23, 92, 0.78) 100%);
+  border: 1.5px solid rgba(192, 132, 252, 0.8);
+  box-shadow:
+    0 4px 18px rgba(168, 85, 247, 0.2),
+    0 0 14px rgba(192, 132, 252, 0.15),
+    inset 0 1px 0 rgba(233, 213, 255, 0.24);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--purple:hover {
+  border-color: #D8B4FE;
+  box-shadow:
+    0 6px 22px rgba(168, 85, 247, 0.28),
+    0 0 18px rgba(192, 132, 252, 0.24),
+    inset 0 1px 0 rgba(233, 213, 255, 0.34);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--purple .sda-pl-action-icon {
+  color: #D8B4FE;
+  filter: drop-shadow(0 0 7px rgba(192, 132, 252, 0.48));
+}
+
+/* 3. Emerald: I Resumed */
+.challenges-screen--premium-hub .sda-pl-action-card--emerald {
+  background:
+    radial-gradient(90% 120% at 15% 20%, rgba(52, 211, 153, 0.25) 0%, rgba(52, 211, 153, 0) 68%),
+    linear-gradient(135deg, rgba(14, 92, 64, 0.66) 0%, rgba(8, 35, 25, 0.93) 68%, rgba(13, 62, 44, 0.8) 100%);
+  border: 1.5px solid rgba(52, 211, 153, 0.8);
+  box-shadow:
+    0 4px 18px rgba(16, 185, 129, 0.2),
+    0 0 14px rgba(52, 211, 153, 0.15),
+    inset 0 1px 0 rgba(167, 243, 208, 0.24);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--emerald:hover {
+  border-color: #6EE7B7;
+  box-shadow:
+    0 6px 22px rgba(16, 185, 129, 0.28),
+    0 0 18px rgba(52, 211, 153, 0.24),
+    inset 0 1px 0 rgba(167, 243, 208, 0.34);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--emerald .sda-pl-action-icon {
+  color: #5EEAD4;
+  filter: drop-shadow(0 0 7px rgba(45, 212, 179, 0.46));
+}
+
+/* 4. Blue: Re-Commit */
+.challenges-screen--premium-hub .sda-pl-action-card--blue {
+  background:
+    radial-gradient(90% 120% at 15% 20%, rgba(96, 165, 250, 0.26) 0%, rgba(96, 165, 250, 0) 68%),
+    linear-gradient(135deg, rgba(18, 66, 126, 0.66) 0%, rgba(9, 27, 56, 0.93) 68%, rgba(16, 48, 94, 0.8) 100%);
+  border: 1.5px solid rgba(96, 165, 250, 0.82);
+  box-shadow:
+    0 4px 18px rgba(59, 130, 246, 0.2),
+    0 0 14px rgba(96, 165, 250, 0.15),
+    inset 0 1px 0 rgba(191, 219, 254, 0.24);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--blue:hover {
+  border-color: #93C5FD;
+  box-shadow:
+    0 6px 22px rgba(59, 130, 246, 0.28),
+    0 0 18px rgba(96, 165, 250, 0.24),
+    inset 0 1px 0 rgba(191, 219, 254, 0.34);
+}
+
+.challenges-screen--premium-hub .sda-pl-action-card--blue .sda-pl-action-icon {
+  color: #7DD3FC;
+  filter: drop-shadow(0 0 7px rgba(96, 165, 250, 0.48));
+}
+
+.challenges-screen--premium-hub .sda-pl-action-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-svg {
+  width: 25px;
+  height: 25px;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-title {
+  font-size: 13.2px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  color: #FFFFFF;
+  overflow-wrap: break-word;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-sub {
+  font-size: 10.6px;
+  font-weight: 500;
+  line-height: 1.24;
+  color: rgba(241, 248, 246, 0.84);
+  overflow-wrap: break-word;
+}
+
+.challenges-screen--premium-hub .sda-pl-action-chevron {
+  color: rgba(255, 255, 255, 0.78);
+  flex-shrink: 0;
+}
+
+/* Book 1 4-Step Flow Strip: Structured Diet -> Today -> Daily Review -> Weekly Review */
+.challenges-screen--premium-hub .sda-pl-steps-flow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+  align-items: stretch;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(185, 207, 200, 0.72);
+  padding: 0;
+  user-select: none;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card {
+  position: relative;
+  min-height: 98px;
+  padding: 9px 3px 8px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(16, 43, 35, 0.72) 0%, rgba(9, 25, 20, 0.88) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card:hover {
+  border-color: rgba(45, 212, 179, 0.54);
+  background: linear-gradient(180deg, rgba(20, 56, 46, 0.82) 0%, rgba(11, 32, 26, 0.92) 100%);
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card.is-current {
+  background:
+    radial-gradient(100% 90% at 50% 0%, rgba(45, 212, 179, 0.28) 0%, rgba(45, 212, 179, 0) 70%),
+    linear-gradient(180deg, rgba(24, 88, 70, 0.9) 0%, rgba(11, 45, 36, 0.96) 100%);
+  border: 1.5px solid #2DD4B3;
+  box-shadow:
+    0 0 20px rgba(45, 212, 179, 0.28),
+    inset 0 1px 0 rgba(167, 243, 208, 0.28);
+}
+
+.challenges-screen--premium-hub .sda-pl-step-done-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.26);
+  border: 1px solid rgba(52, 211, 153, 0.65);
+  color: #6EE7B7;
+  font-size: 9.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-icon {
+  height: 24px;
+  color: #4CE0C2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card.is-current .sda-pl-step-icon {
+  color: #6EE7CE;
+  filter: drop-shadow(0 0 8px rgba(45, 212, 179, 0.55));
+}
+
+.challenges-screen--premium-hub .sda-pl-step-title {
+  font-size: 10.4px;
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-sub {
+  font-size: 9.5px;
+  font-weight: 500;
+  line-height: 1.22;
+  color: #B6CCC5;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.challenges-screen--premium-hub .sda-pl-step-card.is-current .sda-pl-step-sub {
+  color: #E2F8F2;
+}
+
+/* Consolidated Challenge Progress & Metrics Card */
+.challenges-screen--premium-hub .sda-pl-metrics-card {
+  border-radius: 18px;
+  padding: 12px 13px 13px;
+  background: linear-gradient(180deg, rgba(14, 37, 30, 0.95) 0%, rgba(9, 23, 19, 0.98) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  box-shadow: 0 10px 26px rgba(2, 9, 7, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head {
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 4px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(45, 212, 179, 0.14);
+  border: 1px solid rgba(45, 212, 179, 0.28);
+  color: #2DD4B3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #F5FAF8;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head-chevron {
+  color: #B4C7C1;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-head.is-open .sda-pl-metrics-head-chevron {
+  transform: rotate(90deg);
+  color: #2DD4B3;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-tile {
+  padding: 9px 6px 8px;
+  border-radius: 12px;
+  background: rgba(8, 22, 18, 0.78);
+  border: 1px solid rgba(45, 212, 179, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-icon {
+  color: #4CE0C2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-val {
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-denom {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #B9CFC8;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-val.is-empty {
+  color: #8CA39C;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-val.is-checked {
+  color: #5EEAD4;
+}
+
+.challenges-screen--premium-hub .sda-pl-metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #B4C7C1;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-expanded {
+  padding-top: 10px;
+  border-top: 1px solid rgba(45, 212, 179, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.challenges-screen--premium-hub .sda-pl-metrics-expanded[hidden] {
+  display: none !important;
+}
+
+.challenges-screen--premium-hub .sda-pl-recovery-subcard {
+  margin: 0;
+  background: rgba(7, 20, 16, 0.65);
+  border-color: rgba(45, 212, 179, 0.16);
+  box-shadow: none;
+}
+
+.challenges-screen--premium-hub .sda-pl-secondary-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Prominent Contextual Continue My Journey Capsule CTA (Inside Practice Loop) */
+.challenges-screen--premium-hub .sda-pl-continue-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 2px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background:
+    radial-gradient(80% 140% at 50% 0%, rgba(45, 212, 179, 0.22) 0%, rgba(45, 212, 179, 0) 70%),
+    linear-gradient(180deg, rgba(20, 84, 67, 0.96) 0%, rgba(10, 44, 35, 0.98) 100%);
+  border: 1.5px solid rgba(45, 212, 179, 0.85);
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.2),
+    0 0 14px rgba(45, 212, 179, 0.16),
+    inset 0 1px 0 rgba(167, 243, 208, 0.28);
+  color: #FFFFFF;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--premium-hub .sda-pl-continue-btn:hover {
+  transform: translateY(-1px);
+  border-color: #6EE7CE;
+  box-shadow:
+    0 8px 24px rgba(16, 185, 129, 0.28),
+    0 0 20px rgba(45, 212, 179, 0.24),
+    inset 0 1px 0 rgba(204, 251, 241, 0.36);
+}
+
+.challenges-screen--premium-hub .sda-pl-continue-btn:active {
+  transform: translateY(0);
+}
+
+.challenges-screen--premium-hub .sda-pl-continue-btn:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 3px;
+}
+
+.challenges-screen--premium-hub .sda-pl-continue-play-svg {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(45, 212, 179, 0.45));
+}
+
+/* Nested Structured Diet Card inside Collapsible Accordion */
+.challenges-screen--premium-hub .sda-ac-diet-accordion-body[hidden] {
+  display: none !important;
+}
+
+.challenges-screen--premium-hub .sda-ac-diet-accordion-body .challenge-diet-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.challenges-screen--premium-hub .sda-ac-diet-accordion-body .challenge-diet-icon,
+.challenges-screen--premium-hub .sda-ac-diet-accordion-body .challenge-diet-title {
+  display: none;
+}
+
+/* Compact single-row header balance on 385px - 429px (iPhone 13/14/15 390px) */
+@media (min-width: 385px) and (max-width: 429px) {
+  .challenges-screen--premium-hub .sda-pl-infinity-wrap,
+  .challenges-screen--premium-hub .sda-pl-infinity-svg {
+    width: 30px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-title {
+    font-size: 15.2px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-subtitle {
+    font-size: 10px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-book-pill {
+    padding: 5px 8px;
+    font-size: 10.2px;
+    gap: 3px;
+  }
+}
+
+/* Responsive Refinements for Narrow Mobile (320px - 384px) */
+@media (max-width: 384px) {
+  .challenges-screen--premium-hub .sda-pl-card {
+    padding: 13px 11px 13px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-title-group {
+    flex: 1 1 auto;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-title {
+    font-size: 16px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-card {
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding: 10px 9px;
+    gap: 8px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-chevron {
+    display: none;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-title {
+    font-size: 13px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-sub {
+    font-size: 10.5px;
+  }
+
+  /* 2x2 step grid on < 385px so zero horizontal overflow or cramped labels */
+  .challenges-screen--premium-hub .sda-pl-steps-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-step-arrow {
+    display: none;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-step-card {
+    min-height: 88px;
+    padding: 10px 8px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-secondary-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-continue-btn {
+    font-size: 14.5px;
+    padding: 12px 14px;
+  }
+}
+
+/* Ultra-narrow 320px - 359px: Stack action cards & 2x2 metrics tiles cleanly */
+@media (max-width: 359px) {
+  .challenges-screen--premium-hub .sda-pl-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-card {
+    grid-template-columns: 30px minmax(0, 1fr) 14px;
+    min-height: 60px;
+    padding: 10px 12px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-chevron {
+    display: block;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-metrics-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+}
+
+/* Desktop Refinements (>= 900px) */
+@media (min-width: 900px) {
+  .challenges-screen--premium-hub .sda-pl-card {
+    padding: 18px 18px 18px;
+    gap: 14px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-title {
+    font-size: 19px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-action-card {
+    min-height: 76px;
+    padding: 13px 14px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-step-card {
+    min-height: 108px;
+    padding: 12px 10px 11px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-step-title {
+    font-size: 12.5px;
+  }
+
+  .challenges-screen--premium-hub .sda-pl-step-sub {
+    font-size: 10.5px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .challenges-screen--premium-hub .sda-pl-action-card,
+  .challenges-screen--premium-hub .sda-pl-step-card,
+  .challenges-screen--premium-hub .sda-pl-continue-btn,
+  .challenges-screen--premium-hub .sda-pl-book-chevron,
+  .challenges-screen--premium-hub .sda-pl-metrics-head-chevron,
+  .challenges-screen--premium-hub .sda-j90-bar-fill,
+  .challenges-screen--premium-hub .sda-j90-milestones-line-fill {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   PHASE 5A — COMPACT 90-DAY GOAL & JOURNEY PROGRESS PANEL
+   ========================================================================== */
+
+.challenges-screen--premium-hub .sda-j90-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 12px 13px 13px;
+  background:
+    radial-gradient(110% 85% at 12% 0%, rgba(45, 212, 179, 0.1) 0%, rgba(45, 212, 179, 0) 62%),
+    linear-gradient(180deg, rgba(15, 41, 34, 0.95) 0%, rgba(8, 24, 19, 0.98) 100%);
+  border: 1px solid rgba(45, 212, 179, 0.28);
+  box-shadow:
+    0 10px 26px rgba(2, 9, 7, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.challenges-screen--premium-hub .sda-j90-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.challenges-screen--premium-hub .sda-j90-infinity {
+  width: 36px;
+  height: 24px;
+  margin-top: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-j90-infinity .sda-pl-infinity-svg {
+  width: 36px;
+  height: 22px;
+  filter: drop-shadow(0 0 6px rgba(45, 212, 179, 0.42));
+}
+
+.challenges-screen--premium-hub .sda-j90-goal-wrap {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.challenges-screen--premium-hub .sda-j90-eyebrow {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: #34D399;
+}
+
+.challenges-screen--premium-hub .sda-j90-goal-text {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.018em;
+  line-height: 1.26;
+  color: #FFFFFF;
+  overflow-wrap: break-word;
+}
+
+.challenges-screen--premium-hub .sda-j90-edit-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(16, 48, 39, 0.78);
+  border: 1px solid rgba(45, 212, 179, 0.34);
+  color: #BFE8DE;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Expand hit area to >= 46px while keeping compact visual button */
+.challenges-screen--premium-hub .sda-j90-edit-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.challenges-screen--premium-hub .sda-j90-edit-btn:hover {
+  background: rgba(24, 68, 56, 0.92);
+  border-color: rgba(45, 212, 179, 0.65);
+  color: #FFFFFF;
+}
+
+.challenges-screen--premium-hub .sda-j90-edit-btn:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+.challenges-screen--premium-hub .sda-j90-pencil-svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Inline Goal Edit Form */
+.challenges-screen--premium-hub .sda-j90-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 3px;
+}
+
+.challenges-screen--premium-hub .sda-j90-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(5, 16, 13, 0.9);
+  border: 1px solid rgba(45, 212, 179, 0.48);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 16px; /* Prevents iOS Safari zoom on focus */
+  font-weight: 600;
+  line-height: 1.3;
+  box-sizing: border-box;
+}
+
+.challenges-screen--premium-hub .sda-j90-input:focus {
+  outline: none;
+  border-color: #2DD4B3;
+  box-shadow: 0 0 0 2px rgba(45, 212, 179, 0.2);
+}
+
+.challenges-screen--premium-hub .sda-j90-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.challenges-screen--premium-hub .sda-j90-save-btn {
+  min-height: 36px;
+  padding: 5px 13px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #2DD4B3 0%, #10B981 100%);
+  border: none;
+  color: #041D17;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.challenges-screen--premium-hub .sda-j90-cancel-btn {
+  min-height: 36px;
+  padding: 5px 12px;
+  border-radius: 9px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #CBD5E1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.challenges-screen--premium-hub .sda-j90-divider {
+  height: 1px;
+  width: 100%;
+  background: rgba(45, 212, 179, 0.14);
+}
+
+/* Progress Header + Slim Bar + 6-Milestone Track */
+.challenges-screen--premium-hub .sda-j90-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.challenges-screen--premium-hub .sda-j90-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.challenges-screen--premium-hub .sda-j90-progress-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #EAF7F3;
+  letter-spacing: -0.01em;
+}
+
+.challenges-screen--premium-hub .sda-j90-progress-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #C8DDD7;
+}
+
+.challenges-screen--premium-hub .sda-j90-stat-dot {
+  color: rgba(185, 207, 200, 0.65);
+}
+
+.challenges-screen--premium-hub .sda-j90-stat-pct {
+  color: #2DD4B3;
+  font-weight: 800;
+}
+
+.challenges-screen--premium-hub .sda-j90-inactive-pill {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.13);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #C2D4CE;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.challenges-screen--premium-hub .sda-j90-bar-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(6, 18, 15, 0.88);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  overflow: hidden;
+}
+
+.challenges-screen--premium-hub .sda-j90-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #10B981 0%, #2DD4B3 65%, #5EEAD4 100%);
+  box-shadow: 0 0 8px rgba(45, 212, 179, 0.3);
+  transition: width 0.28s ease;
+}
+
+/* 6 Milestones Row (Day 3, 7, 14, 30, 60, 90) */
+.challenges-screen--premium-hub .sda-j90-milestones-wrap {
+  position: relative;
+  margin-top: 2px;
+  padding-top: 1px;
+}
+
+.challenges-screen--premium-hub .sda-j90-milestones-line {
+  position: absolute;
+  top: 11px;
+  left: calc(100% / 12);
+  right: calc(100% / 12);
+  height: 2px;
+  background: rgba(45, 212, 179, 0.22);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.challenges-screen--premium-hub .sda-j90-milestones-line-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #2DD4B3 100%);
+  transition: width 0.28s ease;
+}
+
+.challenges-screen--premium-hub .sda-j90-milestones-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-node {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--completed .sda-j90-ms-node {
+  background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+  border: 1.5px solid #6EE7B7;
+  color: #032019;
+  box-shadow: 0 0 8px rgba(45, 212, 179, 0.28);
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--upcoming .sda-j90-ms-node {
+  background: #0A201A;
+  border: 1.6px solid rgba(94, 234, 212, 0.52);
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--final-upcoming .sda-j90-ms-node {
+  width: 22px;
+  height: 22px;
+  margin-top: -1px;
+  background: radial-gradient(circle, rgba(64, 46, 12, 0.94) 0%, rgba(24, 18, 7, 0.98) 100%);
+  border: 1.6px solid rgba(251, 191, 36, 0.78);
+  color: #FCD34D;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--final-completed .sda-j90-ms-node {
+  width: 22px;
+  height: 22px;
+  margin-top: -1px;
+  background: linear-gradient(180deg, #FDE68A 0%, #F59E0B 100%);
+  border: 1.6px solid #FEF08A;
+  color: #261603;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.36);
+}
+
+.challenges-screen--premium-hub .sda-j90-star-svg {
+  width: 11px;
+  height: 11px;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-label {
+  font-size: 10.2px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #B9CFC8;
+  white-space: nowrap;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--completed .sda-j90-ms-label {
+  color: #E6FAF5;
+  font-weight: 700;
+}
+
+.challenges-screen--premium-hub .sda-j90-ms-item--final-upcoming .sda-j90-ms-label,
+.challenges-screen--premium-hub .sda-j90-ms-item--final-completed .sda-j90-ms-label {
+  color: #FDE68A;
+  font-weight: 700;
+}
+
+/* Inactive / Setup Entry Row (When Shorter Challenge Active & No 90-Day Journey Started) */
+.challenges-screen--premium-hub .sda-j90-setup-row {
+  margin-top: 2px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgba(7, 20, 16, 0.68);
+  border: 1px dashed rgba(45, 212, 179, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.challenges-screen--premium-hub .sda-j90-setup-hint {
+  font-size: 11.2px;
+  line-height: 1.32;
+  color: #B9CFC8;
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.challenges-screen--premium-hub .sda-j90-start-btn {
+  position: relative;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(45, 212, 179, 0.15);
+  border: 1px solid rgba(45, 212, 179, 0.42);
+  color: #6EE7CE;
+  font-size: 11.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenges-screen--premium-hub .sda-j90-start-btn::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
+}
+
+.challenges-screen--premium-hub .sda-j90-start-btn:hover {
+  background: rgba(45, 212, 179, 0.25);
+  border-color: rgba(45, 212, 179, 0.7);
+  color: #FFFFFF;
+}
+
+.challenges-screen--premium-hub .sda-j90-start-btn:focus-visible {
+  outline: 2px solid var(--sda-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 384px) {
+  .challenges-screen--premium-hub .sda-j90-card {
+    padding: 11px 10px 12px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-infinity {
+    width: 30px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-infinity .sda-pl-infinity-svg {
+    width: 30px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-goal-text {
+    font-size: 13.5px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-ms-label {
+    font-size: 9.2px;
+    letter-spacing: -0.02em;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-start-btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 900px) {
+  .challenges-screen--premium-hub .sda-j90-card {
+    padding: 15px 17px 16px;
+    gap: 11px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-goal-text {
+    font-size: 15.5px;
+  }
+
+  .challenges-screen--premium-hub .sda-j90-ms-label {
+    font-size: 11px;
+  }
+}

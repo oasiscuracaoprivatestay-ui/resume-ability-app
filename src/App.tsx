@@ -714,12 +714,13 @@ export default function App() {
         <RecommitScreen
           onComplete={handleRecommitSuccess}
           onNavigate={navigate}
+          onBack={goBack}
         />
       );
       break;
 
     case 'slip-type':
-      content = <SlipTypeScreen onNavigate={navigate} />;
+      content = <SlipTypeScreen onNavigate={navigate} onBack={goBack} />;
       break;
 
     case 'slip-non-negotiable':
@@ -916,7 +917,7 @@ export default function App() {
       content = (
         <DailyReviewScreen
           onNavigate={navigate}
-          onBack={() => navigate('structured-diet')}
+          onBack={goBack}
         />
       );
       break;
@@ -955,7 +956,21 @@ export default function App() {
       break;
 
     case 'challenges':
-      content = <ChallengesScreen onNavigate={navigate} onBack={goBack} />;
+      content = (
+        <ChallengesScreen
+          onNavigate={navigate}
+          onBack={goBack}
+          onOpenAbilityDetail={(abilityId: CanonicalDietAbilityId) => {
+            setSelectedDietAbilityId(abilityId);
+            try {
+              sessionStorage.setItem('sda_selected_ability_id', abilityId);
+            } catch {
+              // ignore
+            }
+            navigate('ability-detail');
+          }}
+        />
+      );
       break;
 
     case 'seven-abilities':

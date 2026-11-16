@@ -7,3 +7,4 @@ export * from './challengeDefinitions';
 export * from './challengeStorage';
 export * from './challengeEngine';
 export * from './challengeMilestones';
+export * from './ninetyDayJourneyStorage';

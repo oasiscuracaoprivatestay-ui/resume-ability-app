@@ -96,7 +96,20 @@ function stripLeadingPlus(label: string): string {
 
 export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictoriesScreenProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    try {
+      const initial = sessionStorage.getItem('pv_initial_tab');
+      if (initial) {
+        sessionStorage.removeItem('pv_initial_tab');
+        if (initial === 'overview' || initial === 'victories' || initial === 'body' || initial === 'observations') {
+          return initial;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return 'overview';
+  });
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);

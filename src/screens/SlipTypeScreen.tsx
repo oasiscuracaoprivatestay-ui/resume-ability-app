@@ -7,15 +7,16 @@ import './SlipTypeScreen.css';
 
 interface SlipTypeScreenProps {
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
-export default function SlipTypeScreen({ onNavigate }: SlipTypeScreenProps) {
+export default function SlipTypeScreen({ onNavigate, onBack }: SlipTypeScreenProps) {
   const { t } = useTranslation();
 
   return (
     <div className="screen slip-type-screen">
       <ScreenHeader
-        onBack={() => onNavigate('home')}
+        onBack={onBack ? onBack : () => onNavigate('home')}
         onHome={() => onNavigate('home')}
       />
 

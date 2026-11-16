@@ -10,6 +10,7 @@ import './RecommitScreen.css';
 interface RecommitScreenProps {
   onComplete: () => void;
   onNavigate: (screen: Screen) => void;
+  onBack?: () => void;
 }
 
 type RecommitStep = 'hold' | 'success';
@@ -17,6 +18,7 @@ type RecommitStep = 'hold' | 'success';
 export default function RecommitScreen({
   onComplete,
   onNavigate,
+  onBack,
 }: RecommitScreenProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<RecommitStep>('hold');
@@ -40,7 +42,13 @@ export default function RecommitScreen({
         title={t.recommit_title}
         eyebrow={t.recommit_label || 'RECOVERY & FOCUS'}
         subtitle={step === 'hold' ? t.recommit_subtitle : undefined}
-        onBack={() => onNavigate(step === 'hold' ? 'help' : 'home')}
+        onBack={() => {
+          if (step === 'hold' && onBack) {
+            onBack();
+          } else {
+            onNavigate(step === 'hold' ? 'help' : 'home');
+          }
+        }}
         backId="btn-header-back"
         showScoreBadge
         onNavigate={onNavigate}

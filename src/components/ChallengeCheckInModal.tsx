@@ -25,6 +25,7 @@ import './ChallengeCheckInModal.css';
 interface ChallengeCheckInModalProps {
   isOpen: boolean;
   challenge: ChallengeInstance;
+  initialStatus?: CheckInStatus | null;
   onClose: () => void;
   onNavigate: (screen: any) => void;
   onCheckInCompleted?: () => void;
@@ -34,13 +35,14 @@ interface ChallengeCheckInModalProps {
 export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   isOpen,
   challenge,
+  initialStatus = null,
   onClose,
   onNavigate,
   onCheckInCompleted,
   onRecommitCompleted,
 }) => {
   const { t } = useTranslation();
-  const [selectedStatus, setSelectedStatus] = useState<CheckInStatus | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<CheckInStatus | null>(initialStatus);
   const [step, setStep] = useState<'select' | 'confirmed'>('select');
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +58,7 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   // Reset state on open
   useEffect(() => {
     if (isOpen) {
-      setSelectedStatus(null);
+      setSelectedStatus(initialStatus ?? null);
       setStep('select');
       setHasRecommitted(false);
       setIsSubmitting(false);
@@ -81,7 +83,7 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
     } else {
       pendingActionIdRef.current = null;
     }
-  }, [isOpen, challenge.id]);
+  }, [isOpen, challenge.id, initialStatus]);
 
   // Handle ESC key to dismiss
   useEffect(() => {
@@ -347,8 +349,21 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
               </button>
             </div>
 
-            {/* Optional Diet reporting gateway */}
+            {/* Optional Diet / Detailed Slip reporting gateway */}
             <div className="challenge-diet-gateway">
+              {selectedStatus === 'slip' && (
+                <button
+                  type="button"
+                  id="btn-checkin-open-slip-type"
+                  className="challenge-diet-link"
+                  onClick={() => {
+                    onClose();
+                    onNavigate('slip-type');
+                  }}
+                >
+                  {t.pl_checkin_detailed_slip_link || 'Report Detailed Slip (Slippery Zone / Rule) →'}
+                </button>
+              )}
               <button
                 type="button"
                 id="btn-checkin-open-diet"
@@ -533,6 +548,17 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                   >
                     <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
                     <span>→</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-ci-detailed-slip"
+                    className="challenge-secondary-action-btn"
+                    onClick={() => {
+                      onClose();
+                      onNavigate('slip-type');
+                    }}
+                  >
+                    {t.pl_checkin_detailed_slip_link || 'Report Detailed Slip (Slippery Zone / Rule) →'}
                   </button>
                   <button
                     type="button"
