@@ -2249,6 +2249,29 @@ export interface Translations {
   challenge_diet_mode_free: string;
   challenge_diet_more_blocks: string;
   challenge_nn_rule_singular: string;
+  // Phase 4 — Premium Structured Diet Experience
+  sdb_header_eyebrow: string;
+  sdb_my_structured_diet: string;
+  sdb_header_subtitle: string;
+  sdb_your_structure_goal: string;
+  sdb_expand_meal: string;
+  sdb_collapse_meal: string;
+  sdb_planned_badge: string;
+  sdb_planned_label: string;
+  sdb_photos_count: string;
+  sdb_photos_count_plural: string;
+  sdb_awareness_empty_title: string;
+  sdb_awareness_empty_sub: string;
+  sdb_category_empty_title: string;
+  sdb_category_empty_sub: string;
+  sdb_free_callout_zero_title: string;
+  sdb_free_callout_zero_desc: string;
+  sdb_free_callout_protected_title: string;
+  sdb_free_callout_protected_desc: string;
+  sdb_free_callout_distinct_title: string;
+  sdb_free_callout_distinct_desc: string;
+  sdb_schedule_section_label: string;
+  sdb_quick_actions_label: string;
   challenge_nn_rule_plural: string;
 }
 

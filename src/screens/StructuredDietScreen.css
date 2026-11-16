@@ -8045,3 +8045,1405 @@
 }
 
 
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   PHASE 4 — PREMIUM STRUCTURED DIET EXPERIENCE
+   Midnight Intelligence × Premium Wellness Design System
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+#root:has(.sdb-screen) {
+  max-width: 1220px;
+  background: #071512;
+}
+
+.app-shell:has(.sdb-screen) .sda-bottom-nav {
+  background: rgba(7, 21, 18, 0.96);
+  border-top: 1px solid rgba(45, 212, 179, 0.16);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.sdb-screen {
+  --sdb-bg-main: #071512;
+  --sdb-surface: #102620;
+  --sdb-surface-elevated: #12342C;
+  --sdb-surface-deep: #0A1B16;
+  --sdb-accent: #2DD4B3;
+  --sdb-emerald: #10B981;
+  --sdb-text-primary: #F5F7F6;
+  --sdb-text-secondary: #98AEA7;
+  --sdb-text-muted: #6E8780;
+  --sdb-border: rgba(45, 212, 179, 0.16);
+  --sdb-border-strong: rgba(45, 212, 179, 0.34);
+
+  background:
+    radial-gradient(ellipse 90% 38% at 50% 0%, rgba(18, 52, 44, 0.58) 0%, rgba(7, 21, 18, 0) 70%),
+    #071512 !important;
+  color: var(--sdb-text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── 1. Sticky Responsive Top Utility Bar (Back + Score Badge) ── */
+.sdb-header-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(7, 21, 18, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(45, 212, 179, 0.12);
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 8px;
+}
+
+.sdb-header-topbar-inner {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sdb-header-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(18, 52, 44, 0.72);
+  border: 1px solid var(--sdb-border);
+  color: var(--sdb-text-primary);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.sdb-header-back-btn:hover {
+  background: rgba(18, 52, 44, 0.96);
+  border-color: var(--sdb-border-strong);
+}
+
+.sdb-header-back-btn:focus-visible,
+.sdb-meal-collapse-btn:focus-visible,
+.sdb-btn-open-settings:focus-visible,
+.sdb-timer-compact-btn:focus-visible,
+.sdb-mode-card:focus-visible,
+.sdb-action-grid-btn:focus-visible,
+.sdb-primary-add-btn:focus-visible,
+.sdb-period-tab:focus-visible {
+  outline: 2px solid var(--sdb-accent);
+  outline-offset: 2px;
+}
+
+.sdb-header-score-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+/* ── 2. Inner Container & Bottom Navigation Clearance ── */
+.sdb-screen .sdb-inner {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 14px 16px calc(var(--sda-nav-reserve, 108px) + 44px) !important;
+  box-sizing: border-box;
+}
+
+.sdb-screen .sdb-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 24px !important;
+  width: 100%;
+  min-width: 0;
+}
+
+.sdb-daily-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sdb-desktop-split {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sdb-col-controls,
+.sdb-col-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── 3. Responsive Hero Title Block (Zero Truncation) ── */
+.sdb-hero-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 2px 4px;
+  min-width: 0;
+}
+
+.sdb-hero-eyebrow-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdb-hero-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--sdb-accent);
+}
+
+.sdb-hero-title {
+  margin: 0;
+  font-size: clamp(1.55rem, 5.5vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--sdb-text-primary);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}
+
+.sdb-hero-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--sdb-text-secondary);
+  line-height: 1.4;
+}
+
+/* ── 4. Compact Structure Goal Summary Card ── */
+.sdb-screen .sdb-daily-profile-bar {
+  background: linear-gradient(160deg, var(--sdb-surface-elevated) 0%, var(--sdb-surface) 100%) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+}
+
+.sdb-daily-profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sdb-screen .sdb-daily-profile-label {
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--sdb-accent) !important;
+}
+
+.sdb-screen .sdb-daily-profile-name {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--sdb-text-primary) !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+}
+
+.sdb-screen .sdb-daily-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sdb-screen .sdb-btn-open-settings,
+.sdb-screen .sdb-timer-compact-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 44px !important;
+  padding: 8px 13px !important;
+  border-radius: 11px !important;
+  font-family: inherit;
+  font-size: 0.81rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  flex: 1 1 auto;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.sdb-screen .sdb-btn-open-settings {
+  background: rgba(45, 212, 179, 0.12) !important;
+  border: 1px solid rgba(45, 212, 179, 0.3) !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+.sdb-screen .sdb-btn-open-settings:hover {
+  background: rgba(45, 212, 179, 0.2) !important;
+  border-color: var(--sdb-accent) !important;
+}
+
+.sdb-screen .sdb-timer-compact-btn {
+  background: rgba(10, 27, 22, 0.72) !important;
+  border: 1px solid var(--sdb-border) !important;
+  color: var(--sdb-text-secondary) !important;
+}
+
+.sdb-screen .sdb-timer-compact-btn:hover {
+  border-color: var(--sdb-border-strong) !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+/* ── 5. Two-Row Premium Date Selector ── */
+.sdb-screen .sdb-day-dropdown-card {
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+}
+
+.sdb-screen .sdb-day-dropdown-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.sdb-screen .sdb-day-dropdown-label {
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--sdb-text-secondary) !important;
+  margin: 0 !important;
+}
+
+.sdb-day-dropdown-badges {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sdb-screen .sdb-today-badge--dropdown {
+  background: rgba(45, 212, 179, 0.14) !important;
+  border: 1px solid rgba(45, 212, 179, 0.34) !important;
+  color: var(--sdb-accent) !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.03em;
+}
+
+.sdb-screen .sdb-day-dropdown-wrapper {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  padding: 10px 14px !important;
+  border-radius: 12px !important;
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid rgba(45, 212, 179, 0.24) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sdb-screen .sdb-day-dropdown-wrapper:hover {
+  border-color: var(--sdb-border-strong) !important;
+}
+
+.sdb-screen .sdb-day-dropdown-wrapper:focus-within {
+  border-color: var(--sdb-accent) !important;
+  box-shadow: 0 0 0 2px rgba(45, 212, 179, 0.24) !important;
+}
+
+.sdb-day-select-cal-icon {
+  position: static !important;
+  transform: none !important;
+  color: var(--sdb-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.sdb-day-select-display {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--sdb-text-primary);
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  pointer-events: none;
+}
+
+.sdb-screen .sdb-day-select--main {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+  z-index: 3 !important;
+}
+
+.sdb-screen .sdb-day-select--main option {
+  background: #0A1B16;
+  color: #F5F7F6;
+}
+
+.sdb-screen .sdb-day-dropdown-chevron {
+  position: static !important;
+  transform: none !important;
+  color: var(--sdb-accent) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important;
+  font-size: 1rem !important;
+}
+
+/* ── 6. Day Type Selector Cards ── */
+.sdb-screen .sdb-day-header-card--clean {
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+}
+
+.sdb-screen .sdb-day-mode-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sdb-screen .sdb-day-mode-label {
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--sdb-text-secondary) !important;
+}
+
+.sdb-screen .sdb-mode-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.sdb-screen .sdb-mode-card {
+  position: relative !important;
+  min-height: 68px !important;
+  padding: 10px 8px !important;
+  border-radius: 12px !important;
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid rgba(45, 212, 179, 0.14) !important;
+  color: var(--sdb-text-secondary) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  text-align: center !important;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.sdb-screen .sdb-mode-card:hover {
+  border-color: var(--sdb-border-strong) !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+.sdb-screen .sdb-mode-card--active {
+  background: var(--sdb-surface-elevated) !important;
+  border-color: var(--sdb-accent) !important;
+  color: var(--sdb-text-primary) !important;
+  box-shadow: 0 0 0 1px rgba(45, 212, 179, 0.22), 0 6px 18px rgba(16, 185, 129, 0.14) !important;
+}
+
+.sdb-screen .sdb-mode-card-icon {
+  color: var(--sdb-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem !important;
+}
+
+.sdb-screen .sdb-mode-card--active .sdb-mode-card-icon {
+  color: var(--sdb-accent);
+}
+
+.sdb-screen .sdb-mode-card-title {
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  line-height: 1.22 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: break-word !important;
+}
+
+.sdb-screen .sdb-mode-card-check {
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 999px !important;
+  background: var(--sdb-accent) !important;
+  color: #041914 !important;
+  font-size: 0.64rem !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ── 7. Quick Actions 2-Column Grid + Full-Width Primary CTA ── */
+.sdb-screen .sdb-quick-actions-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.sdb-screen .sdb-quick-actions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.sdb-screen .sdb-action-grid-btn {
+  min-height: 48px !important;
+  padding: 10px 12px !important;
+  border-radius: 13px !important;
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  color: var(--sdb-text-primary) !important;
+  font-family: inherit !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  text-align: left !important;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease !important;
+}
+
+.sdb-screen .sdb-action-grid-btn:hover {
+  background: var(--sdb-surface-elevated) !important;
+  border-color: var(--sdb-border-strong) !important;
+  transform: translateY(-1px);
+}
+
+.sdb-screen .sdb-action-grid-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(45, 212, 179, 0.1);
+  color: var(--sdb-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.95rem !important;
+}
+
+.sdb-screen .sdb-action-grid-label {
+  min-width: 0;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.22 !important;
+  word-break: break-word;
+}
+
+.sdb-screen .sdb-primary-add-btn {
+  width: 100% !important;
+  min-height: 50px !important;
+  padding: 12px 18px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #2DD4B3 0%, #10B981 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #041914 !important;
+  font-family: inherit !important;
+  font-size: 0.94rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(16, 185, 129, 0.22) !important;
+  transition: filter 0.18s ease, transform 0.18s ease !important;
+}
+
+.sdb-screen .sdb-primary-add-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* ── 8. Today's Progress — Compact Summary ── */
+.sdb-screen .sdb-today-progress-card {
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.sdb-screen .sdb-today-progress-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+.sdb-screen .sdb-progress-badge {
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--sdb-accent) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.sdb-screen .sdb-progress-summary {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+.sdb-progress-linear-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sdb-surface-deep);
+  overflow: hidden;
+  border: 1px solid rgba(45, 212, 179, 0.1);
+}
+
+.sdb-progress-linear-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sdb-emerald), var(--sdb-accent));
+  transition: width 0.28s ease;
+}
+
+.sdb-screen .sdb-progress-rings-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin: 2px 0 0 !important;
+}
+
+.sdb-screen .sdb-progress-ring-item {
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid rgba(45, 212, 179, 0.12) !important;
+  border-radius: 11px !important;
+  padding: 8px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
+  min-width: 0;
+}
+
+.sdb-screen .sdb-progress-ring-item--done {
+  background: rgba(18, 52, 44, 0.85) !important;
+  border-color: rgba(45, 212, 179, 0.36) !important;
+}
+
+.sdb-progress-item-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdb-progress-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sdb-text-muted);
+}
+
+.sdb-progress-ring-item--done .sdb-progress-item-dot {
+  background: var(--sdb-accent);
+  box-shadow: 0 0 8px rgba(45, 212, 179, 0.65);
+}
+
+.sdb-screen .sdb-mini-ring-val {
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+.sdb-screen .sdb-mini-ring-label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: var(--sdb-text-secondary) !important;
+  line-height: 1.25 !important;
+  text-align: left !important;
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+/* ── 9. Daily Schedule Section & Compact Expandable Meal Cards ── */
+.sdb-schedule-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sdb-schedule-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.sdb-schedule-section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--sdb-text-secondary);
+}
+
+.sdb-schedule-count-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sdb-accent);
+  background: rgba(45, 212, 179, 0.1);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.sdb-screen .sdb-block-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.sdb-screen .sdb-block-card {
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24) !important;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.sdb-screen .sdb-block-card:hover {
+  border-color: var(--sdb-border-strong) !important;
+}
+
+.sdb-screen .sdb-block-card--expanded {
+  background: linear-gradient(180deg, var(--sdb-surface-elevated) 0%, var(--sdb-surface) 140px) !important;
+  border-color: rgba(45, 212, 179, 0.32) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34) !important;
+}
+
+.sdb-screen .sdb-block-card--verified.sdb-block-card--on-track {
+  border-color: rgba(45, 212, 179, 0.42) !important;
+}
+
+.sdb-screen .sdb-block-card--verified.sdb-block-card--slip {
+  border-color: rgba(245, 158, 11, 0.38) !important;
+}
+
+/* Collapsed semantic header button */
+.sdb-meal-collapse-btn {
+  width: 100%;
+  min-height: 78px;
+  padding: 13px 15px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.sdb-meal-collapse-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sdb-meal-collapse-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  line-height: 1.25;
+}
+
+.sdb-meal-collapse-time {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--sdb-accent);
+  letter-spacing: 0.01em;
+}
+
+.sdb-meal-collapse-overnight {
+  font-weight: 600;
+  color: var(--sdb-text-secondary);
+}
+
+.sdb-meal-collapse-sep {
+  color: rgba(152, 174, 167, 0.4);
+  font-size: 0.74rem;
+}
+
+.sdb-meal-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 1.3;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.sdb-meal-status-pill--pending,
+.sdb-meal-status-pill--planned {
+  background: rgba(10, 27, 22, 0.78);
+  border: 1px solid rgba(152, 174, 167, 0.2);
+  color: var(--sdb-text-secondary);
+}
+
+.sdb-meal-status-pill--ontrack {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(45, 212, 179, 0.38);
+  color: #5EEAD4;
+}
+
+.sdb-meal-status-pill--slip {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  color: #FCD34D;
+}
+
+.sdb-meal-photo-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sdb-accent);
+  background: rgba(45, 212, 179, 0.1);
+  border: 1px solid rgba(45, 212, 179, 0.22);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.sdb-meal-collapse-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--sdb-text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.sdb-meal-collapse-summary {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--sdb-text-secondary);
+  line-height: 1.36;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.sdb-meal-chevron {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(10, 27, 22, 0.72);
+  border: 1px solid var(--sdb-border);
+  color: var(--sdb-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.22s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.sdb-meal-collapse-btn:hover .sdb-meal-chevron {
+  background: rgba(18, 52, 44, 0.95);
+  border-color: var(--sdb-border-strong);
+}
+
+.sdb-meal-chevron--open {
+  transform: rotate(180deg);
+  background: rgba(45, 212, 179, 0.14);
+  border-color: rgba(45, 212, 179, 0.36);
+}
+
+/* Smooth expandable panel */
+.sdb-meal-expand-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sdb-meal-expand-panel > .sdb-meal-expand-inner {
+  overflow: hidden;
+  min-height: 0;
+  visibility: hidden;
+  opacity: 0;
+  padding: 0 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.16s ease, visibility 0s linear 0.24s;
+}
+
+.sdb-meal-expand-panel.sdb-meal-expand-panel--open {
+  grid-template-rows: 1fr;
+}
+
+.sdb-meal-expand-panel.sdb-meal-expand-panel--open > .sdb-meal-expand-inner {
+  visibility: visible;
+  opacity: 1;
+  padding: 13px 15px 15px;
+  border-top: 1px solid rgba(45, 212, 179, 0.14);
+  transition: opacity 0.2s ease, visibility 0s linear 0s;
+}
+
+/* Expanded controls refinement & 44px touch targets */
+.sdb-screen .sdb-block-time-pill {
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 11px !important;
+  padding: 2px 6px !important;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sdb-screen .sdb-block-time-select {
+  min-height: 44px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--sdb-text-primary) !important;
+  font-family: inherit;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  padding: 4px 6px !important;
+  cursor: pointer;
+}
+
+.sdb-screen .sdb-block-time-select option {
+  background: #0A1B16;
+  color: #F5F7F6;
+}
+
+.sdb-screen .sdb-icon-btn--delete,
+.sdb-screen .sdb-block-desc-edit-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+}
+
+.sdb-screen .sdb-block-thumb-wrap {
+  position: relative;
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 12px !important;
+  overflow: visible !important;
+  flex-shrink: 0;
+}
+
+.sdb-screen .sdb-block-thumb-btn {
+  width: 60px !important;
+  height: 60px !important;
+  padding: 0;
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid var(--sdb-border);
+  background: var(--sdb-surface-deep);
+  cursor: pointer;
+  display: block;
+}
+
+.sdb-screen .sdb-block-thumb-img {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 12px !important;
+  object-fit: cover;
+  display: block;
+}
+
+.sdb-screen .sdb-block-thumb-cam-btn {
+  position: absolute !important;
+  right: -6px !important;
+  bottom: -6px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 999px !important;
+  background: var(--sdb-surface-elevated) !important;
+  border: 1px solid var(--sdb-accent) !important;
+  color: var(--sdb-accent) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.sdb-screen .sdb-block-categories-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
+}
+
+.sdb-screen .sdb-cat-badge {
+  background: rgba(18, 52, 44, 0.8) !important;
+  border: 1px solid rgba(45, 212, 179, 0.22) !important;
+  color: var(--sdb-text-primary) !important;
+  border-radius: 999px !important;
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  max-width: 100%;
+}
+
+.sdb-screen .sdb-verify-btn {
+  min-height: 44px !important;
+  border-radius: 11px !important;
+  font-family: inherit;
+}
+
+.sdb-screen .sdb-verify-btn--slip {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.34) !important;
+  color: #FCD34D !important;
+}
+
+.sdb-screen .sdb-verify-btn--slip:hover,
+.sdb-screen .sdb-verify-btn--slip.sdb-verify-btn--active {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Replace harsh orange Edit button inside meal cards with sleek Midnight Emerald */
+.sdb-screen .sdb-btn-edit-block {
+  min-height: 44px !important;
+  padding: 8px 14px !important;
+  border-radius: 11px !important;
+  background: rgba(45, 212, 179, 0.12) !important;
+  border: 1px solid rgba(45, 212, 179, 0.3) !important;
+  color: var(--sdb-accent) !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.sdb-screen .sdb-btn-edit-block:hover {
+  background: rgba(45, 212, 179, 0.22) !important;
+  border-color: var(--sdb-accent) !important;
+  color: var(--sdb-text-primary) !important;
+}
+
+.sdb-screen .sdb-verified-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+/* ── 10. Eating Structure Awareness & Food Category Awareness (Midnight Emerald) ── */
+.sdb-screen .sdb-awareness-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.sdb-screen .sdb-awareness-card,
+.sdb-screen .sdb-category-awareness-card {
+  background: var(--sdb-surface) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26) !important;
+}
+
+.sdb-screen .sdb-awareness-badge,
+.sdb-screen .sdb-awareness-badge--categories {
+  color: var(--sdb-accent) !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  gap: 6px !important;
+}
+
+.sdb-screen .sdb-awareness-question {
+  color: var(--sdb-text-primary) !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  margin-top: 2px !important;
+}
+
+.sdb-screen .sdb-period-tabs {
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid var(--sdb-border) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100%;
+}
+
+.sdb-screen .sdb-period-tab {
+  min-height: 40px !important;
+  padding: 6px 6px !important;
+  border-radius: 9px !important;
+  font-family: inherit !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: var(--sdb-text-secondary) !important;
+  white-space: normal !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+}
+
+.sdb-screen .sdb-period-tab--active {
+  background: var(--sdb-surface-elevated) !important;
+  color: var(--sdb-accent) !important;
+  border: 1px solid rgba(45, 212, 179, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+.sdb-screen .sdb-segmented-bar {
+  background: var(--sdb-surface-deep) !important;
+  border: 1px solid rgba(45, 212, 179, 0.14);
+}
+
+.sdb-screen .sdb-segment--structured {
+  background: linear-gradient(90deg, var(--sdb-emerald), var(--sdb-accent)) !important;
+}
+
+.sdb-screen .sdb-segment--outside-core {
+  background: linear-gradient(90deg, #2D6A5E, #5FB3A2) !important;
+}
+
+.sdb-screen .sdb-metric-box,
+.sdb-screen .sdb-bucket-card,
+.sdb-screen .sdb-resume-section,
+.sdb-screen .sdb-drift-section,
+.sdb-screen .sdb-awareness-cat-portion-card {
+  background: var(--sdb-surface-deep) !important;
+  border-color: rgba(45, 212, 179, 0.14) !important;
+}
+
+.sdb-screen .sdb-metric-box--outside-core {
+  border-left-color: #5FB3A2 !important;
+}
+
+.sdb-screen .sdb-metric-dot--outside-core {
+  background-color: #5FB3A2 !important;
+  box-shadow: 0 0 6px rgba(95, 179, 162, 0.5) !important;
+}
+
+/* Polished non-zero Empty States for Analytics */
+.sdb-screen .sdb-awareness-empty,
+.sdb-screen .sdb-categories-empty {
+  background: var(--sdb-surface-deep) !important;
+  border: 1px dashed rgba(45, 212, 179, 0.22) !important;
+  border-radius: 14px !important;
+  padding: 26px 18px !important;
+  margin-top: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 6px !important;
+}
+
+.sdb-awareness-empty-icon-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(45, 212, 179, 0.1);
+  border: 1px solid rgba(45, 212, 179, 0.24);
+  color: var(--sdb-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.sdb-awareness-empty-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--sdb-text-primary);
+  line-height: 1.3;
+}
+
+.sdb-screen .sdb-awareness-empty-text,
+.sdb-screen .sdb-categories-empty-text {
+  margin: 0 !important;
+  font-size: 0.83rem !important;
+  font-weight: 500 !important;
+  color: var(--sdb-text-secondary) !important;
+  max-width: 300px !important;
+  line-height: 1.45 !important;
+}
+
+/* ── 11. Responsive Breakpoints (320px, 390px, 430px, 768px, 1024px, 1440px) ── */
+
+@media (max-width: 379px) {
+  .sdb-header-topbar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .sdb-header-back-btn {
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+
+  .sdb-screen .sdb-inner {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .sdb-day-select-display {
+    font-size: 0.85rem;
+  }
+
+  /* Stack Day Type cards cleanly on 320px so long Spanish/Dutch labels never clip */
+  .sdb-screen .sdb-mode-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sdb-screen .sdb-mode-card {
+    min-height: 46px !important;
+    padding: 10px 34px 10px 12px !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    gap: 10px !important;
+  }
+
+  .sdb-screen .sdb-mode-card-check {
+    top: 50% !important;
+    right: 10px !important;
+    transform: translateY(-50%);
+  }
+
+  .sdb-screen .sdb-action-grid-btn {
+    padding: 9px 10px !important;
+    font-size: 0.78rem !important;
+    gap: 7px !important;
+  }
+
+  .sdb-screen .sdb-action-grid-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .sdb-screen .sdb-period-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 480px) {
+  .sdb-screen .sdb-daily-profile-bar {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .sdb-screen .sdb-daily-profile-actions {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .sdb-screen .sdb-progress-rings-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .sdb-header-topbar {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .sdb-screen .sdb-inner {
+    max-width: 760px;
+    padding: 20px 24px calc(var(--sda-nav-reserve, 108px) + 48px) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sdb-header-topbar {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .sdb-screen .sdb-inner {
+    max-width: 1120px;
+    padding: 24px 32px calc(var(--sda-nav-reserve, 108px) + 52px) !important;
+  }
+
+  .sdb-desktop-split {
+    display: grid;
+    grid-template-columns: 370px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .sdb-col-controls .sdb-daily-profile-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .sdb-col-controls .sdb-daily-profile-actions {
+    width: 100%;
+  }
+
+  .sdb-screen .sdb-awareness-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+    margin-top: 12px;
+  }
+}
+
+@media (min-width: 1360px) {
+  .sdb-header-topbar-inner,
+  .sdb-screen .sdb-inner {
+    max-width: 1220px;
+  }
+
+  .sdb-desktop-split {
+    grid-template-columns: 390px minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sdb-meal-expand-panel,
+  .sdb-meal-expand-panel > .sdb-meal-expand-inner,
+  .sdb-meal-chevron,
+  .sdb-progress-linear-fill,
+  .sdb-action-grid-btn,
+  .sdb-primary-add-btn {
+    transition: none !important;
+  }
+}

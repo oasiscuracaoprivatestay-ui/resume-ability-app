@@ -221,8 +221,42 @@ function buildTimeSlots(): TimeSlot[] {
 
 export const TIME_SLOTS: TimeSlot[] = buildTimeSlots();
 
-/** Convert internal 24h "HH:MM" to display label. */
-export function formatTime(value: string): string {
-  const slot = TIME_SLOTS.find(s => s.value === value);
-  return slot?.label ?? value;
+/** Convert internal 24h "HH:MM" to locale-aware display label without mutating unusual values. */
+export function formatTime(value: string, lang?: 'en' | 'es' | 'nl'): string {
+  if (!value) return value;
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
+  if (!match) {
+    const slot = TIME_SLOTS.find(s => s.value === value);
+    return slot?.label ?? value;
+  }
+  const h = Number(match[1]);
+  const mm = match[2];
+  if (lang === 'es' || lang === 'nl') {
+    return `${String(h).padStart(2, '0')}:${mm}`;
+  }
+  const period = h < 12 ? 'AM' : 'PM';
+  const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${displayH}:${mm} ${period}`;
+}
+
+/**
+ * Returns the 96 standard 15-minute time slots (formatted for `lang`), plus `currentValue`
+ * inserted in chronological order if `currentValue` is a valid non-quarter-hour time (e.g. "16:20")
+ * or preserved verbatim if unusual, preventing HTML `<select>` from falling back to "00:00" (12:00 AM).
+ */
+export function getTimeSlotOptions(currentValue?: string, lang?: 'en' | 'es' | 'nl'): TimeSlot[] {
+  const base: TimeSlot[] = TIME_SLOTS.map(s => ({
+    value: s.value,
+    label: formatTime(s.value, lang),
+  }));
+  if (!currentValue || base.some(s => s.value === currentValue)) {
+    return base;
+  }
+  const trimmed = currentValue.trim();
+  if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(trimmed)) {
+    const combined = [...base, { value: currentValue, label: formatTime(trimmed, lang) }];
+    combined.sort((a, b) => a.value.localeCompare(b.value));
+    return combined;
+  }
+  return [...base, { value: currentValue, label: currentValue }];
 }
