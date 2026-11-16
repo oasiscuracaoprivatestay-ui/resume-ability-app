@@ -28,6 +28,7 @@ const HIDDEN_ON: Screen[] = [
   'commitment',
   'my-slippery-zones',
   'dashboard',
+  'progress-victories',
   'daily-review',
   'activity-log',
   'seven-abilities',
