@@ -39,7 +39,12 @@ import {
   resolveNinetyDayJourneyView,
   saveNinetyDayGoalText,
   startStandaloneNinetyDayJourney,
+  saveNinetyDayMilestoneReview,
   NINETY_DAY_JOURNEY_UPDATED_EVENT,
+  evaluateBook1PracticeLoopGuidance,
+  type NinetyDayMilestoneDay,
+  type MilestoneStructureDecision,
+  type PracticeGuidanceActionTarget,
 } from '../challenges';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
@@ -66,18 +71,12 @@ import {
 } from '../activities';
 import type { CheckInStatus } from '../utils/checkInStorage';
 import {
-  getActiveProfile,
-  getDayPlan,
-  getLocalTodayKey,
-  getLocalDateKey,
+  DIET_UPDATED_EVENT,
 } from '../utils/dietStorage';
 import {
-  getDailyVerificationStats,
   DIET_VERIFICATION_UPDATED_EVENT,
 } from '../utils/dietVerificationStorage';
-import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
 import {
-  loadProgressVictoriesStore,
   PROGRESS_VICTORIES_UPDATED_EVENT,
 } from '../utils/progressVictoriesStorage';
 import type { CanonicalDietAbilityId } from '../abilities';
@@ -390,11 +389,14 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const [showNextActionModal, setShowNextActionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
-  // Phase 5A: Practice Loop, 90-Day Goal & Consolidated Sections state
+  // Phase 5A & 5B.1: Practice Loop, 90-Day Goal, Milestone Review & Consolidated Sections state
   const [isBookInfoOpen, setIsBookInfoOpen] = useState<boolean>(false);
   const [isMetricsOpen, setIsMetricsOpen] = useState<boolean>(false);
   const [isEditing90DayGoal, setIsEditing90DayGoal] = useState<boolean>(false);
   const [goal90Draft, setGoal90Draft] = useState<string>('');
+  const [reviewingMilestoneDay, setReviewingMilestoneDay] = useState<NinetyDayMilestoneDay | null>(null);
+  const [msWhatHelped, setMsWhatHelped] = useState<string>('');
+  const [msDecision, setMsDecision] = useState<MilestoneStructureDecision>('continue');
   const [isDietOpen, setIsDietOpen] = useState<boolean>(
     () => typeof window !== 'undefined' && window.innerWidth >= 900
   );
@@ -493,6 +495,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     };
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
     window.addEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
+    window.addEventListener(DIET_UPDATED_EVENT, handleUpdate);
     window.addEventListener('storage', handleUpdate);
     window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
     window.addEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleUpdate);
@@ -500,6 +503,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     return () => {
       window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
       window.removeEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener(DIET_UPDATED_EVENT, handleUpdate);
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
       window.removeEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleUpdate);
@@ -532,7 +536,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   };
 
   const handleContinueChallenge = () => {
-    const current = activeChallenge || syncCurrentChallenge();
+    const current = syncCurrentChallenge() || activeChallenge;
     if (!current || current.status !== 'active') {
       playFeedback('neutral');
       setContinueToast(t.challenge_continue_no_active || 'No active challenge found to continue.');
@@ -542,37 +546,15 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
       return;
     }
 
-    // Step 1 & 2: Challenge is detected and progress/ID/history are strictly preserved
-    const stats = calculateChallengePracticeStats(current);
-
-    if (!stats.todayCheckedIn) {
-      // Step 4: Practice pending — present daily action directly
-      playFeedback('commit');
-      openCheckInModal(null);
-    } else {
-      // Step 5: Practice already completed — show completion status and appropriate next step
-      playFeedback('win');
-      const statusKey = stats.todayLatestStatus;
-      const statusLabel = statusKey
-        ? (statusKey === 'on-structure'
-            ? (t.challenge_checkin_status_on_structure || 'On Structure')
-            : statusKey === 'near-slip'
-            ? (t.challenge_checkin_status_near_slip || 'Near Slip')
-            : statusKey === 'resumed'
-            ? (t.challenge_checkin_status_resumed || 'Resumed')
-            : statusKey === 'off-structure-aware'
-            ? (t.challenge_checkin_status_off_structure_aware || 'Off Structure — Aware')
-            : (t.challenge_checkin_status_slip || 'True Slip'))
-        : (t.challenge_practice_status_done || 'Checked in today');
-
-      const msg = (t.challenge_continue_already_checked || "Today's practice is already logged ({status}). What is your next step?")
-        .replace('{status}', statusLabel);
-      setContinueToast(msg);
-      setShowNextActionModal(true);
-      setTimeout(() => {
-        setContinueToast(null);
-      }, 4500);
-    }
+    // Phase 5B.1: Context-aware Book 1 Practice Loop Guidance Engine determines actual next step
+    const freshJourney = resolveNinetyDayJourneyView(current);
+    const freshGuidance = evaluateBook1PracticeLoopGuidance({
+      activeChallenge: current,
+      ninetyDayJourney: freshJourney,
+      t,
+    });
+    playFeedback('commit');
+    executeGuidanceAction(freshGuidance.primaryAction);
   };
 
   const handleScrollToRecommit = () => {
@@ -734,13 +716,42 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     ? calculateChallengePracticeStats(activeChallenge)
     : null;
 
-  // Phase 5A: Authoritative 90-Day Goal & Journey Progress (separate from shorter challenges; unified for 90-day challenges)
+  // Phase 5A & 5B.1: Authoritative 90-Day Goal & Journey Progress (with non-automatic Milestone Reviews)
   const ninetyDayJourney = useMemo(() => {
     void activityRefreshKey;
     return resolveNinetyDayJourneyView(activeChallenge);
   }, [activeChallenge, activityRefreshKey]);
 
   const displayed90DayGoal = ninetyDayJourney.goalText.trim() || t.journey90_default_goal;
+
+  const openMilestoneReviewModal = useCallback(
+    (day: NinetyDayMilestoneDay) => {
+      const item = ninetyDayJourney.milestones.find((m) => m.day === day);
+      if (!item || !item.isReached) return;
+      setMsWhatHelped(item.reviewRecord?.whatHelped || '');
+      setMsDecision(item.reviewRecord?.structureDecision || 'continue');
+      setReviewingMilestoneDay(day);
+    },
+    [ninetyDayJourney.milestones]
+  );
+
+  const handleSaveMilestoneReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewingMilestoneDay || !ninetyDayJourney.startDate) return;
+    saveNinetyDayMilestoneReview({
+      milestoneDay: reviewingMilestoneDay,
+      journeyStartDate: ninetyDayJourney.startDate,
+      whatHelped: msWhatHelped,
+      structureDecision: msDecision,
+    });
+    playFeedback('win');
+    const shouldAdjustDiet = msDecision === 'adjust';
+    setReviewingMilestoneDay(null);
+    setActivityRefreshKey((k) => k + 1);
+    if (shouldAdjustDiet) {
+      onNavigate('structured-diet');
+    }
+  };
 
   const handleStartEdit90DayGoal = () => {
     setGoal90Draft(ninetyDayJourney.goalText.trim() || t.journey90_default_goal);
@@ -763,67 +774,92 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     setActivityRefreshKey((k) => k + 1);
   };
 
-  // Phase 5A: Factual Book 1 Practice Loop step state (never fabricates progress)
-  const practiceLoopState = useMemo(() => {
+  // Phase 5B.1: Book 1 Interactive Practice Loop Guidance Engine
+  const book1Guidance = useMemo(() => {
     void activityRefreshKey;
-    try {
-      const todayDayKey = getLocalTodayKey();
-      const todayDateKey = getLocalDateKey();
-      const activeProfile = getActiveProfile();
-      const dayPlan = activeProfile?.diet
-        ? getDayPlan(activeProfile.diet, todayDayKey)
-        : { dayKey: todayDayKey, dayOfWeek: 0, mode: 'structured' as const, blocks: [] };
-      const blockIds = dayPlan.blocks.map((b) => b.id);
-      const dietStats = getDailyVerificationStats(dayPlan.blocks.length, todayDateKey, blockIds);
-      const hasMealPlan = dayPlan.mode === 'free' || dayPlan.blocks.length > 0;
-      const dailyReviewDoneToday = activeProfile?.id
-        ? hasCompletedDailyReview(todayDateKey, activeProfile.id)
-        : false;
-      const pvStore = loadProgressVictoriesStore();
-      const weeklyReflectionDoneToday = pvStore.weeklyReflections.some(
-        (r) => getLocalDateKey(new Date(r.updatedAt || r.createdAt)) === todayDateKey
-      );
+    return evaluateBook1PracticeLoopGuidance({
+      activeChallenge,
+      ninetyDayJourney,
+      t,
+    });
+  }, [activeChallenge, ninetyDayJourney, activityRefreshKey, t]);
 
-      let activeStep: 'diet' | 'today' | 'daily-review' | 'weekly-review' | null = null;
-      if (activeChallenge && activeChallenge.status === 'active') {
-        if (!hasMealPlan) {
-          activeStep = 'diet';
-        } else if (!dailyReviewDoneToday) {
-          const allBlocksVerified =
-            dayPlan.blocks.length > 0 && dietStats.reportedCount >= dayPlan.blocks.length;
-          if (allBlocksVerified && practiceStats?.todayCheckedIn) {
-            activeStep = 'daily-review';
-          } else {
-            activeStep = 'today';
+  const executeGuidanceAction = useCallback(
+    (target: PracticeGuidanceActionTarget) => {
+      switch (target) {
+        case 'open_structured_diet':
+          onNavigate('structured-diet');
+          break;
+        case 'open_checkin_modal':
+          openCheckInModal(null);
+          break;
+        case 'open_resume_modal':
+          openCheckInModal('resumed');
+          break;
+        case 'open_detailed_slip':
+          onNavigate('slip-type');
+          break;
+        case 'open_recovery_timer':
+          onNavigate('context');
+          break;
+        case 'open_daily_review':
+          onNavigate('daily-review');
+          break;
+        case 'open_weekly_review':
+          try {
+            sessionStorage.setItem('pv_initial_tab', 'victories');
+          } catch {
+            // ignore
           }
-        } else if (
-          activeChallenge.durationDays >= 7 &&
-          (activeChallenge.currentDay % 7 === 0 || activeChallenge.daysRemaining === 0) &&
-          !weeklyReflectionDoneToday
-        ) {
-          activeStep = 'weekly-review';
-        }
+          onNavigate('progress-victories');
+          break;
+        case 'open_milestone_review':
+          if (book1Guidance.pendingMilestoneDay) {
+            openMilestoneReviewModal(book1Guidance.pendingMilestoneDay);
+          }
+          break;
       }
+    },
+    [book1Guidance.pendingMilestoneDay, onNavigate, openCheckInModal, openMilestoneReviewModal]
+  );
 
-      return {
-        plannedBlocksCount: dietStats.plannedCount,
-        reportedBlocksCount: dietStats.reportedCount,
-        hasMealPlan,
-        dailyReviewDoneToday,
-        weeklyReflectionDoneToday,
-        activeStep,
-      };
-    } catch {
-      return {
-        plannedBlocksCount: 0,
-        reportedBlocksCount: 0,
-        hasMealPlan: false,
-        dailyReviewDoneToday: false,
-        weeklyReflectionDoneToday: false,
-        activeStep: null as 'diet' | 'today' | 'daily-review' | 'weekly-review' | null,
-      };
+  const getGuidanceActionLabel = (target: PracticeGuidanceActionTarget, stateKind = book1Guidance.stateKind): string => {
+    switch (target) {
+      case 'open_structured_diet':
+        if (stateKind === 'setup_structured_diet') return t.pl_next_cta_setup_diet;
+        if (stateKind === 'cycle_complete_continue_or_adjust') return t.pl_next_cta_adjust_diet;
+        return t.pl_next_cta_open_diet;
+      case 'open_checkin_modal':
+        return t.pl_next_cta_checkin;
+      case 'open_resume_modal':
+        return t.pl_next_cta_resume;
+      case 'open_detailed_slip':
+        return t.pl_next_cta_detailed_slip;
+      case 'open_recovery_timer':
+        return t.pl_next_cta_timer;
+      case 'open_daily_review':
+        return t.pl_next_cta_daily_review;
+      case 'open_weekly_review':
+        return t.pl_next_cta_weekly_review;
+      case 'open_milestone_review':
+        return t.pl_next_cta_milestone_review.replace(
+          '{day}',
+          String(book1Guidance.pendingMilestoneDay || '')
+        );
     }
-  }, [activeChallenge, practiceStats, activityRefreshKey]);
+  };
+
+  const practiceLoopState = useMemo(
+    () => ({
+      plannedBlocksCount: book1Guidance.plannedBlocksCount,
+      reportedBlocksCount: book1Guidance.reportedBlocksCount,
+      hasMealPlan: book1Guidance.isStructuredDietConfigured,
+      dailyReviewDoneToday: book1Guidance.dailyReviewCompletedToday,
+      weeklyReflectionDoneToday: book1Guidance.weeklyReviewCompletedThisWeek,
+      activeStep: book1Guidance.activeCycleStep,
+    }),
+    [book1Guidance]
+  );
 
   const savedReasons = (pledge.reasons || []).filter(
     (r) => typeof r === 'string' && r.trim().length > 0
@@ -1496,27 +1532,93 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                         </div>
 
                         <ol className="sda-j90-milestones-list">
-                          {ninetyDayJourney.milestones.map((ms) => (
-                            <li
-                              key={ms.day}
-                              className={`sda-j90-ms-item sda-j90-ms-item--${ms.state}`}
-                              data-milestone-day={ms.day}
-                              data-milestone-state={ms.state}
-                            >
-                              <span className="sda-j90-ms-node" aria-hidden="true">
-                                {ms.isFinal ? (
-                                  <MilestoneStarSvg />
-                                ) : ms.isReached ? (
-                                  <AppIcon name="check" size={11} />
-                                ) : null}
-                              </span>
-                              <span className="sda-j90-ms-label">
-                                {t.journey90_milestone_day.replace('{day}', String(ms.day))}
-                              </span>
-                            </li>
-                          ))}
+                          {ninetyDayJourney.milestones.map((ms) => {
+                            const dayLabel = t.journey90_milestone_day.replace('{day}', String(ms.day));
+                            const statusLabel =
+                              ms.status === 'review_completed'
+                                ? t.journey90_ms_state_completed
+                                : ms.status === 'milestone_reached'
+                                ? t.journey90_ms_state_reached
+                                : ms.status === 'review_pending'
+                                ? t.journey90_ms_state_pending
+                                : t.journey90_ms_state_upcoming;
+
+                            const innerContent = (
+                              <>
+                                <span className="sda-j90-ms-node" aria-hidden="true">
+                                  {ms.isFinal ? (
+                                    <MilestoneStarSvg />
+                                  ) : ms.isReviewCompleted ? (
+                                    <AppIcon name="check" size={11} />
+                                  ) : ms.isReviewPending ? (
+                                    <span className="sda-j90-ms-pending-dot" />
+                                  ) : null}
+                                </span>
+                                <span className="sda-j90-ms-label">{dayLabel}</span>
+                              </>
+                            );
+
+                            return (
+                              <li
+                                key={ms.day}
+                                className={`sda-j90-ms-item sda-j90-ms-item--${ms.state}`}
+                                data-milestone-day={ms.day}
+                                data-milestone-status={ms.status}
+                                data-milestone-state={ms.state}
+                                title={`${dayLabel} — ${statusLabel}`}
+                              >
+                                {ms.isReached ? (
+                                  <button
+                                    type="button"
+                                    id={`btn-j90-ms-${ms.day}`}
+                                    className="sda-j90-ms-btn"
+                                    aria-label={`${dayLabel} — ${statusLabel}`}
+                                    onClick={() => openMilestoneReviewModal(ms.day)}
+                                  >
+                                    {innerContent}
+                                  </button>
+                                ) : (
+                                  innerContent
+                                )}
+                              </li>
+                            );
+                          })}
                         </ol>
                       </div>
+
+                      {/* Phase 5B.1: Reached Milestone Review Pending Banner */}
+                      {ninetyDayJourney.isActive && ninetyDayJourney.pendingMilestoneReviews.length > 0 && (
+                        <div className="sda-j90-ms-banner" id="banner-j90-milestone-review">
+                          <span className="sda-j90-ms-banner-copy">
+                            <span className="sda-j90-ms-banner-dot" aria-hidden="true" />
+                            <span>
+                              {t.journey90_ms_banner_reached.replace(
+                                '{day}',
+                                String(
+                                  ninetyDayJourney.pendingMilestoneReviews[
+                                    ninetyDayJourney.pendingMilestoneReviews.length - 1
+                                  ].day
+                                )
+                              )}
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            id="btn-open-milestone-review"
+                            className="sda-j90-ms-banner-btn"
+                            onClick={() =>
+                              openMilestoneReviewModal(
+                                ninetyDayJourney.pendingMilestoneReviews[
+                                  ninetyDayJourney.pendingMilestoneReviews.length - 1
+                                ].day
+                              )
+                            }
+                          >
+                            <span>{t.journey90_ms_banner_cta}</span>
+                            <AppIcon name="chevron-right" size={12} />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Explicit Inactive / Setup Entry Point for Shorter Challenges when 90-Day Journey Not Started */}
                       {!ninetyDayJourney.isActive && (
@@ -1654,6 +1756,175 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                         <AppIcon name="chevron-right" size={14} />
                       </button>
                     </div>
+
+                    {/* ── PHASE 5B.1: COMPACT CONTEXT-AWARE "YOUR NEXT STEP" CARD ── */}
+                    {(() => {
+                      const g = book1Guidance;
+                      const blk = g.nextScheduledBlock;
+                      const showScheduledBlockRow =
+                        g.stateKind === 'next_meal_block' ||
+                        g.stateKind === 'next_fasting_block' ||
+                        g.stateKind === 'pending_checkin' ||
+                        g.stateKind === 'slip_recovery_next_block' ||
+                        g.stateKind === 'drifting_recovery' ||
+                        (g.stateKind === 'resumed_confirmation' && !g.allTodayBlocksVerified);
+
+                      let headline = t.pl_next_block_heading;
+                      let subcopy = '';
+                      switch (g.stateKind) {
+                        case 'setup_structured_diet':
+                          headline = t.pl_next_setup_diet_title;
+                          subcopy = t.pl_next_setup_diet_sub;
+                          break;
+                        case 'slip_recovery_next_block':
+                          headline = t.pl_next_slip_title;
+                          subcopy = t.pl_next_slip_sub;
+                          break;
+                        case 'drifting_recovery':
+                          headline = t.pl_next_drift_title;
+                          subcopy = t.pl_next_drift_sub;
+                          break;
+                        case 'resumed_confirmation':
+                          headline = t.pl_next_resumed_title;
+                          if (g.allTodayBlocksVerified) {
+                            subcopy = t.pl_next_resumed_sub_review;
+                          }
+                          break;
+                        case 'pending_checkin':
+                          headline = blk ? t.pl_next_block_heading : t.pl_next_checkin_title;
+                          subcopy = t.pl_next_checkin_sub;
+                          break;
+                        case 'next_meal_block':
+                        case 'next_fasting_block':
+                          headline = t.pl_next_block_heading;
+                          break;
+                        case 'verify_remaining_blocks':
+                          headline = t.pl_next_verify_remaining_title;
+                          subcopy = t.pl_next_verify_remaining_sub.replace(
+                            '{count}',
+                            String(g.unverifiedBlocksCount)
+                          );
+                          break;
+                        case 'free_or_unstructured_day':
+                          headline = t.pl_next_free_day_title;
+                          subcopy = t.pl_next_free_day_sub;
+                          break;
+                        case 'milestone_review_pending':
+                          headline = t.journey90_ms_modal_title.replace(
+                            '{day}',
+                            String(g.pendingMilestoneDay || '')
+                          );
+                          subcopy = t.journey90_ms_modal_sub;
+                          break;
+                        case 'daily_review_pending':
+                          headline = t.pl_next_daily_review_title;
+                          subcopy = t.pl_next_daily_review_sub;
+                          break;
+                        case 'weekly_review_pending':
+                          headline = t.pl_next_weekly_review_title;
+                          subcopy = t.pl_next_weekly_review_sub;
+                          break;
+                        case 'cycle_complete_continue_or_adjust':
+                          headline = t.pl_next_cycle_complete_title;
+                          subcopy = t.pl_next_cycle_complete_sub;
+                          break;
+                      }
+
+                      return (
+                        <div
+                          className={`sda-pl-next-card sda-pl-next-card--${g.stateKind}`}
+                          id="card-pl-next-step"
+                          data-guidance-state={g.stateKind}
+                        >
+                          <div className="sda-pl-next-top">
+                            <span className="sda-pl-next-eyebrow">
+                              <AppIcon name="sparkles" size={12} />
+                              <span>{t.pl_next_eyebrow}</span>
+                            </span>
+
+                            <div className="sda-pl-next-badges">
+                              {g.stateKind === 'resumed_confirmation' && (
+                                <span className="sda-pl-next-chip sda-pl-next-chip--resumed" id="badge-pl-resumed">
+                                  ✓ {t.pl_next_resumed_badge}
+                                </span>
+                              )}
+                              {showScheduledBlockRow && blk && (
+                                <span
+                                  className={`sda-pl-next-chip ${
+                                    blk.isFasting
+                                      ? 'sda-pl-next-chip--fasting'
+                                      : 'sda-pl-next-chip--meal'
+                                  }`}
+                                  id="badge-pl-block-kind"
+                                >
+                                  {blk.isFasting ? t.pl_next_fasting_badge : t.pl_next_meal_badge}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="sda-pl-next-main">
+                            <div className="sda-pl-next-copy">
+                              <h4 className="sda-pl-next-title" id="next-step-title">
+                                {headline}
+                              </h4>
+
+                              {showScheduledBlockRow && (
+                                <div className="sda-pl-next-block-row" id="next-step-scheduled-block">
+                                  {blk ? (
+                                    <>
+                                      <span className="sda-pl-next-block-time" id="next-step-block-time">
+                                        {blk.isTomorrow
+                                          ? `${t.pl_next_tomorrow_tag} · `
+                                          : blk.timingState === 'active_now'
+                                          ? `${t.pl_next_now_tag} · `
+                                          : ''}
+                                        {blk.startTime} – {blk.endTime}
+                                      </span>
+                                      <span className="sda-pl-next-block-sep" aria-hidden="true">
+                                        ·
+                                      </span>
+                                      <span className="sda-pl-next-block-desc" id="next-step-block-desc">
+                                        {blk.primaryDescription}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="sda-pl-next-block-empty" id="next-step-block-empty">
+                                      {t.pl_next_no_block_empty}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {subcopy && <p className="sda-pl-next-sub">{subcopy}</p>}
+                            </div>
+
+                            <div className="sda-pl-next-actions">
+                              <button
+                                type="button"
+                                id="btn-pl-next-step-action"
+                                className="sda-pl-next-cta"
+                                onClick={() => executeGuidanceAction(g.primaryAction)}
+                              >
+                                <span>{getGuidanceActionLabel(g.primaryAction)}</span>
+                                <AppIcon name="chevron-right" size={13} />
+                              </button>
+
+                              {g.secondaryAction && (
+                                <button
+                                  type="button"
+                                  id="btn-pl-next-step-secondary"
+                                  className="sda-pl-next-secondary-btn"
+                                  onClick={() => executeGuidanceAction(g.secondaryAction!)}
+                                >
+                                  <span>{getGuidanceActionLabel(g.secondaryAction, g.stateKind)}</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* 4 Action Cards: Gold / Purple / Emerald / Blue */}
                     <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_title}>
@@ -3102,6 +3373,98 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
           }}
           isManualOpen={true}
         />
+      )}
+
+      {/* ── Phase 5B.1: 90-Day Milestone Review Modal ── */}
+      {reviewingMilestoneDay !== null && ninetyDayJourney.isActive && (
+        <div
+          className="challenge-modal-backdrop sda-j90-ms-modal-backdrop"
+          onClick={() => setReviewingMilestoneDay(null)}
+          role="presentation"
+        >
+          <div
+            id="modal-90day-milestone-review"
+            className="sda-j90-ms-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="heading-j90-ms-modal"
+          >
+            <div className="sda-j90-ms-modal-head">
+              <div className="sda-j90-ms-modal-title-group">
+                <span className="sda-j90-ms-modal-pill">
+                  {t.journey90_day_of_90.replace('{day}', String(reviewingMilestoneDay))}
+                </span>
+                <h3 id="heading-j90-ms-modal" className="sda-j90-ms-modal-title">
+                  {t.journey90_ms_modal_title.replace('{day}', String(reviewingMilestoneDay))}
+                </h3>
+              </div>
+              <button
+                type="button"
+                id="btn-close-j90-ms-modal"
+                className="sda-j90-ms-modal-close"
+                aria-label={t.journey90_cancel_btn}
+                onClick={() => setReviewingMilestoneDay(null)}
+              >
+                <AppIcon name="x" size={16} />
+              </button>
+            </div>
+
+            <p className="sda-j90-ms-modal-sub">{t.journey90_ms_modal_sub}</p>
+
+            <form className="sda-j90-ms-form" onSubmit={handleSaveMilestoneReview}>
+              <label htmlFor="textarea-j90-ms-helped" className="sda-j90-ms-field-label">
+                {t.journey90_ms_prompt_label}
+              </label>
+              <textarea
+                id="textarea-j90-ms-helped"
+                className="sda-j90-ms-textarea"
+                rows={3}
+                maxLength={500}
+                placeholder={t.journey90_ms_prompt_placeholder}
+                value={msWhatHelped}
+                onChange={(e) => setMsWhatHelped(e.target.value)}
+              />
+
+              <span className="sda-j90-ms-field-label">{t.journey90_ms_decision_label}</span>
+              <div className="sda-j90-ms-decision-grid" role="radiogroup" aria-label={t.journey90_ms_decision_label}>
+                <button
+                  type="button"
+                  id="btn-j90-decision-continue"
+                  role="radio"
+                  aria-checked={msDecision === 'continue'}
+                  className={`sda-j90-ms-decision-btn ${msDecision === 'continue' ? 'is-selected' : ''}`}
+                  onClick={() => setMsDecision('continue')}
+                >
+                  <AppIcon name="check-circle" size={15} />
+                  <span>{t.journey90_ms_decision_continue}</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-j90-decision-adjust"
+                  role="radio"
+                  aria-checked={msDecision === 'adjust'}
+                  className={`sda-j90-ms-decision-btn ${msDecision === 'adjust' ? 'is-selected' : ''}`}
+                  onClick={() => setMsDecision('adjust')}
+                >
+                  <AppIcon name="utensils" size={15} />
+                  <span>{t.journey90_ms_decision_adjust}</span>
+                </button>
+              </div>
+
+              <div className="sda-j90-ms-modal-actions">
+                <button
+                  type="submit"
+                  id="btn-submit-j90-ms-review"
+                  className="sda-j90-ms-submit-btn"
+                >
+                  <AppIcon name="check" size={16} />
+                  <span>{t.journey90_ms_submit_btn}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -432,3 +432,82 @@
     font-size: 1.15rem;
   }
 }
+
+/* Phase 5B.1: Next Scheduled Meal / Fasting Block Callout */
+.checkin-next-block-box {
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 13px;
+  background: rgba(16, 48, 39, 0.72);
+  border: 1px solid rgba(45, 212, 179, 0.32);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-sizing: border-box;
+}
+
+.checkin-next-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.checkin-next-block-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+
+.checkin-next-block-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.checkin-next-block-badge--meal {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #6ee7b7;
+}
+
+.checkin-next-block-badge--fasting {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  color: #fde68a;
+}
+
+.checkin-next-block-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.checkin-next-block-time {
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.checkin-next-block-desc {
+  font-size: 0.82rem;
+  color: #d1fae5;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.checkin-next-block-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+}

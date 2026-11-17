@@ -12,6 +12,10 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from '../i18n';
 import type { ChallengeInstance } from '../challenges/types';
 import { recordChallengeCheckIn } from '../challenges/challengeEngine';
+import {
+  isDuplicateConsecutiveResume,
+  resolveNextScheduledBlockForDate,
+} from '../challenges/practiceLoopEngine';
 import type { CheckInStatus } from '../utils/checkInStorage';
 import { getLocalDateKey } from '../utils/dietStorage';
 import { loadPledge } from '../utils/pledgeStorage';
@@ -51,9 +55,13 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   // Pending action ID tracking for idempotent retries across rapid taps or reloads
   const pendingActionIdRef = useRef<string | null>(null);
 
-  // Load user's saved Why reason and non-negotiables
+  // Load user's saved Why reason, non-negotiables, and next scheduled meal/fasting block
   const pledge = useMemo(() => loadPledge(), [isOpen]);
   const firstReason = pledge.reasons && pledge.reasons.length > 0 ? pledge.reasons[0] : null;
+  const nextScheduledBlock = useMemo(
+    () => (isOpen ? resolveNextScheduledBlockForDate({ t }) : null),
+    [isOpen, step, t]
+  );
 
   // Reset state on open
   useEffect(() => {
@@ -102,12 +110,55 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   const currentDay = challenge.currentDay;
   const totalDays = challenge.durationDays;
 
+  const renderNextBlockCallout = () => (
+    <div className="checkin-next-block-box" id="checkin-next-scheduled-block">
+      <div className="checkin-next-block-head">
+        <span className="checkin-next-block-eyebrow">{t.pl_next_block_heading}</span>
+        {nextScheduledBlock && (
+          <span
+            className={`checkin-next-block-badge ${
+              nextScheduledBlock.isFasting
+                ? 'checkin-next-block-badge--fasting'
+                : 'checkin-next-block-badge--meal'
+            }`}
+          >
+            {nextScheduledBlock.isFasting ? t.pl_next_fasting_badge : t.pl_next_meal_badge}
+          </span>
+        )}
+      </div>
+      {nextScheduledBlock ? (
+        <div className="checkin-next-block-body">
+          <span className="checkin-next-block-time">
+            {nextScheduledBlock.isTomorrow ? `${t.pl_next_tomorrow_tag} · ` : nextScheduledBlock.timingState === 'active_now' ? `${t.pl_next_now_tag} · ` : ''}
+            {nextScheduledBlock.startTime} – {nextScheduledBlock.endTime}
+          </span>
+          <span className="checkin-next-block-desc">
+            {nextScheduledBlock.primaryDescription}
+          </span>
+        </div>
+      ) : (
+        <p className="checkin-next-block-empty">{t.pl_next_no_block_empty}</p>
+      )}
+    </div>
+  );
+
   const handleSubmitStatus = () => {
     if (!selectedStatus || isSubmitting) return;
     setIsSubmitting(true);
     setSubmissionError(null);
 
     const dateKey = getLocalDateKey();
+
+    // Phase 5B.1: Prevent duplicate consecutive 'resumed' records when already in resumed state
+    if (selectedStatus === 'resumed' && isDuplicateConsecutiveResume(challenge, dateKey)) {
+      playFeedback('win');
+      setStep('confirmed');
+      setIsSubmitting(false);
+      if (onCheckInCompleted) {
+        onCheckInCompleted();
+      }
+      return;
+    }
     if (!pendingActionIdRef.current) {
       pendingActionIdRef.current = `ch_ci_${challenge.id}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       try {
@@ -517,6 +568,9 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                     'Slips never fail or reset your Challenge. Slips are opportunities to practice recovery.'}
                 </p>
 
+                {/* Phase 5B.1: Guide user toward their actual next scheduled meal or fasting block */}
+                {renderNextBlockCallout()}
+
                 {/* Hold to Re-Commit ritual */}
                 <div className="challenge-recommit-ritual-wrap">
                   {!hasRecommitted ? (
@@ -596,6 +650,9 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                   {t.challenge_checkin_resumed_desc ||
                     'You completed an appropriate return and are following your structure again. That is Resume-Ability in action.'}
                 </p>
+
+                {/* Phase 5B.1: Show next meaningful scheduled block after Resume confirmation */}
+                {renderNextBlockCallout()}
 
                 {firstReason && (
                   <div className="feedback-why-card">

@@ -571,20 +571,21 @@ export function saveWeeklyReflection(params: {
 
   const store = loadProgressVictoriesStore();
 
-  if (params.id) {
-    const idx = store.weeklyReflections.findIndex((r) => r.id === params.id);
-    if (idx !== -1) {
-      const updated: WeeklyReflectionRecord = {
-        ...store.weeklyReflections[idx],
-        reflectionText,
-        biggestVictory,
-        nextWeekFocus: (params.nextWeekFocus || '').trim() || undefined,
-        weekStartDateKey: params.weekStartDateKey || store.weeklyReflections[idx].weekStartDateKey,
-        updatedAt: Date.now(),
-      };
-      store.weeklyReflections[idx] = updated;
-      return saveProgressVictoriesStore(store) ? updated : null;
-    }
+  const existingIdx = params.id
+    ? store.weeklyReflections.findIndex((r) => r.id === params.id)
+    : store.weeklyReflections.findIndex((r) => r.weekStartDateKey === params.weekStartDateKey);
+
+  if (existingIdx !== -1) {
+    const updated: WeeklyReflectionRecord = {
+      ...store.weeklyReflections[existingIdx],
+      reflectionText,
+      biggestVictory,
+      nextWeekFocus: (params.nextWeekFocus || '').trim() || undefined,
+      weekStartDateKey: params.weekStartDateKey || store.weeklyReflections[existingIdx].weekStartDateKey,
+      updatedAt: Date.now(),
+    };
+    store.weeklyReflections[existingIdx] = updated;
+    return saveProgressVictoriesStore(store) ? updated : null;
   }
 
   const record: WeeklyReflectionRecord = {

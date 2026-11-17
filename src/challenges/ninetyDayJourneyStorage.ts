@@ -1,20 +1,18 @@
 /**
- * SDA 90-Day Goal & Journey Progress Domain (Phase 5A)
+ * SDA 90-Day Goal & Journey Progress Domain (Phase 5A & Phase 5B.1)
  *
  * Models the user's overarching 90-Day Goal & Journey separately from shorter
  * individual challenge durations (1, 3, 7, 30 days) while unifying seamlessly
  * when the active challenge is itself a 90-day challenge.
  *
- * Strict Data-Honesty & Non-Conflict Guarantees:
- * 1. Never silently starts a 90-day journey.
- * 2. Never converts shorter challenges (1, 3, 7, 30 days) into 90-day challenges
- *    or fabricates 90-day progress from shorter challenge day counts.
- * 3. When an active 90-day challenge exists, uses its actual `startDate`,
- *    `currentDay`, and progress directly — zero duplicate conflicting counter.
- * 4. When a shorter challenge is active and no standalone 90-day journey has
- *    been started by the user, resolves cleanly to `isActive: false` (`inactive`).
- * 5. Preserves user-authored `goalText` across statistics resets while allowing
- *    journey progress reset via `resetNinetyDayJourneyProgress()`.
+ * Phase 5B.1 Milestone Review Rules:
+ * - Supports milestone reviews at Days 3, 7, 14, 30, 60, and 90.
+ * - Strictly distinguishes 4 milestone states:
+ *   1. 'upcoming'          — journey inactive OR currentDay < day
+ *   2. 'milestone_reached' — journey active, currentDay === day, review NOT yet completed
+ *   3. 'review_pending'    — journey active, currentDay > day, review NOT yet completed
+ *   4. 'review_completed'  — journey active, currentDay >= day, AND review explicitly saved
+ * - NEVER awards milestone completion merely because the calendar day has arrived.
  */
 
 import type { ChallengeInstance } from './types';
@@ -27,17 +25,43 @@ export const NINETY_DAY_JOURNEY_UPDATED_EVENT = 'resume-ability:90day-journey-up
 export const NINETY_DAY_MILESTONES = [3, 7, 14, 30, 60, 90] as const;
 export type NinetyDayMilestoneDay = (typeof NINETY_DAY_MILESTONES)[number];
 
-export type NinetyDayMilestoneVisualState =
-  | 'completed'
+export type MilestoneStructureDecision = 'continue' | 'adjust';
+
+export interface NinetyDayMilestoneReviewRecord {
+  milestoneDay: NinetyDayMilestoneDay;
+  journeyStartDate: string; // YYYY-MM-DD of the active 90-day journey cycle
+  dateKey: string;          // YYYY-MM-DD when the review was recorded
+  whatHelped: string;
+  structureDecision: MilestoneStructureDecision;
+  completedAt: number;
+  updatedAt?: number;
+}
+
+export type NinetyDayMilestoneStatus =
   | 'upcoming'
+  | 'milestone_reached'
+  | 'review_pending'
+  | 'review_completed';
+
+export type NinetyDayMilestoneVisualState =
+  | 'upcoming'
+  | 'milestone-reached'
+  | 'review-pending'
+  | 'review-completed'
   | 'final-upcoming'
+  | 'final-reached'
+  | 'final-review-pending'
   | 'final-completed';
 
 export interface NinetyDayMilestoneItem {
   day: NinetyDayMilestoneDay;
+  status: NinetyDayMilestoneStatus;
   state: NinetyDayMilestoneVisualState;
   isReached: boolean;
+  isReviewPending: boolean;
+  isReviewCompleted: boolean;
   isFinal: boolean;
+  reviewRecord?: NinetyDayMilestoneReviewRecord;
 }
 
 export interface NinetyDayJourneyStore {
@@ -45,6 +69,7 @@ export interface NinetyDayJourneyStore {
   goalText: string;
   standaloneStartDate: string | null; // YYYY-MM-DD local calendar date, null until explicitly started
   standaloneStartedAt: number | null;
+  milestoneReviews: NinetyDayMilestoneReviewRecord[];
 }
 
 export type NinetyDayJourneySource =
@@ -63,6 +88,8 @@ export interface NinetyDayJourneyView {
   completionPct: number;    // 0..100 integer percentage
   milestoneTrackPct: number; // 0..100 piecewise connector fill across the 6 milestone nodes
   milestones: NinetyDayMilestoneItem[];
+  pendingMilestoneReviews: NinetyDayMilestoneItem[];
+  nextUpcomingMilestone: NinetyDayMilestoneItem | null;
 }
 
 function createDefaultJourneyStore(): NinetyDayJourneyStore {
@@ -71,11 +98,41 @@ function createDefaultJourneyStore(): NinetyDayJourneyStore {
     goalText: '',
     standaloneStartDate: null,
     standaloneStartedAt: null,
+    milestoneReviews: [],
   };
 }
 
 function isValidDateKey(val: unknown): val is string {
   return typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val);
+}
+
+function normalizeMilestoneReviews(raw: unknown): NinetyDayMilestoneReviewRecord[] {
+  if (!Array.isArray(raw)) return [];
+  const validDays = new Set<number>(NINETY_DAY_MILESTONES);
+  const result: NinetyDayMilestoneReviewRecord[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const rec = item as Record<string, unknown>;
+    const day = Number(rec.milestoneDay);
+    if (!validDays.has(day)) continue;
+    if (!isValidDateKey(rec.journeyStartDate)) continue;
+    result.push({
+      milestoneDay: day as NinetyDayMilestoneDay,
+      journeyStartDate: rec.journeyStartDate,
+      dateKey: isValidDateKey(rec.dateKey) ? rec.dateKey : rec.journeyStartDate,
+      whatHelped: typeof rec.whatHelped === 'string' ? rec.whatHelped.slice(0, 500) : '',
+      structureDecision: rec.structureDecision === 'adjust' ? 'adjust' : 'continue',
+      completedAt:
+        typeof rec.completedAt === 'number' && Number.isFinite(rec.completedAt)
+          ? rec.completedAt
+          : Date.now(),
+      updatedAt:
+        typeof rec.updatedAt === 'number' && Number.isFinite(rec.updatedAt)
+          ? rec.updatedAt
+          : undefined,
+    });
+  }
+  return result;
 }
 
 export function loadNinetyDayJourneyStore(): NinetyDayJourneyStore {
@@ -102,6 +159,7 @@ export function loadNinetyDayJourneyStore(): NinetyDayJourneyStore {
         typeof parsed.standaloneStartedAt === 'number' && Number.isFinite(parsed.standaloneStartedAt)
           ? parsed.standaloneStartedAt
           : null,
+      milestoneReviews: normalizeMilestoneReviews(parsed.milestoneReviews),
     };
   } catch {
     return createDefaultJourneyStore();
@@ -153,7 +211,63 @@ export function startStandaloneNinetyDayJourney(
 }
 
 /**
- * Clears standalone 90-day journey progress while preserving the user's written `goalText`.
+ * Records or updates a 90-Day Milestone Review idempotently for a specific journey cycle & milestone day.
+ * Does NOT alter scoring/XP calculations or create duplicate records.
+ */
+export function saveNinetyDayMilestoneReview(params: {
+  milestoneDay: NinetyDayMilestoneDay;
+  journeyStartDate: string;
+  whatHelped: string;
+  structureDecision: MilestoneStructureDecision;
+  dateKey?: string;
+}): NinetyDayMilestoneReviewRecord | null {
+  if (!isValidDateKey(params.journeyStartDate)) return null;
+  if (!NINETY_DAY_MILESTONES.includes(params.milestoneDay)) return null;
+
+  const store = loadNinetyDayJourneyStore();
+  const now = Date.now();
+  const dateKey = params.dateKey || getLocalDateKey();
+  const cleanText = (params.whatHelped || '').trim().slice(0, 500);
+
+  const existingIdx = store.milestoneReviews.findIndex(
+    (r) =>
+      r.journeyStartDate === params.journeyStartDate &&
+      r.milestoneDay === params.milestoneDay
+  );
+
+  const record: NinetyDayMilestoneReviewRecord =
+    existingIdx >= 0
+      ? {
+          ...store.milestoneReviews[existingIdx],
+          dateKey,
+          whatHelped: cleanText,
+          structureDecision: params.structureDecision,
+          updatedAt: now,
+        }
+      : {
+          milestoneDay: params.milestoneDay,
+          journeyStartDate: params.journeyStartDate,
+          dateKey,
+          whatHelped: cleanText,
+          structureDecision: params.structureDecision,
+          completedAt: now,
+        };
+
+  const nextReviews =
+    existingIdx >= 0
+      ? store.milestoneReviews.map((r, i) => (i === existingIdx ? record : r))
+      : [...store.milestoneReviews, record];
+
+  const saved = saveNinetyDayJourneyStore({
+    ...store,
+    milestoneReviews: nextReviews,
+  });
+
+  return saved ? record : null;
+}
+
+/**
+ * Clears standalone 90-day journey progress and milestone reviews while preserving written `goalText`.
  */
 export function resetNinetyDayJourneyProgress(): void {
   const store = loadNinetyDayJourneyStore();
@@ -161,6 +275,7 @@ export function resetNinetyDayJourneyProgress(): void {
     ...store,
     standaloneStartDate: null,
     standaloneStartedAt: null,
+    milestoneReviews: [],
   });
 }
 
@@ -189,8 +304,8 @@ function computeMilestoneTrackPct(currentDay: number, isActive: boolean): number
 }
 
 /**
- * Resolves the authoritative 90-Day Journey view state without fabricating progress
- * or conflicting with an active 90-day challenge.
+ * Resolves the authoritative 90-Day Journey view state without fabricating progress,
+ * conflicting with an active 90-day challenge, or auto-completing unreviewed milestones.
  */
 export function resolveNinetyDayJourneyView(
   activeChallenge: ChallengeInstance | null | undefined,
@@ -237,19 +352,54 @@ export function resolveNinetyDayJourneyView(
   const milestones: NinetyDayMilestoneItem[] = NINETY_DAY_MILESTONES.map((day) => {
     const isFinal = day === 90;
     const isReached = isActive && (currentDay >= day || isCompleted);
+    const reviewRecord =
+      isActive && startDate
+        ? store.milestoneReviews.find(
+            (r) => r.journeyStartDate === startDate && r.milestoneDay === day
+          )
+        : undefined;
+
+    const isReviewCompleted = Boolean(isReached && reviewRecord);
+    const isReviewPending = Boolean(isReached && !reviewRecord);
+
+    let status: NinetyDayMilestoneStatus;
+    if (!isReached) {
+      status = 'upcoming';
+    } else if (isReviewCompleted) {
+      status = 'review_completed';
+    } else if (currentDay === day) {
+      status = 'milestone_reached';
+    } else {
+      status = 'review_pending';
+    }
+
     let state: NinetyDayMilestoneVisualState;
     if (isFinal) {
-      state = isReached ? 'final-completed' : 'final-upcoming';
+      if (!isReached) state = 'final-upcoming';
+      else if (isReviewCompleted) state = 'final-completed';
+      else if (currentDay === day) state = 'final-reached';
+      else state = 'final-review-pending';
     } else {
-      state = isReached ? 'completed' : 'upcoming';
+      if (!isReached) state = 'upcoming';
+      else if (isReviewCompleted) state = 'review-completed';
+      else if (currentDay === day) state = 'milestone-reached';
+      else state = 'review-pending';
     }
+
     return {
       day,
+      status,
       state,
       isReached,
+      isReviewPending,
+      isReviewCompleted,
       isFinal,
+      reviewRecord,
     };
   });
+
+  const pendingMilestoneReviews = milestones.filter((m) => m.isReviewPending);
+  const nextUpcomingMilestone = milestones.find((m) => !m.isReached) || null;
 
   return {
     isActive,
@@ -262,5 +412,7 @@ export function resolveNinetyDayJourneyView(
     completionPct,
     milestoneTrackPct,
     milestones,
+    pendingMilestoneReviews,
+    nextUpcomingMilestone,
   };
 }
