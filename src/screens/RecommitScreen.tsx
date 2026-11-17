@@ -2,15 +2,18 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { Screen } from '../types';
 import { useTranslation } from '../i18n';
 import { loadPledge } from '../utils/pledgeStorage';
-import { getActiveProfile, loadDietStore } from '../utils/dietStorage';
+import { getActiveProfile, getLocalDateKey, loadDietStore } from '../utils/dietStorage';
+import { getSelectedPracticeLoopBook } from '../challenges';
+import { buildRepledgeAchievementId } from '../utils/achievementRewardsStorage';
 import { PremiumScreenHeader } from '../components/premium/PremiumScreenHeader';
 import HoldCommitButton from '../components/HoldCommitButton';
 import { SuccessCelebration } from '../components/animations';
+import { MotivationalRewardCard } from '../components/rewards';
 import NextActionModal from '../components/premium/NextActionModal';
 import './RecommitScreen.css';
 
 interface RecommitScreenProps {
-  onComplete: () => boolean | void;
+  onComplete: () => string | boolean | void;
   onNavigate: (screen: Screen) => void;
   onBack?: () => void;
 }
@@ -26,6 +29,8 @@ export default function RecommitScreen({
   const [step, setStep] = useState<RecommitStep>('hold');
   const [showNextAction, setShowNextAction] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmedAchievementId, setConfirmedAchievementId] = useState<string | null>(null);
+  const activeBookId = useMemo(() => getSelectedPracticeLoopBook(), []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
@@ -47,6 +52,9 @@ export default function RecommitScreen({
       if (saved === false) {
         setSaveError(t.anim_repledge_save_error);
         return false;
+      }
+      if (typeof saved === 'string' && saved.trim().length > 0) {
+        setConfirmedAchievementId(buildRepledgeAchievementId(saved));
       }
       setStep('success');
       return true;
@@ -205,6 +213,32 @@ export default function RecommitScreen({
               },
             ]}
           />
+
+          {confirmedAchievementId && (
+            <MotivationalRewardCard
+              id="reward-card-repledge"
+              achievementId={confirmedAchievementId}
+              kind="repledge"
+              bookId={activeBookId}
+              dateKey={getLocalDateKey()}
+              nextStepAction={{
+                id: 'btn-repledge-view-history',
+                label: t.rw_btn_view_history,
+                onClick: () => {
+                  try {
+                    sessionStorage.setItem('pv_initial_tab', 'victories');
+                  } catch {
+                    // ignore
+                  }
+                  onNavigate('progress-victories');
+                },
+              }}
+              onDismiss={() => {
+                if (onBack) onBack();
+                else onNavigate('challenges');
+              }}
+            />
+          )}
         </div>
       )}
 

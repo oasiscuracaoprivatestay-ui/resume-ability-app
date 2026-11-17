@@ -282,9 +282,16 @@
   text-align: center;
   gap: 12px;
   color: #ffffff;
-  overflow: hidden;
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
   animation: sdaCardSettle 460ms var(--sda-motion-ease-out) both;
+}
+
+.sda-ms-slot {
+  width: 100%;
+  margin: 2px 0;
 }
 
 .sda-ms-celebration-card--medium {

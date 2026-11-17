@@ -57,6 +57,11 @@ import {
   type Book2ActiveModalKind,
 } from '../components/Book2PracticeModals';
 import { MilestoneCelebration } from '../components/animations';
+import { MotivationalRewardCard } from '../components/rewards';
+import {
+  buildMilestoneAchievementId,
+  recordAchievementBookContext,
+} from '../utils/achievementRewardsStorage';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
@@ -419,6 +424,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const [celebratingMilestone, setCelebratingMilestone] = useState<{
     day: NinetyDayMilestoneDay;
     shouldAdjustDiet: boolean;
+    achievementId: string;
+    dateKey: string;
   } | null>(null);
   const [isDietOpen, setIsDietOpen] = useState<boolean>(
     () => typeof window !== 'undefined' && window.innerWidth >= 900
@@ -786,7 +793,14 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
 
     if (!milestoneWasAlreadyCompleted) {
       playFeedback('win');
-      setCelebratingMilestone({ day: completedDay, shouldAdjustDiet });
+      const achId = buildMilestoneAchievementId(saved.journeyStartDate, saved.milestoneDay);
+      recordAchievementBookContext(achId, selectedBookId);
+      setCelebratingMilestone({
+        day: completedDay,
+        shouldAdjustDiet,
+        achievementId: achId,
+        dateKey: saved.dateKey,
+      });
     } else if (shouldAdjustDiet) {
       onNavigate('structured-diet');
     }
@@ -4013,7 +4027,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
         </div>
       )}
 
-      {/* ── PHASE 5C.1: 90-DAY MILESTONE CELEBRATION MODAL (Newly Completed Reviews Only) ── */}
+      {/* ── PHASE 5C.1 & 5C.2: 90-DAY MILESTONE CELEBRATION + SCENIC REWARD CARD ── */}
       {celebratingMilestone && (
         <MilestoneCelebration
           milestoneDay={celebratingMilestone.day}
@@ -4025,7 +4039,25 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
               onNavigate('structured-diet');
             }
           }}
-        />
+        >
+          <MotivationalRewardCard
+            id="reward-card-milestone"
+            achievementId={celebratingMilestone.achievementId}
+            kind="milestone_90d"
+            bookId={selectedBookId}
+            dateKey={celebratingMilestone.dateKey}
+            milestoneDay={celebratingMilestone.day}
+            compact
+            nextStepAction={{
+              id: 'btn-reward-ms-history',
+              label: t.rw_btn_view_history,
+              onClick: () => {
+                setCelebratingMilestone(null);
+                openFullWeeklyHistory();
+              },
+            }}
+          />
+        </MilestoneCelebration>
       )}
 
       {/* ── PHASE 5B.2: BOOK 2 (LOSS-MAINTENANCE) INTERACTIVE MODALS ── */}

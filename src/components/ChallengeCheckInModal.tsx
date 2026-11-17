@@ -25,6 +25,13 @@ import { generateId } from '../utils';
 import { playFeedback } from '../utils/feedback';
 import { HoldCommitButton } from './HoldCommitButton';
 import { SuccessCelebration } from './animations';
+import { MotivationalRewardCard } from './rewards';
+import { getSelectedPracticeLoopBook } from '../challenges';
+import {
+  buildRepledgeAchievementId,
+  buildResumeAchievementId,
+  recordAchievementBookContext,
+} from '../utils/achievementRewardsStorage';
 import './ChallengeCheckInModal.css';
 
 interface ChallengeCheckInModalProps {
@@ -52,9 +59,12 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  // Phase 5C.1: Celebrate ONLY newly saved Resume events — never duplicates or failed saves
+  // Phase 5C.1 & 5C.2: Celebrate ONLY newly saved Resume events — never duplicates or failed saves
   const [celebrateResumeNow, setCelebrateResumeNow] = useState(false);
   const [isDuplicateResumeNotice, setIsDuplicateResumeNotice] = useState(false);
+  const [confirmedResumeAchievementId, setConfirmedResumeAchievementId] = useState<string | null>(
+    null
+  );
 
   // Pending action ID tracking for idempotent retries across rapid taps or reloads
   const pendingActionIdRef = useRef<string | null>(null);
@@ -77,6 +87,7 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
       setSubmissionError(null);
       setCelebrateResumeNow(false);
       setIsDuplicateResumeNotice(false);
+      setConfirmedResumeAchievementId(null);
 
       // Check if there was an interrupted attempt in sessionStorage
       try {
@@ -222,12 +233,16 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
       } catch {}
 
       if (selectedStatus === 'resumed') {
-        if (res.status === 'saved') {
+        if (res.status === 'saved' && res.checkIn) {
           playFeedback('win');
+          const achId = buildResumeAchievementId(res.checkIn.id);
+          recordAchievementBookContext(achId, getSelectedPracticeLoopBook());
+          setConfirmedResumeAchievementId(achId);
           setCelebrateResumeNow(true);
           setIsDuplicateResumeNotice(false);
         } else {
-          // Duplicate reconcile — do NOT trigger celebration
+          // Duplicate reconcile — do NOT trigger celebration or reward card
+          setConfirmedResumeAchievementId(null);
           setCelebrateResumeNow(false);
           setIsDuplicateResumeNotice(true);
         }
@@ -253,10 +268,16 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
 
   const handleHoldRecommitComplete = () => {
     const recommitId = generateId();
-    saveRecommitEvent({
+    const saved = saveRecommitEvent({
       id: recommitId,
       timestamp: Date.now(),
     });
+    if (saved) {
+      recordAchievementBookContext(
+        buildRepledgeAchievementId(recommitId),
+        getSelectedPracticeLoopBook()
+      );
+    }
     recordScoreEvent({
       activityType: 'RECOMMIT',
       sourceId: `recommit_${recommitId}`,
@@ -685,7 +706,33 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
                       },
                     ]}
                   >
-                    {renderNextBlockCallout()}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+                      {renderNextBlockCallout()}
+                      {confirmedResumeAchievementId && (
+                        <MotivationalRewardCard
+                          id="reward-card-resume"
+                          achievementId={confirmedResumeAchievementId}
+                          kind="resume"
+                          bookId={getSelectedPracticeLoopBook()}
+                          dateKey={getLocalDateKey()}
+                          compact
+                          nextStepAction={{
+                            id: 'btn-reward-resume-history',
+                            label: t.rw_btn_view_history,
+                            onClick: () => {
+                              try {
+                                sessionStorage.setItem('pv_initial_tab', 'victories');
+                              } catch {
+                                // ignore
+                              }
+                              onClose();
+                              onNavigate('progress-victories');
+                            },
+                          }}
+                          onDismiss={handleContinueChallenge}
+                        />
+                      )}
+                    </div>
                   </SuccessCelebration>
                 ) : (
                   <>

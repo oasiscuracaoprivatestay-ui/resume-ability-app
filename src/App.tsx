@@ -40,7 +40,11 @@ import { AbilityDetailScreen } from './screens/AbilityDetailScreen';
 import { ActivityLogScreen } from './screens/ActivityLogScreen';
 import ProgressVictoriesScreen from './screens/ProgressVictoriesScreen';
 import { normalizeToCanonicalDietAbilityId, type CanonicalDietAbilityId } from './abilities';
-import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY } from './challenges';
+import { OPEN_CHALLENGE_CHECKIN_EVENT, CHALLENGE_OPEN_CHECKIN_KEY, getSelectedPracticeLoopBook } from './challenges';
+import {
+  buildRepledgeAchievementId,
+  recordAchievementBookContext,
+} from './utils/achievementRewardsStorage';
 import InAppReminderBanner from './components/InAppReminderBanner';
 import FloatingTimerButton from './components/FloatingTimerButton';
 import FloatingProgramButton from './components/FloatingProgramButton';
@@ -646,8 +650,8 @@ export default function App() {
     [session, slipId, timerOnly],
   );
 
-  // ── Re-Commit / Re-Pledge Success Handler (returns boolean persistence status) ──
-  const handleRecommitSuccess = useCallback((): boolean => {
+  // ── Re-Commit / Re-Pledge Success Handler (returns saved event ID or false on storage failure) ──
+  const handleRecommitSuccess = useCallback((): string | false => {
     const id = generateId();
     const saved = saveRecommitEvent({
       id,
@@ -657,11 +661,15 @@ export default function App() {
     if (!saved) {
       return false;
     }
+    recordAchievementBookContext(
+      buildRepledgeAchievementId(id),
+      getSelectedPracticeLoopBook()
+    );
     recordScoreEvent({
       activityType: 'RECOMMIT',
       sourceId: `recommit_${id}`,
     });
-    return true;
+    return id;
   }, [slipId]);
 
   // ── "I Am in Control" Handler ──

@@ -29,6 +29,7 @@ import { cleanupOrphanPhotos } from './photoStorage';
 import { loadDietStore } from './dietStorage';
 import { resetNinetyDayJourneyProgress } from '../challenges/ninetyDayJourneyStorage';
 import { clearBook2PracticeActivity } from '../challenges/book2PracticeStorage';
+import { clearAchievementRewardsStore } from './achievementRewardsStorage';
 
 export const STATS_RESET_EVENT = 'resume-ability-stats-reset';
 
@@ -104,6 +105,9 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
 
     // 12c. Book 2 Practice Loop activity logs (preserves selected book preference)
     clearBook2PracticeActivity();
+
+    // 12d. Achievement personal notes & reward metadata (Phase 5C.2)
+    clearAchievementRewardsStore();
 
     // 13. Safe background cleanup of orphaned photos (e.g. progress photos, cleared verification photos)
     try {

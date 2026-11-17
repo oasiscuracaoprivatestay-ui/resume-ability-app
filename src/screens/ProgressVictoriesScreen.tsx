@@ -61,11 +61,20 @@ import {
   isValidImageFile,
 } from '../utils/photoStorage';
 import { readActiveChallenge } from '../components/premium/readActiveChallenge';
-import { calculateChallengePracticeStats, CHALLENGE_UPDATED_EVENT } from '../challenges';
+import {
+  calculateChallengePracticeStats,
+  CHALLENGE_UPDATED_EVENT,
+  NINETY_DAY_JOURNEY_UPDATED_EVENT,
+} from '../challenges';
 import { getTodayScore, SCORE_UPDATED_EVENT } from '../utils/scoringEngine';
 import { getDailyActivitySummary, ACTIVITIES_UPDATED_EVENT } from '../activities';
 import { getLocalDateKey } from '../utils/dietStorage';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
+import {
+  ACHIEVEMENT_REWARDS_UPDATED_EVENT,
+  getVerifiedAchievements,
+} from '../utils/achievementRewardsStorage';
+import { AchievementHistorySection } from '../components/rewards';
 import './ProgressVictoriesScreen.css';
 
 interface ProgressVictoriesScreenProps {
@@ -142,6 +151,7 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
   const [resumedSlips, setResumedSlips] = useState<number>(0);
   const [todayScore, setTodayScore] = useState<number>(0);
   const [movementMinutes, setMovementMinutes] = useState<number>(0);
+  const [verifiedAchCount, setVerifiedAchCount] = useState<number>(0);
 
   // Refresh all data from authoritative local stores
   const refreshAll = useCallback(() => {
@@ -218,6 +228,12 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
       setMovementMinutes(0);
     }
 
+    try {
+      setVerifiedAchCount(getVerifiedAchievements().length);
+    } catch {
+      setVerifiedAchCount(0);
+    }
+
     setIsStoreLoaded(true);
   }, []);
 
@@ -226,6 +242,8 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
     const events = [
       PROGRESS_VICTORIES_UPDATED_EVENT,
       CHALLENGE_UPDATED_EVENT,
+      NINETY_DAY_JOURNEY_UPDATED_EVENT,
+      ACHIEVEMENT_REWARDS_UPDATED_EVENT,
       SCORE_UPDATED_EVENT,
       ACTIVITIES_UPDATED_EVENT,
       STATS_RESET_EVENT,
@@ -692,7 +710,7 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
       tab: 'victories',
       icon: 'award',
       label: t.pv_tab_victories,
-      count: victories.length + reflections.length,
+      count: victories.length + reflections.length + verifiedAchCount,
     },
     {
       id: 'tab-pv-body',
@@ -946,6 +964,27 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
                   <div className="pv-snapshot-list">
                     <button
                       type="button"
+                      id="btn-snapshot-achievements"
+                      className="pv-snapshot-row"
+                      onClick={() => setActiveTab('victories')}
+                    >
+                      <span className="pv-snapshot-icon" aria-hidden="true">
+                        <AppIcon name="trophy" size={17} />
+                      </span>
+                      <span className="pv-snapshot-copy">
+                        <span className="pv-snapshot-title">{t.rw_hist_title}</span>
+                        <span className="pv-snapshot-sub">
+                          {t.rw_hist_snapshot_count.replace('{count}', String(verifiedAchCount))}
+                        </span>
+                      </span>
+                      <span className="pv-snapshot-cta">
+                        <span>{t.pv_btn_open_section}</span>
+                        <AppIcon name="chevron-right" size={15} />
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
                       id="btn-snapshot-victories"
                       className="pv-snapshot-row"
                       onClick={() => setActiveTab('victories')}
@@ -1069,10 +1108,12 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
           )}
 
           {/* ════════════════════════════════════════════════════════════════
-              SECTION 2: VICTORIES & REFLECTIONS
+              SECTION 2: VICTORIES, ACHIEVEMENT HISTORY & REFLECTIONS
              ════════════════════════════════════════════════════════════════ */}
           {activeTab === 'victories' && (
-            <div className="pv-two-col-grid">
+            <div>
+              <AchievementHistorySection onNavigate={onNavigate} />
+              <div className="pv-two-col-grid">
               {/* Non-Scale Victories */}
               <section className="pv-card" id="sec-non-scale-victories">
                 <header className="pv-card-header">
@@ -1234,6 +1275,7 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
                   </ul>
                 )}
               </section>
+              </div>
             </div>
           )}
 

@@ -18,6 +18,7 @@ export function getMilestoneCelebrationTier(
 export interface MilestoneCelebrationProps {
   milestoneDay: NinetyDayMilestoneDay;
   shouldNavigateToDiet?: boolean;
+  children?: React.ReactNode;
   onDismiss: () => void;
 }
 
@@ -33,6 +34,7 @@ export interface MilestoneCelebrationProps {
 export const MilestoneCelebration: React.FC<MilestoneCelebrationProps> = ({
   milestoneDay,
   shouldNavigateToDiet = false,
+  children,
   onDismiss,
 }) => {
   const { t } = useTranslation();
@@ -159,6 +161,8 @@ export const MilestoneCelebration: React.FC<MilestoneCelebrationProps> = ({
         </h3>
 
         <p className="sda-ms-sub">{subtitle}</p>
+
+        {children && <div className="sda-ms-slot">{children}</div>}
 
         <button
           ref={primaryBtnRef}
