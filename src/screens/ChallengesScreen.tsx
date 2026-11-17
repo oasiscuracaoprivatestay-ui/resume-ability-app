@@ -42,10 +42,20 @@ import {
   saveNinetyDayMilestoneReview,
   NINETY_DAY_JOURNEY_UPDATED_EVENT,
   evaluateBook1PracticeLoopGuidance,
+  evaluateBook2PracticeLoopGuidance,
+  evaluatePracticeLoopGuidance,
+  getSelectedPracticeLoopBook,
+  setSelectedPracticeLoopBook,
+  PRACTICE_LOOP_UPDATED_EVENT,
   type NinetyDayMilestoneDay,
   type MilestoneStructureDecision,
   type PracticeGuidanceActionTarget,
+  type PracticeLoopBookId,
 } from '../challenges';
+import {
+  Book2PracticeModals,
+  type Book2ActiveModalKind,
+} from '../components/Book2PracticeModals';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
@@ -87,6 +97,7 @@ import './ChallengesScreen.css';
 interface ChallengesScreenProps {
   onNavigate: (screen: any) => void;
   onBack: () => void;
+  onStartTimer?: () => void;
   onOpenAbilityDetail?: (abilityId: CanonicalDietAbilityId) => void;
 }
 
@@ -331,6 +342,7 @@ const MilestoneStarSvg: React.FC = () => (
 export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   onNavigate,
   onBack,
+  onStartTimer,
   onOpenAbilityDetail,
 }) => {
   const { t } = useTranslation();
@@ -389,7 +401,11 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const [showNextActionModal, setShowNextActionModal] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
-  // Phase 5A & 5B.1: Practice Loop, 90-Day Goal, Milestone Review & Consolidated Sections state
+  // Phase 5A, 5B.1 & 5B.2: Practice Loop, Book 1/2 Selection, 90-Day Goal & Milestone Review state
+  const [selectedBookId, setSelectedBookId] = useState<PracticeLoopBookId>(() =>
+    getSelectedPracticeLoopBook()
+  );
+  const [activeBook2Modal, setActiveBook2Modal] = useState<Book2ActiveModalKind>(null);
   const [isBookInfoOpen, setIsBookInfoOpen] = useState<boolean>(false);
   const [isMetricsOpen, setIsMetricsOpen] = useState<boolean>(false);
   const [isEditing90DayGoal, setIsEditing90DayGoal] = useState<boolean>(false);
@@ -491,10 +507,12 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     refreshState();
     const handleUpdate = () => {
       refreshState();
+      setSelectedBookId(getSelectedPracticeLoopBook());
       setActivityRefreshKey((k) => k + 1);
     };
     window.addEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
     window.addEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
+    window.addEventListener(PRACTICE_LOOP_UPDATED_EVENT, handleUpdate);
     window.addEventListener(DIET_UPDATED_EVENT, handleUpdate);
     window.addEventListener('storage', handleUpdate);
     window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
@@ -503,6 +521,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     return () => {
       window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleUpdate);
       window.removeEventListener(NINETY_DAY_JOURNEY_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener(PRACTICE_LOOP_UPDATED_EVENT, handleUpdate);
       window.removeEventListener(DIET_UPDATED_EVENT, handleUpdate);
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleUpdate);
@@ -546,9 +565,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
       return;
     }
 
-    // Phase 5B.1: Context-aware Book 1 Practice Loop Guidance Engine determines actual next step
+    // Phase 5B.1 & 5B.2: Context-aware Book 1 / Book 2 Practice Loop Guidance Engine determines actual next step
     const freshJourney = resolveNinetyDayJourneyView(current);
-    const freshGuidance = evaluateBook1PracticeLoopGuidance({
+    const freshGuidance = evaluatePracticeLoopGuidance({
+      selectedBookId,
       activeChallenge: current,
       ninetyDayJourney: freshJourney,
       t,
@@ -774,7 +794,7 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     setActivityRefreshKey((k) => k + 1);
   };
 
-  // Phase 5B.1: Book 1 Interactive Practice Loop Guidance Engine
+  // Phase 5B.1 & 5B.2: Book 1 & Book 2 Interactive Practice Loop Guidance Engines
   const book1Guidance = useMemo(() => {
     void activityRefreshKey;
     return evaluateBook1PracticeLoopGuidance({
@@ -783,6 +803,36 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
       t,
     });
   }, [activeChallenge, ninetyDayJourney, activityRefreshKey, t]);
+
+  const book2Guidance = useMemo(() => {
+    void activityRefreshKey;
+    return evaluateBook2PracticeLoopGuidance({
+      activeChallenge,
+      ninetyDayJourney,
+      t,
+    });
+  }, [activeChallenge, ninetyDayJourney, activityRefreshKey, t]);
+
+  const isBook2Active = selectedBookId === 'book2_loss_maintenance';
+  const activePendingMilestoneDay = isBook2Active
+    ? book2Guidance.pendingMilestoneDay
+    : book1Guidance.pendingMilestoneDay;
+
+  const handleSelectPracticeBook = (bookId: PracticeLoopBookId) => {
+    setSelectedPracticeLoopBook(bookId);
+    setSelectedBookId(bookId);
+    setIsBookInfoOpen(false);
+    setActivityRefreshKey((k) => k + 1);
+  };
+
+  const openFullWeeklyHistory = useCallback(() => {
+    try {
+      sessionStorage.setItem('pv_initial_tab', 'victories');
+    } catch {
+      // ignore
+    }
+    onNavigate('progress-victories');
+  }, [onNavigate]);
 
   const executeGuidanceAction = useCallback(
     (target: PracticeGuidanceActionTarget) => {
@@ -806,28 +856,55 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
           onNavigate('daily-review');
           break;
         case 'open_weekly_review':
-          try {
-            sessionStorage.setItem('pv_initial_tab', 'victories');
-          } catch {
-            // ignore
-          }
-          onNavigate('progress-victories');
+          openFullWeeklyHistory();
           break;
         case 'open_milestone_review':
-          if (book1Guidance.pendingMilestoneDay) {
-            openMilestoneReviewModal(book1Guidance.pendingMilestoneDay);
+          if (activePendingMilestoneDay) {
+            openMilestoneReviewModal(activePendingMilestoneDay);
+          }
+          break;
+        case 'open_b2_food_readiness':
+          setActiveBook2Modal('food_readiness');
+          break;
+        case 'open_b2_early_drift':
+          setActiveBook2Modal('early_drift');
+          break;
+        case 'open_b2_weekly_review':
+          setActiveBook2Modal('weekly_review');
+          break;
+        case 'open_b2_adjustment':
+          setActiveBook2Modal('adjustment');
+          break;
+        case 'open_b2_timer_shortcut':
+          if (onStartTimer) {
+            onStartTimer();
+          } else {
+            onNavigate('mode');
           }
           break;
       }
     },
-    [book1Guidance.pendingMilestoneDay, onNavigate, openCheckInModal, openMilestoneReviewModal]
+    [
+      activePendingMilestoneDay,
+      onNavigate,
+      onStartTimer,
+      openCheckInModal,
+      openFullWeeklyHistory,
+      openMilestoneReviewModal,
+    ]
   );
 
-  const getGuidanceActionLabel = (target: PracticeGuidanceActionTarget, stateKind = book1Guidance.stateKind): string => {
+  const getGuidanceActionLabel = (
+    target: PracticeGuidanceActionTarget,
+    stateKind: string = isBook2Active ? book2Guidance.stateKind : book1Guidance.stateKind
+  ): string => {
     switch (target) {
       case 'open_structured_diet':
-        if (stateKind === 'setup_structured_diet') return t.pl_next_cta_setup_diet;
+        if (stateKind === 'setup_structured_diet' || stateKind === 'b2_setup_blueprint') {
+          return t.pl_next_cta_setup_diet;
+        }
         if (stateKind === 'cycle_complete_continue_or_adjust') return t.pl_next_cta_adjust_diet;
+        if (isBook2Active) return t.pl_b2_cta_blueprint;
         return t.pl_next_cta_open_diet;
       case 'open_checkin_modal':
         return t.pl_next_cta_checkin;
@@ -844,8 +921,18 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
       case 'open_milestone_review':
         return t.pl_next_cta_milestone_review.replace(
           '{day}',
-          String(book1Guidance.pendingMilestoneDay || '')
+          String(activePendingMilestoneDay || '')
         );
+      case 'open_b2_food_readiness':
+        return t.pl_b2_cta_food_readiness;
+      case 'open_b2_early_drift':
+        return t.pl_b2_cta_early_drift;
+      case 'open_b2_weekly_review':
+        return t.pl_b2_cta_weekly_review;
+      case 'open_b2_adjustment':
+        return t.pl_b2_cta_adjustment;
+      case 'open_b2_timer_shortcut':
+        return t.pl_next_cta_timer;
     }
   };
 
@@ -1638,10 +1725,11 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                     </div>
                   </section>
 
-                  {/* ── PHASE 5A: MY PRACTICE LOOP (Book 1 · Resume-Ability) ── */}
+                  {/* ── PHASE 5A / 5B.1 / 5B.2: MY PRACTICE LOOP (Book 1 & Book 2) ── */}
                   <section
                     className="sda-pl-card"
                     id="section-my-practice-loop"
+                    data-selected-book={selectedBookId}
                     aria-labelledby="heading-my-practice-loop"
                   >
                     <div className="sda-pl-header">
@@ -1653,7 +1741,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                           <h3 id="heading-my-practice-loop" className="sda-pl-title">
                             {t.pl_title}
                           </h3>
-                          <p className="sda-pl-subtitle">{t.pl_subtitle}</p>
+                          <p className="sda-pl-subtitle">
+                            {isBook2Active ? t.pl_b2_subtitle : t.pl_subtitle}
+                          </p>
                         </div>
                       </div>
 
@@ -1665,19 +1755,36 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                         aria-controls="panel-pl-book-info"
                         onClick={() => setIsBookInfoOpen((prev) => !prev)}
                       >
-                        <span>{t.pl_book1_pill}</span>
+                        <span>{isBook2Active ? t.pl_b2_pill_short : t.pl_book1_pill}</span>
                         <AppIcon name="chevron-down" size={14} className="sda-pl-book-chevron" />
                       </button>
                     </div>
 
                     {isBookInfoOpen && (
                       <div id="panel-pl-book-info" className="sda-pl-book-drawer">
-                        <div className="sda-pl-book-row sda-pl-book-row--active">
+                        {/* Book 1 Row */}
+                        <div
+                          id="row-pl-book1"
+                          className={`sda-pl-book-row ${
+                            !isBook2Active ? 'sda-pl-book-row--active' : 'sda-pl-book-row--selectable'
+                          }`}
+                        >
                           <div className="sda-pl-book-row-top">
                             <span className="sda-pl-book-name">{t.pl_book1_pill}</span>
-                            <span className="sda-pl-book-badge sda-pl-book-badge--active">
-                              {t.pl_book1_active_badge}
-                            </span>
+                            {!isBook2Active ? (
+                              <span className="sda-pl-book-badge sda-pl-book-badge--active">
+                                {t.pl_book1_active_badge}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                id="btn-select-book1"
+                                className="sda-pl-book-select-btn"
+                                onClick={() => handleSelectPracticeBook('book1_resume_ability')}
+                              >
+                                {t.pl_book_switch_btn}
+                              </button>
+                            )}
                           </div>
                           <p className="sda-pl-book-desc">{t.pl_book1_active_desc}</p>
                           <button
@@ -1697,14 +1804,46 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                           </button>
                         </div>
 
-                        <div className="sda-pl-book-row sda-pl-book-row--future" aria-disabled="true">
+                        {/* Book 2 Row */}
+                        <div
+                          id="row-pl-book2"
+                          className={`sda-pl-book-row ${
+                            isBook2Active ? 'sda-pl-book-row--active' : 'sda-pl-book-row--selectable'
+                          }`}
+                        >
                           <div className="sda-pl-book-row-top">
                             <span className="sda-pl-book-name">{t.pl_book2_pill}</span>
-                            <span className="sda-pl-book-badge sda-pl-book-badge--future">
-                              {t.pl_book2_future_badge}
-                            </span>
+                            {isBook2Active ? (
+                              <span className="sda-pl-book-badge sda-pl-book-badge--active">
+                                {t.pl_book1_active_badge}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                id="btn-select-book2"
+                                className="sda-pl-book-select-btn"
+                                onClick={() => handleSelectPracticeBook('book2_loss_maintenance')}
+                              >
+                                {t.pl_book_switch_btn}
+                              </button>
+                            )}
                           </div>
-                          <p className="sda-pl-book-desc">{t.pl_book2_future_desc}</p>
+                          <p className="sda-pl-book-desc">{t.pl_b2_active_desc}</p>
+                          <button
+                            type="button"
+                            id="btn-pl-view-book2"
+                            className="sda-pl-book-link"
+                            onClick={() => {
+                              if (onOpenAbilityDetail) {
+                                onOpenAbilityDetail('loss_maintenance_ability');
+                              } else {
+                                onNavigate('seven-abilities');
+                              }
+                            }}
+                          >
+                            <span>{t.pl_b2_view_principles}</span>
+                            <AppIcon name="chevron-right" size={14} />
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1757,342 +1896,724 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                       </button>
                     </div>
 
-                    {/* ── PHASE 5B.1: COMPACT CONTEXT-AWARE "YOUR NEXT STEP" CARD ── */}
-                    {(() => {
-                      const g = book1Guidance;
-                      const blk = g.nextScheduledBlock;
-                      const showScheduledBlockRow =
-                        g.stateKind === 'next_meal_block' ||
-                        g.stateKind === 'next_fasting_block' ||
-                        g.stateKind === 'pending_checkin' ||
-                        g.stateKind === 'slip_recovery_next_block' ||
-                        g.stateKind === 'drifting_recovery' ||
-                        (g.stateKind === 'resumed_confirmation' && !g.allTodayBlocksVerified);
+                    {/* ── PHASE 5B.1 & 5B.2: COMPACT CONTEXT-AWARE "YOUR NEXT STEP" CARD ── */}
+                    {!isBook2Active ? (
+                      (() => {
+                        const g = book1Guidance;
+                        const blk = g.nextScheduledBlock;
+                        const showScheduledBlockRow =
+                          g.stateKind === 'next_meal_block' ||
+                          g.stateKind === 'next_fasting_block' ||
+                          g.stateKind === 'pending_checkin' ||
+                          g.stateKind === 'slip_recovery_next_block' ||
+                          g.stateKind === 'drifting_recovery' ||
+                          (g.stateKind === 'resumed_confirmation' && !g.allTodayBlocksVerified);
 
-                      let headline = t.pl_next_block_heading;
-                      let subcopy = '';
-                      switch (g.stateKind) {
-                        case 'setup_structured_diet':
-                          headline = t.pl_next_setup_diet_title;
-                          subcopy = t.pl_next_setup_diet_sub;
-                          break;
-                        case 'slip_recovery_next_block':
-                          headline = t.pl_next_slip_title;
-                          subcopy = t.pl_next_slip_sub;
-                          break;
-                        case 'drifting_recovery':
-                          headline = t.pl_next_drift_title;
-                          subcopy = t.pl_next_drift_sub;
-                          break;
-                        case 'resumed_confirmation':
-                          headline = t.pl_next_resumed_title;
-                          if (g.allTodayBlocksVerified) {
-                            subcopy = t.pl_next_resumed_sub_review;
-                          }
-                          break;
-                        case 'pending_checkin':
-                          headline = blk ? t.pl_next_block_heading : t.pl_next_checkin_title;
-                          subcopy = t.pl_next_checkin_sub;
-                          break;
-                        case 'next_meal_block':
-                        case 'next_fasting_block':
-                          headline = t.pl_next_block_heading;
-                          break;
-                        case 'verify_remaining_blocks':
-                          headline = t.pl_next_verify_remaining_title;
-                          subcopy = t.pl_next_verify_remaining_sub.replace(
-                            '{count}',
-                            String(g.unverifiedBlocksCount)
-                          );
-                          break;
-                        case 'free_or_unstructured_day':
-                          headline = t.pl_next_free_day_title;
-                          subcopy = t.pl_next_free_day_sub;
-                          break;
-                        case 'milestone_review_pending':
-                          headline = t.journey90_ms_modal_title.replace(
-                            '{day}',
-                            String(g.pendingMilestoneDay || '')
-                          );
-                          subcopy = t.journey90_ms_modal_sub;
-                          break;
-                        case 'daily_review_pending':
-                          headline = t.pl_next_daily_review_title;
-                          subcopy = t.pl_next_daily_review_sub;
-                          break;
-                        case 'weekly_review_pending':
-                          headline = t.pl_next_weekly_review_title;
-                          subcopy = t.pl_next_weekly_review_sub;
-                          break;
-                        case 'cycle_complete_continue_or_adjust':
-                          headline = t.pl_next_cycle_complete_title;
-                          subcopy = t.pl_next_cycle_complete_sub;
-                          break;
-                      }
+                        let headline = t.pl_next_block_heading;
+                        let subcopy = '';
+                        switch (g.stateKind) {
+                          case 'setup_structured_diet':
+                            headline = t.pl_next_setup_diet_title;
+                            subcopy = t.pl_next_setup_diet_sub;
+                            break;
+                          case 'slip_recovery_next_block':
+                            headline = t.pl_next_slip_title;
+                            subcopy = t.pl_next_slip_sub;
+                            break;
+                          case 'drifting_recovery':
+                            headline = t.pl_next_drift_title;
+                            subcopy = t.pl_next_drift_sub;
+                            break;
+                          case 'resumed_confirmation':
+                            headline = t.pl_next_resumed_title;
+                            if (g.allTodayBlocksVerified) {
+                              subcopy = t.pl_next_resumed_sub_review;
+                            }
+                            break;
+                          case 'pending_checkin':
+                            headline = blk ? t.pl_next_block_heading : t.pl_next_checkin_title;
+                            subcopy = t.pl_next_checkin_sub;
+                            break;
+                          case 'next_meal_block':
+                          case 'next_fasting_block':
+                            headline = t.pl_next_block_heading;
+                            break;
+                          case 'verify_remaining_blocks':
+                            headline = t.pl_next_verify_remaining_title;
+                            subcopy = t.pl_next_verify_remaining_sub.replace(
+                              '{count}',
+                              String(g.unverifiedBlocksCount)
+                            );
+                            break;
+                          case 'free_or_unstructured_day':
+                            headline = t.pl_next_free_day_title;
+                            subcopy = t.pl_next_free_day_sub;
+                            break;
+                          case 'milestone_review_pending':
+                            headline = t.journey90_ms_modal_title.replace(
+                              '{day}',
+                              String(g.pendingMilestoneDay || '')
+                            );
+                            subcopy = t.journey90_ms_modal_sub;
+                            break;
+                          case 'daily_review_pending':
+                            headline = t.pl_next_daily_review_title;
+                            subcopy = t.pl_next_daily_review_sub;
+                            break;
+                          case 'weekly_review_pending':
+                            headline = t.pl_next_weekly_review_title;
+                            subcopy = t.pl_next_weekly_review_sub;
+                            break;
+                          case 'cycle_complete_continue_or_adjust':
+                            headline = t.pl_next_cycle_complete_title;
+                            subcopy = t.pl_next_cycle_complete_sub;
+                            break;
+                        }
 
-                      return (
-                        <div
-                          className={`sda-pl-next-card sda-pl-next-card--${g.stateKind}`}
-                          id="card-pl-next-step"
-                          data-guidance-state={g.stateKind}
-                        >
-                          <div className="sda-pl-next-top">
-                            <span className="sda-pl-next-eyebrow">
-                              <AppIcon name="sparkles" size={12} />
-                              <span>{t.pl_next_eyebrow}</span>
-                            </span>
+                        return (
+                          <div
+                            className={`sda-pl-next-card sda-pl-next-card--${g.stateKind}`}
+                            id="card-pl-next-step"
+                            data-book="book1_resume_ability"
+                            data-guidance-state={g.stateKind}
+                          >
+                            <div className="sda-pl-next-top">
+                              <span className="sda-pl-next-eyebrow">
+                                <AppIcon name="sparkles" size={12} />
+                                <span>{t.pl_next_eyebrow}</span>
+                              </span>
 
-                            <div className="sda-pl-next-badges">
-                              {g.stateKind === 'resumed_confirmation' && (
-                                <span className="sda-pl-next-chip sda-pl-next-chip--resumed" id="badge-pl-resumed">
-                                  ✓ {t.pl_next_resumed_badge}
-                                </span>
-                              )}
-                              {showScheduledBlockRow && blk && (
-                                <span
-                                  className={`sda-pl-next-chip ${
-                                    blk.isFasting
-                                      ? 'sda-pl-next-chip--fasting'
-                                      : 'sda-pl-next-chip--meal'
-                                  }`}
-                                  id="badge-pl-block-kind"
-                                >
-                                  {blk.isFasting ? t.pl_next_fasting_badge : t.pl_next_meal_badge}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="sda-pl-next-main">
-                            <div className="sda-pl-next-copy">
-                              <h4 className="sda-pl-next-title" id="next-step-title">
-                                {headline}
-                              </h4>
-
-                              {showScheduledBlockRow && (
-                                <div className="sda-pl-next-block-row" id="next-step-scheduled-block">
-                                  {blk ? (
-                                    <>
-                                      <span className="sda-pl-next-block-time" id="next-step-block-time">
-                                        {blk.isTomorrow
-                                          ? `${t.pl_next_tomorrow_tag} · `
-                                          : blk.timingState === 'active_now'
-                                          ? `${t.pl_next_now_tag} · `
-                                          : ''}
-                                        {blk.startTime} – {blk.endTime}
-                                      </span>
-                                      <span className="sda-pl-next-block-sep" aria-hidden="true">
-                                        ·
-                                      </span>
-                                      <span className="sda-pl-next-block-desc" id="next-step-block-desc">
-                                        {blk.primaryDescription}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="sda-pl-next-block-empty" id="next-step-block-empty">
-                                      {t.pl_next_no_block_empty}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-
-                              {subcopy && <p className="sda-pl-next-sub">{subcopy}</p>}
+                              <div className="sda-pl-next-badges">
+                                {g.stateKind === 'resumed_confirmation' && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--resumed" id="badge-pl-resumed">
+                                    ✓ {t.pl_next_resumed_badge}
+                                  </span>
+                                )}
+                                {showScheduledBlockRow && blk && (
+                                  <span
+                                    className={`sda-pl-next-chip ${
+                                      blk.isFasting
+                                        ? 'sda-pl-next-chip--fasting'
+                                        : 'sda-pl-next-chip--meal'
+                                    }`}
+                                    id="badge-pl-block-kind"
+                                  >
+                                    {blk.isFasting ? t.pl_next_fasting_badge : t.pl_next_meal_badge}
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
-                            <div className="sda-pl-next-actions">
-                              <button
-                                type="button"
-                                id="btn-pl-next-step-action"
-                                className="sda-pl-next-cta"
-                                onClick={() => executeGuidanceAction(g.primaryAction)}
-                              >
-                                <span>{getGuidanceActionLabel(g.primaryAction)}</span>
-                                <AppIcon name="chevron-right" size={13} />
-                              </button>
+                            <div className="sda-pl-next-main">
+                              <div className="sda-pl-next-copy">
+                                <h4 className="sda-pl-next-title" id="next-step-title">
+                                  {headline}
+                                </h4>
 
-                              {g.secondaryAction && (
+                                {showScheduledBlockRow && (
+                                  <div className="sda-pl-next-block-row" id="next-step-scheduled-block">
+                                    {blk ? (
+                                      <>
+                                        <span className="sda-pl-next-block-time" id="next-step-block-time">
+                                          {blk.isTomorrow
+                                            ? `${t.pl_next_tomorrow_tag} · `
+                                            : blk.timingState === 'active_now'
+                                            ? `${t.pl_next_now_tag} · `
+                                            : ''}
+                                          {blk.startTime} – {blk.endTime}
+                                        </span>
+                                        <span className="sda-pl-next-block-sep" aria-hidden="true">
+                                          ·
+                                        </span>
+                                        <span className="sda-pl-next-block-desc" id="next-step-block-desc">
+                                          {blk.primaryDescription}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className="sda-pl-next-block-empty" id="next-step-block-empty">
+                                        {t.pl_next_no_block_empty}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {subcopy && <p className="sda-pl-next-sub">{subcopy}</p>}
+                              </div>
+
+                              <div className="sda-pl-next-actions">
                                 <button
                                   type="button"
-                                  id="btn-pl-next-step-secondary"
-                                  className="sda-pl-next-secondary-btn"
-                                  onClick={() => executeGuidanceAction(g.secondaryAction!)}
+                                  id="btn-pl-next-step-action"
+                                  className="sda-pl-next-cta"
+                                  onClick={() => executeGuidanceAction(g.primaryAction)}
                                 >
-                                  <span>{getGuidanceActionLabel(g.secondaryAction, g.stateKind)}</span>
+                                  <span>{getGuidanceActionLabel(g.primaryAction)}</span>
+                                  <AppIcon name="chevron-right" size={13} />
                                 </button>
-                              )}
+
+                                {g.secondaryAction && (
+                                  <button
+                                    type="button"
+                                    id="btn-pl-next-step-secondary"
+                                    className="sda-pl-next-secondary-btn"
+                                    onClick={() => executeGuidanceAction(g.secondaryAction!)}
+                                  >
+                                    <span>{getGuidanceActionLabel(g.secondaryAction, g.stateKind)}</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()
+                    ) : (
+                      (() => {
+                        const g2 = book2Guidance;
+                        const blk = g2.nextScheduledBlock;
+                        const showScheduledBlockRow =
+                          g2.stateKind === 'b2_next_meal_block' ||
+                          g2.stateKind === 'b2_next_fasting_block' ||
+                          g2.stateKind === 'b2_pending_checkin' ||
+                          g2.stateKind === 'b2_food_readiness_incomplete' ||
+                          g2.stateKind === 'b2_food_readiness_ready' ||
+                          g2.stateKind === 'b2_early_drift_active' ||
+                          g2.stateKind === 'b2_early_drift_addressed';
 
-                    {/* 4 Action Cards: Gold / Purple / Emerald / Blue */}
-                    <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_title}>
-                      {/* 1. I Slipped (Warm Gold) — Opens ChallengeCheckInModal with Slip preselected */}
-                      <button
-                        type="button"
-                        id="btn-pl-slipped"
-                        className="sda-pl-action-card sda-pl-action-card--gold"
-                        onClick={() => openCheckInModal('slip')}
-                      >
-                        <span className="sda-pl-action-icon" aria-hidden="true">
-                          <PracticeSlipBoltSvg />
-                        </span>
-                        <span className="sda-pl-action-copy">
-                          <span className="sda-pl-action-title">{t.pl_action_slipped_title}</span>
-                          <span className="sda-pl-action-sub">{t.pl_action_slipped_sub}</span>
-                        </span>
-                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
-                      </button>
+                        let headline = t.pl_next_block_heading;
+                        let subcopy = '';
+                        switch (g2.stateKind) {
+                          case 'b2_setup_blueprint':
+                            headline = t.pl_b2_next_setup_title;
+                            subcopy = t.pl_b2_next_setup_sub;
+                            break;
+                          case 'b2_food_readiness_incomplete':
+                            headline = t.pl_b2_next_readiness_inc_title;
+                            subcopy = t.pl_b2_next_readiness_inc_sub;
+                            break;
+                          case 'b2_food_readiness_ready':
+                            headline = t.pl_b2_next_readiness_ready_title;
+                            subcopy = t.pl_b2_next_readiness_ready_sub;
+                            break;
+                          case 'b2_early_drift_active':
+                            headline = t.pl_b2_next_drift_active_title;
+                            subcopy = t.pl_b2_next_drift_active_sub;
+                            break;
+                          case 'b2_early_drift_addressed':
+                            headline = t.pl_b2_next_drift_addressed_title;
+                            subcopy = t.pl_b2_next_drift_addressed_sub;
+                            break;
+                          case 'b2_pending_checkin':
+                            headline = blk ? t.pl_next_block_heading : t.pl_next_checkin_title;
+                            subcopy = t.pl_next_checkin_sub;
+                            break;
+                          case 'b2_next_meal_block':
+                          case 'b2_next_fasting_block':
+                            headline = t.pl_next_block_heading;
+                            break;
+                          case 'b2_verify_remaining_blocks':
+                            headline = t.pl_next_verify_remaining_title;
+                            subcopy = t.pl_next_verify_remaining_sub.replace(
+                              '{count}',
+                              String(g2.unverifiedBlocksCount)
+                            );
+                            break;
+                          case 'b2_free_or_unstructured_day':
+                            headline = t.pl_next_free_day_title;
+                            subcopy = t.pl_next_free_day_sub;
+                            break;
+                          case 'b2_milestone_review_pending':
+                            headline = t.journey90_ms_modal_title.replace(
+                              '{day}',
+                              String(g2.pendingMilestoneDay || '')
+                            );
+                            subcopy = t.journey90_ms_modal_sub;
+                            break;
+                          case 'b2_weekly_review_pending':
+                            headline = t.pl_b2_next_weekly_title;
+                            subcopy = t.pl_b2_next_weekly_sub;
+                            break;
+                          case 'b2_test_one_adjustment':
+                            headline = t.pl_b2_next_adjust_title;
+                            subcopy = t.pl_b2_next_adjust_sub;
+                            break;
+                          case 'b2_continue_structure':
+                            headline = t.pl_b2_next_continue_title;
+                            subcopy = t.pl_b2_next_continue_sub;
+                            break;
+                        }
 
-                      {/* 2. I Am Drifting (Purple) */}
-                      <button
-                        type="button"
-                        id="btn-pl-drifting"
-                        className="sda-pl-action-card sda-pl-action-card--purple"
-                        onClick={() => openCheckInModal('off-structure-aware')}
-                      >
-                        <span className="sda-pl-action-icon" aria-hidden="true">
-                          <PracticeDriftWavesSvg />
-                        </span>
-                        <span className="sda-pl-action-copy">
-                          <span className="sda-pl-action-title">{t.pl_action_drifting_title}</span>
-                          <span className="sda-pl-action-sub">{t.pl_action_drifting_sub}</span>
-                        </span>
-                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
-                      </button>
+                        return (
+                          <div
+                            className={`sda-pl-next-card sda-pl-next-card--${g2.stateKind}`}
+                            id="card-pl-next-step"
+                            data-book="book2_loss_maintenance"
+                            data-guidance-state={g2.stateKind}
+                          >
+                            <div className="sda-pl-next-top">
+                              <span className="sda-pl-next-eyebrow">
+                                <AppIcon name="sparkles" size={12} />
+                                <span>{t.pl_next_eyebrow}</span>
+                              </span>
 
-                      {/* 3. I Resumed (Emerald) */}
-                      <button
-                        type="button"
-                        id="btn-pl-resumed"
-                        className="sda-pl-action-card sda-pl-action-card--emerald"
-                        onClick={() => openCheckInModal('resumed')}
-                      >
-                        <span className="sda-pl-action-icon" aria-hidden="true">
-                          <PracticeResumedCheckSvg />
-                        </span>
-                        <span className="sda-pl-action-copy">
-                          <span className="sda-pl-action-title">{t.pl_action_resumed_title}</span>
-                          <span className="sda-pl-action-sub">{t.pl_action_resumed_sub}</span>
-                        </span>
-                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
-                      </button>
+                              <div className="sda-pl-next-badges">
+                                {g2.stateKind === 'b2_food_readiness_ready' && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--resumed" id="badge-b2-food-ready">
+                                    ✓ {t.pl_b2_badge_food_ready}
+                                  </span>
+                                )}
+                                {g2.stateKind === 'b2_food_readiness_incomplete' && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--fasting" id="badge-b2-needs-prep">
+                                    {t.pl_b2_badge_needs_prep}
+                                  </span>
+                                )}
+                                {g2.stateKind === 'b2_early_drift_active' && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--drift" id="badge-b2-early-drift">
+                                    {t.pl_b2_badge_drift_noticed}
+                                  </span>
+                                )}
+                                {g2.stateKind === 'b2_early_drift_addressed' && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--resumed" id="badge-b2-drift-addressed">
+                                    ✓ {t.pl_b2_badge_drift_addressed}
+                                  </span>
+                                )}
+                                {g2.activeAdjustment && (
+                                  <span className="sda-pl-next-chip sda-pl-next-chip--meal" id="badge-b2-testing-adj">
+                                    {t.pl_b2_badge_testing_adj}
+                                  </span>
+                                )}
+                                {showScheduledBlockRow && blk && (
+                                  <span
+                                    className={`sda-pl-next-chip ${
+                                      blk.isFasting
+                                        ? 'sda-pl-next-chip--fasting'
+                                        : 'sda-pl-next-chip--meal'
+                                    }`}
+                                    id="badge-pl-block-kind"
+                                  >
+                                    {blk.isFasting ? t.pl_next_fasting_badge : t.pl_next_meal_badge}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                      {/* 4. Re-Commit (Blue) */}
-                      <button
-                        type="button"
-                        id="btn-pl-recommit"
-                        className="sda-pl-action-card sda-pl-action-card--blue"
-                        onClick={() => onNavigate('recommit')}
-                      >
-                        <span className="sda-pl-action-icon" aria-hidden="true">
-                          <PracticeRecommitShieldSvg />
-                        </span>
-                        <span className="sda-pl-action-copy">
-                          <span className="sda-pl-action-title">{t.pl_action_recommit_title}</span>
-                          <span className="sda-pl-action-sub">{t.pl_action_recommit_sub}</span>
-                        </span>
-                        <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
-                      </button>
-                    </div>
+                            <div className="sda-pl-next-main">
+                              <div className="sda-pl-next-copy">
+                                <h4 className="sda-pl-next-title" id="next-step-title">
+                                  {headline}
+                                </h4>
 
-                    {/* Book 1 Flow Strip: Structured Diet -> Today -> Daily Review -> Weekly Review */}
-                    <nav className="sda-pl-steps-flow" aria-label="Book 1 Practice Loop Steps">
-                      <button
-                        type="button"
-                        id="btn-pl-step-diet"
-                        className={`sda-pl-step-card ${
-                          practiceLoopState.activeStep === 'diet' ? 'is-current' : ''
-                        }`}
-                        aria-current={practiceLoopState.activeStep === 'diet' ? 'step' : undefined}
-                        onClick={() => onNavigate('structured-diet')}
-                      >
-                        <span className="sda-pl-step-icon" aria-hidden="true">
-                          <AppIcon name="utensils" size={19} />
-                        </span>
-                        <span className="sda-pl-step-title">{t.pl_step_diet_title}</span>
-                        <span className="sda-pl-step-sub">{t.pl_step_diet_sub}</span>
-                      </button>
+                                {showScheduledBlockRow && (
+                                  <div className="sda-pl-next-block-row" id="next-step-scheduled-block">
+                                    {blk ? (
+                                      <>
+                                        <span className="sda-pl-next-block-time" id="next-step-block-time">
+                                          {blk.isTomorrow
+                                            ? `${t.pl_next_tomorrow_tag} · `
+                                            : blk.timingState === 'active_now'
+                                            ? `${t.pl_next_now_tag} · `
+                                            : ''}
+                                          {blk.startTime} – {blk.endTime}
+                                        </span>
+                                        <span className="sda-pl-next-block-sep" aria-hidden="true">
+                                          ·
+                                        </span>
+                                        <span className="sda-pl-next-block-desc" id="next-step-block-desc">
+                                          {blk.primaryDescription}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className="sda-pl-next-block-empty" id="next-step-block-empty">
+                                        {t.pl_next_no_block_empty}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
 
-                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+                                {g2.activeAdjustment && (
+                                  <p className="sda-pl-next-adj-pill" id="next-step-active-adjustment">
+                                    <strong>{t.pl_b2_next_active_adj_prefix}</strong>{' '}
+                                    {g2.activeAdjustment.description}
+                                  </p>
+                                )}
 
-                      <button
-                        type="button"
-                        id="btn-pl-step-today"
-                        className={`sda-pl-step-card ${
-                          practiceLoopState.activeStep === 'today' ? 'is-current' : ''
-                        }`}
-                        aria-current={practiceLoopState.activeStep === 'today' ? 'step' : undefined}
-                        onClick={() => {
-                          const freshChallenge = syncCurrentChallenge() || activeChallenge;
-                          const freshStats =
-                            freshChallenge && freshChallenge.status === 'active'
-                              ? calculateChallengePracticeStats(freshChallenge)
-                              : practiceStats;
-                          if (!freshStats?.todayCheckedIn) {
-                            openCheckInModal(null);
-                          } else {
-                            onNavigate('structured-diet');
+                                {subcopy && <p className="sda-pl-next-sub">{subcopy}</p>}
+                              </div>
+
+                              <div className="sda-pl-next-actions">
+                                <button
+                                  type="button"
+                                  id="btn-pl-next-step-action"
+                                  className="sda-pl-next-cta"
+                                  onClick={() => executeGuidanceAction(g2.primaryAction)}
+                                >
+                                  <span>{getGuidanceActionLabel(g2.primaryAction, g2.stateKind)}</span>
+                                  <AppIcon name="chevron-right" size={13} />
+                                </button>
+
+                                {g2.secondaryAction && (
+                                  <button
+                                    type="button"
+                                    id="btn-pl-next-step-secondary"
+                                    className="sda-pl-next-secondary-btn"
+                                    onClick={() => executeGuidanceAction(g2.secondaryAction!)}
+                                  >
+                                    <span>{getGuidanceActionLabel(g2.secondaryAction, g2.stateKind)}</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    )}
+
+                    {/* 4 Action Cards: Book 1 (Recovery) vs Book 2 (Loss-Maintenance) */}
+                    {!isBook2Active ? (
+                      <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_title}>
+                        {/* 1. I Slipped (Warm Gold) */}
+                        <button
+                          type="button"
+                          id="btn-pl-slipped"
+                          className="sda-pl-action-card sda-pl-action-card--gold"
+                          onClick={() => openCheckInModal('slip')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeSlipBoltSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_action_slipped_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_slipped_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 2. I Am Drifting (Purple) */}
+                        <button
+                          type="button"
+                          id="btn-pl-drifting"
+                          className="sda-pl-action-card sda-pl-action-card--purple"
+                          onClick={() => openCheckInModal('off-structure-aware')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeDriftWavesSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_action_drifting_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_drifting_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 3. I Resumed (Emerald) */}
+                        <button
+                          type="button"
+                          id="btn-pl-resumed"
+                          className="sda-pl-action-card sda-pl-action-card--emerald"
+                          onClick={() => openCheckInModal('resumed')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeResumedCheckSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_action_resumed_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_resumed_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 4. Re-Commit (Blue) */}
+                        <button
+                          type="button"
+                          id="btn-pl-recommit"
+                          className="sda-pl-action-card sda-pl-action-card--blue"
+                          onClick={() => onNavigate('recommit')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeRecommitShieldSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_action_recommit_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_recommit_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_b2_pill_short}>
+                        {/* 1. Food Readiness (Warm Gold) */}
+                        <button
+                          type="button"
+                          id="btn-b2-food-readiness"
+                          className="sda-pl-action-card sda-pl-action-card--gold"
+                          onClick={() => setActiveBook2Modal('food_readiness')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <AppIcon name="utensils" size={21} />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_b2_action_readiness_title}</span>
+                            <span className="sda-pl-action-sub">
+                              {book2Guidance.foodReadinessToday?.status === 'needs_prep'
+                                ? t.pl_b2_action_readiness_sub_needs_prep
+                                : book2Guidance.foodReadinessToday
+                                ? t.pl_b2_action_readiness_sub_ready
+                                : t.pl_b2_action_readiness_sub}
+                            </span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 2. Early Signs of Drift (Purple — Strictly Non-Slip) */}
+                        <button
+                          type="button"
+                          id="btn-b2-early-drift"
+                          className="sda-pl-action-card sda-pl-action-card--purple"
+                          onClick={() => setActiveBook2Modal('early_drift')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeDriftWavesSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_b2_action_drift_title}</span>
+                            <span className="sda-pl-action-sub">
+                              {book2Guidance.earlyDriftToday?.status === 'acknowledged'
+                                ? t.pl_b2_action_drift_sub_active
+                                : book2Guidance.earlyDriftToday?.status === 'addressed'
+                                ? t.pl_b2_action_drift_sub_addressed
+                                : t.pl_b2_action_drift_sub}
+                            </span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 3. Test One Adjustment (Emerald) */}
+                        <button
+                          type="button"
+                          id="btn-b2-adjustment"
+                          className="sda-pl-action-card sda-pl-action-card--emerald"
+                          onClick={() => setActiveBook2Modal('adjustment')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <AppIcon name="sparkles" size={21} />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_b2_action_adjust_title}</span>
+                            <span className="sda-pl-action-sub">
+                              {book2Guidance.activeAdjustment
+                                ? t.pl_b2_action_adjust_sub_testing
+                                : t.pl_b2_action_adjust_sub}
+                            </span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 4. My Anchors / Non-Negotiables (Blue) */}
+                        <button
+                          type="button"
+                          id="btn-b2-anchors"
+                          className="sda-pl-action-card sda-pl-action-card--blue"
+                          onClick={() => onNavigate('recommit')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeRecommitShieldSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_b2_action_anchors_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_b2_action_anchors_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* 4-Step Practice Cycle Strip: Book 1 vs Book 2 */}
+                    {!isBook2Active ? (
+                      <nav className="sda-pl-steps-flow" aria-label="Book 1 Practice Loop Steps">
+                        <button
+                          type="button"
+                          id="btn-pl-step-diet"
+                          className={`sda-pl-step-card ${
+                            practiceLoopState.activeStep === 'diet' ? 'is-current' : ''
+                          }`}
+                          aria-current={practiceLoopState.activeStep === 'diet' ? 'step' : undefined}
+                          onClick={() => onNavigate('structured-diet')}
+                        >
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="utensils" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_step_diet_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_step_diet_sub}</span>
+                        </button>
+
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                        <button
+                          type="button"
+                          id="btn-pl-step-today"
+                          className={`sda-pl-step-card ${
+                            practiceLoopState.activeStep === 'today' ? 'is-current' : ''
+                          }`}
+                          aria-current={practiceLoopState.activeStep === 'today' ? 'step' : undefined}
+                          onClick={() => {
+                            const freshChallenge = syncCurrentChallenge() || activeChallenge;
+                            const freshStats =
+                              freshChallenge && freshChallenge.status === 'active'
+                                ? calculateChallengePracticeStats(freshChallenge)
+                                : practiceStats;
+                            if (!freshStats?.todayCheckedIn) {
+                              openCheckInModal(null);
+                            } else {
+                              onNavigate('structured-diet');
+                            }
+                          }}
+                        >
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="sun" size={20} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_step_today_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_step_today_sub}</span>
+                        </button>
+
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                        <button
+                          type="button"
+                          id="btn-pl-step-daily-review"
+                          className={`sda-pl-step-card ${
+                            practiceLoopState.activeStep === 'daily-review' ? 'is-current' : ''
+                          } ${practiceLoopState.dailyReviewDoneToday ? 'is-done' : ''}`}
+                          aria-current={practiceLoopState.activeStep === 'daily-review' ? 'step' : undefined}
+                          onClick={() => onNavigate('daily-review')}
+                        >
+                          {practiceLoopState.dailyReviewDoneToday && (
+                            <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                          )}
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="clipboard-list" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_step_daily_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_step_daily_sub}</span>
+                        </button>
+
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                        <button
+                          type="button"
+                          id="btn-pl-step-weekly-review"
+                          className={`sda-pl-step-card ${
+                            practiceLoopState.activeStep === 'weekly-review' ? 'is-current' : ''
+                          } ${practiceLoopState.weeklyReflectionDoneToday ? 'is-done' : ''}`}
+                          aria-current={practiceLoopState.activeStep === 'weekly-review' ? 'step' : undefined}
+                          onClick={openFullWeeklyHistory}
+                        >
+                          {practiceLoopState.weeklyReflectionDoneToday && (
+                            <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                          )}
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="bar-chart" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_step_weekly_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_step_weekly_sub}</span>
+                        </button>
+                      </nav>
+                    ) : (
+                      <nav className="sda-pl-steps-flow" aria-label="Book 2 Practice Loop Steps">
+                        <button
+                          type="button"
+                          id="btn-b2-step-blueprint"
+                          className={`sda-pl-step-card ${
+                            book2Guidance.activeCycleStep === 'blueprint' ? 'is-current' : ''
+                          }`}
+                          aria-current={
+                            book2Guidance.activeCycleStep === 'blueprint' ? 'step' : undefined
                           }
-                        }}
-                      >
-                        <span className="sda-pl-step-icon" aria-hidden="true">
-                          <AppIcon name="sun" size={20} />
-                        </span>
-                        <span className="sda-pl-step-title">{t.pl_step_today_title}</span>
-                        <span className="sda-pl-step-sub">{t.pl_step_today_sub}</span>
-                      </button>
+                          onClick={() => onNavigate('structured-diet')}
+                        >
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="utensils" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_b2_step_blueprint_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_b2_step_blueprint_sub}</span>
+                        </button>
 
-                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
 
-                      <button
-                        type="button"
-                        id="btn-pl-step-daily-review"
-                        className={`sda-pl-step-card ${
-                          practiceLoopState.activeStep === 'daily-review' ? 'is-current' : ''
-                        } ${practiceLoopState.dailyReviewDoneToday ? 'is-done' : ''}`}
-                        aria-current={practiceLoopState.activeStep === 'daily-review' ? 'step' : undefined}
-                        onClick={() => onNavigate('daily-review')}
-                      >
-                        {practiceLoopState.dailyReviewDoneToday && (
-                          <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
-                        )}
-                        <span className="sda-pl-step-icon" aria-hidden="true">
-                          <AppIcon name="clipboard-list" size={19} />
-                        </span>
-                        <span className="sda-pl-step-title">{t.pl_step_daily_title}</span>
-                        <span className="sda-pl-step-sub">{t.pl_step_daily_sub}</span>
-                      </button>
-
-                      <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
-
-                      <button
-                        type="button"
-                        id="btn-pl-step-weekly-review"
-                        className={`sda-pl-step-card ${
-                          practiceLoopState.activeStep === 'weekly-review' ? 'is-current' : ''
-                        } ${practiceLoopState.weeklyReflectionDoneToday ? 'is-done' : ''}`}
-                        aria-current={practiceLoopState.activeStep === 'weekly-review' ? 'step' : undefined}
-                        onClick={() => {
-                          try {
-                            sessionStorage.setItem('pv_initial_tab', 'victories');
-                          } catch {
-                            // ignore
+                        <button
+                          type="button"
+                          id="btn-b2-step-today"
+                          className={`sda-pl-step-card ${
+                            book2Guidance.activeCycleStep === 'today' ? 'is-current' : ''
+                          }`}
+                          aria-current={
+                            book2Guidance.activeCycleStep === 'today' ? 'step' : undefined
                           }
-                          onNavigate('progress-victories');
-                        }}
-                      >
-                        {practiceLoopState.weeklyReflectionDoneToday && (
-                          <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
-                        )}
-                        <span className="sda-pl-step-icon" aria-hidden="true">
-                          <AppIcon name="bar-chart" size={19} />
-                        </span>
-                        <span className="sda-pl-step-title">{t.pl_step_weekly_title}</span>
-                        <span className="sda-pl-step-sub">{t.pl_step_weekly_sub}</span>
-                      </button>
-                    </nav>
+                          onClick={() => {
+                            const freshChallenge = syncCurrentChallenge() || activeChallenge;
+                            const freshStats =
+                              freshChallenge && freshChallenge.status === 'active'
+                                ? calculateChallengePracticeStats(freshChallenge)
+                                : practiceStats;
+                            if (!freshStats?.todayCheckedIn) {
+                              openCheckInModal(null);
+                            } else {
+                              onNavigate('structured-diet');
+                            }
+                          }}
+                        >
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="sun" size={20} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_b2_step_today_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_b2_step_today_sub}</span>
+                        </button>
+
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                        <button
+                          type="button"
+                          id="btn-b2-step-weekly-review"
+                          className={`sda-pl-step-card ${
+                            book2Guidance.activeCycleStep === 'weekly-review' ? 'is-current' : ''
+                          } ${book2Guidance.weeklyReviewCompletedThisWeek ? 'is-done' : ''}`}
+                          aria-current={
+                            book2Guidance.activeCycleStep === 'weekly-review' ? 'step' : undefined
+                          }
+                          onClick={() => setActiveBook2Modal('weekly_review')}
+                        >
+                          {book2Guidance.weeklyReviewCompletedThisWeek && (
+                            <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                          )}
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="bar-chart" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_b2_step_weekly_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_b2_step_weekly_sub}</span>
+                        </button>
+
+                        <span className="sda-pl-step-arrow" aria-hidden="true">→</span>
+
+                        <button
+                          type="button"
+                          id="btn-b2-step-adjustment"
+                          className={`sda-pl-step-card ${
+                            book2Guidance.activeCycleStep === 'adjustment' ? 'is-current' : ''
+                          } ${book2Guidance.activeAdjustment ? 'is-done' : ''}`}
+                          aria-current={
+                            book2Guidance.activeCycleStep === 'adjustment' ? 'step' : undefined
+                          }
+                          onClick={() => setActiveBook2Modal('adjustment')}
+                        >
+                          {book2Guidance.activeAdjustment && (
+                            <span className="sda-pl-step-done-dot" aria-hidden="true">✓</span>
+                          )}
+                          <span className="sda-pl-step-icon" aria-hidden="true">
+                            <AppIcon name="sparkles" size={19} />
+                          </span>
+                          <span className="sda-pl-step-title">{t.pl_b2_step_adjust_title}</span>
+                          <span className="sda-pl-step-sub">{t.pl_b2_step_adjust_sub}</span>
+                        </button>
+                      </nav>
+                    )}
 
                     {/* Prominent Contextual Continue My Journey Action inside Practice Loop */}
                     <button
@@ -3466,6 +3987,30 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* ── PHASE 5B.2: BOOK 2 (LOSS-MAINTENANCE) INTERACTIVE MODALS ── */}
+      <Book2PracticeModals
+        activeModal={activeBook2Modal}
+        onClose={() => setActiveBook2Modal(null)}
+        onSwitchModal={(next) => setActiveBook2Modal(next)}
+        onRefreshLoop={() => setActivityRefreshKey((k) => k + 1)}
+        onOpenStructuredDiet={() => onNavigate('structured-diet')}
+        onOpenFullWeeklyHistory={openFullWeeklyHistory}
+        onOpenTimerShortcut={() => {
+          if (onStartTimer) {
+            onStartTimer();
+          } else {
+            onNavigate('mode');
+          }
+        }}
+        nextScheduledBlock={book2Guidance.nextScheduledBlock}
+        activeProfileName={book2Guidance.activeProfileName}
+        nonNegotiablesCount={savedNonNegotiables.length}
+        foodReadinessToday={book2Guidance.foodReadinessToday}
+        earlyDriftToday={book2Guidance.earlyDriftToday}
+        activeAdjustment={book2Guidance.activeAdjustment}
+        adjustmentHistory={book2Guidance.adjustmentHistory}
+      />
     </div>
   );
 };

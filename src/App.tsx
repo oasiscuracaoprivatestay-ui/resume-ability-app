@@ -694,7 +694,15 @@ export default function App() {
   // ── Render current screen ──
   let content: React.ReactNode;
   // Back destination for ModeScreen depends on entry path.
-  const modeBackTo: Screen = timerOnly ? 'home' : 'help';
+  const prevStackScreen =
+    historyStackRef.current.length >= 2
+      ? historyStackRef.current[historyStackRef.current.length - 2]
+      : 'home';
+  const modeBackTo: Screen = timerOnly
+    ? prevStackScreen === 'challenges'
+      ? 'challenges'
+      : 'home'
+    : 'help';
 
   switch (screen) {
     case 'home':
@@ -960,6 +968,7 @@ export default function App() {
         <ChallengesScreen
           onNavigate={navigate}
           onBack={goBack}
+          onStartTimer={handleStartTimer}
           onOpenAbilityDetail={(abilityId: CanonicalDietAbilityId) => {
             setSelectedDietAbilityId(abilityId);
             try {

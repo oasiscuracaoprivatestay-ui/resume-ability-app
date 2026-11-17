@@ -41,8 +41,14 @@ import { loadSlips } from '../utils';
 import { getCheckIns, type CheckInStatus } from '../utils/checkInStorage';
 import { hasCompletedDailyReview } from '../utils/dailyReviewStorage';
 import { loadProgressVictoriesStore } from '../utils/progressVictoriesStorage';
+import {
+  loadPracticeLoopStore,
+  type EarlyDriftRecord,
+  type FoodReadinessRecord,
+  type MaintenanceAdjustmentRecord,
+} from './book2PracticeStorage';
 
-// ── Multi-Book Extensibility Registry (Book 1 Active; Book 2 Prepared & Inactive) ──
+// ── Multi-Book Extensibility Registry (Book 1 & Book 2 Active in Phase 5B.2) ──
 
 export type PracticeLoopBookId = 'book1_resume_ability' | 'book2_loss_maintenance';
 
@@ -64,13 +70,19 @@ export const PRACTICE_LOOP_BOOKS: readonly PracticeLoopBookDescriptor[] = [
     id: 'book2_loss_maintenance',
     bookNumber: 2,
     abilityId: 'loss-maintenance-ability',
-    isEnabled: false, // Strictly inactive in Phase 5B.1 until separately approved
+    isEnabled: true,
   },
 ] as const;
 
 // ── Guidance Domain Types ─────────────────────────────────────────────────────
 
 export type PracticeCycleStepId = 'diet' | 'today' | 'daily-review' | 'weekly-review';
+
+export type Book2PracticeCycleStepId =
+  | 'blueprint'
+  | 'today'
+  | 'weekly-review'
+  | 'adjustment';
 
 export type PracticeGuidanceStateKind =
   | 'setup_structured_diet'
@@ -87,6 +99,22 @@ export type PracticeGuidanceStateKind =
   | 'weekly_review_pending'
   | 'cycle_complete_continue_or_adjust';
 
+export type Book2PracticeGuidanceStateKind =
+  | 'b2_setup_blueprint'
+  | 'b2_food_readiness_incomplete'
+  | 'b2_food_readiness_ready'
+  | 'b2_early_drift_active'
+  | 'b2_early_drift_addressed'
+  | 'b2_pending_checkin'
+  | 'b2_next_meal_block'
+  | 'b2_next_fasting_block'
+  | 'b2_verify_remaining_blocks'
+  | 'b2_free_or_unstructured_day'
+  | 'b2_milestone_review_pending'
+  | 'b2_weekly_review_pending'
+  | 'b2_test_one_adjustment'
+  | 'b2_continue_structure';
+
 export type PracticeGuidanceActionTarget =
   | 'open_structured_diet'
   | 'open_checkin_modal'
@@ -95,7 +123,12 @@ export type PracticeGuidanceActionTarget =
   | 'open_recovery_timer'
   | 'open_daily_review'
   | 'open_weekly_review'
-  | 'open_milestone_review';
+  | 'open_milestone_review'
+  | 'open_b2_food_readiness'
+  | 'open_b2_early_drift'
+  | 'open_b2_weekly_review'
+  | 'open_b2_adjustment'
+  | 'open_b2_timer_shortcut';
 
 export interface NextScheduledBlockInfo {
   blockId: string;
@@ -670,4 +703,358 @@ export function evaluateBook1PracticeLoopGuidance(params?: {
     activeCycleStep: 'daily-review',
     primaryAction: 'open_daily_review',
   };
+}
+
+// ── Book 2: Loss-Maintenance Interactive Guidance Engine (Phase 5B.2) ─────────
+
+export interface Book2PracticeGuidance {
+  bookId: 'book2_loss_maintenance';
+  stateKind: Book2PracticeGuidanceStateKind;
+  activeCycleStep: Book2PracticeCycleStepId | null;
+  // Underlying factual signals
+  isStructuredDietConfigured: boolean;
+  activeProfileName: string;
+  dayMode: DayMode;
+  plannedBlocksCount: number;
+  reportedBlocksCount: number;
+  unverifiedBlocksCount: number;
+  allTodayBlocksVerified: boolean;
+  todayCheckedIn: boolean;
+  todayLatestStatus?: CheckInStatus;
+  weeklyReviewCompletedThisWeek: boolean;
+  isWeeklyReviewDue: boolean;
+  pendingMilestoneDay: NinetyDayMilestoneDay | null;
+  // Book 2 specific non-Slip signals
+  foodReadinessToday: FoodReadinessRecord | null;
+  earlyDriftToday: EarlyDriftRecord | null;
+  activeAdjustment: MaintenanceAdjustmentRecord | null;
+  adjustmentHistory: MaintenanceAdjustmentRecord[];
+  // Next scheduled meal / fasting block (null if none exists — never fabricated)
+  nextScheduledBlock: NextScheduledBlockInfo | null;
+  // Contextual actions for "Your Next Step" & "Continue My Journey"
+  primaryAction: PracticeGuidanceActionTarget;
+  secondaryAction?: PracticeGuidanceActionTarget;
+}
+
+/**
+ * Evaluates Sergio Laurant's Book 2 (Loss-Maintenance Ability) core practice loop:
+ *
+ *   Structured Diet Blueprint → Today (Food Readiness / Early Signs of Drift)
+ *     → Weekly Review → Test One Adjustment → Continue the Structure
+ *
+ * Strictly preserves Book 1 events without conflating Drift with Slip or Adjustment with Diet Edit.
+ */
+export function evaluateBook2PracticeLoopGuidance(params?: {
+  activeChallenge?: ChallengeInstance | null;
+  ninetyDayJourney?: NinetyDayJourneyView | null;
+  now?: Date;
+  t?: Record<string, any>;
+}): Book2PracticeGuidance {
+  const now = params?.now || new Date();
+  const t = params?.t;
+  const todayDateKey = getLocalDateKey(now);
+  const activeChallenge = params?.activeChallenge ?? null;
+  const journey =
+    params?.ninetyDayJourney ?? resolveNinetyDayJourneyView(activeChallenge, todayDateKey);
+
+  // 1. Structured Diet Blueprint inspection
+  const dietStore = loadDietStore();
+  const activeProfile = getActiveProfile(dietStore);
+  const dayPlan = getDayPlanForDate(activeProfile.diet, todayDateKey);
+  const sortedBlocks = sortBlocks(dayPlan.blocks);
+  const scheduledIds = sortedBlocks.map((b) => b.id);
+  const dietStats = getDailyVerificationStats(sortedBlocks.length, todayDateKey, scheduledIds);
+
+  const isStructuredDietConfigured =
+    dayPlan.mode === 'free' || dayPlan.mode === 'unstructured' || sortedBlocks.length > 0;
+
+  // 2. Check-In & Challenge context
+  const practiceStats =
+    activeChallenge && activeChallenge.status === 'active'
+      ? calculateChallengePracticeStats(activeChallenge, todayDateKey)
+      : null;
+
+  const todayChallengeCheckIns = (activeChallenge?.checkIns || []).filter(
+    (c) => c.dateKey === todayDateKey
+  );
+  const latestChallengeCheckIn =
+    todayChallengeCheckIns.length > 0
+      ? todayChallengeCheckIns[todayChallengeCheckIns.length - 1]
+      : null;
+
+  const todayCheckedIn = practiceStats
+    ? practiceStats.todayCheckedIn
+    : getCheckIns().some((c) => c.date === todayDateKey);
+  const todayLatestStatus = practiceStats?.todayLatestStatus ?? latestChallengeCheckIn?.status;
+
+  // 3. Rolling 7-Day Weekly Review & 90-Day Milestone inspection
+  const rollingWeekly = evaluateRollingWeeklyReview({
+    todayDateKey,
+    activeChallenge,
+    journey,
+  });
+  const weeklyReviewCompletedThisWeek = rollingWeekly.completedInRollingWindow;
+  const isWeeklyReviewDue = rollingWeekly.isDue;
+
+  const pendingMilestone =
+    journey.isActive && journey.pendingMilestoneReviews.length > 0
+      ? journey.pendingMilestoneReviews[journey.pendingMilestoneReviews.length - 1]
+      : null;
+  const pendingMilestoneDay = pendingMilestone ? pendingMilestone.day : null;
+
+  // 4. Book 2 Domain Signals (Food Readiness, Early Drift, Test One Adjustment)
+  const plStore = loadPracticeLoopStore();
+  const foodReadinessToday = plStore.foodReadinessByDate[todayDateKey] || null;
+  const earlyDriftToday = plStore.earlyDriftByDate[todayDateKey] || null;
+  const activeAdjustment =
+    plStore.activeAdjustment && plStore.activeAdjustment.status === 'testing'
+      ? plStore.activeAdjustment
+      : null;
+  const adjustmentHistory = plStore.adjustmentHistory || [];
+  const continuedStructureToday = plStore.lastStructureContinuedDateKey === todayDateKey;
+
+  // 5. Next Scheduled Block resolution (real data only — never hardcoded)
+  const nextScheduledBlock = isStructuredDietConfigured
+    ? resolveNextScheduledBlockForDate({ now, t, includeTomorrowFallback: true })
+    : null;
+
+  const hasRemainingTodayBlock = Boolean(
+    nextScheduledBlock && !nextScheduledBlock.isTomorrow
+  );
+  const unverifiedBlocksCount = Math.max(
+    0,
+    dietStats.plannedCount - dietStats.reportedCount
+  );
+  const allTodayBlocksVerified =
+    sortedBlocks.length > 0 && dietStats.reportedCount >= sortedBlocks.length;
+  const isEndOfScheduleForToday =
+    allTodayBlocksVerified ||
+    (sortedBlocks.length > 0 && !hasRemainingTodayBlock && todayCheckedIn && unverifiedBlocksCount === 0);
+
+  const baseResult = {
+    bookId: 'book2_loss_maintenance' as const,
+    isStructuredDietConfigured,
+    activeProfileName: activeProfile.name,
+    dayMode: dayPlan.mode,
+    plannedBlocksCount: dietStats.plannedCount,
+    reportedBlocksCount: dietStats.reportedCount,
+    unverifiedBlocksCount,
+    allTodayBlocksVerified,
+    todayCheckedIn,
+    todayLatestStatus,
+    weeklyReviewCompletedThisWeek,
+    isWeeklyReviewDue,
+    pendingMilestoneDay,
+    foodReadinessToday,
+    earlyDriftToday,
+    activeAdjustment,
+    adjustmentHistory,
+    nextScheduledBlock,
+  };
+
+  // A. Structured Diet Blueprint NOT configured
+  if (!isStructuredDietConfigured) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_setup_blueprint',
+      activeCycleStep: 'blueprint',
+      primaryAction: 'open_structured_diet',
+    };
+  }
+
+  // C1. Food Readiness flagged as incomplete ('needs_prep')
+  if (foodReadinessToday?.status === 'needs_prep') {
+    return {
+      ...baseResult,
+      stateKind: 'b2_food_readiness_incomplete',
+      activeCycleStep: 'today',
+      primaryAction: 'open_b2_food_readiness',
+      secondaryAction: 'open_structured_diet',
+    };
+  }
+
+  // D1. Early Signs of Drift acknowledged (needs planned response)
+  if (earlyDriftToday?.status === 'acknowledged') {
+    return {
+      ...baseResult,
+      stateKind: 'b2_early_drift_active',
+      activeCycleStep: 'today',
+      primaryAction: 'open_b2_early_drift',
+      secondaryAction: 'open_structured_diet',
+    };
+  }
+
+  // 90-Day Milestone Review Pending (shared 90-day journey integration)
+  if (
+    pendingMilestoneDay !== null &&
+    todayCheckedIn &&
+    (journey.currentDay === pendingMilestoneDay || isEndOfScheduleForToday)
+  ) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_milestone_review_pending',
+      activeCycleStep: weeklyReviewCompletedThisWeek ? 'adjustment' : 'today',
+      primaryAction: 'open_milestone_review',
+      secondaryAction: 'open_structured_diet',
+    };
+  }
+
+  // E. Rolling 7-Day Weekly Review Pending (when today's blocks are done or checked in at end of schedule)
+  if (isEndOfScheduleForToday && isWeeklyReviewDue) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_weekly_review_pending',
+      activeCycleStep: 'weekly-review',
+      primaryAction: 'open_b2_weekly_review',
+      secondaryAction: activeAdjustment ? 'open_b2_adjustment' : 'open_structured_diet',
+    };
+  }
+
+  // F. End of schedule & Weekly Review satisfied -> Test One Adjustment or Continue the Structure
+  if (isEndOfScheduleForToday && !isWeeklyReviewDue) {
+    if (weeklyReviewCompletedThisWeek && !activeAdjustment && !continuedStructureToday) {
+      return {
+        ...baseResult,
+        stateKind: 'b2_test_one_adjustment',
+        activeCycleStep: 'adjustment',
+        primaryAction: 'open_b2_adjustment',
+        secondaryAction: 'open_structured_diet',
+      };
+    }
+    return {
+      ...baseResult,
+      stateKind: 'b2_continue_structure',
+      activeCycleStep: 'adjustment',
+      primaryAction: 'open_structured_diet',
+      secondaryAction: 'open_b2_adjustment',
+    };
+  }
+
+  // D2 & C2. Active today confirmations for Early Drift Addressed or Food Readiness Action Recorded
+  const driftUpdatedTs = earlyDriftToday?.addressedAt || earlyDriftToday?.acknowledgedAt || 0;
+  const readinessUpdatedTs = foodReadinessToday?.updatedAt || 0;
+
+  if (earlyDriftToday?.status === 'addressed' && driftUpdatedTs >= readinessUpdatedTs) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_early_drift_addressed',
+      activeCycleStep: 'today',
+      primaryAction: 'open_structured_diet',
+      secondaryAction:
+        earlyDriftToday.plannedResponse === 'pause_15_min'
+          ? 'open_b2_timer_shortcut'
+          : 'open_b2_food_readiness',
+    };
+  }
+
+  if (
+    (foodReadinessToday?.status === 'action_planned' || foodReadinessToday?.status === 'ready') &&
+    readinessUpdatedTs > 0
+  ) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_food_readiness_ready',
+      activeCycleStep: 'today',
+      primaryAction: 'open_structured_diet',
+      secondaryAction: 'open_b2_early_drift',
+    };
+  }
+
+  // Free or Unstructured Day with 0 fixed blocks
+  if ((dayPlan.mode === 'free' || dayPlan.mode === 'unstructured') && sortedBlocks.length === 0) {
+    if (!todayCheckedIn) {
+      return {
+        ...baseResult,
+        stateKind: 'b2_pending_checkin',
+        activeCycleStep: 'today',
+        primaryAction: 'open_checkin_modal',
+        secondaryAction: 'open_structured_diet',
+      };
+    }
+    return {
+      ...baseResult,
+      stateKind: 'b2_free_or_unstructured_day',
+      activeCycleStep: 'today',
+      primaryAction: isWeeklyReviewDue ? 'open_b2_weekly_review' : 'open_structured_diet',
+      secondaryAction: 'open_b2_adjustment',
+    };
+  }
+
+  // B1. Pending Check-In today (surfaces actual next scheduled block + Food Readiness shortcut)
+  if (!todayCheckedIn) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_pending_checkin',
+      activeCycleStep: 'today',
+      primaryAction: 'open_checkin_modal',
+      secondaryAction:
+        nextScheduledBlock && !nextScheduledBlock.isFasting
+          ? 'open_b2_food_readiness'
+          : 'open_structured_diet',
+    };
+  }
+
+  // B2. Structured Diet Blueprint exists -> Next Scheduled Fasting or Meal Block
+  if (hasRemainingTodayBlock && nextScheduledBlock) {
+    if (nextScheduledBlock.isFasting) {
+      return {
+        ...baseResult,
+        stateKind: 'b2_next_fasting_block',
+        activeCycleStep: 'today',
+        primaryAction: 'open_structured_diet',
+        secondaryAction: 'open_b2_early_drift',
+      };
+    }
+    return {
+      ...baseResult,
+      stateKind: 'b2_next_meal_block',
+      activeCycleStep: 'today',
+      primaryAction: 'open_structured_diet',
+      secondaryAction: 'open_b2_food_readiness',
+    };
+  }
+
+  // Past today's block times, unverified blocks remain
+  if (unverifiedBlocksCount > 0) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_verify_remaining_blocks',
+      activeCycleStep: 'today',
+      primaryAction: 'open_structured_diet',
+      secondaryAction: isWeeklyReviewDue ? 'open_b2_weekly_review' : undefined,
+    };
+  }
+
+  if (isWeeklyReviewDue) {
+    return {
+      ...baseResult,
+      stateKind: 'b2_weekly_review_pending',
+      activeCycleStep: 'weekly-review',
+      primaryAction: 'open_b2_weekly_review',
+      secondaryAction: 'open_b2_adjustment',
+    };
+  }
+
+  return {
+    ...baseResult,
+    stateKind: 'b2_continue_structure',
+    activeCycleStep: 'adjustment',
+    primaryAction: 'open_structured_diet',
+    secondaryAction: 'open_b2_adjustment',
+  };
+}
+
+export type UnifiedPracticeLoopGuidance = Book1PracticeGuidance | Book2PracticeGuidance;
+
+export function evaluatePracticeLoopGuidance(params: {
+  selectedBookId: PracticeLoopBookId;
+  activeChallenge?: ChallengeInstance | null;
+  ninetyDayJourney?: NinetyDayJourneyView | null;
+  now?: Date;
+  t?: Record<string, any>;
+}): UnifiedPracticeLoopGuidance {
+  if (params.selectedBookId === 'book2_loss_maintenance') {
+    return evaluateBook2PracticeLoopGuidance(params);
+  }
+  return evaluateBook1PracticeLoopGuidance(params);
 }

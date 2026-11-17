@@ -9,3 +9,4 @@ export * from './challengeEngine';
 export * from './challengeMilestones';
 export * from './ninetyDayJourneyStorage';
 export * from './practiceLoopEngine';
+export * from './book2PracticeStorage';
