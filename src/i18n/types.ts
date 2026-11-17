@@ -2573,6 +2573,33 @@ export interface Translations {
   pl_b2_adj_past_reviewed_on: string;
   pl_b2_adj_outcome_kept: string;
   pl_b2_adj_outcome_retired: string;
+  // Phase 5C.1 — Premium Celebration & Interaction Animations
+  anim_resume_title: string;
+  anim_resume_sub: string;
+  anim_resume_next_block_btn: string;
+  anim_resume_return_structure_btn: string;
+  anim_resume_dismiss_btn: string;
+  anim_resume_duplicate_notice: string;
+  anim_repledge_hold_cue: string;
+  anim_repledge_hold_sub: string;
+  anim_repledge_holding_status: string;
+  anim_repledge_canceled_sr: string;
+  anim_repledge_accessible_btn: string;
+  anim_repledge_confirmed_title: string;
+  anim_repledge_confirmed_sub: string;
+  anim_repledge_anchors_label: string;
+  anim_repledge_blueprint_label: string;
+  anim_repledge_return_loop_btn: string;
+  anim_repledge_save_error: string;
+  anim_ms_badge_day: string;
+  anim_ms_complete_title: string;
+  anim_ms_tier_small_sub: string;
+  anim_ms_tier_medium_sub: string;
+  anim_ms_tier_distinctive_sub: string;
+  anim_ms_continue_btn: string;
+  anim_ms_adjust_diet_btn: string;
+  anim_ms_save_error: string;
+  anim_dismiss_aria: string;
 }
 
 

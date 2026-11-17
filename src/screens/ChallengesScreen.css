@@ -7945,3 +7945,14 @@
   color: #6EE7CE;
   font-weight: 800;
 }
+
+.challenges-screen--premium-hub .sda-j90-ms-save-error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(127, 29, 29, 0.38);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #FECACA;
+  font-size: 12px;
+  font-weight: 700;
+}

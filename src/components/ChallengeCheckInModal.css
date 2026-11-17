@@ -511,3 +511,16 @@
   color: #cbd5e1;
   line-height: 1.35;
 }
+
+/* Phase 5C.1 — Non-celebrating duplicate Resume notice */
+.resume-duplicate-notice {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(15, 42, 34, 0.75);
+  border: 1px solid rgba(45, 212, 179, 0.28);
+  color: #cbe7df;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: left;
+}

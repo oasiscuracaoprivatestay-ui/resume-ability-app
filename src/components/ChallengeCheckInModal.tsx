@@ -24,6 +24,7 @@ import { recordScoreEvent } from '../utils/scoringEngine';
 import { generateId } from '../utils';
 import { playFeedback } from '../utils/feedback';
 import { HoldCommitButton } from './HoldCommitButton';
+import { SuccessCelebration } from './animations';
 import './ChallengeCheckInModal.css';
 
 interface ChallengeCheckInModalProps {
@@ -51,6 +52,9 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
   const [hasRecommitted, setHasRecommitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  // Phase 5C.1: Celebrate ONLY newly saved Resume events — never duplicates or failed saves
+  const [celebrateResumeNow, setCelebrateResumeNow] = useState(false);
+  const [isDuplicateResumeNotice, setIsDuplicateResumeNotice] = useState(false);
 
   // Pending action ID tracking for idempotent retries across rapid taps or reloads
   const pendingActionIdRef = useRef<string | null>(null);
@@ -71,6 +75,8 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
       setHasRecommitted(false);
       setIsSubmitting(false);
       setSubmissionError(null);
+      setCelebrateResumeNow(false);
+      setIsDuplicateResumeNotice(false);
 
       // Check if there was an interrupted attempt in sessionStorage
       try {
@@ -149,9 +155,10 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
 
     const dateKey = getLocalDateKey();
 
-    // Phase 5B.1: Prevent duplicate consecutive 'resumed' records when already in resumed state
+    // Phase 5B.1 & 5C.1: Prevent duplicate consecutive 'resumed' records AND suppress celebration
     if (selectedStatus === 'resumed' && isDuplicateConsecutiveResume(challenge, dateKey)) {
-      playFeedback('win');
+      setCelebrateResumeNow(false);
+      setIsDuplicateResumeNotice(true);
       setStep('confirmed');
       setIsSubmitting(false);
       if (onCheckInCompleted) {
@@ -214,7 +221,17 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
         }
       } catch {}
 
-      if (selectedStatus === 'on-structure' || selectedStatus === 'resumed') {
+      if (selectedStatus === 'resumed') {
+        if (res.status === 'saved') {
+          playFeedback('win');
+          setCelebrateResumeNow(true);
+          setIsDuplicateResumeNotice(false);
+        } else {
+          // Duplicate reconcile — do NOT trigger celebration
+          setCelebrateResumeNow(false);
+          setIsDuplicateResumeNotice(true);
+        }
+      } else if (selectedStatus === 'on-structure') {
         playFeedback('win');
       } else if (selectedStatus === 'near-slip' || selectedStatus === 'off-structure-aware') {
         playFeedback('recovery');
@@ -642,58 +659,90 @@ export const ChallengeCheckInModal: React.FC<ChallengeCheckInModalProps> = ({
 
             {selectedStatus === 'resumed' && (
               <div className="feedback-section feedback-section--resumed">
-                <div className="feedback-icon-hero">✓</div>
-                <h3 className="feedback-title">
-                  {t.challenge_checkin_resumed_title || 'Structure Resumed!'}
-                </h3>
-                <p className="feedback-desc">
-                  {t.challenge_checkin_resumed_desc ||
-                    'You completed an appropriate return and are following your structure again. That is Resume-Ability in action.'}
-                </p>
+                {celebrateResumeNow ? (
+                  <SuccessCelebration
+                    id="celebration-resume"
+                    variant="resume"
+                    title={t.anim_resume_title}
+                    subtitle={t.anim_resume_sub}
+                    actions={[
+                      {
+                        id: 'btn-resume-next-action',
+                        label: nextScheduledBlock
+                          ? t.anim_resume_next_block_btn
+                          : t.anim_resume_return_structure_btn,
+                        variant: 'primary',
+                        onClick: () => {
+                          onClose();
+                          onNavigate('structured-diet');
+                        },
+                      },
+                      {
+                        id: 'btn-ci-continue-challenge',
+                        label: t.anim_resume_dismiss_btn,
+                        variant: 'secondary',
+                        onClick: handleContinueChallenge,
+                      },
+                    ]}
+                  >
+                    {renderNextBlockCallout()}
+                  </SuccessCelebration>
+                ) : (
+                  <>
+                    <div className="feedback-icon-hero">✓</div>
+                    <h3 className="feedback-title">
+                      {t.challenge_checkin_resumed_title || 'Structure Resumed!'}
+                    </h3>
+                    {isDuplicateResumeNotice ? (
+                      <p
+                        className="resume-duplicate-notice"
+                        id="resume-duplicate-notice"
+                        role="status"
+                      >
+                        {t.anim_resume_duplicate_notice}
+                      </p>
+                    ) : (
+                      <p className="feedback-desc">
+                        {t.challenge_checkin_resumed_desc ||
+                          'You completed an appropriate return and are following your structure again. That is Resume-Ability in action.'}
+                      </p>
+                    )}
 
-                {/* Phase 5B.1: Show next meaningful scheduled block after Resume confirmation */}
-                {renderNextBlockCallout()}
+                    {renderNextBlockCallout()}
 
-                {firstReason && (
-                  <div className="feedback-why-card">
-                    <span className="feedback-why-tag">{t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}</span>
-                    <p className="feedback-why-text">"{firstReason}"</p>
-                  </div>
+                    {firstReason && (
+                      <div className="feedback-why-card">
+                        <span className="feedback-why-tag">
+                          {t.recommit_why_reminder || 'REMEMBER WHY YOU STARTED'}
+                        </span>
+                        <p className="feedback-why-text">"{firstReason}"</p>
+                      </div>
+                    )}
+
+                    <div className="feedback-actions-stack">
+                      <button
+                        type="button"
+                        id="btn-ci-continue-challenge"
+                        className="challenge-primary-submit-btn"
+                        onClick={handleContinueChallenge}
+                      >
+                        <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
+                        <span>→</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-ci-diet-diet"
+                        className="challenge-secondary-action-btn"
+                        onClick={() => {
+                          onClose();
+                          onNavigate('structured-diet');
+                        }}
+                      >
+                        {t.challenge_checkin_action_diet || 'Return to Structured Diet'}
+                      </button>
+                    </div>
+                  </>
                 )}
-
-                <div className="feedback-actions-stack">
-                  <button
-                    type="button"
-                    id="btn-ci-continue-challenge"
-                    className="challenge-primary-submit-btn"
-                    onClick={handleContinueChallenge}
-                  >
-                    <span>{t.challenge_checkin_btn_continue || 'Continue Challenge'}</span>
-                    <span>→</span>
-                  </button>
-                  <button
-                    type="button"
-                    id="btn-ci-diet-diet"
-                    className="challenge-secondary-action-btn"
-                    onClick={() => {
-                      onClose();
-                      onNavigate('structured-diet');
-                    }}
-                  >
-                    {t.challenge_checkin_action_diet || 'Return to Structured Diet'}
-                  </button>
-                  <button
-                    type="button"
-                    id="btn-ci-review-nn"
-                    className="challenge-secondary-action-btn"
-                    onClick={() => {
-                      onClose();
-                      onNavigate('commitment');
-                    }}
-                  >
-                    {t.challenge_checkin_action_nn || 'Review Non-Negotiables'}
-                  </button>
-                </div>
               </div>
             )}
 

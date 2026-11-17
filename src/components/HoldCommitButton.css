@@ -5,8 +5,21 @@
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 1.25rem 0.75rem;
+  padding: 1.15rem 0.75rem;
   box-sizing: border-box;
+  position: relative;
+}
+
+.hold-commit-sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Direction cue header */
@@ -18,7 +31,7 @@
 }
 
 .hold-commit-cue-text {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -32,6 +45,10 @@
 
 .hold-commit-ritual--review .hold-commit-cue-text {
   color: #fbbf24;
+}
+
+.hold-commit-ritual--repledge .hold-commit-cue-text {
+  color: #7dd3fc;
 }
 
 /* Gated banner when disabled */
@@ -57,8 +74,8 @@
 /* Ring wrap */
 .hold-commit-ring-wrap {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 148px;
+  height: 148px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,28 +92,42 @@
 }
 
 .hold-commit-ring-track {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.09);
+}
+
+.hold-commit-ritual--repledge .hold-commit-ring-track {
+  stroke: rgba(56, 189, 248, 0.16);
 }
 
 /* Central interactive button */
 .hold-commit-button {
-  width: 96px;
-  height: 96px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: var(--surface, #1e293b);
-  border: 2px solid var(--border, #334155);
+  background: var(--surface, #0b221c);
+  border: 2px solid var(--border, #2b4c43);
   color: var(--text-primary, #f8fafc);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   font-family: inherit;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  outline: none;
   z-index: 2;
+}
+
+.hold-commit-ritual--repledge .hold-commit-button {
+  background: radial-gradient(circle at 38% 30%, #103247 0%, #071824 85%);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #e0f2fe;
+}
+
+.hold-commit-button:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 4px;
 }
 
 .hold-commit-button:hover:not(:disabled) {
@@ -115,9 +146,14 @@
   box-shadow: 0 0 24px rgba(251, 191, 36, 0.35);
 }
 
+.hold-commit-ritual--repledge .hold-commit-button:hover:not(:disabled) {
+  border-color: #7dd3fc;
+  box-shadow: 0 0 26px rgba(56, 189, 248, 0.36);
+}
+
 /* Holding state */
 .hold-commit-button--active {
-  transform: scale(0.93) !important;
+  transform: scale(0.94) !important;
   background: #064e3b;
   border-color: #10b981;
   box-shadow: 0 0 32px rgba(16, 185, 129, 0.5) !important;
@@ -133,6 +169,12 @@
   background: #78350f;
   border-color: #fbbf24;
   box-shadow: 0 0 32px rgba(251, 191, 36, 0.5) !important;
+}
+
+.hold-commit-ritual--repledge .hold-commit-button--active {
+  background: radial-gradient(circle at 40% 32%, #0c4a6e 0%, #082f49 88%);
+  border-color: #38bdf8;
+  box-shadow: 0 0 34px rgba(56, 189, 248, 0.52) !important;
 }
 
 /* Disabled state */
@@ -151,6 +193,9 @@
 .hold-commit-center-icon {
   font-size: 1.85rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.2s ease;
 }
 
@@ -158,6 +203,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   color: var(--accent, #10b981);
 }
 
@@ -167,6 +213,10 @@
 
 .hold-commit-ritual--review .hold-commit-pct {
   color: #fbbf24;
+}
+
+.hold-commit-ritual--repledge .hold-commit-pct {
+  color: #7dd3fc;
 }
 
 /* Sub-instruction */
@@ -180,21 +230,71 @@
   text-align: center;
 }
 
+/* Accessible single-action confirmation alternative */
+.hold-commit-accessible-alt-btn {
+  margin-top: 2px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(12, 34, 46, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.34);
+  color: #bae6fd;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.hold-commit-accessible-alt-btn:hover {
+  border-color: rgba(125, 211, 252, 0.7);
+  background: rgba(14, 50, 68, 0.85);
+}
+
+.hold-commit-accessible-alt-btn:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 3px;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hold-commit-button,
+  .hold-commit-center-icon,
+  .hold-commit-gated-banner {
+    transition: none !important;
+    animation: none !important;
+  }
+  .hold-commit-button--active,
+  .hold-commit-button:hover:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+html.sda-force-reduced-motion .hold-commit-button,
+html.sda-force-reduced-motion .hold-commit-center-icon {
+  transition: none !important;
+  animation: none !important;
+}
+
+html.sda-force-reduced-motion .hold-commit-button--active,
+html.sda-force-reduced-motion .hold-commit-button:hover:not(:disabled) {
+  transform: none !important;
+}
+
 @media (max-width: 360px) {
   .hold-commit-ring-wrap {
-    width: 124px;
-    height: 124px;
+    width: 132px;
+    height: 132px;
   }
   .hold-commit-button {
-    width: 84px;
-    height: 84px;
+    width: 88px;
+    height: 88px;
   }
   .hold-commit-cue-text {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 }

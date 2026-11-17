@@ -56,6 +56,7 @@ import {
   Book2PracticeModals,
   type Book2ActiveModalKind,
 } from '../components/Book2PracticeModals';
+import { MilestoneCelebration } from '../components/animations';
 import { HoldCommitButton } from '../components/HoldCommitButton';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
@@ -413,6 +414,12 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const [reviewingMilestoneDay, setReviewingMilestoneDay] = useState<NinetyDayMilestoneDay | null>(null);
   const [msWhatHelped, setMsWhatHelped] = useState<string>('');
   const [msDecision, setMsDecision] = useState<MilestoneStructureDecision>('continue');
+  const [milestoneWasAlreadyCompleted, setMilestoneWasAlreadyCompleted] = useState<boolean>(false);
+  const [milestoneSaveError, setMilestoneSaveError] = useState<string | null>(null);
+  const [celebratingMilestone, setCelebratingMilestone] = useState<{
+    day: NinetyDayMilestoneDay;
+    shouldAdjustDiet: boolean;
+  } | null>(null);
   const [isDietOpen, setIsDietOpen] = useState<boolean>(
     () => typeof window !== 'undefined' && window.innerWidth >= 900
   );
@@ -750,6 +757,8 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
       if (!item || !item.isReached) return;
       setMsWhatHelped(item.reviewRecord?.whatHelped || '');
       setMsDecision(item.reviewRecord?.structureDecision || 'continue');
+      setMilestoneWasAlreadyCompleted(item.isReviewCompleted);
+      setMilestoneSaveError(null);
       setReviewingMilestoneDay(day);
     },
     [ninetyDayJourney.milestones]
@@ -758,17 +767,27 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const handleSaveMilestoneReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewingMilestoneDay || !ninetyDayJourney.startDate) return;
-    saveNinetyDayMilestoneReview({
+    const saved = saveNinetyDayMilestoneReview({
       milestoneDay: reviewingMilestoneDay,
       journeyStartDate: ninetyDayJourney.startDate,
       whatHelped: msWhatHelped,
       structureDecision: msDecision,
     });
-    playFeedback('win');
+    if (!saved) {
+      setMilestoneSaveError(t.anim_ms_save_error);
+      return;
+    }
+
+    const completedDay = reviewingMilestoneDay;
     const shouldAdjustDiet = msDecision === 'adjust';
     setReviewingMilestoneDay(null);
+    setMilestoneSaveError(null);
     setActivityRefreshKey((k) => k + 1);
-    if (shouldAdjustDiet) {
+
+    if (!milestoneWasAlreadyCompleted) {
+      playFeedback('win');
+      setCelebratingMilestone({ day: completedDay, shouldAdjustDiet });
+    } else if (shouldAdjustDiet) {
       onNavigate('structured-diet');
     }
   };
@@ -3973,6 +3992,12 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                 </button>
               </div>
 
+              {milestoneSaveError && (
+                <p className="sda-j90-ms-save-error" id="j90-ms-save-error" role="alert">
+                  {milestoneSaveError}
+                </p>
+              )}
+
               <div className="sda-j90-ms-modal-actions">
                 <button
                   type="submit"
@@ -3986,6 +4011,21 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── PHASE 5C.1: 90-DAY MILESTONE CELEBRATION MODAL (Newly Completed Reviews Only) ── */}
+      {celebratingMilestone && (
+        <MilestoneCelebration
+          milestoneDay={celebratingMilestone.day}
+          shouldNavigateToDiet={celebratingMilestone.shouldAdjustDiet}
+          onDismiss={() => {
+            const goDiet = celebratingMilestone.shouldAdjustDiet;
+            setCelebratingMilestone(null);
+            if (goDiet) {
+              onNavigate('structured-diet');
+            }
+          }}
+        />
       )}
 
       {/* ── PHASE 5B.2: BOOK 2 (LOSS-MAINTENANCE) INTERACTIVE MODALS ── */}

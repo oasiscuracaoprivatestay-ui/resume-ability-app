@@ -1,10 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import { playFeedback, FeedbackType } from '../utils/feedback';
+import { AppIcon } from './icons/AppIcon';
 import './HoldCommitButton.css';
 
 export interface HoldCommitButtonProps {
-  variant?: 'commit' | 'recommit' | 'review';
+  variant?: 'commit' | 'recommit' | 'review' | 'repledge';
   label?: string;
   holdingLabel?: string;
   subLabel?: string;
@@ -12,16 +13,19 @@ export interface HoldCommitButtonProps {
   disabled?: boolean;
   disabledReason?: string;
   durationMs?: number;
-  onComplete: () => void;
+  /** Return `false` if persistence failed so the hold resets without locking or celebrating. */
+  onComplete: () => boolean | void;
+  showAccessibleConfirm?: boolean;
+  accessibleConfirmLabel?: string;
   id?: string;
   className?: string;
 }
 
 const DEFAULT_HOLD_MS = 2500;
-const RING_SIZE = 140;
-const RING_CX = 70;
-const RING_CY = 70;
-const RING_R = 56;
+const RING_SIZE = 148;
+const RING_CX = 74;
+const RING_CY = 74;
+const RING_R = 59;
 const RING_CIRC = 2 * Math.PI * RING_R;
 
 export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
@@ -34,12 +38,15 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
   disabledReason,
   durationMs = DEFAULT_HOLD_MS,
   onComplete,
+  showAccessibleConfirm = false,
+  accessibleConfirmLabel,
   id = 'btn-hold-commit-ritual',
   className = '',
 }) => {
   const { t } = useTranslation();
   const [holding, setHolding] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [srAnnouncement, setSrAnnouncement] = useState('');
 
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -48,6 +55,8 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
   // Derive default localized labels based on variant
   const defaultLabel = React.useMemo(() => {
     switch (variant) {
+      case 'repledge':
+        return `→ ${t.anim_repledge_hold_cue}`;
       case 'recommit':
         return `→ ${t.recommit_hold_btn || 'HOLD TO RE-COMMIT'}`;
       case 'review':
@@ -60,6 +69,8 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
 
   const defaultIcon = React.useMemo(() => {
     switch (variant) {
+      case 'repledge':
+        return <AppIcon name="shield" size={30} />;
       case 'recommit':
         return '🔄';
       case 'review':
@@ -72,6 +83,8 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
 
   const feedbackType: FeedbackType = React.useMemo(() => {
     switch (variant) {
+      case 'repledge':
+        return 'commit';
       case 'recommit':
         return 'recovery';
       case 'review':
@@ -82,9 +95,10 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
     }
   }, [variant]);
 
-  // Cancel hold if finger/pointer lifts, leaves, or key is released
+  // Cancel hold if finger/pointer lifts, leaves, blurs, or key is released early
   const cancelHold = useCallback(() => {
     if (holdCompletedRef.current) return;
+    const wasHolding = startRef.current !== null;
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -92,11 +106,14 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
     startRef.current = null;
     setHolding(false);
     setProgress(0);
-  }, []);
+    if (wasHolding) {
+      setSrAnnouncement(t.anim_repledge_canceled_sr);
+    }
+  }, [t.anim_repledge_canceled_sr]);
 
-  // Complete action
+  // Complete action (single-fire guarded; resets cleanly if save returns false)
   const completeHold = useCallback(() => {
-    if (holdCompletedRef.current) return;
+    if (disabled || holdCompletedRef.current) return;
     holdCompletedRef.current = true;
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
@@ -106,62 +123,62 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
     setHolding(false);
     setProgress(1);
 
-    playFeedback(feedbackType);
-    onComplete();
-  }, [feedbackType, onComplete]);
+    const result = onComplete();
+    if (result === false) {
+      // Persistence failed — unlock and reset ring without playing success feedback
+      holdCompletedRef.current = false;
+      setProgress(0);
+      return;
+    }
 
-  // Pointer start
+    playFeedback(feedbackType);
+  }, [disabled, feedbackType, onComplete]);
+
+  const startHoldLoop = useCallback(() => {
+    if (disabled || holdCompletedRef.current || startRef.current !== null) return;
+    setSrAnnouncement('');
+    setHolding(true);
+    startRef.current = performance.now();
+
+    const tick = (now: number) => {
+      if (startRef.current === null) return;
+      const elapsed = now - startRef.current;
+      const p = Math.min(elapsed / durationMs, 1);
+      setProgress(p);
+
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        completeHold();
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+  }, [disabled, durationMs, completeHold]);
+
+  // Pointer start (mouse & touch)
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       if (disabled || holdCompletedRef.current) return;
+      if (e.button !== undefined && e.button !== 0) return;
       e.preventDefault();
-      setHolding(true);
-      startRef.current = performance.now();
-
-      const tick = (now: number) => {
-        if (startRef.current === null) return;
-        const elapsed = now - startRef.current;
-        const p = Math.min(elapsed / durationMs, 1);
-        setProgress(p);
-
-        if (p < 1) {
-          rafRef.current = requestAnimationFrame(tick);
-        } else {
-          completeHold();
-        }
-      };
-
-      rafRef.current = requestAnimationFrame(tick);
+      startHoldLoop();
     },
-    [disabled, durationMs, completeHold],
+    [disabled, startHoldLoop]
   );
 
   // Keyboard accessibility (Space / Enter hold)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>) => {
-      if (disabled || holdCompletedRef.current || holding) return;
+      if (disabled || holdCompletedRef.current) return;
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        setHolding(true);
-        startRef.current = performance.now();
-
-        const tick = (now: number) => {
-          if (startRef.current === null) return;
-          const elapsed = now - startRef.current;
-          const p = Math.min(elapsed / durationMs, 1);
-          setProgress(p);
-
-          if (p < 1) {
-            rafRef.current = requestAnimationFrame(tick);
-          } else {
-            completeHold();
-          }
-        };
-
-        rafRef.current = requestAnimationFrame(tick);
+        if (!e.repeat) {
+          startHoldLoop();
+        }
       }
     },
-    [disabled, holding, durationMs, completeHold],
+    [disabled, startHoldLoop]
   );
 
   const handleKeyUp = useCallback(
@@ -170,7 +187,7 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
         cancelHold();
       }
     },
-    [cancelHold],
+    [cancelHold]
   );
 
   useEffect(() => {
@@ -182,11 +199,32 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
   const strokeOffset = RING_CIRC * (1 - progress);
   const displayLabel = label || defaultLabel;
   const pct = Math.round(progress * 100);
+  const gradId = `hold-grad-${variant}-${id}`;
+  const glowId = `hold-glow-${variant}-${id}`;
+
+  const activeHoldingText = holdingLabel
+    ? holdingLabel.replace('{pct}', String(pct))
+    : variant === 'repledge'
+    ? t.anim_repledge_holding_status.replace('{pct}', String(pct))
+    : `${pct}%`;
+
+  const idleSubText =
+    subLabel ||
+    (variant === 'repledge'
+      ? t.anim_repledge_hold_sub
+      : t.commit_hold_instruction || 'Press and hold');
 
   return (
     <div
-      className={`hold-commit-ritual-container hold-commit-ritual--${variant} ${disabled ? 'hold-commit-ritual--disabled' : ''} ${className}`}
+      className={`hold-commit-ritual-container hold-commit-ritual--${variant} ${
+        disabled ? 'hold-commit-ritual--disabled' : ''
+      } ${className}`}
     >
+      {/* Screen-reader live region */}
+      <span className="hold-commit-sr-live" role="status" aria-live="polite">
+        {srAnnouncement}
+      </span>
+
       {/* Disabled reason cue if review is gated */}
       {disabled && disabledReason && (
         <div className="hold-commit-gated-banner" role="status">
@@ -205,6 +243,7 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
       {/* Circular Hold Ring area */}
       <div
         className={`hold-commit-ring-wrap ${holding ? 'hold-commit-ring-wrap--holding' : ''}`}
+        data-hold-progress={pct}
       >
         <svg
           className="hold-commit-svg"
@@ -212,7 +251,14 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id={`hold-grad-${variant}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              {variant === 'repledge' && (
+                <>
+                  <stop offset="0%" stopColor="#7dd3fc" />
+                  <stop offset="52%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#2dd4b3" />
+                </>
+              )}
               {variant === 'commit' && (
                 <>
                   <stop offset="0%" stopColor="#34d399" />
@@ -232,8 +278,8 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
                 </>
               )}
             </linearGradient>
-            <filter id={`hold-glow-${variant}`}>
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <filter id={glowId}>
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -248,7 +294,7 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
             cy={RING_CY}
             r={RING_R}
             fill="none"
-            strokeWidth="5"
+            strokeWidth="5.5"
           />
 
           {/* Active progress arc */}
@@ -259,13 +305,13 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
               cy={RING_CY}
               r={RING_R}
               fill="none"
-              stroke={`url(#hold-grad-${variant})`}
-              strokeWidth="5"
+              stroke={`url(#${gradId})`}
+              strokeWidth="5.5"
               strokeLinecap="round"
               strokeDasharray={RING_CIRC}
               strokeDashoffset={strokeOffset}
               transform={`rotate(-90 ${RING_CX} ${RING_CY})`}
-              filter={`url(#hold-glow-${variant})`}
+              filter={`url(#${glowId})`}
             />
           )}
         </svg>
@@ -279,10 +325,11 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
           onPointerUp={cancelHold}
           onPointerLeave={cancelHold}
           onPointerCancel={cancelHold}
+          onBlur={cancelHold}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           onContextMenu={(e) => e.preventDefault()}
-          aria-label={`${displayLabel} - ${holding ? (holdingLabel || `${pct}%`) : 'Press and hold'}`}
+          aria-label={`${displayLabel} — ${holding ? activeHoldingText : idleSubText}`}
         >
           {holding ? (
             <span className="hold-commit-pct">{pct}%</span>
@@ -294,11 +341,23 @@ export const HoldCommitButton: React.FC<HoldCommitButtonProps> = ({
 
       <p className="hold-commit-sub-instruction">
         {holding
-          ? holdingLabel || `${pct}%`
+          ? activeHoldingText
           : disabled
-            ? disabledReason || t.nn_review_check_all_first
-            : subLabel || t.commit_hold_instruction || 'Press and hold'}
+          ? disabledReason || t.nn_review_check_all_first
+          : idleSubText}
       </p>
+
+      {/* Accessible single-action confirmation alternative (keyboard / switch / reduced-dexterity) */}
+      {showAccessibleConfirm && !disabled && (
+        <button
+          type="button"
+          id={`${id}-accessible-confirm`}
+          className="hold-commit-accessible-alt-btn"
+          onClick={completeHold}
+        >
+          {accessibleConfirmLabel || t.anim_repledge_accessible_btn}
+        </button>
+      )}
     </div>
   );
 };

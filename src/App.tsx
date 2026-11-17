@@ -175,8 +175,8 @@ export default function App() {
   // Listen for score events to detect crossing daily milestone thresholds (Phase 29C)
   useEffect(() => {
     const handleMilestoneCheck = () => {
-      // Avoid overlapping modals: wait until Level Up celebration is dismissed
-      if (levelUpToShow !== null) return;
+      // Avoid overlapping modals: wait until Level Up celebration or Re-Pledge celebration screen completes
+      if (levelUpToShow !== null || screen === 'recommit') return;
       const todayScore = getTodayScore();
       const todayKey = getLocalDateKey();
       const nextMilestone = getNextUncelebratedMilestone(todayScore, todayKey);
@@ -187,7 +187,7 @@ export default function App() {
     handleMilestoneCheck();
     window.addEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
     return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
-  }, [levelUpToShow]);
+  }, [levelUpToShow, screen]);
 
   // Phase 44: Evaluate Active Challenge Welcome Popup on app entry (respecting modal priority rules)
   useEffect(() => {
@@ -646,18 +646,22 @@ export default function App() {
     [session, slipId, timerOnly],
   );
 
-  // ── Re-Commit Success Handler ──
-  const handleRecommitSuccess = useCallback(() => {
+  // ── Re-Commit / Re-Pledge Success Handler (returns boolean persistence status) ──
+  const handleRecommitSuccess = useCallback((): boolean => {
     const id = generateId();
-    saveRecommitEvent({
+    const saved = saveRecommitEvent({
       id,
       timestamp: Date.now(),
       slipId: slipId ?? undefined,
     });
+    if (!saved) {
+      return false;
+    }
     recordScoreEvent({
       activityType: 'RECOMMIT',
       sourceId: `recommit_${id}`,
     });
+    return true;
   }, [slipId]);
 
   // ── "I Am in Control" Handler ──
