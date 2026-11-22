@@ -552,10 +552,224 @@ export async function preloadPhotos(ids: string[]): Promise<void> {
   }
 }
 
+export const PERSONAL_MEAL_LIBRARY_STORAGE_KEY = 'sda_personal_meal_library_v1';
+const PROGRESS_VICTORIES_PHOTO_STORAGE_KEY = 'sda_progress_victories_v1';
+
+export interface PhotoRefImageRefLike {
+  kind?: string;
+  photoId?: string;
+  photoMeta?: { id?: string } | null;
+}
+
+export interface PhotoRefTargetLike {
+  foodPhoto?: { id?: string } | null;
+  foodPhotos?: Array<{ id?: string } | null> | null;
+  imageRef?: PhotoRefImageRefLike | null;
+}
+
+export interface PhotoRefBlockLike extends PhotoRefTargetLike {
+  alternatives?: Array<PhotoRefTargetLike | null> | null;
+}
+
+export interface PhotoRefDietStoreLike {
+  profiles?: Array<{
+    diet?: {
+      days?:
+        | Array<{ blocks?: Array<PhotoRefBlockLike | null> | null }>
+        | Record<string, { blocks?: Array<PhotoRefBlockLike | null> | null }>;
+      dateOverrides?: Record<string, { blocks?: Array<PhotoRefBlockLike | null> | null }>;
+      historySnapshots?: Record<string, { blocks?: Array<PhotoRefBlockLike | null> | null }>;
+    };
+  }>;
+}
+
+export type PhotoRefVerificationsLike = Record<
+  string,
+  {
+    entries?: Array<{
+      foodPhoto?: { id?: string } | null;
+      foodPhotos?: Array<{ id?: string } | null> | null;
+      plannedSnapshot?: PhotoRefBlockLike | null;
+    }>;
+  }
+>;
+
+export interface PhotoRefMealLibraryLike {
+  meals?: Array<PhotoRefBlockLike | null> | null;
+}
+
+function addTargetPhotoIds(target: PhotoRefTargetLike | null | undefined, out: Set<string>): void {
+  if (!target || typeof target !== 'object') return;
+  if (target.foodPhoto && typeof target.foodPhoto.id === 'string' && target.foodPhoto.id.trim()) {
+    out.add(target.foodPhoto.id.trim());
+  }
+  if (Array.isArray(target.foodPhotos)) {
+    for (const p of target.foodPhotos) {
+      if (p && typeof p.id === 'string' && p.id.trim()) {
+        out.add(p.id.trim());
+      }
+    }
+  }
+  if (target.imageRef && typeof target.imageRef === 'object') {
+    const kind = target.imageRef.kind;
+    if (!kind || kind === 'uploaded_photo') {
+      if (typeof target.imageRef.photoId === 'string' && target.imageRef.photoId.trim()) {
+        out.add(target.imageRef.photoId.trim());
+      }
+      if (
+        target.imageRef.photoMeta &&
+        typeof target.imageRef.photoMeta.id === 'string' &&
+        target.imageRef.photoMeta.id.trim()
+      ) {
+        out.add(target.imageRef.photoMeta.id.trim());
+      }
+    }
+  }
+}
+
+function addBlockAndAlternativesPhotoIds(
+  block: PhotoRefBlockLike | null | undefined,
+  out: Set<string>
+): void {
+  if (!block || typeof block !== 'object') return;
+  addTargetPhotoIds(block, out);
+  if (Array.isArray(block.alternatives)) {
+    for (const alt of block.alternatives) {
+      addTargetPhotoIds(alt, out);
+    }
+  }
+}
+
+function readStoredMealLibraryForPhotoCheck(): PhotoRefMealLibraryLike | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(PERSONAL_MEAL_LIBRARY_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return { meals: parsed };
+    }
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.meals)) {
+      return parsed as PhotoRefMealLibraryLike;
+    }
+  } catch {
+    // Ignore malformed or inaccessible localStorage
+  }
+  return null;
+}
+
+function readStoredProgressPhotoIds(out: Set<string>): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(PROGRESS_VICTORIES_PHOTO_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.photos)) {
+      for (const rec of parsed.photos) {
+        if (rec && typeof rec.photoId === 'string' && rec.photoId.trim()) {
+          out.add(rec.photoId.trim());
+        }
+      }
+    }
+  } catch {
+    // Ignore malformed or inaccessible localStorage
+  }
+}
+
+/**
+ * Collects all referenced IndexedDB photo IDs across Structured Diet schedules
+ * (recurring days, dateOverrides, historySnapshots, and alternative meals),
+ * Daily Diet Verifications, the Personal Meal Library, and Progress Photos.
+ */
+export function collectActivePhotoIds(options?: {
+  store?: PhotoRefDietStoreLike | null;
+  verifications?: PhotoRefVerificationsLike | null;
+  mealLibrary?: PhotoRefMealLibraryLike | null;
+  includeProgressPhotos?: boolean;
+}): Set<string> {
+  const activeIds = new Set<string>();
+  const store = options?.store;
+  const verifications = options?.verifications;
+  const effectiveMealLibrary =
+    options && 'mealLibrary' in options
+      ? options.mealLibrary
+      : readStoredMealLibraryForPhotoCheck();
+
+  if (store?.profiles) {
+    for (const profile of store.profiles) {
+      if (profile?.diet?.days) {
+        const dayList = Array.isArray(profile.diet.days)
+          ? profile.diet.days
+          : Object.values(profile.diet.days);
+        for (const day of dayList) {
+          for (const b of day?.blocks || []) {
+            addBlockAndAlternativesPhotoIds(b, activeIds);
+          }
+        }
+      }
+      if (profile?.diet?.dateOverrides) {
+        for (const overrideDay of Object.values(profile.diet.dateOverrides)) {
+          for (const b of overrideDay?.blocks || []) {
+            addBlockAndAlternativesPhotoIds(b, activeIds);
+          }
+        }
+      }
+      if (profile?.diet?.historySnapshots) {
+        for (const snap of Object.values(profile.diet.historySnapshots)) {
+          for (const b of snap?.blocks || []) {
+            addBlockAndAlternativesPhotoIds(b, activeIds);
+          }
+        }
+      }
+    }
+  }
+
+  if (verifications) {
+    for (const dailyVerif of Object.values(verifications)) {
+      for (const entry of dailyVerif?.entries || []) {
+        if (!entry) continue;
+        addTargetPhotoIds(entry, activeIds);
+        if (entry.plannedSnapshot) {
+          addBlockAndAlternativesPhotoIds(entry.plannedSnapshot, activeIds);
+        }
+      }
+    }
+  }
+
+  if (effectiveMealLibrary?.meals && Array.isArray(effectiveMealLibrary.meals)) {
+    for (const meal of effectiveMealLibrary.meals) {
+      addBlockAndAlternativesPhotoIds(meal, activeIds);
+    }
+  }
+
+  if (options?.includeProgressPhotos) {
+    readStoredProgressPhotoIds(activeIds);
+  }
+
+  return activeIds;
+}
+
 /**
  * Delete any photos in IndexedDB that are not in the set of active photo IDs.
+ * Note: Any photo still referenced in the Personal Meal Library is automatically preserved
+ * even if a caller omitted library IDs when constructing `activePhotoIds`.
  */
-export async function cleanupOrphanPhotos(activePhotoIds: Set<string>): Promise<number> {
+export async function cleanupOrphanPhotos(
+  activePhotoIds: Set<string>,
+  options?: { mealLibrary?: PhotoRefMealLibraryLike | null }
+): Promise<number> {
+  const protectedIds = new Set<string>(activePhotoIds);
+  const libraryToProtect =
+    options && 'mealLibrary' in options
+      ? options.mealLibrary
+      : readStoredMealLibraryForPhotoCheck();
+
+  if (libraryToProtect?.meals && Array.isArray(libraryToProtect.meals)) {
+    for (const meal of libraryToProtect.meals) {
+      addBlockAndAlternativesPhotoIds(meal, protectedIds);
+    }
+  }
+
   try {
     const db = await openPhotoDb();
     return new Promise((resolve) => {
@@ -567,7 +781,7 @@ export async function cleanupOrphanPhotos(activePhotoIds: Set<string>): Promise<
         const keys = (req.result as string[]) || [];
         let deleted = 0;
         for (const key of keys) {
-          if (!activePhotoIds.has(key)) {
+          if (!protectedIds.has(key)) {
             store.delete(key);
             photoMemoryCache.delete(key);
             deleted++;
@@ -583,59 +797,26 @@ export async function cleanupOrphanPhotos(activePhotoIds: Set<string>): Promise<
 }
 
 /**
- * Check if a photo ID is referenced by any block in the given diet store profiles or verifications.
+ * Check if a photo ID is referenced by any block, alternative meal, dateOverride,
+ * historySnapshot, verification record, or Personal Meal Library entry.
+ *
+ * When `mealLibrary` is omitted (e.g. existing 3-argument callers), automatically
+ * inspects persisted Personal Meal Library storage so library photos are never deleted.
  */
 export function isPhotoReferenced(
   photoId: string,
-  store?: {
-    profiles?: Array<{
-      diet: {
-        days:
-          | Array<{ blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>
-          | Record<string, { blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>;
-        historySnapshots?: Record<string, { blocks: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> }> }>;
-      };
-    }>;
-  },
-  verifications?: Record<string, { entries: Array<{ foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }>; plannedSnapshot?: { foodPhoto?: { id: string }; foodPhotos?: Array<{ id: string }> } }> }>
+  store?: PhotoRefDietStoreLike | null,
+  verifications?: PhotoRefVerificationsLike | null,
+  mealLibrary?: PhotoRefMealLibraryLike | null
 ): boolean {
-  if (!photoId) return false;
+  const trimmed = typeof photoId === 'string' ? photoId.trim() : '';
+  if (!trimmed) return false;
 
-  if (store?.profiles) {
-    for (const profile of store.profiles) {
-      if (profile?.diet?.days) {
-        const dayList = Array.isArray(profile.diet.days) ? profile.diet.days : Object.values(profile.diet.days);
-        for (const day of dayList) {
-          if (day?.blocks?.some(b => b.foodPhoto?.id === photoId || b.foodPhotos?.some(p => p.id === photoId))) {
-            return true;
-          }
-        }
-      }
-      if (profile?.diet?.historySnapshots) {
-        for (const snap of Object.values(profile.diet.historySnapshots)) {
-          if (snap?.blocks?.some(b => b.foodPhoto?.id === photoId || b.foodPhotos?.some(p => p.id === photoId))) {
-            return true;
-          }
-        }
-      }
-    }
-  }
+  const activeIds = collectActivePhotoIds({
+    store,
+    verifications,
+    ...(mealLibrary !== undefined ? { mealLibrary } : {}),
+  });
 
-  if (verifications) {
-    for (const dailyVerif of Object.values(verifications)) {
-      if (
-        dailyVerif?.entries?.some(
-          e =>
-            e.foodPhoto?.id === photoId ||
-            e.foodPhotos?.some(p => p.id === photoId) ||
-            e.plannedSnapshot?.foodPhoto?.id === photoId ||
-            e.plannedSnapshot?.foodPhotos?.some(p => p.id === photoId)
-        )
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return activeIds.has(trimmed);
 }

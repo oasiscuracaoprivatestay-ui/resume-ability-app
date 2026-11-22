@@ -79,6 +79,7 @@ import { readActiveChallenge } from './components/premium/readActiveChallenge';
 import {
   canShowActiveChallengeWelcomePopup,
   calculateChallengePracticeStats,
+  CHALLENGE_UPDATED_EVENT,
   type ChallengeInstance,
 } from './challenges';
 
@@ -193,17 +194,44 @@ export default function App() {
     return () => window.removeEventListener(SCORE_UPDATED_EVENT, handleMilestoneCheck);
   }, [levelUpToShow, screen]);
 
-  // Phase 44: Evaluate Active Challenge Welcome Popup on app entry (respecting modal priority rules)
+  // Phase 44 & Phase 6A.1: Evaluate and synchronize Active Challenge Welcome Popup across
+  // app entry, tab visibility, and CHALLENGE_UPDATED_EVENT (confirmation, updates, or cancellation).
   useEffect(() => {
-    // Modal priority rule: wait until higher-priority celebration modals are dismissed
-    if (levelUpToShow !== null || dailyMilestoneToShow !== null) return;
+    let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
     const evaluateWelcome = () => {
       const active = readActiveChallenge();
-      if (active && canShowActiveChallengeWelcomePopup(active)) {
+
+      // Never show (and immediately clear) if no active Challenge exists — e.g., when
+      // the Duration Selection Modal opens, on Cancel, or when an active Challenge is cancelled.
+      if (!active || active.status !== 'active') {
+        setShowWelcomePopup(false);
+        setWelcomeChallenge(null);
+        return;
+      }
+
+      // Modal priority rule: wait until higher-priority celebration modals are dismissed
+      if (levelUpToShow !== null || dailyMilestoneToShow !== null) return;
+
+      if (canShowActiveChallengeWelcomePopup(active)) {
         setWelcomeChallenge(active);
         setShowWelcomePopup(true);
+      } else {
+        setShowWelcomePopup(false);
+        setWelcomeChallenge(null);
       }
+    };
+
+    const handleChallengeUpdated = () => {
+      const active = readActiveChallenge();
+      if (!active || active.status !== 'active') {
+        if (updateTimer) clearTimeout(updateTimer);
+        setShowWelcomePopup(false);
+        setWelcomeChallenge(null);
+        return;
+      }
+      if (updateTimer) clearTimeout(updateTimer);
+      updateTimer = setTimeout(evaluateWelcome, 60);
     };
 
     // Initial app entry check with slight delay for smooth entrance
@@ -215,10 +243,16 @@ export default function App() {
         evaluateWelcome();
       }
     };
+
+    window.addEventListener(CHALLENGE_UPDATED_EVENT, handleChallengeUpdated);
+    window.addEventListener('storage', handleChallengeUpdated);
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       clearTimeout(initialTimer);
+      if (updateTimer) clearTimeout(updateTimer);
+      window.removeEventListener(CHALLENGE_UPDATED_EVENT, handleChallengeUpdated);
+      window.removeEventListener('storage', handleChallengeUpdated);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [levelUpToShow, dailyMilestoneToShow]);

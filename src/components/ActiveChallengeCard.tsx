@@ -15,6 +15,7 @@ import {
   setChallengeInvitationSnooze,
   markChallengeInvitationPrompted,
   CHALLENGE_UPDATED_EVENT,
+  CHALLENGE_OPEN_DURATION_MODAL_KEY,
   ChallengeInstance,
   ChallengeDayProgress,
   SnoozeOptionDays,
@@ -54,6 +55,11 @@ export const ActiveChallengeCard: React.FC<ActiveChallengeCardProps> = ({ onNavi
 
   const handleStartChallengeFromInvite = () => {
     markChallengeInvitationPrompted();
+    try {
+      sessionStorage.setItem(CHALLENGE_OPEN_DURATION_MODAL_KEY, '1');
+    } catch {
+      // ignore
+    }
     onNavigate('challenges');
   };
 

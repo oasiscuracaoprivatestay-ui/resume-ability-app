@@ -8,19 +8,23 @@
  * 4. Navigates cleanly to StructuredDietScreen for full verification and adjustments.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../i18n';
 import {
-  getDayPlan,
+  getDayPlanForDate,
   getLocalTodayKey,
   getLocalDateKey,
   getActiveProfile,
   getGoalDisplayName,
   getBlockPrimaryDescription,
+  isBlockScheduleActive,
+  sortBlocks,
+  DIET_UPDATED_EVENT,
 } from '../utils/dietStorage';
 import {
   getDailyDietVerification,
   getDailyVerificationStats,
+  DIET_VERIFICATION_UPDATED_EVENT,
 } from '../utils/dietVerificationStorage';
 import { AppIcon, type AppIconName } from './icons/AppIcon';
 import './ChallengeDietSummaryCard.css';
@@ -31,22 +35,34 @@ interface ChallengeDietSummaryCardProps {
 
 export const ChallengeDietSummaryCard: React.FC<ChallengeDietSummaryCardProps> = ({ onNavigate }) => {
   const { t } = useTranslation();
+  const [, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setRefreshTick((n) => n + 1);
+    window.addEventListener(DIET_UPDATED_EVENT, refresh);
+    window.addEventListener(DIET_VERIFICATION_UPDATED_EVENT, refresh);
+    return () => {
+      window.removeEventListener(DIET_UPDATED_EVENT, refresh);
+      window.removeEventListener(DIET_VERIFICATION_UPDATED_EVENT, refresh);
+    };
+  }, []);
 
   const todayKey = getLocalTodayKey();
   const dateKey = getLocalDateKey();
   const activeProfile = getActiveProfile();
   const dayPlan = activeProfile?.diet
-    ? getDayPlan(activeProfile.diet, todayKey)
+    ? getDayPlanForDate(activeProfile.diet, dateKey)
     : { dayKey: todayKey, dayOfWeek: 0, mode: 'structured' as const, blocks: [] };
+  const activeBlocks = sortBlocks(dayPlan.blocks.filter(isBlockScheduleActive));
   const verification = getDailyDietVerification(dateKey);
-  const scheduledBlockIds = dayPlan.blocks.map((b) => b.id);
-  const stats = getDailyVerificationStats(dayPlan.blocks.length, dateKey, scheduledBlockIds);
+  const scheduledBlockIds = activeBlocks.map((b) => b.id);
+  const stats = getDailyVerificationStats(activeBlocks.length, dateKey, scheduledBlockIds);
 
   const profileDisplayName = activeProfile
     ? getGoalDisplayName(activeProfile, t) || activeProfile.name
     : 'Diet Plan';
   const isFree = dayPlan.mode === 'free';
-  const displayedBlocks = dayPlan.blocks.slice(0, 4);
+  const displayedBlocks = activeBlocks.slice(0, 4);
   const progressPct =
     stats.plannedCount > 0
       ? Math.min(100, Math.round((stats.reportedCount / stats.plannedCount) * 100))
@@ -94,7 +110,7 @@ export const ChallengeDietSummaryCard: React.FC<ChallengeDietSummaryCardProps> =
         </div>
       </div>
 
-      {dayPlan.blocks.length === 0 ? (
+      {activeBlocks.length === 0 ? (
         <div className="challenge-diet-empty">
           <p>{t.challenge_diet_no_blocks || 'No meal blocks scheduled for today.'}</p>
         </div>
@@ -154,11 +170,11 @@ export const ChallengeDietSummaryCard: React.FC<ChallengeDietSummaryCardProps> =
               </div>
             );
           })}
-          {dayPlan.blocks.length > 4 && (
+          {activeBlocks.length > 4 && (
             <div className="challenge-diet-more-hint">
               {(t.challenge_diet_more_blocks || '+{count} more planned blocks').replace(
                 '{count}',
-                String(dayPlan.blocks.length - 4)
+                String(activeBlocks.length - 4)
               )}
             </div>
           )}

@@ -64,6 +64,7 @@ import { readActiveChallenge } from '../components/premium/readActiveChallenge';
 import {
   calculateChallengePracticeStats,
   CHALLENGE_UPDATED_EVENT,
+  CHALLENGE_OPEN_DURATION_MODAL_KEY,
   NINETY_DAY_JOURNEY_UPDATED_EVENT,
 } from '../challenges';
 import { getTodayScore, SCORE_UPDATED_EVENT } from '../utils/scoringEngine';
@@ -853,7 +854,14 @@ export function ProgressVictoriesScreen({ onNavigate, onBack }: ProgressVictorie
                       type="button"
                       id="btn-pv-start-challenge"
                       className="pv-challenge-pill pv-challenge-pill--empty"
-                      onClick={() => onNavigate('challenges')}
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem(CHALLENGE_OPEN_DURATION_MODAL_KEY, '1');
+                        } catch {
+                          // ignore
+                        }
+                        onNavigate('challenges');
+                      }}
                     >
                       <AppIcon name="zap" size={13} />
                       <span>{t.pv_start_challenge_cta}</span>

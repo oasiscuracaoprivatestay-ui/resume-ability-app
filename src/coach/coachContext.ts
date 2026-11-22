@@ -34,7 +34,14 @@ import type {
   TurnScopedSensitiveContext,
 } from './types';
 import { ACTIVE_ABILITY_ID } from './types';
-import { getLocalDateKey, loadWeeklyDiet, getDayPlanForDate } from '../utils/dietStorage';
+import {
+  getLocalDateKey,
+  loadWeeklyDiet,
+  getDayPlanForDate,
+  isBlockScheduleActive,
+  sortBlocks,
+} from '../utils/dietStorage';
+import { getNextPlannedBlock } from '../utils/homeSelectors';
 import { getTodayScore, getLifetimeScore } from '../utils/scoringEngine';
 import { getCurrentLevel } from '../utils/progressionEngine';
 import { loadPledge } from '../utils/pledgeStorage';
@@ -118,10 +125,16 @@ export function buildCoachContext(dateKey = getLocalDateKey()): CoachContext {
   try {
     const dietPlan = loadWeeklyDiet();
     const dayPlan = getDayPlanForDate(dietPlan, dateKey);
-    const plannedToday = dayPlan?.blocks || [];
+    const plannedToday =
+      dayPlan && dayPlan.mode === 'structured'
+        ? sortBlocks((dayPlan.blocks || []).filter(isBlockScheduleActive))
+        : [];
     hasStructuredDiet = plannedToday.length > 0;
     plannedBlocksCount = plannedToday.length;
-    nextPlannedMealTime = plannedToday[0]?.startTime;
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const nextCandidate = dayPlan ? getNextPlannedBlock(dayPlan, nowMins) : null;
+    nextPlannedMealTime = nextCandidate?.block.startTime ?? plannedToday[0]?.startTime;
   } catch {
     hasStructuredDiet = false;
     plannedBlocksCount = 0;

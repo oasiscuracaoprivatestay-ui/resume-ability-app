@@ -27,12 +27,16 @@ import {
   calculateEndTimeFromStart,
   snapshotHistoryDate,
   getBlockPhotos,
+  getAllBlockReferencedPhotoIds,
   sanitiseBlock,
   getBlockPrimaryDescription,
   MEAL_TYPE_KEYS,
   isFreeDay,
   setFreeScheduleDates,
   clearDateOverride,
+  isBlockScheduleActive,
+  setBlockApprovalStatus,
+  swapBlockWithAlternative,
 } from '../utils/dietStorage';
 import type {
   DayKey,
@@ -42,6 +46,7 @@ import type {
   StructureDietStore,
   StructureGoalProfile,
   MealTypeKey,
+  MealApprovalStatus,
 } from '../utils/dietStorage';
 import {
   getDailyDietVerification,
@@ -120,6 +125,27 @@ import {
   isValidImageFile,
   getLocalizedPhotoErrorMessage,
 } from '../utils/photoStorage';
+import {
+  loadMealLibraryStore,
+  createLibraryMealFromBlock,
+  applyLibraryMealToBlock,
+  buildAlternativeFromLibraryMeal,
+  recordLibraryMealUsed,
+  listReusableUploadedPhotos,
+  MEAL_LIBRARY_UPDATED_EVENT,
+  type PersonalMealLibraryItem,
+} from '../utils/mealLibraryStorage';
+import {
+  PersonalMealLibraryModal,
+  type MealLibraryModalMode,
+} from '../components/PersonalMealLibraryModal';
+import SmartDietWizardModal from '../components/SmartDietWizardModal';
+import {
+  resolveMealStockPhoto,
+  resolveBuiltInMealText,
+  translateBuiltInFoodItem,
+  type MealStockPhotoTarget,
+} from '../utils/mealStockPhotos';
 import './StructuredDietScreen.css';
 
 interface StructuredDietScreenProps {
@@ -130,13 +156,8 @@ interface StructuredDietScreenProps {
 
 // ── Visual Redesign Helpers (Phase 43 Concept) ──────────────────────────────
 
-export function getDefaultMealImage(block?: { type?: string; mealType?: string } | null): string {
-  const t = (block?.mealType || block?.type || '').toLowerCase();
-  if (t.includes('breakfast')) return '/images/meals/breakfast.jpg';
-  if (t.includes('lunch')) return '/images/meals/lunch.jpg';
-  if (t.includes('snack')) return '/images/meals/snack.jpg';
-  if (t.includes('dinner')) return '/images/meals/dinner.jpg';
-  return '/images/meals/breakfast.jpg';
+export function getDefaultMealImage(block?: MealStockPhotoTarget | null): string {
+  return resolveMealStockPhoto(block);
 }
 
 export function formatDaySelectorDate(
@@ -326,13 +347,26 @@ interface BlockEditorProps {
   initialOutcome?: DetailedBlockOutcome | 'none';
   isToday?: boolean;
   selectedDayName?: string;
+  markModifiedOnSave?: boolean;
   onSave: (block: StructuredDietBlock, outcome?: DetailedBlockOutcome | 'none', applyToRecurring?: boolean) => void;
+  onSavedToLibrary?: () => void;
   onAutosaveQuantities?: (quantities: FoodQuantitiesMap) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave, onAutosaveQuantities, onCancel, t }: BlockEditorProps) {
+function BlockEditor({
+  initial,
+  initialOutcome,
+  isToday,
+  selectedDayName,
+  markModifiedOnSave,
+  onSave,
+  onSavedToLibrary,
+  onAutosaveQuantities,
+  onCancel,
+  t,
+}: BlockEditorProps) {
   const { lang } = useTranslation();
   const [applyToRecurring, setApplyToRecurring] = useState(false);
   const getDefaultTimes = () => {
@@ -363,7 +397,11 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
     }
     return [];
   });
-  const [customText, setCustomText] = useState(initial?.customText ?? '');
+  const [customText, setCustomText] = useState(() =>
+    resolveBuiltInMealText(initial?.customText ?? '', t, {
+      isUserCustomMeal: Boolean(initial?.libraryMealId),
+    })
+  );
   const [isCustomTextUserEdited, setIsCustomTextUserEdited] = useState(() => {
     if (!initial?.customText || !initial.customText.trim()) return false;
     const initialText = initial.customText.trim();
@@ -444,6 +482,9 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(null);
+  const [showReusePhotos, setShowReusePhotos] = useState(false);
+  const [alsoSaveToLibrary, setAlsoSaveToLibrary] = useState(false);
+  const reusablePhotos = useMemo(() => listReusableUploadedPhotos(), []);
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const cameraFileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
@@ -452,8 +493,9 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
 
   useEffect(() => {
     let isSubscribed = true;
-    for (const p of foodPhotos) {
-      if (!photoPreviewUrls[p.id]) {
+    const allToHydrate = [...foodPhotos, ...reusablePhotos];
+    for (const p of allToHydrate) {
+      if (p?.id && !photoPreviewUrls[p.id]) {
         getFoodPhoto(p.id).then(record => {
           if (isSubscribed && record?.dataUrl) {
             setPhotoPreviewUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
@@ -464,7 +506,7 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
     return () => {
       isSubscribed = false;
     };
-  }, [foodPhotos]);
+  }, [foodPhotos, reusablePhotos]);
 
   const handleAddPhotoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -765,7 +807,12 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
       }
     }
 
-    const block: StructuredDietBlock = {
+    const resolvedApprovalStatus: MealApprovalStatus | undefined =
+      markModifiedOnSave || initial?.approvalStatus === 'pending' || initial?.approvalStatus === 'rejected'
+        ? 'modified'
+        : initial?.approvalStatus;
+
+    const baseBlock: StructuredDietBlock = {
       id: initial?.id ?? generateBlockId(),
       startTime,
       endTime,
@@ -780,8 +827,31 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
       soupPortion: foodCategories.includes('soups') ? soupPortion : undefined,
       foodPhotos: foodPhotos.length > 0 ? foodPhotos : undefined,
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
+      libraryMealId: initial?.libraryMealId,
+      approvalStatus: resolvedApprovalStatus,
+      alternatives: initial?.alternatives,
+      imageRef:
+        foodPhotos.length > 0
+          ? {
+              kind: 'uploaded_photo',
+              photoId: foodPhotos[0].id,
+              photoMeta: { ...foodPhotos[0] },
+            }
+          : initial?.imageRef?.kind === 'stock_asset'
+          ? initial.imageRef
+          : undefined,
     };
-    onSave(sanitiseBlock(block), selectedOutcome, applyToRecurring);
+
+    let finalSanitised = sanitiseBlock(baseBlock);
+    if (alsoSaveToLibrary) {
+      const savedLib = createLibraryMealFromBlock(finalSanitised, { t });
+      finalSanitised = sanitiseBlock({
+        ...finalSanitised,
+        libraryMealId: savedLib.id,
+      });
+      onSavedToLibrary?.();
+    }
+    onSave(finalSanitised, selectedOutcome, applyToRecurring);
   };
 
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -914,6 +984,17 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
                   <span className="sdb-photo-btn-icon">🖼️</span>
                   <span className="sdb-photo-btn-label">{t.sdb_choose_gallery}</span>
                 </button>
+                <button
+                  type="button"
+                  id="btn-editor-reuse-photo"
+                  className="sdb-btn-photo-action sdb-btn-photo-action--reuse"
+                  onClick={() => setShowReusePhotos(prev => !prev)}
+                  disabled={isProcessingPhoto}
+                  title={t.mlib_btn_reuse_photo}
+                >
+                  <span className="sdb-photo-btn-icon">♻️</span>
+                  <span className="sdb-photo-btn-label">{t.mlib_btn_reuse_photo}</span>
+                </button>
                 {/* Fallback backward-compatible target */}
                 <button
                   type="button"
@@ -924,6 +1005,41 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
                   aria-hidden="true"
                 />
               </div>
+
+              {showReusePhotos && (
+                <div className="sdb-reuse-photos-panel" id="sdb-editor-reuse-photos-panel">
+                  <span className="sdb-reuse-photos-title">{t.mlib_reuse_photo_heading}</span>
+                  {reusablePhotos.length === 0 ? (
+                    <p className="sdb-reuse-photos-empty">{t.mlib_reuse_photo_empty}</p>
+                  ) : (
+                    <div className="sdb-reuse-photos-grid">
+                      {reusablePhotos.map(p => {
+                        const src = photoPreviewUrls[p.id] || getPhotoDataUrlSync(p.id);
+                        const isAlreadyAttached = foodPhotos.some(fp => fp.id === p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            id={`btn-editor-pick-saved-photo-${p.id}`}
+                            className={`sdb-reuse-photo-tile ${isAlreadyAttached ? 'sdb-reuse-photo-tile--selected' : ''}`}
+                            onClick={() => {
+                              setFoodPhotos(prev => [p, ...prev.filter(fp => fp.id !== p.id)]);
+                              setShowReusePhotos(false);
+                            }}
+                          >
+                            {src ? (
+                              <img src={src} alt="" className="sdb-reuse-photo-tile-img" />
+                            ) : (
+                              <span>📷</span>
+                            )}
+                            {isAlreadyAttached && <span className="sdb-reuse-photo-check">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {photoError && <p className="sdb-photo-error-msg" role="alert">{photoError}</p>}
@@ -1449,6 +1565,23 @@ function BlockEditor({ initial, initialOutcome, isToday, selectedDayName, onSave
             )}
           </div>
 
+          {/* ── Save to Personal Meal Library Option (Phase 2) ── */}
+          <div className="sdb-field sdb-recurring-toggle-field" id="sdb-save-library-toggle-field">
+            <label className="sdb-recurring-toggle-label" htmlFor="toggle-editor-save-library">
+              <input
+                type="checkbox"
+                id="toggle-editor-save-library"
+                className="sdb-recurring-toggle-checkbox"
+                checked={alsoSaveToLibrary}
+                onChange={e => setAlsoSaveToLibrary(e.target.checked)}
+              />
+              <div className="sdb-recurring-toggle-content">
+                <span className="sdb-recurring-toggle-title">{t.sdb_vc_btn_save_library}</span>
+                <span className="sdb-recurring-toggle-desc">{t.mlib_modal_sub}</span>
+              </div>
+            </label>
+          </div>
+
           {isToday && (
             <div className="sdb-field sdb-recurring-toggle-field" id="sdb-recurring-toggle-field">
               <label className="sdb-recurring-toggle-label" htmlFor="toggle-recurring-day-change">
@@ -1841,12 +1974,69 @@ function DietSlipModal({
 
 // ── Block card ─────────────────────────────────────────────────────────────────
 
+function MealTimeTypeSvg({ blockType }: { blockType: string }) {
+  const key = (blockType || '').toLowerCase();
+  if (key.includes('breakfast')) {
+    return (
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2v3" />
+        <path d="m4.93 10.93 1.41 1.41" />
+        <path d="M2 18h20" />
+        <path d="M19.07 10.93l-1.41 1.41" />
+        <path d="M16 18a4 4 0 0 0-8 0" />
+      </svg>
+    );
+  }
+  if (key.includes('dinner')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    );
+  }
+  if (key.includes('beverage') || key.includes('shake')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+      </svg>
+    );
+  }
+  if (key.includes('fasting') || key.includes('kitchen')) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  );
+}
+
 interface BlockCardProps {
   block: StructuredDietBlock;
   onEdit: () => void;
+  onModifyForApproval?: () => void;
   onDelete: () => void;
   t: ReturnType<typeof useTranslation>['t'];
   isToday: boolean;
+  isStructureReviewMode?: boolean;
+  onSetApprovalStatus?: (status: MealApprovalStatus) => void;
+  onSwapAlternative?: (alternativeId: string) => void;
+  onSaveToLibrary?: () => void;
+  onOpenLibraryReplace?: () => void;
+  onOpenLibraryAddAlternative?: () => void;
   verification?: DietBlockVerification;
   onVerifyOutcome?: (outcome: DetailedBlockOutcome, status: DietVerificationStatus) => void;
   onToggleResumed?: () => void;
@@ -1866,9 +2056,16 @@ interface BlockCardProps {
 function BlockCard({
   block,
   onEdit,
+  onModifyForApproval,
   onDelete,
   t,
   isToday,
+  isStructureReviewMode = false,
+  onSetApprovalStatus,
+  onSwapAlternative,
+  onSaveToLibrary,
+  onOpenLibraryReplace,
+  onOpenLibraryAddAlternative,
   verification,
   onVerifyOutcome,
   onToggleResumed,
@@ -1886,8 +2083,16 @@ function BlockCard({
 }: BlockCardProps) {
   const { lang } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [altIndex, setAltIndex] = useState(0);
   const typeName = (t[`sdb_type_${block.type}` as keyof typeof t] as string | undefined) ?? block.type;
   const overnight = isOvernightBlock(block);
+  const lowerBlockType = (block.type || '').trim().toLowerCase();
+  const isFastingWindow = lowerBlockType === 'micro_fasting' || lowerBlockType === 'kitchen_closed';
+  const isRejected = block.approvalStatus === 'rejected';
+  const showApprovalControls =
+    isStructureReviewMode ||
+    block.approvalStatus === 'pending' ||
+    block.approvalStatus === 'rejected';
 
   // Photos state: prioritize verification photos if present so attached photos remain visible
   const photos = useMemo(() => {
@@ -1899,9 +2104,18 @@ function BlockCard({
     }
     return getBlockPhotos(block);
   }, [verification?.foodPhotos, verification?.foodPhoto, block]);
+
+  const alternativesList = useMemo(
+    () => (Array.isArray(block.alternatives) ? block.alternatives : []),
+    [block.alternatives]
+  );
+  const activeAlt =
+    alternativesList.length > 0 ? alternativesList[altIndex % alternativesList.length] : null;
+  const activeAltPhotos = useMemo(() => getBlockPhotos(activeAlt), [activeAlt]);
+
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
-    for (const p of photos) {
+    for (const p of [...photos, ...activeAltPhotos]) {
       const sync = getPhotoDataUrlSync(p.id);
       if (sync) map[p.id] = sync;
     }
@@ -1923,19 +2137,21 @@ function BlockCard({
 
   useEffect(() => {
     let isSubscribed = true;
-    for (const p of photos) {
-      if (!photoUrls[p.id]) {
-        getFoodPhoto(p.id).then(record => {
-          if (isSubscribed && record?.dataUrl) {
-            setPhotoUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
-          }
-        });
+    for (const p of [...photos, ...activeAltPhotos]) {
+      if (p?.id && !photoUrls[p.id]) {
+        getFoodPhoto(p.id)
+          .then(record => {
+            if (isSubscribed && record?.dataUrl) {
+              setPhotoUrls(prev => ({ ...prev, [p.id]: record.dataUrl }));
+            }
+          })
+          .catch(() => {});
       }
     }
     return () => {
       isSubscribed = false;
     };
-  }, [photos, photoUrls]);
+  }, [photos, activeAltPhotos, photoUrls]);
 
   const handleCardPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2097,78 +2313,482 @@ function BlockCard({
 
   const formattedTimeRange = `${formatTime(block.startTime, lang)}–${formatTime(block.endTime, lang)}`;
 
-  const statusPillVariant = !isToday
+  const statusPillVariant = isRejected
+    ? 'rejected'
+    : block.approvalStatus === 'pending'
+    ? 'pending'
+    : !isToday
     ? 'planned'
     : !verification
-      ? 'pending'
-      : verification.status === 'on-track'
-        ? 'ontrack'
-        : 'slip';
+    ? 'pending'
+    : verification.status === 'on-track'
+    ? 'ontrack'
+    : 'slip';
 
-  const statusPillLabel = !isToday
+  const statusPillLabel = isRejected
+    ? t.sdb_vc_approval_rejected
+    : block.approvalStatus === 'pending'
+    ? t.sdb_vc_approval_pending
+    : !isToday
     ? t.sdb_planned_badge
     : !verification
-      ? t.sdb_v_not_reported
-      : verification.status === 'slip' && verification.isResumed
-        ? `${verifiedBadgeLabel} · ✓ ${t.sdb_resumed_label}`
-        : verifiedBadgeLabel;
+    ? t.sdb_v_not_reported
+    : verification.status === 'slip' && verification.isResumed
+    ? `${verifiedBadgeLabel} · ✓ ${t.sdb_resumed_label}`
+    : verifiedBadgeLabel;
+
+  const primaryPhotoSrc =
+    (photos[0] && (photoUrls[photos[0].id] || getPhotoDataUrlSync(photos[0].id))) ||
+    getDefaultMealImage(block);
+
+  const mainMealDetailsText = (() => {
+    const detailItems: string[] = [];
+    const quantities =
+      verification?.actualFoodQuantities || verification?.foodQuantities || block.foodQuantities;
+
+    if (block.foodSelections) {
+      for (const [cat, foods] of Object.entries(block.foodSelections)) {
+        if (Array.isArray(foods)) {
+          for (const foodKey of foods) {
+            const label = translateBuiltInFoodItem(foodKey, t, cat as FoodCategoryKey);
+            const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, foodKey);
+            const qtyStr = formatFoodItemQuantity(quantities?.[qtyKey], t);
+            const display = qtyStr ? `${qtyStr} ${label}` : label;
+            if (display && !detailItems.includes(display)) detailItems.push(display);
+          }
+        }
+      }
+    }
+    if (block.customFoods) {
+      for (const [cat, customList] of Object.entries(block.customFoods)) {
+        if (Array.isArray(customList)) {
+          for (const cFood of customList) {
+            const qtyKey = getFoodQuantityKey(cat as FoodCategoryKey, cFood, true);
+            const qtyStr = formatFoodItemQuantity(quantities?.[qtyKey], t);
+            const display = qtyStr ? `${qtyStr} ${cFood}` : cFood;
+            if (display && !detailItems.includes(display)) detailItems.push(display);
+          }
+        }
+      }
+    }
+
+    const portion =
+      verification?.actualSoupPortion || verification?.soupPortion || block.soupPortion;
+    if (portion) {
+      detailItems.push(`🥣 ${formatSoupPortion(portion, t)}`);
+    }
+
+    if (detailItems.length > 0) {
+      return detailItems.slice(0, 5).join(', ');
+    }
+    if (Array.isArray(block.items) && block.items.length > 0) {
+      const translatedItems = block.items
+        .filter(it => {
+          const lw = (it || '').trim().toLowerCase();
+          return lw && !(FOOD_CATEGORY_KEYS as readonly string[]).includes(lw) && lw !== 'micro_fasting' && lw !== 'kitchen_closed';
+        })
+        .map(it => translateBuiltInFoodItem(it, t));
+      const joinedItems = translatedItems.join(', ');
+      if (joinedItems && joinedItems.toLowerCase() !== foodSummary.toLowerCase()) {
+        return joinedItems;
+      }
+    }
+    if (blockCategories.length > 0) {
+      return blockCategories
+        .map(catKey => (t[`sdb_cat_${catKey}` as keyof typeof t] as string | undefined) ?? catKey)
+        .join(', ');
+    }
+    return '';
+  })();
+
+  const activeAltPhotoSrc = activeAlt
+    ? (activeAltPhotos[0] &&
+        (photoUrls[activeAltPhotos[0].id] || getPhotoDataUrlSync(activeAltPhotos[0].id))) ||
+      getDefaultMealImage(activeAlt)
+    : '';
+
+  const activeAltDisplayName = activeAlt
+    ? resolveBuiltInMealText(activeAlt.name, t, {
+        isUserCustomMeal: Boolean(activeAlt.libraryMealId),
+      })
+    : '';
+
+  const activeAltDetailsText = (() => {
+    if (!activeAlt) return '';
+    const resolvedAltCustom = resolveBuiltInMealText(activeAlt.customText, t, {
+      isUserCustomMeal: Boolean(activeAlt.libraryMealId),
+    });
+    if (
+      resolvedAltCustom &&
+      resolvedAltCustom.trim().toLowerCase() !== activeAltDisplayName.trim().toLowerCase()
+    ) {
+      return resolvedAltCustom.trim();
+    }
+    const parts: string[] = [];
+    if (activeAlt.foodSelections) {
+      for (const [cat, foods] of Object.entries(activeAlt.foodSelections)) {
+        for (const fk of foods || []) {
+          const lbl = translateBuiltInFoodItem(fk, t, cat as FoodCategoryKey);
+          if (lbl && !parts.includes(lbl)) parts.push(lbl);
+        }
+      }
+    }
+    if (activeAlt.customFoods) {
+      for (const list of Object.values(activeAlt.customFoods)) {
+        for (const cf of list || []) {
+          if (cf && !parts.includes(cf)) parts.push(cf);
+        }
+      }
+    }
+    if (Array.isArray(activeAlt.items) && activeAlt.items.length > 0 && parts.length === 0) {
+      for (const it of activeAlt.items) {
+        const lw = (it || '').trim().toLowerCase();
+        if (!lw || (FOOD_CATEGORY_KEYS as readonly string[]).includes(lw)) continue;
+        const lbl = translateBuiltInFoodItem(it, t);
+        if (lbl && !parts.includes(lbl)) parts.push(lbl);
+      }
+    }
+    if (parts.length > 0) return parts.slice(0, 4).join(', ');
+    if (activeAlt.foodCategories && activeAlt.foodCategories.length > 0) {
+      return activeAlt.foodCategories
+        .map(c => (t[`sdb_cat_${c}` as keyof typeof t] as string) || c)
+        .join(', ');
+    }
+    return '';
+  })();
 
   return (
     <div
-      className={`sdb-block-card ${isExpanded ? 'sdb-block-card--expanded' : 'sdb-block-card--collapsed'} ${isToday && verification ? `sdb-block-card--verified sdb-block-card--${verification.status}` : ''}`}
+      className={`sdb-block-card sdb-vcard ${isExpanded ? 'sdb-block-card--expanded' : 'sdb-block-card--collapsed'} ${isRejected ? 'sdb-block-card--rejected' : ''} ${block.approvalStatus === 'pending' ? 'sdb-block-card--proposed' : ''} ${isToday && verification && !isRejected ? `sdb-block-card--verified sdb-block-card--${verification.status}` : ''}`}
       id={`sdb-block-${block.id}`}
+      data-approval-status={block.approvalStatus || 'accepted'}
     >
-      {/* ── Collapsed Summary Header (Semantic Button — Zero Nested Controls) ── */}
-      <button
-        type="button"
-        id={`btn-toggle-block-${block.id}`}
-        className="sdb-meal-collapse-btn"
-        aria-expanded={isExpanded}
-        aria-controls={`sdb-meal-panel-${block.id}`}
-        aria-label={`${isExpanded ? t.sdb_collapse_meal : t.sdb_expand_meal}: ${mealTypeDisplay}, ${formattedTimeRange}`}
-        onClick={() => setIsExpanded(prev => !prev)}
-      >
-        <span className="sdb-meal-collapse-main">
-          <span className="sdb-meal-collapse-meta">
-            <span className="sdb-meal-collapse-time">
-              {formattedTimeRange}
-              {overnight && <span className="sdb-meal-collapse-overnight"> ({t.sdb_next_day})</span>}
-            </span>
-            <span className="sdb-meal-collapse-sep" aria-hidden="true">|</span>
-            <span className={`sdb-meal-status-pill sdb-meal-status-pill--${statusPillVariant}`}>
-              {statusPillLabel}
-            </span>
-            {photos.length > 0 && (
-              <span
-                className="sdb-meal-photo-indicator"
-                title={
-                  (photos.length === 1 ? t.sdb_photos_count : t.sdb_photos_count_plural).replace(
-                    '{count}',
-                    String(photos.length)
-                  )
-                }
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-                <span>{photos.length}</span>
-              </span>
-            )}
+      {/* Hidden file inputs for direct camera photo capture and gallery fallback */}
+      <input
+        ref={cardCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleCardPhotoSelect}
+      />
+      <input
+        ref={cardFileInputRef}
+        type="file"
+        accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
+        style={{ display: 'none' }}
+        onChange={handleCardPhotoSelect}
+      />
+
+      {/* ── 1. Approved Visual Card Header: Meal Type Icon + Title + Scheduled Time Pill + Quick-Edit Toggle ── */}
+      <div className="sdb-vcard-header">
+        <div className="sdb-vcard-header-left">
+          <span className="sdb-vcard-type-icon" aria-hidden="true">
+            <MealTimeTypeSvg blockType={block.mealType || block.type} />
           </span>
-          <span className="sdb-meal-collapse-title" id={`sdb-meal-type-badge-${block.id}`}>
+          <span className="sdb-vcard-type-title" id={`sdb-meal-type-badge-${block.id}`}>
             {mealTypeDisplay}
           </span>
-          <span className="sdb-meal-collapse-summary">{foodSummary}</span>
-        </span>
-        <span className={`sdb-meal-chevron ${isExpanded ? 'sdb-meal-chevron--open' : ''}`} aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </span>
-      </button>
+          <span className={`sdb-meal-status-pill sdb-meal-status-pill--${statusPillVariant}`}>
+            {statusPillLabel}
+          </span>
+        </div>
 
-      {/* ── Expandable Full Controls Panel ── */}
+        <div className="sdb-vcard-header-right">
+          <span className="sdb-vcard-time-pill">
+            {formattedTimeRange}
+            {overnight && <span className="sdb-meal-collapse-overnight"> ({t.sdb_next_day})</span>}
+          </span>
+          <button
+            type="button"
+            id={`btn-toggle-block-${block.id}`}
+            className="sdb-vcard-expand-btn"
+            aria-expanded={isExpanded}
+            aria-controls={`sdb-meal-panel-${block.id}`}
+            aria-label={`${isExpanded ? t.sdb_collapse_meal : t.sdb_expand_meal}: ${mealTypeDisplay}, ${formattedTimeRange}`}
+            onClick={() => setIsExpanded(prev => !prev)}
+          >
+            <span className={`sdb-meal-chevron ${isExpanded ? 'sdb-meal-chevron--open' : ''}`} aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {cardPhotoError && (
+        <div
+          className="sdb-block-photo-card-error"
+          role="alert"
+          onClick={() => setCardPhotoError(null)}
+          title="Click to dismiss"
+        >
+          <span className="sdb-block-photo-card-error-icon" aria-hidden="true">⚠️</span>
+          <span className="sdb-block-photo-card-error-text">{cardPhotoError}</span>
+          <button
+            type="button"
+            className="sdb-block-photo-card-error-close"
+            onClick={e => {
+              e.stopPropagation();
+              setCardPhotoError(null);
+            }}
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── 2. Visual Main Meal Row (Photo + Main Meal Badge + Title + Ingredients + Individual Approval Rail) ── */}
+      <div className="sdb-vcard-main">
+        <div className="sdb-vcard-photo-wrap">
+          {photos.length > 0 ? (
+            <button
+              type="button"
+              id={`btn-photo-thumb-${block.id}-0`}
+              className="sdb-vcard-photo-btn"
+              onClick={() => onPreviewPhotos?.(previewItems, 0)}
+              aria-label={`${t.sdb_view_photo}: ${foodSummary}`}
+              title={`${t.sdb_view_photo}: ${foodSummary}`}
+            >
+              <img
+                src={primaryPhotoSrc}
+                alt={foodSummary || t.sdb_food_photo}
+                className="sdb-vcard-photo-img"
+                onError={e => {
+                  if (!e.currentTarget.dataset.fallbackApplied) {
+                    e.currentTarget.dataset.fallbackApplied = '1';
+                    e.currentTarget.src = '/images/meals/breakfast.jpg';
+                  }
+                }}
+              />
+            </button>
+          ) : (
+            <img
+              src={primaryPhotoSrc}
+              alt={foodSummary || typeName}
+              className="sdb-vcard-photo-img"
+              onError={e => {
+                if (!e.currentTarget.dataset.fallbackApplied) {
+                  e.currentTarget.dataset.fallbackApplied = '1';
+                  e.currentTarget.src = '/images/meals/breakfast.jpg';
+                }
+              }}
+            />
+          )}
+          <button
+            type="button"
+            id={`btn-direct-add-photo-${block.id}`}
+            className="sdb-block-thumb-cam-btn"
+            onClick={() => cardFileInputRef.current?.click()}
+            disabled={isAddingPhoto}
+            aria-label={`${t.sdb_add_photo}: ${foodSummary}`}
+            title={t.sdb_add_photo}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="sdb-vcard-info">
+          <div className="sdb-vcard-badges">
+            <span className={`sdb-vcard-role-pill ${isFastingWindow ? 'sdb-vcard-role-pill--window' : 'sdb-vcard-role-pill--main'}`}>
+              {isFastingWindow ? t.sdb_vc_structure_window_badge : t.sdb_vc_main_meal_badge}
+            </span>
+            {block.approvalStatus === 'accepted' && (
+              <span className="sdb-vcard-approval-pill sdb-vcard-approval-pill--accepted">
+                ✓ {t.sdb_vc_approval_accepted}
+              </span>
+            )}
+            {block.approvalStatus === 'modified' && (
+              <span className="sdb-vcard-approval-pill sdb-vcard-approval-pill--modified">
+                ✎ {t.sdb_vc_approval_modified}
+              </span>
+            )}
+            {block.libraryMealId && (
+              <span className="sdb-vcard-lib-pill">★ {t.sdb_vc_saved_library_badge}</span>
+            )}
+          </div>
+
+          <h4 className="sdb-vcard-meal-name">{foodSummary}</h4>
+
+          {mainMealDetailsText && mainMealDetailsText.toLowerCase() !== foodSummary.toLowerCase() && (
+            <p className="sdb-vcard-meal-details">{mainMealDetailsText}</p>
+          )}
+        </div>
+
+        {/* Individual Proposed Meal Approval Controls (Accept / Modify / Reject — Planning Only, Never Scoring) */}
+        {showApprovalControls && onSetApprovalStatus && (
+          <div
+            className="sdb-vcard-approval-rail"
+            role="group"
+            aria-label={`${mealTypeDisplay} — ${t.sdb_vc_review_structure_btn}`}
+          >
+            <button
+              type="button"
+              id={`btn-approve-accept-${block.id}`}
+              className={`sdb-approval-pill-btn sdb-approval-pill-btn--accept ${
+                block.approvalStatus === 'accepted' ? 'is-active' : ''
+              }`}
+              onClick={() => onSetApprovalStatus('accepted')}
+              title={t.sdb_vc_btn_accept}
+              aria-label={`${t.sdb_vc_btn_accept}: ${foodSummary}`}
+            >
+              <span aria-hidden="true">✓</span>
+              <span className="sdb-approval-btn-text">{t.sdb_vc_btn_accept}</span>
+            </button>
+            <button
+              type="button"
+              id={`btn-approve-modify-${block.id}`}
+              className={`sdb-approval-pill-btn sdb-approval-pill-btn--modify ${
+                block.approvalStatus === 'modified' ? 'is-active' : ''
+              }`}
+              onClick={() => (onModifyForApproval ? onModifyForApproval() : onEdit())}
+              title={t.sdb_vc_btn_modify}
+              aria-label={`${t.sdb_vc_btn_modify}: ${foodSummary}`}
+            >
+              <span aria-hidden="true">✎</span>
+              <span className="sdb-approval-btn-text">{t.sdb_vc_btn_modify}</span>
+            </button>
+            <button
+              type="button"
+              id={`btn-approve-reject-${block.id}`}
+              className={`sdb-approval-pill-btn sdb-approval-pill-btn--reject ${
+                isRejected ? 'is-active' : ''
+              }`}
+              onClick={() => onSetApprovalStatus(isRejected ? 'accepted' : 'rejected')}
+              title={isRejected ? t.sdb_vc_btn_restore : t.sdb_vc_btn_reject}
+              aria-label={`${isRejected ? t.sdb_vc_btn_restore : t.sdb_vc_btn_reject}: ${foodSummary}`}
+            >
+              <span aria-hidden="true">✕</span>
+              <span className="sdb-approval-btn-text">{t.sdb_vc_btn_reject}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Calm Planning Exclusion Notice when Rejected */}
+      {isRejected && (
+        <div className="sdb-vcard-rejected-banner" id={`sdb-rejected-banner-${block.id}`}>
+          <span className="sdb-vcard-rejected-text">{t.sdb_vc_rejected_hint}</span>
+          {onSetApprovalStatus && (
+            <button
+              type="button"
+              id={`btn-restore-meal-${block.id}`}
+              className="sdb-vcard-restore-btn"
+              onClick={() => onSetApprovalStatus('accepted')}
+            >
+              ✓ {t.sdb_vc_btn_restore}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── 3. Alternative / Backup Meal Option Row (When Available) ── */}
+      {activeAlt && (
+        <div className="sdb-vcard-alt-section" id={`sdb-alt-section-${block.id}`}>
+          <div className="sdb-vcard-alt-left">
+            <img
+              src={activeAltPhotoSrc}
+              alt={activeAltDisplayName}
+              className="sdb-vcard-alt-img"
+              onError={e => {
+                if (!e.currentTarget.dataset.fallbackApplied) {
+                  e.currentTarget.dataset.fallbackApplied = '1';
+                  e.currentTarget.src = '/images/meals/lunch.jpg';
+                }
+              }}
+            />
+            <div className="sdb-vcard-alt-copy">
+              <div className="sdb-vcard-alt-badges">
+                <span className="sdb-vcard-alt-pill">{t.sdb_vc_alt_option_badge}</span>
+                {alternativesList.length > 1 && (
+                  <button
+                    type="button"
+                    id={`btn-cycle-alt-${block.id}`}
+                    className="sdb-vcard-alt-more-btn"
+                    onClick={() => setAltIndex(i => (i + 1) % alternativesList.length)}
+                  >
+                    {t.sdb_vc_more_alts.replace('{count}', String(alternativesList.length - 1))} ↻
+                  </button>
+                )}
+              </div>
+              <span className="sdb-vcard-alt-name">{activeAltDisplayName}</span>
+              {activeAltDetailsText && (
+                <span className="sdb-vcard-alt-desc">{activeAltDetailsText}</span>
+              )}
+            </div>
+          </div>
+
+          {onSwapAlternative && (
+            <button
+              type="button"
+              id={`btn-use-alt-${block.id}`}
+              className="sdb-vcard-use-alt-btn"
+              onClick={() => onSwapAlternative(activeAlt.id)}
+            >
+              <span>⇄</span>
+              <span>{t.sdb_vc_btn_use_alt}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── 4. Contextual Planning & Personal Meal Library Action Bar ── */}
+      {!isRejected && (
+        <div className="sdb-vcard-toolbar">
+          <button
+            id={`btn-customize-block-${block.id}`}
+            type="button"
+            className="sdb-vcard-tool-btn sdb-vcard-tool-btn--edit"
+            onClick={onEdit}
+          >
+            <span>✎</span>
+            <span>{t.sdb_vc_btn_modify}</span>
+          </button>
+
+          {!isFastingWindow && onSaveToLibrary && (
+            <button
+              id={`btn-save-block-to-library-${block.id}`}
+              type="button"
+              className="sdb-vcard-tool-btn"
+              onClick={onSaveToLibrary}
+            >
+              <span>★</span>
+              <span>{t.sdb_vc_btn_save_library}</span>
+            </button>
+          )}
+
+          {!isFastingWindow && onOpenLibraryReplace && (
+            <button
+              id={`btn-replace-from-library-${block.id}`}
+              type="button"
+              className="sdb-vcard-tool-btn"
+              onClick={onOpenLibraryReplace}
+            >
+              <span>📖</span>
+              <span>{t.sdb_vc_btn_replace_library}</span>
+            </button>
+          )}
+
+          {!isFastingWindow && onOpenLibraryAddAlternative && (
+            <button
+              id={`btn-add-alt-block-${block.id}`}
+              type="button"
+              className="sdb-vcard-tool-btn"
+              onClick={onOpenLibraryAddAlternative}
+            >
+              <span>+</span>
+              <span>{t.sdb_vc_btn_add_alt}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── 5. Expandable Advanced Quick-Edit Panel (Time Window, Quick Rename, Category Chips, Delete) ── */}
       <div
         id={`sdb-meal-panel-${block.id}`}
         className={`sdb-meal-expand-panel ${isExpanded ? 'sdb-meal-expand-panel--open' : ''}`}
@@ -2222,90 +2842,7 @@ function BlockCard({
             </div>
           </div>
 
-      {/* Hidden file inputs for direct camera photo capture and gallery fallback */}
-      <input
-        ref={cardCameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        style={{ display: 'none' }}
-        onChange={handleCardPhotoSelect}
-      />
-      <input
-        ref={cardFileInputRef}
-        type="file"
-        accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif"
-        style={{ display: 'none' }}
-        onChange={handleCardPhotoSelect}
-      />
-
-      {cardPhotoError && (
-        <div
-          className="sdb-block-photo-card-error"
-          role="alert"
-          onClick={() => setCardPhotoError(null)}
-          title="Click to dismiss"
-        >
-          <span className="sdb-block-photo-card-error-icon" aria-hidden="true">⚠️</span>
-          <span className="sdb-block-photo-card-error-text">{cardPhotoError}</span>
-          <button
-            type="button"
-            className="sdb-block-photo-card-error-close"
-            onClick={(e) => {
-              e.stopPropagation();
-              setCardPhotoError(null);
-            }}
-            aria-label="Dismiss error"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* ── Main Row: Food Thumbnail + Food Title + Category Chips ── */}
-      <div className="sdb-block-main-row">
-        <div className="sdb-block-thumb-container">
-          <div className="sdb-block-thumb-wrap">
-            {photos.length > 0 ? (
-              <button
-                type="button"
-                id={`btn-photo-thumb-${block.id}-0`}
-                className="sdb-block-thumb-btn"
-                onClick={() => onPreviewPhotos?.(previewItems, 0)}
-                aria-label={`${t.sdb_view_photo}: ${desc}`}
-                title={`${t.sdb_view_photo}: ${desc}`}
-              >
-                <img
-                  src={photoUrls[photos[0].id] || getPhotoDataUrlSync(photos[0].id) || getDefaultMealImage(block)}
-                  alt={desc || t.sdb_food_photo}
-                  className="sdb-block-thumb-img"
-                />
-              </button>
-            ) : (
-              <img
-                src={getDefaultMealImage(block)}
-                alt={desc || typeName}
-                className="sdb-block-thumb-img"
-              />
-            )}
-            <button
-              type="button"
-              id={`btn-direct-add-photo-${block.id}`}
-              className="sdb-block-thumb-cam-btn"
-              onClick={() => cardFileInputRef.current?.click()}
-              disabled={isAddingPhoto}
-              aria-label={`${t.sdb_add_photo}: ${desc}`}
-              title={t.sdb_add_photo}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="sdb-block-info-col">
+          <div className="sdb-block-info-col">
           <div className="sdb-block-desc-wrap">
             <div className="sdb-block-desc-input-container">
               <span className="sdb-block-desc-sizer" aria-hidden="true">
@@ -2433,12 +2970,16 @@ function BlockCard({
               </div>
             );
           })()}
+          </div>
         </div>
       </div>
 
-      {/* ── Today Daily Verification Controls ── */}
-      {isToday && (
-        <div className="sdb-verification-box">
+      {/* ── 6. Today Post-Meal Execution Check (Strictly Separate from Plan Approval; Hidden When Rejected) ── */}
+      {isToday && !isRejected && (
+        <div className="sdb-verification-box sdb-verification-box--surface">
+          <div className="sdb-verify-eyebrow-row">
+            <span className="sdb-verify-eyebrow">{t.sdb_vc_today_verify_heading}</span>
+          </div>
           {/* Selected Status Visual Banner if verified and not actively changing */}
           {verification && !isChanging && (
             <div className={`sdb-verified-status-banner sdb-verified-status-banner--${verification.status}`}>
@@ -2803,47 +3344,6 @@ function BlockCard({
           )}
         </div>
       )}
-      {/* Footer row with Edit button and verification status */}
-      <div className="sdb-block-bottom-row">
-        <button
-          id={`btn-customize-block-${block.id}`}
-          type="button"
-          className="sdb-customize-btn sdb-edit-prominent-btn sdb-btn-edit-block"
-          onClick={onEdit}
-          aria-label={`${t.commit_edit || 'Edit'}: ${desc}`}
-        >
-          <svg className="sdb-customize-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
-          <span>{t.sdb_edit_block || t.commit_edit || 'Edit'}</span>
-        </button>
-
-        <div className="sdb-block-verified-status">
-          {verification?.status === 'on-track' && (
-            <button
-              type="button"
-              className="sdb-verified-badge sdb-verified-badge--ontrack"
-              onClick={() => setIsChanging(true)}
-              title={t.commit_edit || 'Change outcome'}
-            >
-              ✓ {t.sdb_v_on_track || 'On Track'}
-            </button>
-          )}
-          {verification?.status === 'slip' && (
-            <button
-              type="button"
-              className="sdb-verified-badge sdb-verified-badge--slip"
-              onClick={() => setIsChanging(true)}
-              title={t.commit_edit || 'Change outcome'}
-            >
-              ⚠ {t.sdb_v_slip || 'Slip'}
-            </button>
-          )}
-        </div>
-      </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -5463,6 +5963,15 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   const [selectedDayKey, setSelectedDayKey] = useState<DayKey>(() => getLocalTodayKey());
   const [activeView, setActiveView] = useState<'daily' | 'settings'>('daily');
   const [editingBlock, setEditingBlock] = useState<StructuredDietBlock | null | 'new'>(null);
+  const [modifyingApprovalBlockId, setModifyingApprovalBlockId] = useState<string | null>(null);
+  const [isStructureReviewMode, setIsStructureReviewMode] = useState(false);
+  const [mealLibraryModal, setMealLibraryModal] = useState<{
+    mode: MealLibraryModalMode;
+    targetBlock?: StructuredDietBlock | null;
+  } | null>(null);
+  const [libraryMealsCount, setLibraryMealsCount] = useState<number>(
+    () => loadMealLibraryStore().meals.length
+  );
   const [editingName, setEditingName] = useState(false);
   const [nameText, setNameText] = useState(weekly.planName);
   const [showCopyModal, setShowCopyModal] = useState(false);
@@ -5470,6 +5979,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
   const [showQuickBuildModal, setShowQuickBuildModal] = useState(false);
   const [showUnstructuredConfirmModal, setShowUnstructuredConfirmModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showSmartWizard, setShowSmartWizard] = useState(false);
 
   // Daily verification state (today's verifications)
   const [todayVerification, setTodayVerification] = useState<DailyDietVerification | null>(
@@ -5498,12 +6008,12 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     : getDayPlan(weekly, selectedDayKey);
   const isReviewCompletedToday = hasCompletedDailyReview(getLocalDateKey(), activeProfile.id);
 
-  // Preload photos for current day blocks for instant UI rendering (Phase 6B)
+  // Preload photos for current day blocks (including alternatives) for instant UI rendering
   useEffect(() => {
     const photoIds: string[] = [];
     for (const b of currentDay.blocks) {
-      for (const p of getBlockPhotos(b)) {
-        if (p?.id) photoIds.push(p.id);
+      for (const pid of getAllBlockReferencedPhotoIds(b)) {
+        if (pid) photoIds.push(pid);
       }
     }
     if (photoIds.length > 0) {
@@ -5511,7 +6021,21 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     }
   }, [currentDay.blocks]);
 
+  useEffect(() => {
+    const syncLibraryCount = () => setLibraryMealsCount(loadMealLibraryStore().meals.length);
+    window.addEventListener(MEAL_LIBRARY_UPDATED_EVENT, syncLibraryCount);
+    return () => window.removeEventListener(MEAL_LIBRARY_UPDATED_EVENT, syncLibraryCount);
+  }, []);
+
   const handleHeaderBack = () => {
+    if (showSmartWizard) {
+      setShowSmartWizard(false);
+      return;
+    }
+    if (mealLibraryModal) {
+      setMealLibraryModal(null);
+      return;
+    }
     if (activeView === 'settings') {
       setActiveView('daily');
       return;
@@ -6167,12 +6691,159 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     refreshVerifications();
   };
 
+  const showTransientToast = (msg: string) => {
+    setCopyFeedback(msg);
+    setTimeout(() => {
+      setCopyFeedback(null);
+    }, 2800);
+  };
+
+  // ── Phase 2: Pre-Meal Plan Approval, Alternative Swaps & Personal Meal Library Actions ──
+  // Strictly planning-level: NEVER creates Slip records, Verification entries, or Score events.
+
+  const handleSetBlockApproval = (blockId: string, status: MealApprovalStatus) => {
+    const target = currentDay.blocks.find(b => b.id === blockId);
+    if (!target) return;
+    const updated = setBlockApprovalStatus(target, status);
+    handleQuickUpdateBlock(blockId, { approvalStatus: updated.approvalStatus });
+    playFeedback('neutral');
+  };
+
+  const handleAcceptAllDailyStructure = () => {
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = getLocalDateKey(yesterdayDate);
+
+    const finalizeDayBlocks = (blocks: StructuredDietBlock[]) =>
+      blocks.map(b => {
+        if (b.approvalStatus === 'rejected' || b.approvalStatus === 'modified') {
+          return b;
+        }
+        return setBlockApprovalStatus(b, 'accepted');
+      });
+
+    updateWeekly(prevWeekly => {
+      let nextWeekly = prevWeekly;
+      if (!nextWeekly.historySnapshots || !nextWeekly.historySnapshots[yesterdayKey]) {
+        nextWeekly = snapshotHistoryDate(nextWeekly, yesterdayKey);
+      }
+      if (activeView === 'daily' && isToday) {
+        return updateDatePlan(
+          nextWeekly,
+          todayDateKey,
+          day => ({
+            ...day,
+            blocks: sortBlocks(finalizeDayBlocks(day.blocks)),
+          }),
+          { dayKey: selectedDayKey }
+        );
+      }
+      return updateDayPlan(nextWeekly, selectedDayKey, day => ({
+        ...day,
+        blocks: sortBlocks(finalizeDayBlocks(day.blocks)),
+      }));
+    });
+
+    setIsStructureReviewMode(false);
+    playFeedback('win');
+    showTransientToast(t.sdb_vc_structure_accepted_toast);
+  };
+
+  const handleSwapAlternative = (blockId: string, alternativeId: string) => {
+    const target = currentDay.blocks.find(b => b.id === blockId);
+    if (!target) return;
+    const swapped = swapBlockWithAlternative(target, alternativeId, {
+      keepPreviousAsAlternative: true,
+      nextApprovalStatus: target.approvalStatus ? 'modified' : 'accepted',
+    });
+    handleSaveBlock(swapped);
+    playFeedback('neutral');
+    showTransientToast(t.sdb_vc_alt_swapped_toast);
+  };
+
+  const handleSaveBlockToLibrary = (block: StructuredDietBlock) => {
+    const saved = createLibraryMealFromBlock(block, { t });
+    handleQuickUpdateBlock(block.id, { libraryMealId: saved.id });
+    setLibraryMealsCount(loadMealLibraryStore().meals.length);
+    playFeedback('win');
+    showTransientToast(t.mlib_saved_toast);
+  };
+
+  const handleSelectFromMealLibrary = (
+    meal: PersonalMealLibraryItem,
+    timeSlot?: { startTime: string; endTime: string }
+  ) => {
+    if (!mealLibraryModal) return;
+    const { mode, targetBlock } = mealLibraryModal;
+
+    if (mode === 'apply_to_block' && targetBlock) {
+      const nextApproval: MealApprovalStatus | undefined =
+        targetBlock.approvalStatus === 'pending' || targetBlock.approvalStatus === 'rejected'
+          ? 'modified'
+          : targetBlock.approvalStatus;
+      const replaced = applyLibraryMealToBlock(meal, {
+        id: targetBlock.id,
+        startTime: targetBlock.startTime,
+        endTime: targetBlock.endTime,
+        type: targetBlock.type,
+        mealType: targetBlock.mealType,
+        approvalStatus: nextApproval,
+        alternatives: targetBlock.alternatives,
+      });
+      recordLibraryMealUsed(meal.id);
+      handleSaveBlock(replaced);
+      setMealLibraryModal(null);
+      playFeedback('win');
+      showTransientToast(t.mlib_applied_toast);
+      return;
+    }
+
+    if (mode === 'add_alternative' && targetBlock) {
+      const newAlt = buildAlternativeFromLibraryMeal(meal, {
+        type: targetBlock.type,
+        mealType: targetBlock.mealType,
+      });
+      const existingAlts = Array.isArray(targetBlock.alternatives) ? targetBlock.alternatives : [];
+      handleQuickUpdateBlock(targetBlock.id, {
+        alternatives: [...existingAlts, newAlt],
+      });
+      recordLibraryMealUsed(meal.id);
+      setMealLibraryModal(null);
+      playFeedback('win');
+      showTransientToast(t.mlib_alt_added_toast);
+      return;
+    }
+
+    // Browse mode: insert meal into selected day's schedule
+    const createdBlock = applyLibraryMealToBlock(meal, {
+      startTime: timeSlot?.startTime || '12:30',
+      endTime: timeSlot?.endTime || '13:00',
+    });
+    recordLibraryMealUsed(meal.id);
+    handleSaveBlock(createdBlock);
+    setMealLibraryModal(null);
+    playFeedback('win');
+    showTransientToast(t.mlib_applied_toast);
+  };
+
   const sortedBlocks = sortBlocks(currentDay.blocks);
+  const activeScheduledBlocks = useMemo(
+    () => sortedBlocks.filter(isBlockScheduleActive),
+    [sortedBlocks]
+  );
+  const hasPendingApprovalBlocks = useMemo(
+    () => sortedBlocks.some(b => b.approvalStatus === 'pending'),
+    [sortedBlocks]
+  );
   const currentDayFullName = t[`sdb_day_${selectedDayKey}` as keyof typeof t] as string;
 
-  // Stats for today's verification
+  // Stats for today's verification (strictly excludes rejected proposed meals without generating slips)
   const verificationStats = isToday
-    ? getDailyVerificationStats(sortedBlocks.length)
+    ? getDailyVerificationStats(
+        activeScheduledBlocks.length,
+        todayDateKey,
+        activeScheduledBlocks.map(b => b.id)
+      )
     : null;
 
   // Unplanned food & neutral logs: logged on Today without a pre-existing planned block
@@ -6832,7 +7503,12 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                         <span className="sdb-day-mode-label">{t.sdb_day_type}</span>
                         <TermHelp termKey="sd" btnId="btn-help-day-type" />
                       </div>
-                      <div className="sdb-mode-cards-grid" role="radiogroup" aria-label={t.sdb_day_type}>
+                      <div
+                        className="sdb-mode-cards-grid"
+                        lang={lang}
+                        role="radiogroup"
+                        aria-label={t.sdb_day_type}
+                      >
                         <button
                           id="sdb-mode-btn-structured"
                           type="button"
@@ -6930,6 +7606,24 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
 
                   {/* ── Quick Actions 2-Column Grid + Primary Full-Width CTA ── */}
                   <div className="sdb-quick-actions-container">
+                    <button
+                      id="btn-sdb-smart-wizard"
+                      type="button"
+                      className="sdb-wizard-launch-card"
+                      onClick={() => setShowSmartWizard(true)}
+                    >
+                      <span className="sdb-wizard-launch-icon" aria-hidden="true">
+                        ✨
+                      </span>
+                      <span className="sdb-wizard-launch-copy">
+                        <strong className="sdb-wizard-launch-title">{t.wiz_entry_btn}</strong>
+                        <span className="sdb-wizard-launch-sub">{t.wiz_entry_sub}</span>
+                      </span>
+                      <span className="sdb-wizard-launch-arrow" aria-hidden="true">
+                        →
+                      </span>
+                    </button>
+
                     <div className="sdb-quick-actions-grid">
                       <button
                         id="btn-sdb-quick-build"
@@ -6991,6 +7685,23 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                           </svg>
                         </span>
                         <span className="sdb-action-grid-label">{t.sdb_neutral_log || 'Neutral Log'}</span>
+                      </button>
+                      <button
+                        id="btn-sdb-meal-library"
+                        type="button"
+                        className="sdb-action-grid-btn sdb-action-grid-btn--span-full"
+                        onClick={() => setMealLibraryModal({ mode: 'browse', targetBlock: null })}
+                      >
+                        <span className="sdb-action-grid-icon" aria-hidden="true">
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                          </svg>
+                        </span>
+                        <span className="sdb-action-grid-label">
+                          {t.mlib_open_btn}
+                          {libraryMealsCount > 0 ? ` (${libraryMealsCount})` : ''}
+                        </span>
                       </button>
                     </div>
 
@@ -7163,6 +7874,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                       onDelete={() => handleDeleteBlock(block.id)}
                       t={t}
                       isToday={false}
+                      onSwapAlternative={altId => handleSwapAlternative(block.id, altId)}
+                      onSaveToLibrary={() => handleSaveBlockToLibrary(block)}
+                      onOpenLibraryReplace={() =>
+                        setMealLibraryModal({ mode: 'apply_to_block', targetBlock: block })
+                      }
+                      onOpenLibraryAddAlternative={() =>
+                        setMealLibraryModal({ mode: 'add_alternative', targetBlock: block })
+                      }
                       verification={undefined}
                       onVerifyOnTrack={() => {}}
                       onOpenSlipModal={() => {}}
@@ -7292,9 +8011,42 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
               ) : (
                 <div className="sdb-schedule-section">
                   <div className="sdb-schedule-section-head">
-                    <span className="sdb-schedule-section-label">{t.sdb_schedule_section_label}</span>
-                    <span className="sdb-schedule-count-pill">{sortedBlocks.length} {t.sdb_tpl_blocks_unit}</span>
+                    <div className="sdb-schedule-head-left">
+                      <span className="sdb-schedule-section-label">{t.sdb_schedule_section_label}</span>
+                      <span className="sdb-schedule-count-pill">
+                        {activeScheduledBlocks.length} {t.sdb_tpl_blocks_unit}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      id="btn-sdb-toggle-review-mode"
+                      className={`sdb-review-mode-btn ${
+                        isStructureReviewMode || hasPendingApprovalBlocks ? 'is-active' : ''
+                      }`}
+                      onClick={() => setIsStructureReviewMode(prev => !prev)}
+                    >
+                      <span>✓</span>
+                      <span>
+                        {isStructureReviewMode
+                          ? t.sdb_vc_exit_review_btn
+                          : t.sdb_vc_review_structure_btn}
+                      </span>
+                    </button>
                   </div>
+
+                  {(hasPendingApprovalBlocks || isStructureReviewMode) && (
+                    <div className="sdb-structure-review-banner" id="sdb-pending-structure-banner">
+                      <div className="sdb-structure-review-copy">
+                        <strong className="sdb-structure-review-title">
+                          {t.sdb_vc_pending_banner_title}
+                        </strong>
+                        <span className="sdb-structure-review-sub">
+                          {t.sdb_vc_pending_banner_sub}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="sdb-block-list">
                     {sortedBlocks.map(block => {
                       const verification = isToday && todayVerification
@@ -7305,10 +8057,27 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                         <BlockCard
                           key={block.id}
                           block={block}
-                          onEdit={() => setEditingBlock(block)}
+                          onEdit={() => {
+                            setModifyingApprovalBlockId(null);
+                            setEditingBlock(block);
+                          }}
+                          onModifyForApproval={() => {
+                            setModifyingApprovalBlockId(block.id);
+                            setEditingBlock(block);
+                          }}
                           onDelete={() => handleDeleteBlock(block.id)}
                           t={t}
                           isToday={isToday}
+                          isStructureReviewMode={isStructureReviewMode}
+                          onSetApprovalStatus={status => handleSetBlockApproval(block.id, status)}
+                          onSwapAlternative={altId => handleSwapAlternative(block.id, altId)}
+                          onSaveToLibrary={() => handleSaveBlockToLibrary(block)}
+                          onOpenLibraryReplace={() =>
+                            setMealLibraryModal({ mode: 'apply_to_block', targetBlock: block })
+                          }
+                          onOpenLibraryAddAlternative={() =>
+                            setMealLibraryModal({ mode: 'add_alternative', targetBlock: block })
+                          }
                           verification={verification}
                           onVerifyOutcome={(outcome, status) => handleVerifyOutcome(block, outcome, status)}
                           onToggleResumed={() => handleToggleResumed(block.id)}
@@ -7327,6 +8096,18 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                       );
                     })}
                   </div>
+
+                  {(hasPendingApprovalBlocks || isStructureReviewMode) && (
+                    <button
+                      type="button"
+                      id="btn-sdb-accept-daily-structure"
+                      className="sdb-accept-structure-cta"
+                      onClick={handleAcceptAllDailyStructure}
+                    >
+                      <span className="sdb-accept-structure-check" aria-hidden="true">✓</span>
+                      <span>{t.sdb_vc_accept_structure_cta}</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -7423,7 +8204,17 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           }
           isToday={isToday}
           selectedDayName={currentDayFullName}
-          onSave={handleSaveBlock}
+          markModifiedOnSave={
+            editingBlock !== 'new' && modifyingApprovalBlockId === editingBlock.id
+          }
+          onSave={(savedBlk, outcome, applyToRec) => {
+            setModifyingApprovalBlockId(null);
+            handleSaveBlock(savedBlk, outcome, applyToRec);
+          }}
+          onSavedToLibrary={() => {
+            setLibraryMealsCount(loadMealLibraryStore().meals.length);
+            showTransientToast(t.mlib_saved_toast);
+          }}
           onAutosaveQuantities={
             editingBlock !== 'new'
               ? (nextQuantities: FoodQuantitiesMap) => {
@@ -7435,7 +8226,10 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                 }
               : undefined
           }
-          onCancel={() => setEditingBlock(null)}
+          onCancel={() => {
+            setModifyingApprovalBlockId(null);
+            setEditingBlock(null);
+          }}
           t={t}
         />
       )}
@@ -7734,6 +8528,42 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
           t={t}
         />
       )}
+
+      {/* ── Personal Meal Library Modal (Final Completion Phase 2) ── */}
+      <PersonalMealLibraryModal
+        isOpen={Boolean(mealLibraryModal)}
+        mode={mealLibraryModal?.mode || 'browse'}
+        targetBlock={mealLibraryModal?.targetBlock}
+        onClose={() => setMealLibraryModal(null)}
+        onSelectMeal={handleSelectFromMealLibrary}
+      />
+
+      {/* ── Smart Structured Diet Wizard (Final Completion Phase 3) ── */}
+      <SmartDietWizardModal
+        isOpen={showSmartWizard}
+        onClose={() => setShowSmartWizard(false)}
+        onPlanSaved={(result, toastMsg) => {
+          const freshStore = loadDietStore();
+          const freshActive = getActiveProfile(freshStore);
+          setDietStore(freshStore);
+          setWeekly(freshActive.diet);
+          setNameText(freshActive.diet.planName);
+          if (result.destination === 'today_only') {
+            setSelectedDayKey(getLocalTodayKey());
+          } else if (
+            result.destination === 'selected_weekdays' &&
+            result.updatedDays &&
+            result.updatedDays.length > 0 &&
+            !result.updatedDays.includes(selectedDayKey)
+          ) {
+            setSelectedDayKey(result.updatedDays[0]);
+          }
+          setShowSmartWizard(false);
+          setCopyFeedback(toastMsg);
+          setTimeout(() => setCopyFeedback(null), 3500);
+          playFeedback('win');
+        }}
+      />
     </div>
   );
 }

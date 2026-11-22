@@ -96,7 +96,7 @@ export function getNextPlannedBlock(
     Array.isArray(options.yesterdayDay.blocks)
   ) {
     const yesterdayCandidates = options.yesterdayDay.blocks
-      .filter((b) => b && !NON_MEAL_BLOCK_TYPES.has(String(b.type || '').trim().toLowerCase()))
+      .filter((b) => b && b.approvalStatus !== 'rejected' && !NON_MEAL_BLOCK_TYPES.has(String(b.type || '').trim().toLowerCase()))
       .filter((b) => !yesterdayCompleted.has(b.id) && !completed.has(b.id))
       .map((b) => ({
         b,
@@ -120,7 +120,7 @@ export function getNextPlannedBlock(
   if (!day || day.mode !== 'structured' || !Array.isArray(day.blocks)) return null;
 
   const candidates = day.blocks
-    .filter((b) => b && !NON_MEAL_BLOCK_TYPES.has(String(b.type || '').trim().toLowerCase()))
+    .filter((b) => b && b.approvalStatus !== 'rejected' && !NON_MEAL_BLOCK_TYPES.has(String(b.type || '').trim().toLowerCase()))
     .filter((b) => !completed.has(b.id))
     .map((b) => {
       const start = parseTimeToMinutes(b.startTime);

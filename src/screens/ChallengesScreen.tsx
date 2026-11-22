@@ -29,6 +29,9 @@ import {
   OPEN_CHALLENGE_CHECKIN_EVENT,
   CHALLENGE_OPEN_CHECKIN_KEY,
   CHALLENGE_PRESELECT_DURATION_KEY,
+  CHALLENGE_OPEN_DURATION_MODAL_KEY,
+  getPreferredChallengeDuration,
+  savePreferredChallengeDuration,
   ChallengeInstance,
   ChallengeDurationDays,
   ChallengeAbilityId,
@@ -63,6 +66,7 @@ import {
   recordAchievementBookContext,
 } from '../utils/achievementRewardsStorage';
 import { HoldCommitButton } from '../components/HoldCommitButton';
+import { ChallengeDurationConfirmModal } from '../components/ChallengeDurationConfirmModal';
 import { ChallengeCheckInModal } from '../components/ChallengeCheckInModal';
 import { ChallengeDietSummaryCard } from '../components/ChallengeDietSummaryCard';
 import { ChallengeMilestoneModal } from '../components/ChallengeMilestoneModal';
@@ -376,7 +380,32 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     }
     return null;
   });
-  const [selectedDuration, setSelectedDuration] = useState<ChallengeDurationDays>(preselectedDuration ?? 7);
+  const [selectedDuration, setSelectedDuration] = useState<ChallengeDurationDays>(
+    () => preselectedDuration ?? getPreferredChallengeDuration() ?? 7
+  );
+
+  // Phase 5C: One-shot modal trigger from external Start Challenge CTAs + Duration Confirmation Modal state
+  const [shouldOpenDurationModalOnMount] = useState<boolean>(() => {
+    try {
+      const flag = sessionStorage.getItem(CHALLENGE_OPEN_DURATION_MODAL_KEY);
+      if (flag) {
+        sessionStorage.removeItem(CHALLENGE_OPEN_DURATION_MODAL_KEY);
+        return true;
+      }
+    } catch {
+      // ignore storage access issues
+    }
+    return false;
+  });
+  const [showDurationConfirmModal, setShowDurationConfirmModal] = useState<boolean>(() => {
+    if (!shouldOpenDurationModalOnMount) return false;
+    try {
+      const current = syncCurrentChallenge();
+      return !current || current.status !== 'active';
+    } catch {
+      return false;
+    }
+  });
 
   // Phase 41B: Reminder preferences state
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
@@ -442,7 +471,9 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
   const [isMovementOpen, setIsMovementOpen] = useState<boolean>(false);
 
   // Phase 41H.4: Completion view state
-  const [showingStartWizard, setShowingStartWizard] = useState(preselectedDuration !== null);
+  const [showingStartWizard, setShowingStartWizard] = useState(
+    preselectedDuration !== null || shouldOpenDurationModalOnMount
+  );
 
   const latestCompletedChallenge = useMemo(() => {
     return history.find((c) => c.status === 'completed') || null;
@@ -699,12 +730,38 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
     }
   };
 
-  const handleStartChallenge = () => {
+  const openDurationConfirmModal = useCallback((initialDuration?: ChallengeDurationDays) => {
+    const liveActive = syncCurrentChallenge();
+    if (liveActive && liveActive.status === 'active') {
+      setActiveChallenge(liveActive);
+      return;
+    }
+    if (
+      initialDuration &&
+      RESUME_ABILITY_CHALLENGE_DEFINITION.supportedDurations.includes(initialDuration)
+    ) {
+      setSelectedDuration(initialDuration);
+    }
+    setShowDurationConfirmModal(true);
+  }, []);
+
+  const handleConfirmStartChallenge = (confirmedDuration: ChallengeDurationDays) => {
     try {
       setErrorMessage(null);
+      const liveActive = syncCurrentChallenge();
+      if (liveActive && liveActive.status === 'active') {
+        setShowDurationConfirmModal(false);
+        setActiveChallenge(liveActive);
+        return;
+      }
+
+      setSelectedDuration(confirmedDuration);
+      savePreferredChallengeDuration(confirmedDuration);
+      setShowDurationConfirmModal(false);
+
       const newInstance = startChallenge(
         selectedAbility,
-        selectedDuration,
+        confirmedDuration,
         undefined,
         remindersEnabled
           ? {
@@ -1171,7 +1228,13 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                 type="button"
                 id="btn-history-start-challenge"
                 className="sda-hist-empty-cta"
-                onClick={() => setViewTab('challenge')}
+                onClick={() => {
+                  setViewTab('challenge');
+                  if (!activeChallenge || activeChallenge.status !== 'active') {
+                    setShowingStartWizard(true);
+                    openDurationConfirmModal(selectedDuration);
+                  }
+                }}
               >
                 <AppIcon
                   name={activeChallenge && activeChallenge.status === 'active' ? 'target' : 'zap'}
@@ -2303,41 +2366,24 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                     {/* 4 Action Cards: Book 1 (Recovery) vs Book 2 (Loss-Maintenance) */}
                     {!isBook2Active ? (
                       <div className="sda-pl-actions-grid" role="group" aria-label={t.pl_title}>
-                        {/* 1. I Slipped (Warm Gold) */}
+                        {/* 1. Top-Left: I Am On Track — Re-Commit / Re-Pledge (Blue) */}
                         <button
                           type="button"
-                          id="btn-pl-slipped"
-                          className="sda-pl-action-card sda-pl-action-card--gold"
-                          onClick={() => openCheckInModal('slip')}
+                          id="btn-pl-recommit"
+                          className="sda-pl-action-card sda-pl-action-card--blue"
+                          onClick={() => onNavigate('recommit')}
                         >
                           <span className="sda-pl-action-icon" aria-hidden="true">
-                            <PracticeSlipBoltSvg />
+                            <PracticeRecommitShieldSvg />
                           </span>
                           <span className="sda-pl-action-copy">
-                            <span className="sda-pl-action-title">{t.pl_action_slipped_title}</span>
-                            <span className="sda-pl-action-sub">{t.pl_action_slipped_sub}</span>
+                            <span className="sda-pl-action-title">{t.pl_action_recommit_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_recommit_sub}</span>
                           </span>
                           <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
                         </button>
 
-                        {/* 2. I Am Drifting (Purple) */}
-                        <button
-                          type="button"
-                          id="btn-pl-drifting"
-                          className="sda-pl-action-card sda-pl-action-card--purple"
-                          onClick={() => openCheckInModal('off-structure-aware')}
-                        >
-                          <span className="sda-pl-action-icon" aria-hidden="true">
-                            <PracticeDriftWavesSvg />
-                          </span>
-                          <span className="sda-pl-action-copy">
-                            <span className="sda-pl-action-title">{t.pl_action_drifting_title}</span>
-                            <span className="sda-pl-action-sub">{t.pl_action_drifting_sub}</span>
-                          </span>
-                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
-                        </button>
-
-                        {/* 3. I Resumed (Emerald) */}
+                        {/* 2. Top-Right: I Resumed — Back on structure (Emerald) */}
                         <button
                           type="button"
                           id="btn-pl-resumed"
@@ -2354,19 +2400,36 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                           <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
                         </button>
 
-                        {/* 4. Re-Commit (Blue) */}
+                        {/* 3. Bottom-Left: I Slipped — Report a slip (Warm Gold) */}
                         <button
                           type="button"
-                          id="btn-pl-recommit"
-                          className="sda-pl-action-card sda-pl-action-card--blue"
-                          onClick={() => onNavigate('recommit')}
+                          id="btn-pl-slipped"
+                          className="sda-pl-action-card sda-pl-action-card--gold"
+                          onClick={() => openCheckInModal('slip')}
                         >
                           <span className="sda-pl-action-icon" aria-hidden="true">
-                            <PracticeRecommitShieldSvg />
+                            <PracticeSlipBoltSvg />
                           </span>
                           <span className="sda-pl-action-copy">
-                            <span className="sda-pl-action-title">{t.pl_action_recommit_title}</span>
-                            <span className="sda-pl-action-sub">{t.pl_action_recommit_sub}</span>
+                            <span className="sda-pl-action-title">{t.pl_action_slipped_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_slipped_sub}</span>
+                          </span>
+                          <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
+                        </button>
+
+                        {/* 4. Bottom-Right: I Am Drifting — Report time off structure (Purple) */}
+                        <button
+                          type="button"
+                          id="btn-pl-drifting"
+                          className="sda-pl-action-card sda-pl-action-card--purple"
+                          onClick={() => openCheckInModal('off-structure-aware')}
+                        >
+                          <span className="sda-pl-action-icon" aria-hidden="true">
+                            <PracticeDriftWavesSvg />
+                          </span>
+                          <span className="sda-pl-action-copy">
+                            <span className="sda-pl-action-title">{t.pl_action_drifting_title}</span>
+                            <span className="sda-pl-action-sub">{t.pl_action_drifting_sub}</span>
                           </span>
                           <AppIcon name="chevron-right" size={16} className="sda-pl-action-chevron" />
                         </button>
@@ -3373,7 +3436,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                     id="btn-completion-start-new"
                     type="button"
                     className="completion-btn-primary"
-                    onClick={() => setShowingStartWizard(true)}
+                    onClick={() => {
+                      setShowingStartWizard(true);
+                      openDurationConfirmModal(completedChallengeToSummarize.durationDays);
+                    }}
                   >
                     <AppIcon name="zap" size={16} />
                     <span>{t.challenge_completion_btn_start_new || 'Start a New Challenge'}</span>
@@ -3796,7 +3862,10 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                         holdingLabel={t.challenge_starting || 'STARTING CHALLENGE...'}
                         subLabel={t.challenge_hold_sub_commit || 'PRESS AND HOLD TO COMMIT'}
                         icon={<GoldenBoltSvg />}
-                        onComplete={handleStartChallenge}
+                        onComplete={() => {
+                          openDurationConfirmModal(selectedDuration);
+                          return false;
+                        }}
                         id="btn-hold-start-challenge"
                       />
                     </div>
@@ -3807,6 +3876,17 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
           )}
         </>
       )}
+
+      {/* ── Phase 5C: Challenge Duration Selection & Confirmation Modal ── */}
+      <ChallengeDurationConfirmModal
+        isOpen={
+          showDurationConfirmModal && (!activeChallenge || activeChallenge.status !== 'active')
+        }
+        initialDuration={selectedDuration}
+        abilityName={RESUME_ABILITY_CHALLENGE_DEFINITION.canonicalName}
+        onConfirm={handleConfirmStartChallenge}
+        onCancel={() => setShowDurationConfirmModal(false)}
+      />
 
       {/* ── Cancellation Confirmation Modal ── */}
       {showCancelModal && (

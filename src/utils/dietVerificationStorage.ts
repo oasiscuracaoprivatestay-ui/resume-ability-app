@@ -12,8 +12,21 @@
  * Deterministic local date handling (YYYY-MM-DD), never uses UTC date shifts.
  */
 
-import type { DayKey, StructuredDietBlock, MealTypeKey } from './dietStorage';
-import { getLocalTodayKey, getBlockPhotos, calculateEndTimeFromStart } from './dietStorage';
+import type {
+  DayKey,
+  StructuredDietBlock,
+  MealTypeKey,
+  MealApprovalStatus,
+  MealAlternativeOption,
+  MealImageRef,
+} from './dietStorage';
+import {
+  getLocalTodayKey,
+  getBlockPhotos,
+  calculateEndTimeFromStart,
+  cloneMealAlternative,
+  cloneMealImageRef,
+} from './dietStorage';
 import type { FoodCategoryKey } from '../data/dietData';
 import type { FoodPhotoMetadata } from './photoStorage';
 import type { FoodQuantitiesMap, FoodItemQuantity, SoupPortionKey } from '../data/foodOptions';
@@ -80,6 +93,10 @@ export interface PlannedBlockSnapshot {
   recordType?: DietRecordType;
   foodPhoto?: FoodPhotoMetadata;
   foodPhotos?: FoodPhotoMetadata[];
+  libraryMealId?: string;
+  approvalStatus?: MealApprovalStatus;
+  alternatives?: MealAlternativeOption[];
+  imageRef?: MealImageRef;
 }
 
 export type DriftState = 'none' | 'started' | 'drifting' | 'stopped';
@@ -267,8 +284,16 @@ export function createPlannedBlockSnapshot(plannedBlock: StructuredDietBlock): P
       ? JSON.parse(JSON.stringify(plannedBlock.foodQuantities))
       : undefined,
     soupPortion: plannedBlock.soupPortion,
-    foodPhoto: plannedPhotos[0],
-    foodPhotos: plannedPhotos.length > 0 ? [...plannedPhotos] : undefined,
+    foodPhoto: plannedPhotos[0] ? { ...plannedPhotos[0] } : undefined,
+    foodPhotos: plannedPhotos.length > 0 ? plannedPhotos.map(p => ({ ...p })) : undefined,
+    ...(typeof plannedBlock.libraryMealId === 'string' && plannedBlock.libraryMealId.trim()
+      ? { libraryMealId: plannedBlock.libraryMealId.trim() }
+      : {}),
+    ...(plannedBlock.approvalStatus ? { approvalStatus: plannedBlock.approvalStatus } : {}),
+    ...(Array.isArray(plannedBlock.alternatives) && plannedBlock.alternatives.length > 0
+      ? { alternatives: plannedBlock.alternatives.map(a => cloneMealAlternative(a, false)) }
+      : {}),
+    ...(plannedBlock.imageRef ? { imageRef: cloneMealImageRef(plannedBlock.imageRef) } : {}),
   };
 }
 
@@ -333,6 +358,14 @@ export function saveBlockVerification(params: {
           ? JSON.parse(JSON.stringify(params.plannedBlock.customFoods))
           : daily.entries[existingIdx].plannedSnapshot.customFoods,
         soupPortion: params.plannedBlock.soupPortion ?? daily.entries[existingIdx].plannedSnapshot.soupPortion,
+        libraryMealId: params.plannedBlock.libraryMealId ?? daily.entries[existingIdx].plannedSnapshot.libraryMealId,
+        approvalStatus: params.plannedBlock.approvalStatus ?? daily.entries[existingIdx].plannedSnapshot.approvalStatus,
+        alternatives: params.plannedBlock.alternatives
+          ? params.plannedBlock.alternatives.map(a => cloneMealAlternative(a, false))
+          : daily.entries[existingIdx].plannedSnapshot.alternatives,
+        imageRef: params.plannedBlock.imageRef
+          ? cloneMealImageRef(params.plannedBlock.imageRef)
+          : daily.entries[existingIdx].plannedSnapshot.imageRef,
       }
     : createPlannedBlockSnapshot(params.plannedBlock);
 

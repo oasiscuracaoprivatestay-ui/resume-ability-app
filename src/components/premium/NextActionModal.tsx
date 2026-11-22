@@ -28,6 +28,7 @@ import {
   getLocalTodayKey,
   getLocalDateKey,
   getDayPlanForDate,
+  isBlockScheduleActive,
   updateDatePlan,
   sortBlocks,
   generateBlockId,
@@ -78,13 +79,16 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
     return getDayPlanForDate(weeklyDiet, todayDateKey);
   }, [weeklyDiet, todayDateKey]);
 
-  // Extract meal-worthy blocks for today (ignoring micro_fasting and kitchen_closed)
+  // Extract active meal/beverage blocks for today (excluding rejected, micro_fasting, and kitchen_closed)
   const availableBlocks = useMemo(() => {
-    if (!todayPlan || !Array.isArray(todayPlan.blocks)) return [];
-    return todayPlan.blocks.filter((b) => {
-      const type = (b.type || '').trim().toLowerCase();
-      return type !== 'micro_fasting' && type !== 'kitchen_closed';
-    });
+    if (!todayPlan || todayPlan.mode !== 'structured' || !Array.isArray(todayPlan.blocks)) return [];
+    return sortBlocks(
+      todayPlan.blocks.filter((b) => {
+        if (!isBlockScheduleActive(b)) return false;
+        const type = (b.type || '').trim().toLowerCase();
+        return type !== 'micro_fasting' && type !== 'kitchen_closed';
+      })
+    );
   }, [todayPlan]);
 
   // Initialize schedule form when switching to 'schedule' view

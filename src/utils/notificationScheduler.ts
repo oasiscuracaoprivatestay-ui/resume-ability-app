@@ -20,7 +20,13 @@ import {
   getLocalTodayDateKey,
 } from './notificationSettingsStorage';
 import { loadPledge } from './pledgeStorage';
-import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from './dietStorage';
+import {
+  loadWeeklyDiet,
+  getDayPlanForDate,
+  getLocalDateKey,
+  isBlockScheduleActive,
+  sortBlocks,
+} from './dietStorage';
 
 export interface ReminderCandidate {
   key: string;               // Unique reminder key for today (e.g. "2026-09-10_checkin_10:00")
@@ -98,16 +104,19 @@ export function buildCandidate(
 ): ReminderCandidate {
   if (type === 'structured-diet') {
     const weekly = loadWeeklyDiet();
-    const todayKey = getLocalTodayKey();
-    const todayPlan = getDayPlan(weekly, todayKey);
+    const todayPlan = getDayPlanForDate(weekly, getLocalDateKey());
+    const activeBlocks =
+      todayPlan.mode === 'structured'
+        ? sortBlocks((todayPlan.blocks || []).filter(isBlockScheduleActive))
+        : [];
 
-    // If today has upcoming blocks, see if one is nearby
+    // If today has upcoming active blocks, see if one is nearby
     let body = t.notif_rem_diet_body_general;
-    if (todayPlan.mode === 'structured' && todayPlan.blocks.length > 0) {
+    if (activeBlocks.length > 0) {
       const now = new Date();
       const currentMins = now.getHours() * 60 + now.getMinutes();
 
-      const upcoming = todayPlan.blocks.find(b => {
+      const upcoming = activeBlocks.find(b => {
         const bMins = parseMinutes(b.startTime);
         return bMins >= currentMins && bMins - currentMins <= 45;
       });
@@ -209,8 +218,7 @@ export function evaluateNextReminder(
   // Structured Diet only enabled if today is structured
   if (settings.structuredDietEnabled) {
     const weekly = loadWeeklyDiet();
-    const todayKey = getLocalTodayKey();
-    const todayPlan = getDayPlan(weekly, todayKey);
+    const todayPlan = getDayPlanForDate(weekly, todayDateKey);
     if (todayPlan.mode === 'structured') {
       enabledTypes.push('structured-diet');
     }

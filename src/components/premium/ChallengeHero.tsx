@@ -29,6 +29,7 @@ import {
   getCanonicalAbilityName,
   CHALLENGE_UPDATED_EVENT,
   CHALLENGE_PRESELECT_DURATION_KEY,
+  CHALLENGE_OPEN_DURATION_MODAL_KEY,
   type ChallengeInstance,
   type ChallengeDayProgress,
   type SnoozeOptionDays,
@@ -129,6 +130,7 @@ export function ChallengeHero({ onNavigate }: ChallengeHeroProps) {
       markChallengeInvitationPrompted();
       try {
         sessionStorage.setItem(CHALLENGE_PRESELECT_DURATION_KEY, String(FLAGSHIP_DURATION));
+        sessionStorage.setItem(CHALLENGE_OPEN_DURATION_MODAL_KEY, '1');
       } catch {
         // ignore
       }
@@ -183,6 +185,11 @@ export function ChallengeHero({ onNavigate }: ChallengeHeroProps) {
                 className="sda-hero-link-btn"
                 onClick={() => {
                   markChallengeInvitationPrompted();
+                  try {
+                    sessionStorage.setItem(CHALLENGE_OPEN_DURATION_MODAL_KEY, '1');
+                  } catch {
+                    // ignore
+                  }
                   onNavigate('challenges');
                 }}
               >

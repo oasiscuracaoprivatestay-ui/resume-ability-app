@@ -128,10 +128,13 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
         yesterdayCompletedBlockIds,
       });
 
-      // Check whether all scheduled meals/beverages for today were completed
+      // Check whether all scheduled meals/beverages for today were completed (excluding rejected proposed meals)
       const NON_MEAL_TYPES = new Set(['micro_fasting', 'kitchen_closed']);
       const scheduledMealBlocks = (todayDay?.blocks || []).filter(
-        (b) => b && !NON_MEAL_TYPES.has(String(b.type || '').trim().toLowerCase())
+        (b) =>
+          b &&
+          b.approvalStatus !== 'rejected' &&
+          !NON_MEAL_TYPES.has(String(b.type || '').trim().toLowerCase())
       );
       const hasPlannedMeals = scheduledMealBlocks.length > 0;
       const allCompleted =

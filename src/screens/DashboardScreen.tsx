@@ -15,8 +15,18 @@ import {
   getTotalCheckInCount,
 } from '../utils/checkInStorage';
 import { getNonNegotiableReviewCount } from '../utils/pledgeStorage';
-import { loadWeeklyDiet, getDayPlan, getLocalTodayKey } from '../utils/dietStorage';
-import { getDailyVerificationStats, loadAllDietVerifications, getLocalDateKey } from '../utils/dietVerificationStorage';
+import {
+  loadWeeklyDiet,
+  getDayPlanForDate,
+  isBlockScheduleActive,
+  DIET_UPDATED_EVENT,
+} from '../utils/dietStorage';
+import {
+  getDailyVerificationStats,
+  loadAllDietVerifications,
+  getLocalDateKey,
+  DIET_VERIFICATION_UPDATED_EVENT,
+} from '../utils/dietVerificationStorage';
 import { getAwarenessSummary } from '../utils/dietStructureAnalytics';
 import { STATS_RESET_EVENT } from '../utils/resetStats';
 import {
@@ -124,10 +134,14 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
     window.addEventListener(STATS_RESET_EVENT, handleReset);
     window.addEventListener(SCORE_UPDATED_EVENT, handleReset);
     window.addEventListener(ACTIVITIES_UPDATED_EVENT, handleReset);
+    window.addEventListener(DIET_UPDATED_EVENT, handleReset);
+    window.addEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleReset);
     return () => {
       window.removeEventListener(STATS_RESET_EVENT, handleReset);
       window.removeEventListener(SCORE_UPDATED_EVENT, handleReset);
       window.removeEventListener(ACTIVITIES_UPDATED_EVENT, handleReset);
+      window.removeEventListener(DIET_UPDATED_EVENT, handleReset);
+      window.removeEventListener(DIET_VERIFICATION_UPDATED_EVENT, handleReset);
     };
   }, []);
 
@@ -193,12 +207,15 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
 
   const dietStats = useMemo(() => {
     const weekly = loadWeeklyDiet();
-    const todayKey = getLocalTodayKey();
-    const todayPlan = getDayPlan(weekly, todayKey);
-    const scheduledBlocks = todayPlan.mode === 'structured' ? todayPlan.blocks : [];
+    const dateKey = getLocalDateKey();
+    const todayPlan = getDayPlanForDate(weekly, dateKey);
+    const scheduledBlocks =
+      todayPlan.mode === 'structured'
+        ? (todayPlan.blocks || []).filter(isBlockScheduleActive)
+        : [];
     const plannedCount = scheduledBlocks.length;
     const scheduledBlockIds = scheduledBlocks.map((b) => b.id);
-    return getDailyVerificationStats(plannedCount, getLocalDateKey(), scheduledBlockIds);
+    return getDailyVerificationStats(plannedCount, dateKey, scheduledBlockIds);
   }, [refreshKey]);
 
   const todayAwareness = useMemo(() => {
@@ -558,7 +575,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
                 {activitySummary.count}
               </span>
               <span className="dash-activity-stat-label">
-                {t.act_today_summary_count}
+                {t.act_today_summary_count.replace('{count}', String(activitySummary.count))}
               </span>
             </div>
             <div className="dash-activity-stat-card">
@@ -566,7 +583,7 @@ export default function DashboardScreen({ onNavigate, onBack }: DashboardScreenP
                 {activitySummary.totalDurationMinutes}m
               </span>
               <span className="dash-activity-stat-label">
-                {t.act_today_summary_minutes}
+                {t.act_today_summary_minutes.replace('{minutes}', String(activitySummary.totalDurationMinutes))}
               </span>
             </div>
           </div>

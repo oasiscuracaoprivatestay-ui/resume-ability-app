@@ -25,6 +25,7 @@ import {
   getDayPlanForDate,
   getBlockPrimaryDescription,
   getLocalDateKey,
+  isBlockScheduleActive,
   isOvernightBlock,
   loadDietStore,
   sortBlocks,
@@ -228,11 +229,12 @@ export function resolveNextScheduledBlockForDate(options?: {
   const activeProfile = getActiveProfile(store);
   const dayPlan = getDayPlanForDate(activeProfile.diet, todayDateKey);
 
-  if (dayPlan.mode === 'structured' && dayPlan.blocks.length === 0) {
+  const activeTodayBlocks = dayPlan.blocks.filter(isBlockScheduleActive);
+  if (dayPlan.mode === 'structured' && activeTodayBlocks.length === 0) {
     return null;
   }
 
-  const sortedToday = sortBlocks(dayPlan.blocks);
+  const sortedToday = sortBlocks(activeTodayBlocks);
   const dailyVerif = getDailyDietVerification(todayDateKey);
   const verifiedPlannedIds = new Set(
     (dailyVerif?.entries || [])
@@ -265,7 +267,7 @@ export function resolveNextScheduledBlockForDate(options?: {
   if (includeTomorrow) {
     const tomorrowDateKey = addDaysToDateKey(todayDateKey, 1);
     const tomorrowPlan = getDayPlanForDate(activeProfile.diet, tomorrowDateKey);
-    const sortedTomorrow = sortBlocks(tomorrowPlan.blocks);
+    const sortedTomorrow = sortBlocks(tomorrowPlan.blocks.filter(isBlockScheduleActive));
     if (sortedTomorrow.length > 0) {
       return buildBlockInfo(sortedTomorrow[0], 'tomorrow', t);
     }
@@ -399,7 +401,7 @@ export function evaluateBook1PracticeLoopGuidance(params?: {
   const dietStore = loadDietStore();
   const activeProfile = getActiveProfile(dietStore);
   const dayPlan = getDayPlanForDate(activeProfile.diet, todayDateKey);
-  const sortedBlocks = sortBlocks(dayPlan.blocks);
+  const sortedBlocks = sortBlocks(dayPlan.blocks.filter(isBlockScheduleActive));
   const scheduledIds = sortedBlocks.map((b) => b.id);
   const dietStats = getDailyVerificationStats(sortedBlocks.length, todayDateKey, scheduledIds);
 
@@ -761,7 +763,7 @@ export function evaluateBook2PracticeLoopGuidance(params?: {
   const dietStore = loadDietStore();
   const activeProfile = getActiveProfile(dietStore);
   const dayPlan = getDayPlanForDate(activeProfile.diet, todayDateKey);
-  const sortedBlocks = sortBlocks(dayPlan.blocks);
+  const sortedBlocks = sortBlocks(dayPlan.blocks.filter(isBlockScheduleActive));
   const scheduledIds = sortedBlocks.map((b) => b.id);
   const dietStats = getDailyVerificationStats(sortedBlocks.length, todayDateKey, scheduledIds);
 

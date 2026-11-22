@@ -10,7 +10,13 @@
  * - Emits 'resume-ability:challenge-updated' window events on change for reactive UI.
  */
 
-import type { ChallengeInstance, ChallengeStore, ChallengeInvitationState, SnoozeOptionDays } from './types';
+import type {
+  ChallengeInstance,
+  ChallengeStore,
+  ChallengeInvitationState,
+  ChallengeDurationDays,
+  SnoozeOptionDays,
+} from './types';
 
 export const CHALLENGE_STORAGE_KEY = 'resume-ability-challenges';
 export const CHALLENGE_UPDATED_EVENT = 'resume-ability:challenge-updated';
@@ -18,6 +24,34 @@ export const OPEN_CHALLENGE_CHECKIN_EVENT = 'resume-ability:open-challenge-check
 export const CHALLENGE_OPEN_CHECKIN_KEY = 'challenge_open_checkin';
 /** Phase 2: sessionStorage one-shot hint used by the Home flagship invite to preselect a duration. */
 export const CHALLENGE_PRESELECT_DURATION_KEY = 'challenge_preselect_duration';
+/** Phase 5C: sessionStorage one-shot hint used by Start Challenge CTAs to open the Duration Confirmation modal. */
+export const CHALLENGE_OPEN_DURATION_MODAL_KEY = 'sda_open_challenge_duration_modal';
+/** Phase 5C: localStorage key storing the user's most recently confirmed Challenge duration preference. */
+export const CHALLENGE_PREFERRED_DURATION_KEY = 'sda_preferred_challenge_duration';
+
+const VALID_DURATIONS: readonly ChallengeDurationDays[] = [1, 3, 7, 30, 90];
+
+export function getPreferredChallengeDuration(): ChallengeDurationDays | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CHALLENGE_PREFERRED_DURATION_KEY);
+    if (!raw) return null;
+    const n = Number(raw);
+    return VALID_DURATIONS.includes(n as ChallengeDurationDays) ? (n as ChallengeDurationDays) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function savePreferredChallengeDuration(duration: ChallengeDurationDays): void {
+  if (typeof localStorage === 'undefined') return;
+  if (!VALID_DURATIONS.includes(duration)) return;
+  try {
+    localStorage.setItem(CHALLENGE_PREFERRED_DURATION_KEY, String(duration));
+  } catch {
+    // ignore storage errors
+  }
+}
 
 /** Default cooldown between invitation prompts: 24 hours (ms) */
 export const CHALLENGE_INVITATION_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -329,23 +363,31 @@ export function setChallengeWelcomeAutoShowEnabled(enabled: boolean): void {
 
 /**
  * Checks whether the Welcome Popup has already been shown/dismissed during this browser session.
+ * When `challengeId` is provided, returns true if the popup was already dismissed for that
+ * specific challenge (or marked globally `'true'`), allowing a newly confirmed challenge with
+ * a fresh ID to synchronize cleanly without duplicating for the same challenge.
  */
-export function wasChallengeWelcomeShownThisSession(): boolean {
+export function wasChallengeWelcomeShownThisSession(challengeId?: string): boolean {
   if (typeof sessionStorage === 'undefined') return false;
   try {
-    return sessionStorage.getItem(CHALLENGE_WELCOME_SESSION_KEY) === 'true';
+    const val = sessionStorage.getItem(CHALLENGE_WELCOME_SESSION_KEY);
+    if (!val) return false;
+    if (val === 'true') return true;
+    if (challengeId) return val === challengeId;
+    return true;
   } catch {
     return false;
   }
 }
 
 /**
- * Marks the Welcome Popup as shown for the remainder of this continuous usage session.
+ * Marks the Welcome Popup as shown for the remainder of this continuous usage session
+ * (scoped to `challengeId` when provided, or `'true'` for backward compatibility).
  */
-export function markChallengeWelcomeShownThisSession(): void {
+export function markChallengeWelcomeShownThisSession(challengeId?: string): void {
   if (typeof sessionStorage === 'undefined') return;
   try {
-    sessionStorage.setItem(CHALLENGE_WELCOME_SESSION_KEY, 'true');
+    sessionStorage.setItem(CHALLENGE_WELCOME_SESSION_KEY, challengeId || 'true');
   } catch {
     // ignore storage restrictions
   }
@@ -358,7 +400,7 @@ export function markChallengeWelcomeShownThisSession(): void {
  * 1. An eligible active challenge MUST exist and have status 'active'.
  * 2. Excludes completed, cancelled, or missing challenges.
  * 3. User must NOT have disabled automatic popups.
- * 4. Popup must NOT have already shown or been dismissed during the current session.
+ * 4. Popup must NOT have already shown or been dismissed for this challenge during the current session.
  */
 export function canShowActiveChallengeWelcomePopup(challenge: ChallengeInstance | null): boolean {
   if (!challenge || challenge.status !== 'active') {
@@ -367,7 +409,7 @@ export function canShowActiveChallengeWelcomePopup(challenge: ChallengeInstance 
   if (!isChallengeWelcomeAutoShowEnabled()) {
     return false;
   }
-  if (wasChallengeWelcomeShownThisSession()) {
+  if (wasChallengeWelcomeShownThisSession(challenge.id)) {
     return false;
   }
   return true;

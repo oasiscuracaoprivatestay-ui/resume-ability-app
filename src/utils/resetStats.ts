@@ -6,6 +6,7 @@
  *   - Why reason(s)
  *   - Non-Negotiable list
  *   - Weekly Structured Diet plan (all 7 days, blocks, foods, times)
+ *   - Personal Meal Library (reusable custom meals and their referenced photos)
  *   - Reminder settings & notification preferences
  *   - Language preference
  *   - Audio playback mode
@@ -25,8 +26,9 @@ import { clearAllDailyReviews } from './dailyReviewStorage';
 import { CELEBRATED_LEVEL_KEY } from './progressionEngine';
 import { clearAllActivities } from '../activities';
 import { clearProgressVictories } from './progressVictoriesStorage';
-import { cleanupOrphanPhotos } from './photoStorage';
+import { cleanupOrphanPhotos, collectActivePhotoIds } from './photoStorage';
 import { loadDietStore } from './dietStorage';
+import { loadMealLibraryStore } from './mealLibraryStorage';
 import { resetNinetyDayJourneyProgress } from '../challenges/ninetyDayJourneyStorage';
 import { clearBook2PracticeActivity } from '../challenges/book2PracticeStorage';
 import { clearAchievementRewardsStore } from './achievementRewardsStorage';
@@ -109,42 +111,15 @@ export function resetAllStats(options: ResetStatsOptions = { resetLifetimeScore:
     // 12d. Achievement personal notes & reward metadata (Phase 5C.2)
     clearAchievementRewardsStore();
 
-    // 13. Safe background cleanup of orphaned photos (e.g. progress photos, cleared verification photos)
+    // 13. Safe background cleanup of orphaned photos (preserves Diet schedules, overrides, snapshots, alternatives, and Personal Meal Library photos)
     try {
       const dietStore = loadDietStore();
-      const activePhotoIds = new Set<string>();
-      if (dietStore?.profiles) {
-        for (const profile of dietStore.profiles) {
-          const dayList = Array.isArray(profile.diet?.days)
-            ? profile.diet.days
-            : profile.diet?.days
-            ? Object.values(profile.diet.days)
-            : [];
-          for (const day of dayList) {
-            for (const b of (day as any)?.blocks || []) {
-              if (b.foodPhoto?.id) activePhotoIds.add(b.foodPhoto.id);
-              if (b.foodPhotos) {
-                for (const p of b.foodPhotos) {
-                  if (p?.id) activePhotoIds.add(p.id);
-                }
-              }
-            }
-          }
-          if (profile.diet?.historySnapshots) {
-            for (const snap of Object.values(profile.diet.historySnapshots)) {
-              for (const b of (snap as any)?.blocks || []) {
-                if (b.foodPhoto?.id) activePhotoIds.add(b.foodPhoto.id);
-                if (b.foodPhotos) {
-                  for (const p of b.foodPhotos) {
-                    if (p?.id) activePhotoIds.add(p.id);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      cleanupOrphanPhotos(activePhotoIds).catch(err => {
+      const mealLibraryStore = loadMealLibraryStore();
+      const activePhotoIds = collectActivePhotoIds({
+        store: dietStore,
+        mealLibrary: mealLibraryStore,
+      });
+      cleanupOrphanPhotos(activePhotoIds, { mealLibrary: mealLibraryStore }).catch(err => {
         console.warn('[ResetStats] Photo cleanup error (non-fatal):', err);
       });
     } catch {

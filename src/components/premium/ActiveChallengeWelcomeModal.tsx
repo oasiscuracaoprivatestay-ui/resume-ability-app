@@ -89,12 +89,12 @@ export const ActiveChallengeWelcomeModal: React.FC<ActiveChallengeWelcomeModalPr
   }
 
   const handleClose = () => {
-    markChallengeWelcomeShownThisSession();
+    markChallengeWelcomeShownThisSession(challenge.id);
     onClose();
   };
 
   const handleContinue = () => {
-    markChallengeWelcomeShownThisSession();
+    markChallengeWelcomeShownThisSession(challenge.id);
     onContinue();
   };
 

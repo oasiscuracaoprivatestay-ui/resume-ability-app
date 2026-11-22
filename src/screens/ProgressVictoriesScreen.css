@@ -45,7 +45,9 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
+  /* overflow-x: clip prevents horizontal overflow without creating a nested scrollport
+     that would break position: sticky offset below PersistentChallengeBar */
+  overflow-x: clip;
 }
 
 /* ── 1. Sticky Utility Topbar ── */
