@@ -210,6 +210,12 @@
   line-height: 1.3;
 }
 
+.challenge-diet-block-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .challenge-diet-block-desc {
   margin: 0;
   font-size: 13.6px;
@@ -219,6 +225,26 @@
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+.challenge-diet-block-alt {
+  margin: 0;
+  font-size: 12.6px;
+  color: #B9CFC8;
+  font-weight: 500;
+  line-height: 1.38;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.challenge-diet-line-prefix {
+  color: #2DD4B3;
+  font-weight: 700;
+}
+
+.challenge-diet-line-prefix--alt {
+  color: #99F6E4;
 }
 
 .challenge-diet-status-tag {

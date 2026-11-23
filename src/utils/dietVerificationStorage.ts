@@ -95,6 +95,7 @@ export interface PlannedBlockSnapshot {
   foodPhotos?: FoodPhotoMetadata[];
   libraryMealId?: string;
   approvalStatus?: MealApprovalStatus;
+  alternativeText?: string;
   alternatives?: MealAlternativeOption[];
   imageRef?: MealImageRef;
 }
@@ -290,6 +291,9 @@ export function createPlannedBlockSnapshot(plannedBlock: StructuredDietBlock): P
       ? { libraryMealId: plannedBlock.libraryMealId.trim() }
       : {}),
     ...(plannedBlock.approvalStatus ? { approvalStatus: plannedBlock.approvalStatus } : {}),
+    ...(typeof plannedBlock.alternativeText === 'string' && plannedBlock.alternativeText.trim()
+      ? { alternativeText: plannedBlock.alternativeText.trim() }
+      : {}),
     ...(Array.isArray(plannedBlock.alternatives) && plannedBlock.alternatives.length > 0
       ? { alternatives: plannedBlock.alternatives.map(a => cloneMealAlternative(a, false)) }
       : {}),
@@ -360,6 +364,10 @@ export function saveBlockVerification(params: {
         soupPortion: params.plannedBlock.soupPortion ?? daily.entries[existingIdx].plannedSnapshot.soupPortion,
         libraryMealId: params.plannedBlock.libraryMealId ?? daily.entries[existingIdx].plannedSnapshot.libraryMealId,
         approvalStatus: params.plannedBlock.approvalStatus ?? daily.entries[existingIdx].plannedSnapshot.approvalStatus,
+        alternativeText:
+          params.plannedBlock.alternativeText !== undefined
+            ? params.plannedBlock.alternativeText
+            : daily.entries[existingIdx].plannedSnapshot.alternativeText,
         alternatives: params.plannedBlock.alternatives
           ? params.plannedBlock.alternatives.map(a => cloneMealAlternative(a, false))
           : daily.entries[existingIdx].plannedSnapshot.alternatives,

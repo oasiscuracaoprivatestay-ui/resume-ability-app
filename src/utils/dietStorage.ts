@@ -93,6 +93,7 @@ export interface StructuredDietBlock {
   foodPhotos?: FoodPhotoMetadata[];   // Phase 6B: multi-photo support (food + beverages)
   libraryMealId?: string;             // Final Phase 1: optional link to PersonalMealLibraryItem.id
   approvalStatus?: MealApprovalStatus; // Final Phase 1: pre-meal plan approval; omitted = 'accepted'
+  alternativeText?: string;           // Optional backup/alternative food or beverage description
   alternatives?: MealAlternativeOption[]; // Final Phase 1: optional alternative meal options
   imageRef?: MealImageRef;            // Final Phase 1: optional primary image reference
 }
@@ -326,6 +327,120 @@ export function getBlockPrimaryDescription(
   }
 
   return typeName || 'Breakfast';
+}
+
+/**
+ * Resolves the optional alternative food or beverage description for a scheduled block.
+ * Supports both explicit `alternativeText` and structured `alternatives[0]` (including
+ * future Smart Structured Diet Wizard suggestions), returning `''` when no alternative exists.
+ */
+export function getBlockAlternativeDescription(
+  block?: {
+    alternativeText?: string;
+    alternatives?: MealAlternativeOption[];
+  } | null,
+  t?: Record<string, any>
+): string {
+  if (!block) return '';
+
+  const rawAltText = typeof block.alternativeText === 'string' ? block.alternativeText.trim() : '';
+  if (rawAltText) {
+    return resolveBuiltInMealText(rawAltText, t, { isUserCustomMeal: true });
+  }
+
+  if (Array.isArray(block.alternatives) && block.alternatives.length > 0) {
+    const firstAlt = block.alternatives[0];
+    const candidate = (firstAlt?.name || firstAlt?.customText || '').trim();
+    if (candidate) {
+      return resolveBuiltInMealText(candidate, t, {
+        isUserCustomMeal: Boolean(firstAlt?.libraryMealId),
+      });
+    }
+  }
+
+  return '';
+}
+
+/**
+ * Associates, updates, or clears the optional alternative food or beverage on a scheduled block
+ * without mutating the input block or overwriting any primary meal/beverage fields.
+ * Keeps `alternativeText` and `alternatives` synchronized for full Structured Diet & Wizard compatibility.
+ */
+export function applyAlternativeTextToBlock(
+  block: StructuredDietBlock,
+  rawAlternativeText?: string | null
+): StructuredDietBlock {
+  const cloned = cloneBlocks([block])[0];
+  const trimmedAlt = typeof rawAlternativeText === 'string' ? rawAlternativeText.trim() : '';
+  const prevAltText = typeof block.alternativeText === 'string' ? block.alternativeText.trim() : '';
+  const existingAlts = Array.isArray(cloned.alternatives)
+    ? cloned.alternatives.map(a => cloneMealAlternative(a, false))
+    : [];
+
+  if (trimmedAlt.length > 0) {
+    const syncedAlt: MealAlternativeOption = {
+      id: existingAlts[0]?.id?.startsWith('alt_text_')
+        ? existingAlts[0].id
+        : `alt_text_${cloned.id || generateBlockId()}`,
+      name: trimmedAlt,
+      customText: trimmedAlt,
+      type: cloned.type,
+      mealType: cloned.mealType,
+    };
+
+    let nextAlternatives: MealAlternativeOption[];
+    if (existingAlts.length === 0) {
+      nextAlternatives = [syncedAlt];
+    } else if (
+      existingAlts[0].id.startsWith('alt_text_') ||
+      (prevAltText && existingAlts[0].name.trim().toLowerCase() === prevAltText.toLowerCase())
+    ) {
+      nextAlternatives = [syncedAlt, ...existingAlts.slice(1)];
+    } else if (existingAlts[0].name.trim().toLowerCase() === trimmedAlt.toLowerCase()) {
+      nextAlternatives = existingAlts;
+    } else {
+      nextAlternatives = [syncedAlt, ...existingAlts];
+    }
+
+    return sanitiseBlock({
+      ...cloned,
+      alternativeText: trimmedAlt,
+      alternatives: nextAlternatives,
+    });
+  }
+
+  const remainingAlts = existingAlts.length > 1 ? existingAlts.slice(1) : [];
+  const nextAltText = remainingAlts[0]?.name?.trim() || undefined;
+  return sanitiseBlock({
+    ...cloned,
+    alternativeText: nextAltText,
+    alternatives: remainingAlts.length > 0 ? remainingAlts : undefined,
+  });
+}
+
+/**
+ * Removes a specific alternative option (or the primary alternative when `alternativeId` is omitted)
+ * without deleting or modifying the primary meal or scheduled time block.
+ */
+export function removeBlockAlternative(
+  block: StructuredDietBlock,
+  alternativeId?: string
+): StructuredDietBlock {
+  const cloned = cloneBlocks([block])[0];
+  const existingAlts = Array.isArray(cloned.alternatives)
+    ? cloned.alternatives.map(a => cloneMealAlternative(a, false))
+    : [];
+
+  const remainingAlts = alternativeId
+    ? existingAlts.filter(a => a.id !== alternativeId)
+    : existingAlts.slice(1);
+
+  const nextAltText = remainingAlts[0]?.name?.trim() || undefined;
+  return sanitiseBlock({
+    ...cloned,
+    alternativeText: nextAltText,
+    alternatives: remainingAlts.length > 0 ? remainingAlts : undefined,
+  });
 }
 
 export interface StructuredDietDay {
@@ -879,6 +994,9 @@ export function deepCloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBl
     ...(b.approvalStatus && (MEAL_APPROVAL_STATUSES as readonly string[]).includes(b.approvalStatus)
       ? { approvalStatus: b.approvalStatus }
       : {}),
+    ...(typeof b.alternativeText === 'string' && b.alternativeText.trim()
+      ? { alternativeText: b.alternativeText.trim() }
+      : {}),
     ...(Array.isArray(b.alternatives) && b.alternatives.length > 0
       ? { alternatives: b.alternatives.map(a => cloneMealAlternative(a, true)) }
       : {}),
@@ -914,6 +1032,9 @@ export function cloneBlocks(blocks: StructuredDietBlock[]): StructuredDietBlock[
       : {}),
     ...(b.approvalStatus && (MEAL_APPROVAL_STATUSES as readonly string[]).includes(b.approvalStatus)
       ? { approvalStatus: b.approvalStatus }
+      : {}),
+    ...(typeof b.alternativeText === 'string' && b.alternativeText.trim()
+      ? { alternativeText: b.alternativeText.trim() }
       : {}),
     ...(Array.isArray(b.alternatives) && b.alternatives.length > 0
       ? { alternatives: b.alternatives.map(a => cloneMealAlternative(a, false)) }
@@ -1783,6 +1904,11 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
       ? (b.approvalStatus as MealApprovalStatus)
       : undefined;
 
+  const rawAlternativeText =
+    typeof b.alternativeText === 'string' && b.alternativeText.trim().length > 0
+      ? b.alternativeText.trim()
+      : undefined;
+
   let alternatives: MealAlternativeOption[] | undefined;
   if (Array.isArray(b.alternatives) && b.alternatives.length > 0) {
     const cleanedAlts = b.alternatives
@@ -1790,6 +1916,17 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
       .filter((a): a is MealAlternativeOption => Boolean(a));
     if (cleanedAlts.length > 0) {
       alternatives = cleanedAlts;
+    }
+  } else if (rawAlternativeText) {
+    const synthesized = sanitiseMealAlternative({
+      id: `alt_text_${b.id}`,
+      name: rawAlternativeText,
+      customText: rawAlternativeText,
+      type: b.type,
+      mealType,
+    });
+    if (synthesized) {
+      alternatives = [synthesized];
     }
   }
 
@@ -1812,6 +1949,7 @@ export function sanitiseBlock(b: StructuredDietBlock): StructuredDietBlock {
     foodPhotos,
     ...(libraryMealId ? { libraryMealId } : {}),
     ...(approvalStatus ? { approvalStatus } : {}),
+    ...(rawAlternativeText ? { alternativeText: rawAlternativeText } : {}),
     ...(alternatives ? { alternatives } : {}),
     ...(imageRef ? { imageRef } : {}),
   };
@@ -1909,6 +2047,7 @@ export function swapBlockWithAlternative(
     foodPhotos: chosenPhotos.length > 0 ? chosenPhotos.map(p => ({ ...p })) : undefined,
     libraryMealId: chosenAlt.libraryMealId,
     approvalStatus: nextStatus,
+    alternativeText: remainingAlts[0]?.name?.trim() || undefined,
     alternatives: remainingAlts.length > 0 ? remainingAlts : undefined,
     imageRef: chosenAlt.imageRef ? cloneMealImageRef(chosenAlt.imageRef) : undefined,
   });

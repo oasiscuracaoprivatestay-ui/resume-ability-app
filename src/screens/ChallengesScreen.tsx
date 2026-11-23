@@ -2121,9 +2121,26 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                                         <span className="sda-pl-next-block-sep" aria-hidden="true">
                                           ·
                                         </span>
-                                        <span className="sda-pl-next-block-desc" id="next-step-block-desc">
-                                          {blk.primaryDescription}
-                                        </span>
+                                        {blk.alternativeDescription ? (
+                                          <span className="sda-pl-next-block-desc sda-pl-next-block-desc--pair" id="next-step-block-desc">
+                                            <span>
+                                              <strong className="sda-pl-next-prefix">
+                                                {t.meal_planned_prefix || 'Planned:'}
+                                              </strong>{' '}
+                                              {blk.primaryDescription}
+                                            </span>
+                                            <span className="sda-pl-next-alt-inline" id="next-step-block-alt">
+                                              <strong className="sda-pl-next-prefix sda-pl-next-prefix--alt">
+                                                {t.meal_alternative_prefix || 'Alternative:'}
+                                              </strong>{' '}
+                                              {blk.alternativeDescription}
+                                            </span>
+                                          </span>
+                                        ) : (
+                                          <span className="sda-pl-next-block-desc" id="next-step-block-desc">
+                                            {blk.primaryDescription}
+                                          </span>
+                                        )}
                                       </>
                                     ) : (
                                       <span className="sda-pl-next-block-empty" id="next-step-block-empty">
@@ -2313,9 +2330,26 @@ export const ChallengesScreen: React.FC<ChallengesScreenProps> = ({
                                         <span className="sda-pl-next-block-sep" aria-hidden="true">
                                           ·
                                         </span>
-                                        <span className="sda-pl-next-block-desc" id="next-step-block-desc">
-                                          {blk.primaryDescription}
-                                        </span>
+                                        {blk.alternativeDescription ? (
+                                          <span className="sda-pl-next-block-desc sda-pl-next-block-desc--pair" id="next-step-block-desc">
+                                            <span>
+                                              <strong className="sda-pl-next-prefix">
+                                                {t.meal_planned_prefix || 'Planned:'}
+                                              </strong>{' '}
+                                              {blk.primaryDescription}
+                                            </span>
+                                            <span className="sda-pl-next-alt-inline" id="next-step-block-alt">
+                                              <strong className="sda-pl-next-prefix sda-pl-next-prefix--alt">
+                                                {t.meal_alternative_prefix || 'Alternative:'}
+                                              </strong>{' '}
+                                              {blk.alternativeDescription}
+                                            </span>
+                                          </span>
+                                        ) : (
+                                          <span className="sda-pl-next-block-desc" id="next-step-block-desc">
+                                            {blk.primaryDescription}
+                                          </span>
+                                        )}
                                       </>
                                     ) : (
                                       <span className="sda-pl-next-block-empty" id="next-step-block-empty">

@@ -41,7 +41,7 @@ export interface GetNextPlannedBlockOptions {
 export function isBeverageBlock(block: StructuredDietBlock | null | undefined): boolean {
   if (!block) return false;
   const type = String(block.type || '').trim().toLowerCase();
-  if (type === 'beverages' || type === 'protein_shake') return true;
+  if (type === 'beverage' || type === 'beverages' || type === 'protein_shake') return true;
   if (Array.isArray(block.foodCategories) && block.foodCategories.length > 0) {
     return block.foodCategories.every((c) => c === 'beverages');
   }

@@ -284,12 +284,18 @@ export function resolveMealStockPhoto(target?: MealStockPhotoTarget | null): str
   }
 
   if (
+    rawType === 'beverage' ||
     rawType === 'beverages' ||
     (catTokens.length === 1 && catTokens[0] === 'beverages') ||
     ((textBlob.includes('herbal tea') || textBlob.includes('tea') || textBlob.includes('coffee')) &&
       catTokens.every(c => c === 'beverages' || c === 'simple_carbs' || c === 'fruits'))
   ) {
-    if (rawType === 'beverages' || textBlob.includes('rest_fluids') || textBlob.includes('rest & fluids')) {
+    if (
+      rawType === 'beverage' ||
+      rawType === 'beverages' ||
+      textBlob.includes('rest_fluids') ||
+      textBlob.includes('rest & fluids')
+    ) {
       return MEAL_STOCK_PHOTO_URLS.herbal_hydration;
     }
   }

@@ -10021,6 +10021,71 @@
   word-break: break-word;
 }
 
+.sdb-alt-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdb-clear-alt-inline-btn {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 179, 0.28);
+  background: rgba(13, 46, 37, 0.65);
+  color: #99F6E4;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.sdb-clear-alt-inline-btn:hover {
+  background: rgba(20, 66, 53, 0.9);
+  color: #FFFFFF;
+}
+
+.sdb-alt-field-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.76rem;
+  line-height: 1.38;
+  color: #9DC2B8;
+}
+
+.sdb-vcard-alt-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sdb-vcard-remove-alt-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 210, 197, 0.28);
+  background: rgba(11, 35, 28, 0.8);
+  color: #B9CFC8;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+}
+
+.sdb-vcard-remove-alt-btn:hover {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #FCA5A5;
+  background: rgba(50, 18, 20, 0.65);
+}
+
 .sdb-vcard-use-alt-btn {
   min-height: 38px;
   padding: 6px 12px;
@@ -10304,9 +10369,15 @@
     gap: 8px;
   }
 
-  .sdb-vcard-use-alt-btn {
+  .sdb-vcard-alt-actions {
     width: 100%;
+    display: flex;
+  }
+
+  .sdb-vcard-use-alt-btn {
+    flex: 1 1 auto;
     min-height: 40px;
+    justify-content: center;
   }
 
   .sdb-vcard-toolbar {

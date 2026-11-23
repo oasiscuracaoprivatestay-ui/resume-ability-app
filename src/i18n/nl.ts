@@ -3033,6 +3033,14 @@ export const nl: Translations = {
   ch_dur_window_label: 'Uitdagingsperiode',
   ch_dur_confirm_btn: 'Bevestig & Start Uitdaging',
   ch_dur_cancel_btn: 'Annuleren',
+
+  // ── Alternative Food or Beverage Field ──
+  next_action_alt_meal_label: 'Alternatief Voedingsmiddel of Drankje (Optioneel)',
+  next_action_alt_meal_placeholder: 'bijv. Plat water in plaats van kokoswater',
+  next_action_alt_meal_hint: 'Kies een back-upoptie voor het geval je geplande voedingsmiddel of drankje niet beschikbaar is.',
+  meal_planned_prefix: 'Gepland:',
+  meal_alternative_prefix: 'Alternatief:',
+  sdb_vc_btn_remove_alt: 'Alternatief Verwijderen',
 };
 
 

@@ -30,6 +30,9 @@ import {
   getAllBlockReferencedPhotoIds,
   sanitiseBlock,
   getBlockPrimaryDescription,
+  getBlockAlternativeDescription,
+  applyAlternativeTextToBlock,
+  removeBlockAlternative,
   MEAL_TYPE_KEYS,
   isFreeDay,
   setFreeScheduleDates,
@@ -422,6 +425,10 @@ function BlockEditor({
     }
     return true;
   });
+  const [alternativeText, setAlternativeText] = useState<string>(() =>
+    initial ? getBlockAlternativeDescription(initial, t) : ''
+  );
+  const [isAlternativeEdited, setIsAlternativeEdited] = useState(false);
   const [mealType, setMealType] = useState<MealTypeKey | undefined>(initial?.mealType);
   const [selectedOutcome, setSelectedOutcome] = useState<DetailedBlockOutcome | 'none'>(initialOutcome || 'none');
 
@@ -829,6 +836,7 @@ function BlockEditor({
       foodPhoto: foodPhotos.length > 0 ? foodPhotos[0] : undefined,
       libraryMealId: initial?.libraryMealId,
       approvalStatus: resolvedApprovalStatus,
+      alternativeText: initial?.alternativeText,
       alternatives: initial?.alternatives,
       imageRef:
         foodPhotos.length > 0
@@ -842,7 +850,10 @@ function BlockEditor({
           : undefined,
     };
 
-    let finalSanitised = sanitiseBlock(baseBlock);
+    let finalSanitised =
+      isAlternativeEdited || (!initial && alternativeText.trim().length > 0)
+        ? applyAlternativeTextToBlock(baseBlock, alternativeText)
+        : sanitiseBlock(baseBlock);
     if (alsoSaveToLibrary) {
       const savedLib = createLibraryMealFromBlock(finalSanitised, { t });
       finalSanitised = sanitiseBlock({
@@ -1109,6 +1120,42 @@ function BlockEditor({
               maxLength={120}
               aria-label={t.sdb_custom_label}
             />
+          </div>
+
+          {/* ── Alternative Food or Beverage (Optional) ── */}
+          <div className="sdb-field">
+            <div className="sdb-alt-label-row">
+              <label className="sdb-label" htmlFor="sdb-alternative-text">
+                {t.next_action_alt_meal_label}
+              </label>
+              {alternativeText.trim().length > 0 && (
+                <button
+                  type="button"
+                  id="btn-editor-clear-alt"
+                  className="sdb-clear-alt-inline-btn"
+                  onClick={() => {
+                    setAlternativeText('');
+                    setIsAlternativeEdited(true);
+                  }}
+                >
+                  ✕ {t.sdb_vc_btn_remove_alt}
+                </button>
+              )}
+            </div>
+            <input
+              id="sdb-alternative-text"
+              className="sdb-input"
+              type="text"
+              value={alternativeText}
+              onChange={e => {
+                setAlternativeText(e.target.value);
+                setIsAlternativeEdited(true);
+              }}
+              placeholder={t.next_action_alt_meal_placeholder}
+              maxLength={120}
+              aria-label={t.next_action_alt_meal_label}
+            />
+            <span className="sdb-alt-field-hint">{t.next_action_alt_meal_hint}</span>
           </div>
 
           {/* ── Food Categories (Primary Quick Food Classification) ── */}
@@ -2034,6 +2081,7 @@ interface BlockCardProps {
   isStructureReviewMode?: boolean;
   onSetApprovalStatus?: (status: MealApprovalStatus) => void;
   onSwapAlternative?: (alternativeId: string) => void;
+  onRemoveAlternative?: (alternativeId: string) => void;
   onSaveToLibrary?: () => void;
   onOpenLibraryReplace?: () => void;
   onOpenLibraryAddAlternative?: () => void;
@@ -2063,6 +2111,7 @@ function BlockCard({
   isStructureReviewMode = false,
   onSetApprovalStatus,
   onSwapAlternative,
+  onRemoveAlternative,
   onSaveToLibrary,
   onOpenLibraryReplace,
   onOpenLibraryAddAlternative,
@@ -2723,17 +2772,31 @@ function BlockCard({
             </div>
           </div>
 
-          {onSwapAlternative && (
-            <button
-              type="button"
-              id={`btn-use-alt-${block.id}`}
-              className="sdb-vcard-use-alt-btn"
-              onClick={() => onSwapAlternative(activeAlt.id)}
-            >
-              <span>⇄</span>
-              <span>{t.sdb_vc_btn_use_alt}</span>
-            </button>
-          )}
+          <div className="sdb-vcard-alt-actions">
+            {onSwapAlternative && (
+              <button
+                type="button"
+                id={`btn-use-alt-${block.id}`}
+                className="sdb-vcard-use-alt-btn"
+                onClick={() => onSwapAlternative(activeAlt.id)}
+              >
+                <span>⇄</span>
+                <span>{t.sdb_vc_btn_use_alt}</span>
+              </button>
+            )}
+            {onRemoveAlternative && (
+              <button
+                type="button"
+                id={`btn-remove-alt-${block.id}`}
+                className="sdb-vcard-remove-alt-btn"
+                onClick={() => onRemoveAlternative(activeAlt.id)}
+                title={t.sdb_vc_btn_remove_alt}
+                aria-label={`${t.sdb_vc_btn_remove_alt}: ${activeAltDisplayName}`}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -6761,6 +6824,14 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
     showTransientToast(t.sdb_vc_alt_swapped_toast);
   };
 
+  const handleRemoveAlternative = (blockId: string, alternativeId: string) => {
+    const target = currentDay.blocks.find(b => b.id === blockId);
+    if (!target) return;
+    const updated = removeBlockAlternative(target, alternativeId);
+    handleSaveBlock(updated);
+    playFeedback('neutral');
+  };
+
   const handleSaveBlockToLibrary = (block: StructuredDietBlock) => {
     const saved = createLibraryMealFromBlock(block, { t });
     handleQuickUpdateBlock(block.id, { libraryMealId: saved.id });
@@ -8071,6 +8142,7 @@ export default function StructuredDietScreen({ onNavigate, onBack, onStartTimer 
                           isStructureReviewMode={isStructureReviewMode}
                           onSetApprovalStatus={status => handleSetBlockApproval(block.id, status)}
                           onSwapAlternative={altId => handleSwapAlternative(block.id, altId)}
+                          onRemoveAlternative={altId => handleRemoveAlternative(block.id, altId)}
                           onSaveToLibrary={() => handleSaveBlockToLibrary(block)}
                           onOpenLibraryReplace={() =>
                             setMealLibraryModal({ mode: 'apply_to_block', targetBlock: block })

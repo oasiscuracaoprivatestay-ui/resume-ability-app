@@ -24,6 +24,7 @@ import {
   getActiveProfile,
   getDayPlanForDate,
   getBlockPrimaryDescription,
+  getBlockAlternativeDescription,
   getLocalDateKey,
   isBlockScheduleActive,
   isOvernightBlock,
@@ -138,6 +139,7 @@ export interface NextScheduledBlockInfo {
   blockTypeKey: string;
   blockTypeLabel: string;
   primaryDescription: string;
+  alternativeDescription?: string;
   isFasting: boolean;
   isTomorrow: boolean;
   timingState: 'active_now' | 'upcoming_today' | 'tomorrow';
@@ -198,6 +200,9 @@ function buildBlockInfo(
   const isFasting = isFastingStructureBlock(block);
   const blockTypeLabel = getLocalizedBlockTypeLabel(block.type, t);
   const primaryDescription = getBlockPrimaryDescription(block, t) || blockTypeLabel;
+  const alternativeDescription = !isFasting
+    ? getBlockAlternativeDescription(block, t) || undefined
+    : undefined;
   return {
     blockId: block.id,
     startTime: block.startTime,
@@ -205,6 +210,7 @@ function buildBlockInfo(
     blockTypeKey: (block.type || '').trim().toLowerCase(),
     blockTypeLabel,
     primaryDescription,
+    ...(alternativeDescription ? { alternativeDescription } : {}),
     isFasting,
     isTomorrow: timingState === 'tomorrow',
     timingState,

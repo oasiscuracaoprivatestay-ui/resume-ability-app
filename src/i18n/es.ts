@@ -3033,6 +3033,14 @@ export const es: Translations = {
   ch_dur_window_label: 'Periodo del Desafío',
   ch_dur_confirm_btn: 'Confirmar e Iniciar Desafío',
   ch_dur_cancel_btn: 'Cancelar',
+
+  // ── Alternative Food or Beverage Field ──
+  next_action_alt_meal_label: 'Alimento o Bebida Alternativa (Opcional)',
+  next_action_alt_meal_placeholder: 'p. ej., Agua natural en lugar de agua de coco',
+  next_action_alt_meal_hint: 'Elige una opción de respaldo en caso de que tu alimento o bebida planificada no esté disponible.',
+  meal_planned_prefix: 'Planificado:',
+  meal_alternative_prefix: 'Alternativa:',
+  sdb_vc_btn_remove_alt: 'Quitar Alternativa',
 };
 
 

@@ -2941,6 +2941,14 @@ export interface Translations {
   ch_dur_window_label: string;
   ch_dur_confirm_btn: string;
   ch_dur_cancel_btn: string;
+
+  // ── Alternative Food or Beverage Field ──
+  next_action_alt_meal_label: string;
+  next_action_alt_meal_placeholder: string;
+  next_action_alt_meal_hint: string;
+  meal_planned_prefix: string;
+  meal_alternative_prefix: string;
+  sdb_vc_btn_remove_alt: string;
 }
 
 

@@ -7634,6 +7634,26 @@
   min-width: 0;
 }
 
+.challenges-screen--premium-hub .sda-pl-next-block-desc--pair {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.challenges-screen--premium-hub .sda-pl-next-alt-inline {
+  font-size: 11.2px;
+  color: #B9CFC8;
+}
+
+.challenges-screen--premium-hub .sda-pl-next-prefix {
+  color: #5EEAD4;
+  font-weight: 700;
+}
+
+.challenges-screen--premium-hub .sda-pl-next-prefix--alt {
+  color: #99F6E4;
+}
+
 .challenges-screen--premium-hub .sda-pl-next-block-empty {
   font-size: 11.2px;
   color: #B9CFC8;

@@ -33,6 +33,8 @@ import {
   sortBlocks,
   generateBlockId,
   getBlockPrimaryDescription,
+  getBlockAlternativeDescription,
+  applyAlternativeTextToBlock,
   type StructuredDietBlock,
 } from '../../utils/dietStorage';
 import { getNextPlannedBlock } from '../../utils/homeSelectors';
@@ -60,11 +62,19 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
   // Schedule subflow state
   const [selectedBlockId, setSelectedBlockId] = useState<string>('custom');
   const [plannedFoodText, setPlannedFoodText] = useState<string>('');
+  const [alternativeFoodText, setAlternativeFoodText] = useState<string>('');
   const [customStartTime, setCustomStartTime] = useState<string>('12:30');
   const [customEndTime, setCustomEndTime] = useState<string>('13:00');
   const [customMealType, setCustomMealType] = useState<string>('Lunch');
-  const [savedSummary, setSavedSummary] = useState<{ meal: string; time: string }>({
+  const [savedSummary, setSavedSummary] = useState<{
+    meal: string;
+    plannedText: string;
+    alternative: string;
+    time: string;
+  }>({
     meal: '',
+    plannedText: '',
+    alternative: '',
     time: '',
   });
 
@@ -102,6 +112,7 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
         setSelectedBlockId(nextPlanned.block.id);
         const desc = getBlockPrimaryDescription(nextPlanned.block, t);
         setPlannedFoodText(desc || nextPlanned.block.customText || '');
+        setAlternativeFoodText(getBlockAlternativeDescription(nextPlanned.block, t) || '');
         setCustomStartTime(nextPlanned.block.startTime || '12:30');
         setCustomEndTime(nextPlanned.block.endTime || '13:00');
         setCustomMealType(nextPlanned.block.type || 'Lunch');
@@ -110,12 +121,14 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
         setSelectedBlockId(first.id);
         const desc = getBlockPrimaryDescription(first, t);
         setPlannedFoodText(desc || first.customText || '');
+        setAlternativeFoodText(getBlockAlternativeDescription(first, t) || '');
         setCustomStartTime(first.startTime || '12:30');
         setCustomEndTime(first.endTime || '13:00');
         setCustomMealType(first.type || 'Lunch');
       } else {
         setSelectedBlockId('custom');
         setPlannedFoodText('');
+        setAlternativeFoodText('');
         setCustomStartTime('12:30');
         setCustomEndTime('13:00');
         setCustomMealType('Lunch');
@@ -128,6 +141,7 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
     setSelectedBlockId(blockId);
     if (blockId === 'custom') {
       setPlannedFoodText('');
+      setAlternativeFoodText('');
       setCustomStartTime('12:30');
       setCustomEndTime('13:00');
       setCustomMealType('Lunch');
@@ -136,6 +150,7 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
       if (block) {
         const desc = getBlockPrimaryDescription(block, t);
         setPlannedFoodText(desc || block.customText || '');
+        setAlternativeFoodText(getBlockAlternativeDescription(block, t) || '');
         setCustomStartTime(block.startTime || '12:30');
         setCustomEndTime(block.endTime || '13:00');
         setCustomMealType(block.type || 'Lunch');
@@ -169,26 +184,31 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
     if (!weeklyDiet || !todayPlan) return;
 
     const trimmedFood = plannedFoodText.trim();
+    const trimmedAlt = alternativeFoodText.trim();
     let updatedBlocks: StructuredDietBlock[] = [...todayPlan.blocks];
     let mealLabel = customMealType;
     let timeLabel = `${customStartTime} – ${customEndTime}`;
+    let resolvedPlannedText = trimmedFood;
 
     if (selectedBlockId !== 'custom') {
-      // Update existing block in place
+      // Update existing block in place while preserving primary meal data & syncing optional alternative
       const targetIndex = updatedBlocks.findIndex((b) => b.id === selectedBlockId);
       if (targetIndex !== -1) {
         const existing = updatedBlocks[targetIndex];
         mealLabel = existing.type || customMealType;
         timeLabel = `${existing.startTime} – ${existing.endTime}`;
 
-        updatedBlocks[targetIndex] = {
+        const updatedPrimary: StructuredDietBlock = {
           ...existing,
           customText: trimmedFood || existing.customText,
         };
+        resolvedPlannedText =
+          trimmedFood || getBlockPrimaryDescription(updatedPrimary, t) || mealLabel;
+        updatedBlocks[targetIndex] = applyAlternativeTextToBlock(updatedPrimary, trimmedAlt);
       }
     } else {
-      // Create a new block for today
-      const newBlock: StructuredDietBlock = {
+      // Create a new block for today with optional alternative associated on the same block
+      const rawNewBlock: StructuredDietBlock = {
         id: generateBlockId(),
         startTime: customStartTime,
         endTime: customEndTime,
@@ -196,6 +216,9 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
         items: trimmedFood ? [trimmedFood] : [],
         customText: trimmedFood,
       };
+      const newBlock = trimmedAlt
+        ? applyAlternativeTextToBlock(rawNewBlock, trimmedAlt)
+        : rawNewBlock;
       updatedBlocks.push(newBlock);
       updatedBlocks = sortBlocks(updatedBlocks);
     }
@@ -217,6 +240,8 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
 
     setSavedSummary({
       meal: trimmedFood ? `${mealLabel} ("${trimmedFood}")` : mealLabel,
+      plannedText: resolvedPlannedText || mealLabel,
+      alternative: trimmedAlt,
       time: timeLabel,
     });
     setView('scheduled-success');
@@ -626,6 +651,44 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
                     'Plan your next meal or beverage in your Structured Diet.'}
                 </span>
               </div>
+
+              {/* Alternative Food or Beverage Input (Optional) */}
+              <div className="next-action-field-group">
+                <div className="next-action-field-label-row">
+                  <label
+                    htmlFor="input-next-action-alt-meal"
+                    className="next-action-field-label"
+                  >
+                    {t.next_action_alt_meal_label ||
+                      'Alternative Food or Beverage (Optional)'}
+                  </label>
+                  {alternativeFoodText.trim().length > 0 && (
+                    <button
+                      type="button"
+                      id="btn-clear-next-action-alt-meal"
+                      className="next-action-clear-alt-btn"
+                      onClick={() => setAlternativeFoodText('')}
+                    >
+                      ✕ {t.sdb_vc_btn_remove_alt || 'Remove Alternative'}
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="input-next-action-alt-meal"
+                  type="text"
+                  className="next-action-input"
+                  value={alternativeFoodText}
+                  onChange={(e) => setAlternativeFoodText(e.target.value)}
+                  placeholder={
+                    t.next_action_alt_meal_placeholder ||
+                    'e.g., Plain water instead of coconut water'
+                  }
+                />
+                <span className="next-action-field-hint" id="hint-next-action-alt-meal">
+                  {t.next_action_alt_meal_hint ||
+                    'Choose a backup option in case your planned food or beverage is unavailable.'}
+                </span>
+              </div>
             </div>
 
             <div className="next-action-form-actions">
@@ -672,6 +735,23 @@ export const NextActionModal: React.FC<NextActionModalProps> = ({
                 .replace('{meal}', savedSummary.meal)
                 .replace('{time}', savedSummary.time)}
             </p>
+
+            {savedSummary.alternative && (
+              <div className="next-action-saved-pair" id="next-action-saved-pair-summary">
+                <div className="next-action-saved-row">
+                  <strong className="next-action-saved-label">
+                    {t.meal_planned_prefix || 'Planned:'}
+                  </strong>
+                  <span className="next-action-saved-val">{savedSummary.plannedText}</span>
+                </div>
+                <div className="next-action-saved-row next-action-saved-row--alt">
+                  <strong className="next-action-saved-label next-action-saved-label--alt">
+                    {t.meal_alternative_prefix || 'Alternative:'}
+                  </strong>
+                  <span className="next-action-saved-val">{savedSummary.alternative}</span>
+                </div>
+              </div>
+            )}
 
             <div className="next-action-success-actions">
               <button

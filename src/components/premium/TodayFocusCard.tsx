@@ -23,6 +23,7 @@ import {
   loadWeeklyDiet,
   getDayPlanForDate,
   getBlockPrimaryDescription,
+  getBlockAlternativeDescription,
   getLocalDateKey,
   getYesterdayDateKey,
   DIET_UPDATED_EVENT,
@@ -182,6 +183,11 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
     return getBlockPrimaryDescription(next.block, t as unknown as Record<string, any>);
   }, [next, t]);
 
+  const altDescription = useMemo(() => {
+    if (!next) return '';
+    return getBlockAlternativeDescription(next.block, t as unknown as Record<string, any>);
+  }, [next, t]);
+
   const timeRange = useMemo(() => {
     if (!next) return '';
     const start = next.block.startTime || '';
@@ -247,9 +253,26 @@ export function TodayFocusCard({ onNavigate }: TodayFocusCardProps) {
             </div>
 
             <div className="sda-focus-content-wrap">
-              <div className="sda-focus-desc sda-focus-desc--full">
-                {foodDescription || typeDisplay}
-              </div>
+              {altDescription ? (
+                <div className="sda-focus-desc sda-focus-desc--full sda-focus-desc--with-alt">
+                  <div className="sda-focus-plan-line" id="home-focus-planned-line">
+                    <strong className="sda-focus-line-label">
+                      {t.meal_planned_prefix || 'Planned:'}
+                    </strong>{' '}
+                    <span>{foodDescription || typeDisplay}</span>
+                  </div>
+                  <div className="sda-focus-alt-line" id="home-focus-alt-line">
+                    <strong className="sda-focus-line-label sda-focus-line-label--alt">
+                      {t.meal_alternative_prefix || 'Alternative:'}
+                    </strong>{' '}
+                    <span>{altDescription}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="sda-focus-desc sda-focus-desc--full">
+                  {foodDescription || typeDisplay}
+                </div>
+              )}
               <AppIcon name="chevron-right" size={18} className="sda-focus-chevron" />
             </div>
           </div>

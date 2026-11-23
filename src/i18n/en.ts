@@ -3047,6 +3047,14 @@ export const en: Translations = {
   ch_dur_window_label: 'Challenge Window',
   ch_dur_confirm_btn: 'Confirm & Start Challenge',
   ch_dur_cancel_btn: 'Cancel',
+
+  // ── Alternative Food or Beverage Field ──
+  next_action_alt_meal_label: 'Alternative Food or Beverage (Optional)',
+  next_action_alt_meal_placeholder: 'e.g., Plain water instead of coconut water',
+  next_action_alt_meal_hint: 'Choose a backup option in case your planned food or beverage is unavailable.',
+  meal_planned_prefix: 'Planned:',
+  meal_alternative_prefix: 'Alternative:',
+  sdb_vc_btn_remove_alt: 'Remove Alternative',
 };
 
 

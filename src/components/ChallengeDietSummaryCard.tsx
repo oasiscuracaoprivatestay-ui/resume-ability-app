@@ -17,6 +17,7 @@ import {
   getActiveProfile,
   getGoalDisplayName,
   getBlockPrimaryDescription,
+  getBlockAlternativeDescription,
   isBlockScheduleActive,
   sortBlocks,
   DIET_UPDATED_EVENT,
@@ -144,6 +145,7 @@ export const ChallengeDietSummaryCard: React.FC<ChallengeDietSummaryCardProps> =
             }
 
             const primaryDesc = getBlockPrimaryDescription(block, t) || block.type;
+            const altDesc = getBlockAlternativeDescription(block, t);
 
             return (
               <div
@@ -166,7 +168,24 @@ export const ChallengeDietSummaryCard: React.FC<ChallengeDietSummaryCardProps> =
                     <span>{statusLabel}</span>
                   </span>
                 </div>
-                <p className="challenge-diet-block-desc">{primaryDesc}</p>
+                {altDesc ? (
+                  <div className="challenge-diet-block-lines">
+                    <p className="challenge-diet-block-desc">
+                      <strong className="challenge-diet-line-prefix">
+                        {t.meal_planned_prefix || 'Planned:'}
+                      </strong>{' '}
+                      {primaryDesc}
+                    </p>
+                    <p className="challenge-diet-block-alt">
+                      <strong className="challenge-diet-line-prefix challenge-diet-line-prefix--alt">
+                        {t.meal_alternative_prefix || 'Alternative:'}
+                      </strong>{' '}
+                      {altDesc}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="challenge-diet-block-desc">{primaryDesc}</p>
+                )}
               </div>
             );
           })}

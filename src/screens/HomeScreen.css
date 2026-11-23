@@ -649,6 +649,26 @@
   min-width: 0;
 }
 
+.sda-home .sda-focus-desc--with-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sda-home .sda-focus-alt-line {
+  font-size: 13.8px;
+  color: var(--sda-subtext);
+}
+
+.sda-home .sda-focus-line-label {
+  color: var(--sda-accent);
+  font-weight: 700;
+}
+
+.sda-home .sda-focus-line-label--alt {
+  color: #99f6e4;
+}
+
 .sda-home .sda-focus-chevron {
   color: var(--sda-subtext);
   flex-shrink: 0;
